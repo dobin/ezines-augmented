@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x10, Issue 0x47, Phile #0x0C of 0x11",
+  "title": "Finding hidden kernel modules (extrem way reborn): 20 years later",
+  "authors": "g1inko <g1inko at hotmail com>",
+  "date": "Not specified",
+  "historical_context": "This article revisits techniques for detecting Linux kernel rootkits, originally discussed in Phrack over 20 years ago, and updates them for modern kernels.",
+  "target_audience": "Security researchers, kernel developers, and those interested in rootkit detection techniques.",
+  "short_summary": "The article explores the evolution of techniques for detecting hidden Linux kernel modules, particularly focusing on the challenges posed by modern kernel architectures and the rebirth of an old detection method adapted for contemporary systems.",
+  "summary": "In this article, g1inko revisits the topic of Linux kernel rootkits, specifically focusing on loadable kernel module (LKM) rootkits that employ self-hiding techniques. The author discusses the historical context of these rootkits and the evolution of detection methods over the past two decades. The original technique, known as module_hunter, is analyzed and reimplemented for modern x86_64 kernels, addressing the significant changes in the Linux kernel's internal API and memory management. The article highlights the challenges faced, such as the unavailability of the __module_address() function and the need for new checks to accurately identify hidden modules in memory.\n\nThe rebirth of the detection technique involves a detailed examination of the struct module and its fields, as well as the virtual memory layout of x86_64 architecture. The author outlines a series of checks to validate module descriptors, ensuring that only legitimate modules are reported. The article concludes with a discussion on the potential for adapting this detection method to other architectures, such as AArch64, and invites contributions from the community to enhance the tool's compatibility. Overall, this work not only pays homage to the original ideas but also provides a practical approach to combating modern kernel rootkits."
+}

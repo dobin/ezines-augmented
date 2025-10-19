@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 3, Article #7",
+  "title": "The Darth Vader Virus Strain B",
+  "authors": "Unknown",
+  "date": "Not specified",
+  "historical_context": "This article discusses a virus from the early 1990s, a time when computer viruses were becoming more prevalent and complex.",
+  "target_audience": "Security professionals, malware researchers, and retro computing enthusiasts.",
+  "short_summary": "The Darth Vader virus is a unique strain that infects the stack space of .COM files rather than becoming resident in memory. Originating from Bulgaria, it has specific requirements for infection.",
+  "summary": "The Darth Vader Virus Strain B is notable for its unconventional method of infection, targeting the stack space of .COM files during the copying process. Unlike many viruses of its time that would embed themselves into memory and infect all running programs, this virus specifically looks for .COM files with a stack space equal to its own size, making it a distinct variant in the malware landscape. The article hints at the growing reputation of Bulgaria as a hub for virus development, raising questions about the geographical origins of malware during this era.\n\nThe technical details provided in the article include a hex dump of the virus code, which would be of interest to malware analysts and those studying the evolution of computer viruses. The article serves as a historical snapshot of early virus development, showcasing the creativity and technical prowess of its creators. For those interested in the history of computer security, this piece offers insights into the mindset of early virus authors and the challenges they posed to computer users and security professionals alike."
+}

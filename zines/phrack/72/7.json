@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "APT Down - The North Korea Files",
+  "authors": "Saber + cyb0rg",
+  "date": "June 2025",
+  "historical_context": "This article provides an analysis of a data dump from a North Korean APT's workstation, specifically focusing on the Kimsuky group, which has been known to target South Korean and Taiwanese organizations.",
+  "target_audience": "Security professionals, threat hunters, reverse engineers, and hackers.",
+  "short_summary": "The article dissects a data dump from a North Korean APT's workstation, revealing tools, techniques, and internal documentation used by the Kimsuky group. It includes insights into their operations, phishing tactics, and backdoors, along with a call to the community for further investigation.",
+  "summary": "This article presents a detailed analysis of a data dump retrieved from a workstation associated with the North Korean APT group Kimsuky. The authors provide a comprehensive overview of the tools and techniques used by this threat actor, including various backdoors, phishing tools, and internal documentation that showcases their operational methods. The dump reveals access to sensitive South Korean government networks and highlights the collaboration between Kimsuky and other Chinese APTs. The authors emphasize the importance of this information for threat hunters and security researchers, encouraging them to dissect the artifacts further to understand Kimsuky's tactics and improve defenses against such threats.\n\nThe article is structured into sections that cover the data dumps, the artifacts found, and the identification of Kimsuky. It discusses specific tools like a kernel-level remote backdoor, a custom Cobalt Strike beacon, and phishing tools designed to mimic trusted domains. The authors also delve into the operational patterns of Kimsuky, including their target selection and the use of stolen government certificates. By providing this insight, the article serves as a crucial resource for understanding the evolving landscape of cyber threats posed by state-sponsored actors."
+}

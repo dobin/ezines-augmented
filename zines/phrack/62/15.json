@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x0f of 0x10",
+  "title": "Introduction for Playing Cards for Smart Profits",
+  "authors": "ender <ender@afturgurluk.org>",
+  "date": "",
+  "short_summary": "This article provides an in-depth guide on interacting with smartcards, detailing the ISO7816 standard, communication protocols, and various techniques for exploiting smartcard vulnerabilities. It includes practical examples and tools for readers interested in smartcard hacking.",
+  "summary": "In 'Introduction for Playing Cards for Smart Profits', the author, ender, presents a comprehensive exploration of smartcard technology, focusing on the ISO7816 standard. The article begins with an introduction to the necessary tools and standards for engaging with smartcards, emphasizing the importance of understanding the communication protocols involved. It covers essential topics such as receiving the Answer To Reset (ATR), sending commands, and interpreting responses from smartcards. The author provides practical examples using both credit cards and SIM cards, demonstrating how to interact with these devices effectively.\n\nThe article also delves into advanced topics such as brute-forcing unidentified cards, mapping filesystems, and the cryptographic capabilities of smartcards. It highlights the vulnerabilities present in smartcard systems, particularly in the context of PIN verification and access control. The author encourages readers to experiment with smartcard technology, warning against using the knowledge for malicious purposes. Overall, this article serves as a valuable resource for hackers, security professionals, and anyone interested in the intricacies of smartcard technology and its security implications."
+}

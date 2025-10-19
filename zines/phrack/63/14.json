@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x0e of 0x14",
+  "title": "Clutching at straws: When you can shift the stack pointer",
+  "authors": "Andrew Griffiths <andrewg@felinemenace.org>",
+  "date": "",
+  "historical_context": "This article discusses a vulnerability related to variable-length arrays in C, which was particularly relevant during the early 2000s as security researchers began to explore stack-based vulnerabilities more deeply.",
+  "target_audience": "Security researchers, software developers, and hackers interested in exploit development and C programming.",
+  "short_summary": "The article explores a vulnerability in C's variable-length arrays that allows an attacker to manipulate the stack pointer, potentially leading to arbitrary code execution. It discusses the conditions under which this vulnerability can be exploited and provides examples of code and assembly output to illustrate the concept.",
+  "summary": "In this article, Andrew Griffiths delves into a specific vulnerability associated with variable-length arrays in C, particularly when user-supplied lengths are involved. The author describes a scenario where an attacker can manipulate the stack pointer by providing a negative length, effectively shifting the stack pointer to an unexpected location. This manipulation can allow the attacker to overwrite critical data, such as return addresses, leading to potential code execution. The article includes detailed code examples and assembly output to illustrate how compilers handle such constructs, emphasizing the importance of understanding compiler behavior in exploit development.\n\nGriffiths also discusses the requirements for exploitability, noting that the architecture must support stack manipulation and that compilers should not implement runtime checks that prevent such vulnerabilities. The article concludes with practical advice for testing and exploiting the vulnerability, including a Makefile for testing various architectures. This exploration of stack manipulation techniques remains relevant for understanding modern exploitation methods and the importance of secure coding practices."
+}

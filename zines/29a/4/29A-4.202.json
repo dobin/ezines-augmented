@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Billy Belceb Virus Writing Guide 1.00 for Win32",
+  "authors": "Billy Belcebu/iKX",
+  "date": "1999",
+  "historical_context": "This guide represents a significant shift in virus writing from MS-DOS to Win32, reflecting the evolving landscape of computer security and malware development in the late 1990s.",
+  "target_audience": "Aspiring virus writers, malware researchers, and those interested in the technical aspects of virus development.",
+  "short_summary": "This guide provides a comprehensive tutorial on writing Win32 viruses, covering essential topics such as the PE header, coding techniques, and advanced methods for virus creation and evasion.",
+  "summary": "The 'Billy Belceb Virus Writing Guide 1.00 for Win32' serves as a detailed tutorial for those looking to delve into the world of Win32 virus creation. The author, Billy Belcebu, outlines the transition from MS-DOS to Win32, emphasizing the importance of understanding the PE header and the various coding techniques required for effective virus development. The guide includes practical examples, such as a simple 'Hello World' virus, and discusses advanced topics like Ring-0 coding, per-process residency, and polymorphism. Belcebu also shares insights into anti-debugging techniques and the significance of structured exception handling (SEH) in evading detection by antivirus software. Overall, this guide is a valuable resource for anyone interested in the technical intricacies of virus writing in the Win32 environment."
+}

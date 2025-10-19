@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "A Hacker's Guide To: PRIMOS Part I",
+  "authors": "Cosmos Kid",
+  "date": "1987",
+  "historical_context": "This article was published during the early days of hacking culture, providing insights into the PRIMOS operating system, which was used in various academic and research institutions.",
+  "target_audience": "Beginners and experienced users of PRIMOS, hackers, and security enthusiasts.",
+  "short_summary": "This article serves as an introductory guide to the PRIMOS operating system, detailing basic commands, system prompts, and file handling techniques. It aims to educate both beginners and experienced users on effectively navigating and utilizing PRIMOS.",
+  "summary": "In this first part of a two-part series, Cosmos Kid introduces readers to the PRIMOS operating system, emphasizing its potential as a powerful tool when used correctly. The article outlines essential commands for logging on and off, navigating the system, and understanding its unique prompts, such as 'OK' and 'ER!'. It also covers special characters and their functions, which are crucial for effective interaction with the system. The guide is designed to be accessible, making it suitable for newcomers while still offering valuable insights for seasoned users.",
+  "summary_details": "The article elaborates on the login process, highlighting the importance of entering commands correctly to avoid errors. It provides a comprehensive overview of file and directory management, including naming conventions and commands for file handling. Additionally, the author explains how to change passwords and save terminal sessions, ensuring users can maintain their accounts securely. By the end of the article, readers are equipped with foundational knowledge to explore PRIMOS further, with a promise of more advanced topics in the upcoming second part."
+}

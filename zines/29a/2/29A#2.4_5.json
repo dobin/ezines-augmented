@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "SpiceGirl family",
+  "authors": "Darkman/29A",
+  "date": "",
+  "historical_context": "The SpiceGirl virus represents a notable example of early parasitic viruses that employed advanced techniques for evading detection, reflecting the evolving landscape of malware during the late 20th century.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The SpiceGirl family consists of memory-resident parasitic viruses that infect COM files by hooking INT 21h. They employ stealth techniques to avoid detection and include features like on-the-fly disinfection and oligo-morphic behavior.",
+  "summary": "The SpiceGirl family of viruses is characterized by their memory-resident parasitic nature, infecting COM files by hooking into DOS interrupt INT 21h. These viruses are designed to write themselves to the beginning of the files they infect, while employing encryption techniques to obfuscate their presence. Starting from version 2123 bytes, the viruses exhibit semi-stealth capabilities, creating temporary files to store disinfected copies of infected files, thus maintaining the illusion of normal file behavior. This method complicates detection efforts by security software, as the original files appear unaffected during the infection process.\n\nThe SpiceGirls.2125 variant is particularly notable for its advanced features, including an error handler, anti-heuristic and anti-debugging techniques, and an oligo-morphic engine that allows it to change its appearance with each infection. The article provides detailed assembly code for the virus, illustrating its structure and functionality. This technical insight not only serves as a historical reference for malware development but also highlights the ongoing cat-and-mouse game between malware authors and security professionals, a theme that remains relevant in today's cybersecurity landscape."
+}

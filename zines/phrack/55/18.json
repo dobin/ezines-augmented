@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #1 of 19",
+  "title": "State of Defacements",
+  "authors": "Attrition",
+  "date": "09.01.99",
+  "historical_context": "This article provides a snapshot of website defacements during a time when such incidents were on the rise, reflecting the hacker culture of the late 1990s.",
+  "target_audience": "Hackers, security professionals, web developers",
+  "short_summary": "The article presents statistics on website defacements, highlighting trends and notable incidents from 1995 to 1999. It emphasizes the increasing frequency of defacements and the types of systems targeted.",
+  "summary": "In 'State of Defacements', Attrition compiles comprehensive statistics on website defacements, revealing a dramatic increase from just four in 1995 to 1,905 in 1999. The data indicates an average of 10.3 defacements per day in August 1999 alone, showcasing a growing trend in the hacker community. The article also notes that high-profile sites like the White House and major news organizations have not been immune to these attacks, indicating a shift in the landscape of web security and the motivations behind such defacements, which often include political statements or sheer vandalism.\n\nThe piece serves as a wake-up call for web administrators and security professionals, urging them to recognize the vulnerabilities in their systems. It categorizes the types of operating systems affected, with Windows NT and various UNIX systems being prominent targets. By documenting these incidents, the article not only provides a historical context for the rise of defacements but also highlights the need for improved security measures in an increasingly digital world."
+}

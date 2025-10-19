@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Gnu-Warez Kidz' Guide to Pirating on the Internet",
+  "authors": "Tarkin Darklighter",
+  "date": "01/01/1996",
+  "historical_context": "This article reflects the early days of internet piracy, showcasing the transition from BBS systems to the internet as a medium for software piracy.",
+  "target_audience": "Hackers, phreakers, and individuals interested in software piracy techniques.",
+  "short_summary": "This guide provides insights into the methods and tools used for pirating software on the internet in the mid-1990s, including FTP, IRC, and site navigation techniques.",
+  "summary": "In 'The Gnu-Warez Kidz' Guide to Pirating on the Internet', Tarkin Darklighter outlines the essential tools and methods for engaging in software piracy during the early days of the internet. The article emphasizes the importance of having a UNIX shell account and a terminal program capable of displaying control characters, which are crucial for navigating the complex directory structures of pirate sites. Darklighter also discusses the evolution of piracy from early BBS systems to the internet, highlighting the use of Archie for site discovery and the significance of maintaining upload/download ratios among users to foster a thriving pirate community.\n\nThe guide delves into practical techniques for accessing pirate sites, including the use of FTP and FSP for file transfers, and the etiquette expected within these communities. Darklighter warns against common pitfalls, such as deleting files or misusing directory structures, which could lead to a negative reputation among peers. The article concludes with a prediction about the future of piracy, suggesting that as technology advances, anonymous sites will diminish in favor of more controlled environments, where sysops can manage user access and maintain a sense of community. Overall, this article serves as both a historical document and a practical guide for those interested in the underground culture of software piracy."
+}

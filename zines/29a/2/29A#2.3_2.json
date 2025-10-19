@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virus Oriented VxD Writing Tutorial",
+  "authors": "GriYo/29A",
+  "date": "",
+  "historical_context": "This article is a tutorial on writing VxDs (Virtual Device Drivers) for Windows 95, focusing on creating viruses. It reflects the hacker culture of the 1990s, where programming skills were often used for malicious purposes.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in low-level Windows programming.",
+  "short_summary": "This tutorial provides a basic introduction to writing VxDs for Windows 95, specifically aimed at creating viruses. It covers essential tools, coding practices, and the structure of VxDs, making it a foundational piece for those interested in malware development.",
+  "summary": "The article serves as a primer on VxD programming, specifically for malicious purposes. It begins by defining what a VxD is and its significance in interacting with system resources at a low level. The author emphasizes the need for specific tools from the Microsoft Developer Network, such as the Microsoft Macro Assembler and various include files necessary for VxD development. The tutorial outlines the process of writing a VxD, breaking it down into manageable stages, from initialization to file system manipulation, which is crucial for virus functionality. Key concepts such as VxD segments, control procedures, and system control messages are explained in detail, providing readers with the technical knowledge required to create their own VxDs. The article also includes code snippets and examples, illustrating how to hook into the file system to monitor and infect files, showcasing the technical prowess and intent behind the creation of malware during this era."
+}

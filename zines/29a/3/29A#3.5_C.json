@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Gwar-virus [v1.10]",
+  "authors": "T-2000 / Invaders",
+  "date": "February 1998 / May 1998",
+  "historical_context": "This article discusses a stealth boot sector virus during a time when computer viruses were becoming increasingly sophisticated, particularly in the late 1990s.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The Gwar-virus is a stealth boot sector and MBR infector that operates within a single sector, utilizing various techniques to evade detection and execute its payload, which includes disk-trashing and screen dumping.",
+  "summary": "The Gwar-virus, authored by T-2000 of the Invaders group, is a highly optimized resident virus designed to infect boot sectors and master boot records (MBRs) of hard drives and diskettes. Its stealth capabilities allow it to remain hidden from most detection methods, as it cleverly utilizes the upper part of the interrupt table to store its code, thereby avoiding traditional memory checks. The virus is only one sector long, making it efficient in terms of disk and memory usage. It employs a variety of techniques, including anti-debugger tricks and variable encryption, to enhance its stealth and functionality.\n\nThe payload of the Gwar-virus is particularly destructive, as it can display a message, trash disk data, and dump the screen. Notably, it can redirect writes to the boot area and infect other disks when they are accessed. However, the article also highlights potential issues with compatibility, particularly with Windows 95/NT systems, which may crash due to the virus's inability to stealth boot sectors effectively. The author emphasizes that the virus was not intended as a learning tool but rather as a demonstration of functional programming prowess, showcasing the technical skill involved in its creation."
+}

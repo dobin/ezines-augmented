@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win32.Jacky.1440",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1997",
+  "historical_context": "This article discusses one of the first Win32 viruses, highlighting the challenges faced by earlier viruses in infecting Windows NT systems. It reflects the early days of Windows malware development.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article introduces Win32.Jacky, a fully compatible virus for Windows 95/NT, detailing its technical workings and the innovations that allow it to infect NT systems. It also compares it to other viruses of the time.",
+  "summary": "In this article, Jacky Qwerty presents Win32.Jacky, a pioneering virus designed to infect Windows 95 and NT systems. Unlike its predecessors, which struggled to spread on NT due to fixed memory address assumptions, Win32.Jacky operates at the Win32 API level, allowing it to successfully infect any Win32-based system. The virus's design is notable for its ability to locate and utilize the KERNEL32 base address dynamically, which is crucial for its infection process. This approach marks a significant advancement in the evolution of Windows malware, showcasing the author's technical prowess and understanding of the operating system's architecture.\n\nThe article also provides a detailed technical breakdown of the virus's functionality, including its methods for locating executable files, infecting them, and modifying their headers without altering timestamps. Jacky Qwerty emphasizes the virus's efficiency and adaptability, particularly in how it handles API calls and file operations. The author expresses some frustration that Win32.Cabanas, a later virus, received more media attention despite Win32.Jacky's earlier development, illustrating the competitive nature of virus creation in the hacker community of the time. Overall, this article serves as both a technical guide and a historical document, reflecting the early days of Windows malware development."
+}

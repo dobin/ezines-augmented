@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 27, File 3 of 12",
+  "title": "Introduction to MIDNET",
+  "authors": "Knight Lightning",
+  "date": "June 16, 1989",
+  "historical_context": "This article provides insights into the NSFnet and its regional networks during the early days of the Internet, highlighting the technological landscape of the time.",
+  "target_audience": "Hackers, security professionals, network engineers, and anyone interested in the history of computer networks.",
+  "short_summary": "The article offers a comprehensive overview of MIDNET, a regional network within the NSFnet, detailing its structure, protocols, and functionalities, including mail, file transfer, and remote login.",
+  "summary": "In 'Introduction to MIDNET', Knight Lightning delves into the architecture and operational aspects of MIDNET, a regional computer network that connects various universities in the mid-United States to the NSFnet. The article outlines the significance of MIDNET in facilitating access to supercomputing resources and inter-university communication. It emphasizes the role of TCP/IP protocols, particularly SMTP for mail, FTP for file transfers, and Telnet for remote logins, which are foundational to network communication at the time. The author also discusses the importance of gateways in connecting different networks, illustrating how users can communicate across various platforms despite differing technologies.\n\nThe article serves as both an introduction and a practical guide for users looking to navigate the complexities of network protocols and functionalities. It highlights the layered architecture of the DOD Protocol Suite, explaining how different protocols work together to enable seamless communication. The discussion on IP addressing and the transition from hosttables to the domain name system provides historical context to the evolution of network identification methods. Overall, this piece is a valuable resource for understanding the early Internet's infrastructure and the foundational technologies that continue to influence modern networking."
+}

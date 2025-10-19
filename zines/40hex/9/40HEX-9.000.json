@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 5, File 000",
+  "title": "40Hex Number 9",
+  "authors": "Gheap",
+  "date": "December 31, 1992",
+  "historical_context": "This issue of 40Hex was published during a time when computer viruses were becoming more prevalent, and the underground hacking community was actively sharing knowledge about virus creation and countermeasures.",
+  "target_audience": "Hackers, virus writers, security professionals, and enthusiasts of malware analysis.",
+  "short_summary": "This issue features a tutorial on SYS infections, along with various articles on virus news, disassemblies, and debugging techniques. It highlights the community's frustrations with uncredited work and invites contributions from readers.",
+  "summary": "In the ninth issue of 40Hex, Gheap introduces readers to a wealth of content focused on the burgeoning field of computer viruses. The standout feature is a tutorial by Dark Angel on SYS infections, which delves into the mechanics of how these viruses operate and how they can be created. The issue also includes updates on the latest in virus news, disassembly techniques, and debugging scripts, catering to those interested in the technical aspects of malware development and analysis. The editorial notes a growing concern within the community regarding the lack of credit given to original authors, emphasizing the importance of acknowledging contributions in the hacker culture. Additionally, the issue invites readers to engage with the zine by contributing their own articles or original viruses, fostering a collaborative spirit among hackers and virus writers alike. Overall, this issue serves as both a resource and a rallying cry for the underground community."
+}

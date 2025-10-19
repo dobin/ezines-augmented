@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 30, File #2 of 12",
+  "title": "Network Miscellany III",
+  "authors": "Taran King",
+  "date": "December 24, 1989",
+  "historical_context": "This article was written during the early days of the Internet, when access to online services and information was becoming more widespread, yet still limited compared to today's standards.",
+  "target_audience": "Hackers, security professionals, and anyone interested in early Internet technologies and access methods.",
+  "short_summary": "This article provides a collection of useful tips and resources for accessing various online services, databases, and FTP sites, highlighting the early Internet's capabilities and limitations.",
+  "summary": "In 'Network Miscellany III', Taran King presents a compilation of valuable resources and tips for navigating the early Internet landscape. The article covers various online services, such as the Colorado Alliance of Research Libraries (CARL) and CompuServe, detailing how to access them via Telnet. King also shares a clever trick for obtaining the current date and time from Unix systems by connecting to port 13, showcasing the simplicity and utility of early networking commands. Additionally, the article lists numerous FTP sites that accept anonymous access, providing readers with a treasure trove of data and software repositories available at the time.\n\nThe piece serves as a snapshot of the burgeoning online world, emphasizing the importance of community contributions in compiling useful resources. By sharing contact information for various services and encouraging readers to contribute to the list, King fosters a sense of collaboration among early Internet users. This article is not only a practical guide for navigating the Internet of the late 1980s but also a reflection of the hacker culture that thrived on sharing knowledge and resources during this formative period."
+}

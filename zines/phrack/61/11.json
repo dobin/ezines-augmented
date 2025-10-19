@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3d, Phile #0x0b of 0x0f",
+  "title": "Building IA32 'Unicode-Proof' Shellcodes",
+  "authors": "obscou <obscou@dr.com||wishkah@chek.com>",
+  "date": "",
+  "historical_context": "This article addresses the challenges of creating shellcode that remains functional after being transformed into Unicode, a relevant topic in the context of buffer overflow exploits during the early 2000s.",
+  "target_audience": "Hackers, security researchers, and anyone interested in exploit development.",
+  "short_summary": "The article discusses the challenges of creating shellcode that can survive transformations into Unicode, detailing strategies to build 'Unicode-proof' shellcodes that can still execute after being altered by the encoding process.",
+  "summary": "In the realm of exploit development, one significant hurdle is the transformation of shellcode into Unicode, which can disrupt the execution of payloads due to the introduction of null bytes. This article provides a comprehensive overview of the Unicode standard and its implications for buffer overflow exploits. The author outlines a method for constructing shellcode that can withstand these transformations, focusing on the use of specific opcodes that do not introduce null bytes into the payload. Techniques such as using single-byte opcodes and manipulating registers are discussed to ensure that the shellcode remains functional after being altered by the Unicode encoding process.\n\nThe article also presents a detailed strategy for creating a loop that cleans the shellcode of null bytes, allowing for the execution of the intended payload. By leveraging the characteristics of the IA32 instruction set and the behavior of the Windows API, the author demonstrates how to effectively manage memory and execute shellcode in a Unicode environment. This work is not only a technical guide but also a historical reference for understanding the evolution of exploit techniques in the face of changing software standards."
+}

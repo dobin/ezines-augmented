@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 0x10, Issue 0x47, Phile #0x09 of 0x11",
+  "title": "Broodsac: A VX Adventure in Build Systems and Oldschool Techniques",
+  "authors": "Amethyst Basilisk <amethyst.basilisk@gmail.com>",
+  "date": "Not specified",
+  "historical_context": "This article reflects on the evolution of malware development techniques, particularly focusing on the use of build systems in creating viruses, which is a topic that remains relevant in the context of modern malware development.",
+  "target_audience": "Security researchers, malware developers, and those interested in the technical aspects of virus creation.",
+  "short_summary": "The article discusses the importance of a robust build system in malware development, detailing the process of creating a Windows executable infector. It emphasizes the need for organization, testing, and evasion techniques against antivirus software, while also providing insights into the design and implementation of the malware.",
+  "summary": "In 'Broodsac', Amethyst Basilisk explores the intricate process of developing a Windows executable infector, emphasizing the critical role of a well-structured build system. The article begins with a philosophical reflection on the nature of software development in the context of malware, highlighting the balance between speed and maintainability. The author outlines the planning and design phases, detailing how to create an infector that uses techniques like TLS directory injection to stealthily infect executables. The piece also addresses the challenges faced during development, such as antivirus detection, and offers creative solutions to circumvent these obstacles, including the use of PowerShell for payload execution. Ultimately, the article serves as both a technical guide and a philosophical treatise on the art of malware development, advocating for best practices that can lead to more effective and maintainable malicious software.",
+  "artifacts": "The article includes a tarball with the source code and artifacts related to the Broodsac project, allowing readers to experiment with the techniques discussed."
+}

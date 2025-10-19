@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 2, Phile #1 of 11",
+  "title": "How to sneak infected files into past SCAN",
+  "authors": "Hellraiser, Nick Haflinger, Skism One",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early 1990s hacking culture where virus creation and distribution were becoming more prevalent, and security measures like SCAN were being developed.",
+  "target_audience": "Hackers, virus creators, security researchers",
+  "short_summary": "This article provides techniques for bypassing file scanning systems to distribute infected files. It discusses methods to disguise malicious code and evade detection.",
+  "summary": "In 'How to sneak infected files into past SCAN', the authors delve into the intricacies of evading file scanning software, a crucial skill for those involved in virus creation and distribution. The article outlines various techniques to disguise infected files, including altering file signatures and using compression methods that obscure the malicious payload. The authors emphasize the importance of understanding the limitations of scanning software and how to exploit them effectively. This knowledge is not just theoretical; it serves as a practical guide for hackers looking to enhance their skills in file manipulation and virus propagation.\n\nThe article also touches on the ethical implications of such practices, hinting at the ongoing debate within the hacker community regarding the responsibilities of those who create and distribute malware. By providing insights into the technical aspects of virus evasion, the authors contribute to a broader understanding of the cat-and-mouse game between hackers and security professionals. This piece is a must-read for anyone interested in the evolution of malware tactics and the historical context of hacking culture."
+}

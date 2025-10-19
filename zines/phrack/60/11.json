@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3c, Phile #0x0b of 0x10",
+  "title": "SMB/CIFS BY THE ROOT",
+  "authors": "ledin <ledin@encephalon-zero.com>",
+  "date": "Not specified",
+  "historical_context": "This article provides a detailed examination of the SMB/CIFS protocol, which has been a fundamental part of Microsoft networking since the 1980s. It discusses vulnerabilities and attack vectors that are still relevant today, especially in the context of network security.",
+  "target_audience": "Security professionals, network administrators, and hackers interested in understanding SMB/CIFS vulnerabilities.",
+  "short_summary": "The article explores the SMB/CIFS protocol, detailing its structure, session establishment, security levels, and common vulnerabilities. It includes practical examples of attacks, such as ARP poisoning and man-in-the-middle attacks, to recover passwords transmitted over the network.",
+  "summary": "In 'SMB/CIFS BY THE ROOT', ledin provides an in-depth analysis of the SMB (Server Message Block) and CIFS (Common Internet File System) protocols, which are crucial for file and print services in Microsoft networks. The article begins with an introduction to the protocols, explaining how a client establishes a session with a server, including the negotiation of security levels and the transmission of passwords. It highlights the two security models: share-level and user-level security, and discusses the implications of password encryption and transmission in clear text during session establishment.\n\nThe article further delves into the structure of SMB packets, detailing the various commands and their headers. Notably, it describes methods for recovering SMB passwords in clear text from the network, including ARP poisoning and man-in-the-middle attacks. These techniques are illustrated with diagrams and practical examples, emphasizing the importance of understanding these vulnerabilities for network security. The article concludes with references for further reading, making it a valuable resource for anyone looking to deepen their knowledge of SMB/CIFS and its security implications."
+}

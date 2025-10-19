@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #012 of 012",
+  "title": "UMB Residency",
+  "authors": "Dark Angel, Phalcon/Skism '95",
+  "date": "1995",
+  "historical_context": "This article discusses techniques relevant to DOS viruses and memory management, particularly in the context of Upper Memory Blocks (UMBs), which were a significant aspect of DOS programming during the 1990s.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in DOS and memory manipulation techniques.",
+  "short_summary": "The article explores the underutilization of Upper Memory Blocks (UMBs) by viruses and provides a detailed explanation of how DOS viruses can effectively hide in UMBs. It includes sample code for a COM infector that demonstrates this technique.",
+  "summary": "In 'UMB Residency', Dark Angel delves into the relatively unexplored territory of Upper Memory Blocks (UMBs) in DOS, highlighting their potential for virus developers. UMBs, which exist above 640K and below 1MB, offer a unique opportunity for hiding malicious code due to their integration into DOS's memory allocation scheme starting from version 5. The article explains the structure of UMB control blocks and how they can be manipulated to conceal viruses from detection utilities like MEM. The author emphasizes the simplicity of implementing these techniques, making it accessible for programmers looking to exploit DOS's memory management features.\n\nThe article includes a sample code for a COM infector that illustrates the process of infecting a program by adjusting the memory control blocks (MCBs) to accommodate the virus. By marking the virus as DOS system code, the infection remains hidden from conventional memory checks, allowing it to operate undetected. This technical exploration not only serves as a guide for aspiring malware developers but also provides insights into the historical context of virus creation during the early days of personal computing."
+}

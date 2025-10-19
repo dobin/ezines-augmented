@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x44, Phile #0x0b of 0x13",
+  "title": "Infecting loadable kernel modules",
+  "authors": "styx^",
+  "date": "Not specified",
+  "historical_context": "This article updates previous methods for infecting loadable kernel modules in Linux, specifically for kernel versions 2.6.x and 3.0.x, reflecting changes in kernel internals.",
+  "target_audience": "Security researchers, kernel developers, and hackers interested in kernel exploitation techniques.",
+  "short_summary": "The article presents methods for infecting loadable kernel modules in Linux kernel versions 2.6.x and 3.0.x, detailing the process of code injection and symbol manipulation. It also discusses real-world implications and variations for other operating systems.",
+  "summary": "In this comprehensive article, the author outlines techniques for infecting loadable kernel modules (LKMs) in Linux, specifically targeting kernel versions 2.6.x and 3.0.x. The methods discussed include manipulating ELF symbols and using tools like 'elfstrchange' to alter function pointers within kernel modules. The article begins by explaining the limitations of previous methods and introduces new strategies for code injection, including a detailed example of how to replace the initialization function of a kernel module with malicious code. The author emphasizes the importance of understanding kernel internals and the relocation process, providing insights into the challenges faced when dealing with static functions and symbol bindings. Furthermore, the article explores the implications of these techniques in real-world scenarios, including how to backdoor kernel modules and the potential for stealthy exploitation across different operating systems such as Solaris and BSD variants. The piece concludes with a call for caution and responsibility when applying these techniques, highlighting their potential for misuse in malicious activities."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Fifty, Phile #3 of 16",
+  "title": "Portable BBS Hacking",
+  "authors": "Khelbin",
+  "date": "11.22.96",
+  "historical_context": "This article discusses vulnerabilities in Bulletin Board Systems (BBS) during the late 1990s, a time when BBSs were popular for online communication and file sharing.",
+  "target_audience": "Hackers, security researchers, BBS enthusiasts",
+  "short_summary": "The article outlines a method to exploit vulnerabilities in BBS systems using the Renegade software and the pkunzip archiver, allowing an attacker to overwrite critical user files.",
+  "summary": "In 'Portable BBS Hacking', Khelbin reveals a significant vulnerability in the Renegade BBS software that allows an attacker to exploit the pkunzip archiver. By uploading a specially crafted zip file, an attacker can overwrite the USERS.DAT file, which contains sensitive login information, effectively granting them SYSOP access. The method involves manipulating the zip file's directory structure to traverse up the file hierarchy, thus replacing the legitimate USERS.DAT with a malicious version. This technique highlights the risks associated with user-uploaded files and the importance of proper file handling in BBS systems.\n\nKhelbin also discusses the implications of this vulnerability, noting that many BBS systems may be susceptible to similar attacks if they utilize the same unguarded extraction methods. He emphasizes that simply removing the overwrite flag is insufficient as it could lead to denial of service attacks. The article serves as a cautionary tale for BBS administrators and a technical guide for hackers looking to exploit similar weaknesses in other systems."
+}

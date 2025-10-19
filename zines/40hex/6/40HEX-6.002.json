@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Concealment: Keep Your Code Hidden From Prying Eyes",
+  "authors": "Demogorgon/PHALCON/SKISM",
+  "date": "",
+  "historical_context": "This article reflects the early 1990s hacker culture focused on virus writing and evasion techniques against debugging and disassembly tools, a time when malware development was becoming more sophisticated.",
+  "target_audience": "Virus writers, malware developers, security researchers, and those interested in reverse engineering.",
+  "short_summary": "The article discusses techniques for writing 'debug resistant' code and defeating disassemblers, aimed at keeping malicious code hidden from analysis. It provides practical examples and encourages original thinking in code concealment.",
+  "summary": "In this article, Demogorgon explores advanced programming techniques that are particularly relevant to the virus writing community. The first part emphasizes the importance of creating 'debug resistant' code by manipulating interrupt handlers to alter program behavior when run under a debugger. Techniques such as replacing the handlers for interrupts and using specific instructions to confuse debuggers are discussed, showcasing how minimal code can effectively hinder analysis. The author also highlights the limitations of these techniques against more sophisticated protected mode debuggers, suggesting that additional methods must be employed for effective concealment.\n\nThe second part of the article shifts focus to defeating disassemblers, introducing the concept of overlapping code as a means to confuse analysis tools. Through practical examples, Demogorgon illustrates how to create code that misleads disassemblers by using indirect jumps and arithmetic operations to obscure the true values being manipulated. The article concludes with a call for originality in coding practices, urging readers to innovate rather than replicate existing techniques. Overall, this piece serves as a technical guide for those looking to enhance the stealth of their code against scrutiny."
+}

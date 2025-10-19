@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Ply Family",
+  "authors": "Darkman/29A",
+  "date": "Not specified",
+  "historical_context": "The Ply family of viruses represents an early example of polymorphic malware, showcasing the evolving techniques used by virus authors in the late 1980s and early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of computer virus history.",
+  "short_summary": "The Ply family consists of non-memory resident parasitic viruses that infect EXE files by appending themselves. They utilize a polymorphic engine to evade detection, making them complex and difficult to analyze.",
+  "summary": "The Ply family of viruses, particularly Ply.5175, exemplifies the sophisticated techniques employed by early malware authors. These viruses are non-memory resident and parasitic, meaning they infect executable files by appending their code to the end of the target file. The Ply viruses are notable for their polymorphic nature, which allows them to alter their code structure while maintaining the same functionality, thus evading traditional signature-based detection methods. The viruses contain a main code block, a data block, and a block for redirected calls, all designed to obfuscate their presence and behavior. The main code consists of 3-byte instructions, with NOP commands filling any gaps, allowing for dynamic code manipulation during the infection process. This complexity often leads to file corruption during the infection process, highlighting the risks associated with such malware."
+}

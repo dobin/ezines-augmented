@@ -1,0 +1,44 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #6 of 11",
+      "title": "Killing programz by title string",
+      "authors": "YuP - Deithwen Addan",
+      "date": "23.01.02",
+      "historical_context": "This article reflects the early 2000s hacker culture, focusing on methods to evade antivirus software.",
+      "target_audience": "Hackers, malware developers, security researchers",
+      "short_summary": "The article presents a method to terminate processes based on their window titles, specifically targeting antivirus and firewall applications.",
+      "summary": "In this article, YuP introduces a technique to kill processes by scanning for specific window titles using the EnumWindows API. Unlike previous methods that required exact window names, this approach allows for a broader search by checking for 'denied names' in the title bar. The author provides a source code snippet that demonstrates how to implement this functionality in assembly language, emphasizing the ability to terminate any process by simply modifying the target string. The article serves as a practical guide for those looking to bypass security measures by directly interacting with system processes."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #7 of 11",
+      "title": "Child protect Parent and reverse",
+      "authors": "YuP - Deithwen Addan",
+      "date": "Not specified",
+      "historical_context": "This article showcases techniques from the early 2000s for creating resilient malware that can defend against termination.",
+      "target_audience": "Malware developers, security researchers, hackers",
+      "short_summary": "The article describes a method for creating a parent-child process relationship to prevent termination of the main application.",
+      "summary": "YuP elaborates on a method called *VPROT*, which involves creating a parent process that spawns a child process, thus complicating the termination of the application. By implementing mutexes, the child process can monitor the parent and ensure it remains active, effectively defending against attempts to kill it. The author provides assembly code for both the parent and child processes, illustrating how they communicate and maintain their execution state. This technique highlights the lengths to which malware developers go to ensure persistence and evade detection by antivirus software."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #8 of 11",
+      "title": "mIRC Scripting: Silent DCC SEND",
+      "authors": "YuP - Deithwen Addan",
+      "date": "Not specified",
+      "historical_context": "This article reflects the use of mIRC scripting for malicious purposes, common in the early 2000s.",
+      "target_audience": "Hackers, malware developers, mIRC users",
+      "short_summary": "The article provides a script for silently sending files over mIRC without alerting the user.",
+      "summary": "In this piece, YuP discusses how to create a stealthy DCC send script for mIRC that avoids detection by the user. The script checks if the user is an operator and waits before attempting to send a file, ensuring that the target is not alerted. By using a custom DCC client/server setup, the script circumvents the standard DCC window, making it harder for the victim to recognize the transfer. The author encourages readers to modify the script further, emphasizing the importance of stealth in malware distribution. This article serves as a guide for those interested in leveraging mIRC for malicious activities."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #9 of 11",
+      "title": "AntiDEBUGGING trickz!",
+      "authors": "YuP - Deithwen Addan",
+      "date": "Not specified",
+      "historical_context": "This article outlines techniques for evading debuggers, relevant to malware authors and security researchers.",
+      "target_audience": "Malware developers, security researchers",
+      "short_summary": "The article presents various techniques to detect and evade debuggers in Windows applications.",
+      "summary": "YuP shares several anti-debugging techniques that can be employed to protect malware from analysis. The first method involves using the GetTickCount API to detect single-step debugging by comparing tick counts before and after a nop instruction. The second method utilizes Structured Exception Handling (SEH) to trap INT3 breakpoints, allowing the malware to determine if it is being debugged. Lastly, the author discusses how to leverage system timers to detect the presence of debuggers like SICE. These techniques are aimed at enhancing the resilience of malware against reverse engineering and debugging efforts, making it a valuable read for those interested in malware development."
+    }
+  ]
+}

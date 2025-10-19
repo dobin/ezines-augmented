@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 29, File #7 of 12",
+  "title": "HOW WE GOT RICH THROUGH ELECTRONIC FUND TRANSFERS",
+  "authors": "The Legion of Doom! EFT Division",
+  "date": "",
+  "historical_context": "This article reflects the early days of electronic banking and the vulnerabilities present in the systems of the time, showcasing the audacity and technical skills of hackers in the 1980s.",
+  "target_audience": "Hackers, security professionals, and those interested in the history of cybercrime.",
+  "short_summary": "The article details a hacking operation by the Legion of Doom that successfully intercepted electronic fund transfers from CitiCorp, allowing them to divert large sums of money into their own accounts. It provides insights into the methods used to exploit vulnerabilities in banking systems.",
+  "summary": "In this audacious account, the authors recount their elaborate scheme to exploit vulnerabilities in electronic fund transfer systems at CitiCorp. By systematically probing the bank's network, they discovered a way to intercept and manipulate transactions. Their method involved gaining access to a debug port on a terminal, allowing them to capture and analyze data transmissions related to fund transfers. They meticulously crafted a plan to divert funds into their own accounts, ultimately netting over $66,000 each without leaving a trace. The article serves as a cautionary tale about the security flaws in early banking systems and the lengths to which hackers would go to exploit them.\n\nThe authors describe their technical approach in detail, including the structure of the data transmitted during fund transfers and the steps taken to cover their tracks. They highlight the challenges faced during the operation, such as the need to create fake identities and accounts to withdraw the stolen funds. The narrative is both thrilling and educational, providing a glimpse into the hacker culture of the time and the mindset of those who operated on the fringes of legality. The article concludes with a reflection on the aftermath of their actions and the changes made by banks in response to such exploits."
+}

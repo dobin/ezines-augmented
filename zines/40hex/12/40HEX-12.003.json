@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 3, File 003",
+  "title": "Self Checking Executable Files",
+  "authors": "Demogorgon, Phalcon/Skism",
+  "date": "",
+  "historical_context": "This article discusses methods to protect .COM files from viruses, reflecting the early days of computer viruses and the need for self-protection mechanisms.",
+  "target_audience": "Hackers, security professionals, and programmers interested in executable file integrity and virus protection.",
+  "short_summary": "The article presents a technique for .COM files to check their own integrity against potential viral infections by comparing their memory image to their disk image. It also discusses methods for self-disinfection.",
+  "summary": "In 'Self Checking Executable Files', the author outlines a method for .COM files to detect if they have been infected by a virus. The technique involves reading the file's disk image and comparing it to its memory image, allowing the program to identify any discrepancies that may indicate infection. The article provides detailed assembly code to implement this self-checking mechanism, emphasizing the importance of detecting infections before the program executes its main functionality. The method is particularly effective against simple viruses that alter the initial bytes of the executable but notes that stealth viruses, which disinfect on the fly, pose a significant challenge to this approach.\n\nAdditionally, the article delves into self-disinfection techniques, allowing a program to restore its original state by rewriting its memory image back to disk. The author provides code snippets for this process, highlighting the potential vulnerabilities that arise during disinfection, especially from memory-resident viruses. The discussion includes the need for 'tunneling' techniques to bypass virus interference during the read and write operations. Overall, this article serves as a practical guide for programmers looking to enhance the resilience of their executable files against viral threats."
+}

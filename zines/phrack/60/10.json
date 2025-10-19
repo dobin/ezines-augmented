@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3c, Phile #0x0a of 0x10",
+  "title": "Basic Integer Overflows",
+  "authors": "blexim <blexim@hush.com>",
+  "date": "",
+  "historical_context": "This article discusses integer overflows, a common vulnerability in C programming, which has been relevant in various security incidents over the years.",
+  "target_audience": "Security professionals, programmers, and hackers interested in software vulnerabilities.",
+  "short_summary": "The article explains integer overflows and signedness bugs in C programming, detailing how they occur, their potential dangers, and real-world examples of exploitation. It emphasizes the subtlety of these vulnerabilities and their implications for software security.",
+  "summary": "In 'Basic Integer Overflows', blexim delves into the intricacies of integer overflows and signedness bugs, two classes of programming errors that can lead to unexpected behavior in software. The article begins by defining integers and explaining what constitutes an overflow, highlighting the undefined behavior that can arise when a value exceeds the maximum limit of an integer type. It emphasizes that while integer overflows may not directly overwrite memory, they can lead to other vulnerabilities, such as buffer overflows, by causing erroneous values to be stored in critical variables. The author provides practical examples of how these vulnerabilities can be exploited, particularly in the context of C programming, where a basic understanding of the language is assumed for the reader. \n\nThe article further explores real-world instances of integer overflows and signedness bugs, illustrating their presence in various applications, including network daemons and operating system kernels. By examining specific code snippets, blexim demonstrates how these vulnerabilities can be triggered and the potential consequences they can have on system security. The conclusion underscores the difficulty in detecting integer overflows post-occurrence, stressing the importance of careful coding practices and thorough testing to mitigate these risks."
+}

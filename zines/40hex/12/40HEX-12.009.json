@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 3, File 009",
+  "title": "OS/2 Overwriting Virus Source Code",
+  "authors": "Arthur Ellis",
+  "date": "1993",
+  "historical_context": "This article is one of the earliest examples of virus source code for the OS/2 operating system, showcasing the growing interest in malware development during the early 1990s.",
+  "target_audience": "Security researchers, malware analysts, and students interested in virus development.",
+  "short_summary": "The article presents a simple overwriting virus for OS/2, detailing its source code and explaining how it utilizes OS/2 API functions to infect executable files. It serves as a foundational piece for those looking to understand or develop malware in the OS/2 environment.",
+  "summary": "In this article, Arthur Ellis introduces a basic overwriting virus designed for the OS/2 operating system, marking a significant contribution to the understanding of malware development in this niche environment. The virus is constructed using assembly language and demonstrates the use of OS/2 API functions to locate, open, and infect executable files. The source code is provided in detail, allowing readers to see the inner workings of the virus, including how it handles file operations and manages memory. The article emphasizes the simplicity of the virus, making it an accessible project for students and aspiring malware developers.\n\nEllis notes that the virus does not incorporate extensive error checking, a common trait among malware, and suggests that readers could enhance the program by converting it to .386p mode. The article serves as both a technical guide and a historical artifact, reflecting the early days of virus creation and the burgeoning hacker culture surrounding it. By providing this source code, Ellis not only contributes to the knowledge base of virus development but also invites readers to engage with the ethical implications of creating malware."
+}

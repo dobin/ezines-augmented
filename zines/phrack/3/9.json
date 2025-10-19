@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Three, Phile 9 of 10",
+  "title": "Introduction to PBXs",
+  "authors": "Knight Lightning",
+  "date": "January 3, 1986",
+  "historical_context": "This article was written during a time when PBX systems were becoming increasingly common in businesses, marking a shift from manual switchboards to automated systems.",
+  "target_audience": "Telecommunications professionals, hackers interested in telephony, and security researchers.",
+  "short_summary": "This article provides an overview of Private Branch Exchanges (PBXs), detailing their functions, features, and operational methods. It explains how PBXs connect internal telephones to external lines and discusses various features that enhance communication within organizations.",
+  "summary": "In 'Introduction to PBXs', Knight Lightning elucidates the concept of Private Branch Exchanges (PBXs), which serve as internal telephone systems for organizations, connecting them to public telephone networks. The article describes the basic functions of a PBX, including its role in switching calls between internal extensions and external lines, and highlights the evolution from manual switchboards to automated systems. The author explains the significance of the central processing unit (CPU) in controlling the switching matrix and how it enables various functionalities that enhance communication efficiency within businesses.\n\nThe article also delves into the diverse features offered by PBXs, such as call transfer, automatic call waiting, and conference capabilities. These features not only streamline communication but also provide flexibility for organizations to tailor their telephony needs. The author emphasizes the importance of understanding PBX systems for anyone involved in telecommunications, as they represent a critical component of modern business communication infrastructure. Overall, this article serves as a foundational introduction to PBXs, making it relevant for both historical context and contemporary discussions in telephony and security."
+}

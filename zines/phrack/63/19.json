@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x13 of 0x14",
+  "title": "Breaking through a Firewall using a forged FTP command",
+  "authors": "Soungjoo Han <kotkrye@hanmail.net>",
+  "date": "Not specified",
+  "historical_context": "This article discusses vulnerabilities in the Netfilter/IPTables firewall, particularly in the context of FTP connections, which were relevant during the early 2000s when FTP was widely used.",
+  "target_audience": "Security professionals, penetration testers, and hackers interested in firewall vulnerabilities and FTP protocol exploitation.",
+  "short_summary": "The article presents three attack scenarios that exploit vulnerabilities in the Netfilter/IPTables firewall by using forged FTP commands. These attacks demonstrate how an attacker can bypass firewall protections and connect to arbitrary TCP ports on an FTP server.",
+  "summary": "In this article, Soungjoo Han explores vulnerabilities in the Netfilter/IPTables firewall, particularly focusing on how forged FTP commands can be used to bypass security measures. The author outlines three distinct attack scenarios that leverage the stateful inspection mechanism of the firewall. The first trick involves sending a forged PORT command that tricks the firewall into allowing a connection to an arbitrary TCP port, such as the default IRC port. The second trick demonstrates how a non-standard FTP command can be used to achieve a similar effect, while the third trick exploits the echo feature of FTP replies to confuse the firewall into accepting unauthorized connections. Each scenario is supported by detailed technical explanations and examples, making it a valuable resource for understanding the intricacies of firewall vulnerabilities and the FTP protocol's behavior under attack conditions. The article concludes with a demonstration tool and practical examples of the attacks, emphasizing the importance of robust firewall configurations to mitigate such risks."
+}

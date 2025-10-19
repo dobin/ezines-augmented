@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x43, Phile #0x07 of 0x10",
+  "title": "ProFTPD with mod_sql pre-authentication, remote root",
+  "authors": "max_packetz@felinemenace.org",
+  "date": "Not specified",
+  "historical_context": "This article discusses a vulnerability in ProFTPD that allows for remote root access through a heap overflow, which was relevant during the time of its publication and remains a significant case study in exploit development.",
+  "target_audience": "Security researchers, penetration testers, and developers interested in understanding heap overflows and exploit development.",
+  "short_summary": "The article details a pre-authentication remote root heap overflow vulnerability in ProFTPD, explaining the exploitation process and potential mitigations. It covers the vulnerability's mechanics, the exploitation avenues, and hardening techniques against such attacks.",
+  "summary": "The author explores the ProFTPD pool allocator and how it can be manipulated to achieve arbitrary code execution. By examining backtraces from crashes caused by the overflow, the author identifies potential targets for exploitation, such as function pointers in the Global Offset Table (GOT). The paper concludes with a discussion on hardening techniques that can mitigate such vulnerabilities, including Address Space Layout Randomization (ASLR) and non-executable memory protections. The insights provided in this article are valuable for understanding the intricacies of heap exploitation and the importance of secure coding practices."
+}

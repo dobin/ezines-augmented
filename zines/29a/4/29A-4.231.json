@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "How VirusBuster sorts his virii collection",
+  "authors": "VirusBuster",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early days of virus collection management in the 1990s, a time when personal computing and malware were becoming increasingly prevalent.",
+  "target_audience": "Security researchers, malware analysts, hobbyist hackers, and anyone interested in virus collection management.",
+  "short_summary": "VirusBuster shares a method for sorting and managing a collection of computer viruses using batch files and various utilities. The article emphasizes the importance of backups and provides a detailed walkthrough of the sorting process.",
+  "summary": "In this article, VirusBuster details his approach to organizing a personal collection of computer viruses, emphasizing the necessity of maintaining backups to prevent loss. He outlines a batch file process that automates the sorting of viruses stored on a hard drive, which can take several hours on older hardware. The author provides specific commands and directory structures used in the process, highlighting the importance of separating and compressing virus files to ensure efficient management and retrieval. \n\nVirusBuster also discusses the use of various utilities, such as PKZIP for compression and TBWEEDER for removing duplicates, to streamline the organization of his collection. He notes the limitations of certain tools, such as the 16-bit version of PKZIP, and suggests alternatives for users requiring support for long file names. The article serves as a practical guide for anyone looking to manage a virus collection effectively, combining technical insights with a personal touch from the author's experiences."
+}

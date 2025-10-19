@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "MIME and UUEncode Attachment Encoders",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article discusses the encoding techniques used for email attachments, which were crucial during the early days of email communication. MIME (Multipurpose Internet Mail Extensions) and UUEncode were widely used to send binary files over protocols that only supported text.",
+  "target_audience": "Hackers, security professionals, software developers, and anyone interested in email protocols and encoding techniques.",
+  "short_summary": "The article provides assembly code examples for encoding binary files into MIME and UUEncode formats. These techniques are essential for sending attachments in emails, particularly in environments that only support text data.",
+  "summary": "This article presents two assembly language programs designed to encode binary files into MIME and UUEncode formats, which are essential for email attachments. The MIME encoder creates a multipart message that includes both plain text and binary data, while the UUEncode encoder transforms binary files into a text format that can be easily transmitted over email. The assembly code is structured to handle file operations such as reading, writing, and encoding, showcasing the low-level programming techniques necessary for manipulating binary data.\n\nThe MIME encoder begins by opening an input binary file and creating an output EML file. It constructs the MIME headers and encodes the binary data using base64 encoding. The UUEncode encoder follows a similar structure, starting with the creation of a UUE file and encoding the binary data into a format suitable for email transmission. Both encoders illustrate the importance of understanding file handling and data encoding in the context of early email systems, providing valuable insights for those interested in the evolution of digital communication."
+}

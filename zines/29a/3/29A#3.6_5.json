@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Z0MBiE",
+  "authors": "Unknown",
+  "date": "1997",
+  "historical_context": "This article is from the late 1990s, a time when computer viruses and malware were becoming increasingly prevalent. The Z0MBiE virus is a notable example of early self-replicating code.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in the history of computer viruses.",
+  "short_summary": "The Z0MBiE article details the inner workings of a DOS-based virus, showcasing its assembly code and infection mechanisms. It serves as an educational piece on how early malware operated and spread.",
+  "summary": "The Z0MBiE virus, written in assembly language, demonstrates a classic example of a DOS-based self-replicating program. The article provides a detailed look at the virus's structure, including its entry point, file infection routine, and the methods it uses to locate and infect other executable files. The code is meticulously crafted, utilizing low-level system calls to manipulate file attributes and read/write operations directly to the disk. This technical depth offers valuable insights into the programming techniques used by early malware authors.\n\nIn addition to the technical breakdown, the article emphasizes the importance of understanding such viruses for both historical context and modern security practices. By dissecting the Z0MBiE virus, readers gain a clearer perspective on the evolution of malware and the ongoing challenges in cybersecurity. The article serves as a reminder of the ingenuity and persistence of early hackers, as well as the need for robust security measures to combat such threats."
+}

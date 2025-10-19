@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win2K Infection",
+  "authors": "GriYo / 29A",
+  "date": "29A",
+  "historical_context": "This article discusses the System File Protection (SFP) feature introduced in Windows 2000, which was a significant change in how Windows handled system file integrity. The article reflects the early days of Windows 2000 and its security mechanisms.",
+  "target_audience": "Hackers, security researchers, and Windows system administrators.",
+  "short_summary": "The article explores the System File Protection feature in Windows 2000, detailing how it prevents unauthorized modifications to system files and discussing methods to bypass this protection. It includes practical code examples for checking file protection status.",
+  "summary": "In 'Win2K Infection', GriYo delves into the System File Protection (SFP) mechanism of Windows 2000, which is designed to safeguard critical system files from unauthorized changes. The article begins by explaining how SFP operates, including its reliance on a catalog file to verify the integrity of system files. GriYo highlights the challenges posed by SFP to malware, as it actively restores protected files to their original versions if tampered with. The author also discusses registry keys associated with SFP, particularly the SfcDisable key, which can be manipulated to disable SFP temporarily, albeit with some limitations.\n\nThe article further provides a practical C code example that demonstrates how to utilize the SfcIsFileProtected API to check if a specific file is protected by SFP. This code serves as a useful tool for security researchers and hackers alike, allowing them to identify which files are safeguarded against modification. GriYo's insights into the inner workings of SFP and the provided code snippets make this article a valuable resource for those interested in Windows security and malware research."
+}

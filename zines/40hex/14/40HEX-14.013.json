@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #13 of 13",
+  "title": "Resident stealth infector 'AVALANCHE'",
+  "authors": "Metal Junkie",
+  "date": "1994/95",
+  "historical_context": "This article discusses the development of a stealth virus for DOS systems during the early 1990s, a time when computer viruses were becoming increasingly sophisticated.",
+  "target_audience": "Hackers, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article presents the source code for 'AVALANCHE', a stealth virus that infects EXE and COM files. It includes features like memory stealth and anti-scanning techniques, showcasing the author's technical prowess in virus development.",
+  "summary": "In this article, Metal Junkie introduces 'AVALANCHE', a resident stealth infector designed to evade detection by antivirus software. The virus employs a variety of techniques, including memory stealth, which allows it to remain hidden in system memory while infecting executable files. The source code is provided, illustrating the intricate methods used to manipulate DOS interrupts and file attributes to achieve its stealth capabilities. The author warns readers about the destructive nature of the code, emphasizing that it should not be compiled or executed. The article serves as both a technical guide and a historical artifact, reflecting the hacker culture of the time and the ongoing cat-and-mouse game between virus creators and antivirus developers."
+}

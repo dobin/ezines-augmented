@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Ultimate Virus Programmers Toolkit",
+  "authors": "40Hex",
+  "date": "December 1991",
+  "historical_context": "This article was published during the early 1990s, a time when computer viruses were becoming more prevalent and the underground hacking culture was thriving. The toolkit reflects the tools and resources that were considered essential for virus programming at that time.",
+  "target_audience": "Hackers, virus programmers, security professionals, and those interested in the history of malware development.",
+  "short_summary": "This article lists essential tools and resources for aspiring virus programmers, including software, source code, and BBS accounts. It provides a humorous yet insightful look into the mindset of virus creators in the early '90s.",
+  "summary": "In 'The Ultimate Virus Programmers Toolkit,' 40Hex humorously compiles a list of tools deemed essential for anyone looking to delve into virus programming. The toolkit includes a variety of software such as Turbo Assembler, Turbo Debugger, and various virus scanning tools, highlighting the importance of having the right resources at hand. The author emphasizes the utility of specific programs, like VSUM, which is described as the 'virus underground bible,' and provides insight into the types of source code that can be beneficial for beginners and intermediates alike. The article also mentions the necessity of community engagement through BBS accounts, showcasing the collaborative nature of the hacking culture at the time. \n\nThe piece serves not only as a practical guide for budding virus programmers but also as a snapshot of the hacker ethos of the early '90s. It reflects a time when the lines between security research and malicious intent were often blurred, and the tools listed are a testament to the evolving landscape of computer security. The inclusion of personal vices like 'Vivaren' and the need for sustenance adds a light-hearted touch, grounding the technical advice in the reality of the hacker lifestyle."
+}

@@ -1,0 +1,11 @@
+{
+  "reference": "40Hex Issue 4, Phile #1 of 1",
+  "title": "The Sunday Virus",
+  "authors": "DecimatoR",
+  "date": "December 1991",
+  "historical_context": "The Sunday Virus is based on the Jerusalem virus and was prevalent in the late 1980s. It reflects the early days of computer viruses and their impact on software security.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of computer virus history.",
+  "short_summary": "The Sunday Virus is a memory-resident virus that infects COM, EXE, and OVL files. It spreads rapidly and was notably circulated in Seattle in 1989. The article provides technical details on its operation and a method to create the virus.",
+  "summary": "The Sunday Virus, as described by DecimatoR, is a memory-resident virus that infects various file types including COM and EXE files. Its code is similar to that of the Jerusalem virus, and it was notably circulated in the Seattle area during 1989. The virus is designed to remain active in memory, allowing it to replicate and spread without user intervention. Interestingly, while some versions of the virus display messages on Sundays, this particular variant does not. The SCAN ID code for detection is provided, making it easier for antivirus software to identify the virus.",
+  "summary_details": "The article goes into detail about the technical aspects of the Sunday Virus, including its infection mechanism and the specific bytes that make up its code. It also includes a step-by-step guide on how to create the virus using the DEBUG command, which would be of particular interest to those studying malware creation and behavior. The Sunday Virus serves as a historical example of early malware, illustrating the challenges faced by users and security professionals in the pre-internet era of computing."
+}

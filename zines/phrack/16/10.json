@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 16, File 10 of 12",
+  "title": "Phrack World News, Part 3",
+  "authors": "The Mad Phone-Man",
+  "date": "",
+  "historical_context": "This article reflects the mindset of hackers and phreakers during the late 1980s, particularly in relation to telecommunications and the legal risks associated with their activities.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts",
+  "short_summary": "The article narrates the author's experience of relocating his BBS to Canada to avoid legal repercussions from law enforcement. It details the technical steps taken to establish a secure connection across the border.",
+  "summary": "In this engaging piece, The Mad Phone-Man recounts his decision to expatriate his Bulletin Board System (BBS) to Canada as a means of evading potential legal troubles with authorities. The narrative begins with a sense of urgency, as the author fears losing his investment in an IBM computer due to police seizures. Drawing parallels with historical practices of draft dodging, he explores the feasibility of moving his operation to a 'friendly foreign country.' The article is rich with technical details, showcasing the author's resourcefulness in leveraging existing telecommunications infrastructure to establish a secure line to Canada.\n\nThe author cleverly negotiates with a local hospital's communications manager to gain access to a microwave link into Canada. He undertakes the task of maintaining the equipment in exchange for the opportunity to set up his own channel. The narrative unfolds with a series of technical maneuvers, including sourcing and repairing necessary hardware components, ultimately leading to the successful establishment of a reliable communication line. This article not only serves as a fascinating glimpse into the hacker culture of the time but also highlights the lengths to which individuals would go to protect their digital assets from law enforcement scrutiny."
+}

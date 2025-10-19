@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Art of PHP - My CTF Journey and Untold Stories!",
+  "authors": "Orange Tsai <orange@CHROOT.org>",
+  "date": "Not specified",
+  "historical_context": "The article is set against the backdrop of the growing popularity of CTF competitions since their inception in the mid-1990s, showcasing how they have influenced the development of security techniques and vulnerabilities in PHP. Tsai's reflections provide a unique perspective on the hacker culture and its evolution over the years.",
+  "target_audience": "Hackers, security researchers, CTF participants, PHP developers.",
+  "short_summary": "Orange Tsai shares his journey through the world of Capture the Flag (CTF) competitions, discussing various PHP security vulnerabilities and techniques that have emerged from these events. The article covers historical context, personal anecdotes, and technical insights into PHP security, particularly focusing on deserialization and local file inclusion (LFI) vulnerabilities.",
+  "summary": "In 'The Art of PHP - My CTF Journey and Untold Stories!', Orange Tsai recounts his experiences in the hacking community, particularly through the lens of Capture the Flag (CTF) competitions. He reflects on how these competitions have evolved from informal gatherings into highly competitive events that push the boundaries of security research. Tsai emphasizes the importance of creativity and problem-solving in CTFs, illustrating how participants often revive forgotten vulnerabilities and develop new attack techniques. He shares insights into PHP security, particularly focusing on deserialization vulnerabilities and local file inclusion (LFI) exploits, detailing how these issues have been addressed and exploited over the years. The article serves as both a personal narrative and a technical exploration of the intersection between CTFs and PHP security, highlighting the ongoing evolution of hacking techniques and the community's role in shaping them."
+}

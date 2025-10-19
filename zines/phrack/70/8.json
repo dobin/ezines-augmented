@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x10, Issue 0x46, Phile #0x07 of 0x0f",
+  "title": "(De)coding an iOS Kernel Vulnerability",
+  "authors": "Adam Donenfeld",
+  "date": "Not specified",
+  "short_summary": "This article details the discovery and analysis of a kernel vulnerability in iOS, specifically CVE-2018-4109, focusing on the research process, sandbox concepts, and the exploitation potential of the vulnerability.",
+  "summary": "In this article, Adam Donenfeld provides a comprehensive overview of the research process leading to the discovery of CVE-2018-4109, a vulnerability in the iOS kernel related to video decoding. The author begins by explaining the importance of understanding sandbox concepts in modern operating systems, which restrict processes from accessing sensitive information. The article then delves into the specifics of the IOSurface bug, detailing how a sign mismatch in the plane's offset led to a buffer overflow. Donenfeld emphasizes the significance of infrastructure work in vulnerability research, showcasing techniques for tracing kernel execution and reverse engineering closed-source drivers like AppleD5500.kext.\n\nThe article culminates in a detailed analysis of how the vulnerability can be exploited through the mediaserverd process, which acts as a broker for video operations. By manipulating the parameters sent to the AppleD5500 driver, the author demonstrates how an attacker could potentially gain arbitrary write access, leading to kernel crashes. The paper serves as both a technical guide for experienced researchers and a motivational piece for those new to the field, encouraging them to engage with kernel research and vulnerability discovery in iOS."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Nine, File 13 of 13",
+  "title": "Phrack World News",
+  "authors": "Compiled by Datastream Cowboy",
+  "date": "April 21, 1992",
+  "short_summary": "This article discusses a high-profile case of ticket fraud involving economist William Gibson, who allegedly exploited American Airlines' ticketing policies to save money on flights. The case raises questions about airline practices and customer behavior.",
+  "summary": "The article details the case of William Gibson, an economist accused of committing ticket fraud against American Airlines, costing the airline over $200,000. Gibson's defense claims that he merely took advantage of the airline's leniency towards frequent fliers, using expired tickets that were accepted by agents. The airline, however, argues that Gibson's actions were fraudulent and that he altered tickets to mislead the airline. The case has sparked discussions about the ethics of frequent flyer practices and the potential for legal repercussions for customers who bend the rules. As Gibson prepares for trial, the implications of this case could influence how airlines handle ticketing policies and customer loyalty programs in the future.",
+  "historical_context": "This case occurred during a time when airlines were beginning to face significant financial pressures and were tightening their policies regarding ticketing and customer loyalty programs. It reflects the growing tension between airlines and their most frequent customers.",
+  "target_audience": "Hackers, security professionals, airline industry analysts, and frequent fliers."
+}

@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x07 of 0x0e",
+  "title": "Linux on-the-fly kernel patching without LKM",
+  "authors": "sd <sd@sf.cz>, devik <devik@cdi.cz>",
+  "date": "December 12th 2001",
+  "short_summary": "This article discusses techniques for patching the Linux kernel on-the-fly without the use of Loadable Kernel Modules (LKM). It provides methods for manipulating system calls and allocating kernel space directly from user space.",
+  "summary": "In this article, the authors explore the concept of runtime kernel patching in Linux, specifically focusing on how to modify kernel syscalls without relying on Loadable Kernel Modules (LKM). The authors begin by explaining the significance of `/dev/kmem` as a tool for accessing and modifying kernel memory. They detail methods for obtaining the `sys_call_table` address without LKM support, which is crucial for redirecting syscall handlers. The article also covers the allocation of kernel memory and the importance of understanding kernel version differences, particularly regarding the `GFP_KERNEL` flag.\n\nThe authors provide a comprehensive guide on how to overwrite syscalls, including a detailed pseudocode example for replacing the `write` syscall. They also discuss potential pitfalls and security implications of these techniques, emphasizing the need for caution when manipulating kernel memory. The article concludes with a practical implementation of a rootkit, SucKIT, showcasing the discussed techniques in action. This work serves as a significant resource for those interested in kernel-level programming and security, particularly in understanding the vulnerabilities associated with kernel memory access."
+}

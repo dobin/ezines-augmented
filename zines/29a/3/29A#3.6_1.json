@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "007 Virus Source Code",
+  "authors": "007JB",
+  "date": "1998",
+  "historical_context": "This article presents the source code for a DOS virus, showcasing techniques used in early malware development. It reflects the hacker culture of the late 1990s, where coding and reverse engineering were prevalent among enthusiasts.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The article provides the complete assembly source code for the 007 virus, detailing its structure and functionality. It includes various techniques for infection and evasion, typical of early DOS malware.",
+  "summary": "The '007 Virus Source Code' article offers a deep dive into the assembly language code of a DOS virus, illustrating the methods used to infect executable files and evade detection. The code is structured with various macros and data structures that define the virus's behavior, including its ability to manipulate system calls and interact with the DOS environment. Key components include routines for file handling, memory management, and the implementation of anti-debugging techniques, which were crucial for the virus's stealth and effectiveness. The author, 007JB, acknowledges contributions from other hackers, highlighting the collaborative nature of the hacker community at the time. This source code serves as both a historical artifact and a technical reference for understanding early malware development practices."
+}

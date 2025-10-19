@@ -1,0 +1,9 @@
+{
+    "name": "29A",
+    "topic": "Virus research, assembly programming, and reverse engineering",
+    "date": "1996 – 2008",
+    "impact": "Regarded as the most advanced virus-writing group and zine; pushed the limits of self-replicating code and polymorphic engines, influencing both malware researchers and antivirus developers.",
+    "description": "A Spanish-founded ezine created by the 29A virus-writing group, dedicated to technical exploration of computer viruses as a form of digital art and research.",
+    "essential": "Demonstrates the intersection of creativity, code, and research — showing that virus authors could be both highly skilled and scientifically minded.",
+    "inside": "Assembly source code for viruses, polymorphism and metamorphism techniques, disassembly and analysis of malware, and articles on system internals."
+}

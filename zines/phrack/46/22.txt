@@ -1,0 +1,379 @@
+                              ==Phrack Magazine==
+
+                 Volume Five, Issue Forty-Six, File 22 of 28
+
+****************************************************************************
+
+                                     HOPE
+                                      by
+                                 Erik Bloodaxe
+
+I was a little apprehensive about going to HOPE.  I'd been warned for months
+that "If you go to HOPE, you are going home in a body bag," and "I am
+going to kick your fucking ass at hope," and "If you go, you're gonna get
+shot."
+
+Needless to say I found this a bit unnerving.  As big an ego as I may have,
+it still does not repel hot lead projectiles.  Add this to the fact that my
+best friend of 10 years was murdered by some random idiot with a pistol in
+fucking pissant, Bible-thumping Waco, TX a few months back.  Waco.  And the
+shooter wasn't even a Davidian, just a drugged-out 16 year-old.  If the
+kids pack heat in Waco, I know they must come standard issue in New York.
+
+But, hell, I've haven't missed a con in ages.  Could I actually miss
+a SummerCon?  Especially the SummerCon commemorating the 10th
+anniversary of 2600 Magazine?  Could I?
+
+Like an idiot, I make my reservations.  Ice-9, who was stuck with a
+leftover ticket on United, traded it in and we were both off to New York.
+
+We arrived late Friday night.  So there we were:  The Big Apple, Metropolis,
+The City that Never Sleeps.  Unfortunately, it never showers or changes
+its clothes either.  Why anyone in their right mind would want to come
+to New York City boggles the mind.  It sucks.  I mean, I've been damn
+near everywhere in the United States, I've been to major cities in Mexico,
+Canada and Europe, and New York is by far and away the worst fucking
+shithole I've seen yet.  I don't know for certain, but Port au Prince
+probably has more redeeming qualities.
+
+I figured out within a few minutes why New Yorkers are such assholes too.
+First, no one seems to be from New York exactly, merely transplants from
+somewhere else.  So what has happened is that they bought into New York's
+superb public relations campaign and sold off all their belongings to get
+their ticket to America and the land of opportunities.  So, they find
+themselves in NYC with about half a billion other broke, disillusioned
+immigrants wading in their own filth, growing very pissed off at being sold
+such a bill of goods.
+
+It would piss me off too.  And I'm sure our cab driver that night missed his
+family's ancestral thatched hut back in good old Bangladesh.  But luckily for
+him crack provides a good short-term solution.  Not to mention excellent
+motor skills.
+
+Twenty-five near misses, and a lengthy carhorn symphony later, we managed to
+arrive at the Hotel Pennsylvania intact.  The hotel, heralded in legend and
+lore had seen better decades.  About the only thing it had going for it was
+one of the oldest phone numbers in the city.  PEnnsylvania 6-5000.
+(Ta-da-dum-dum)  I think if Glen Miller were alive today, his band members
+would kick his ass if he told them they had to sleep there.
+
+For a hundred dollars a night, Ice-9 and I were treated to two less than
+jail-house sized beds, a tv that almost worked, and a hardwired telephone
+(ie:  no modular jacks in sight.)  In addition, the entire room was stained
+from floor to ceiling, and most of the wall paper by the window had peeled
+halfway down.  The window itself opened to a miraculous view of the trash
+12 floors down.  We debated on throwing every single object in the room
+out the window for a little excitement, but decided it might injure some of
+the homeless below.
+
+Anxious to get the hell out of our little cell (well, the prisons I've had
+the misfortune to sleep in were in better repair) Ice-9 and I took off to
+the top floor and the HOPE conference area.
+
+I don't know why Emmanuel decided to call this conference "Hackers On Planet
+Earth."  This conference had more right to the title "Hacking at the End
+of the Universe."  Perhaps even "Hacking in the Cesspool of the Earth."
+HEU was in the middle of nowhere, but it was pretty and happy.  It should have
+been called HOPE.
+
+In fact, as the days went on, I noticed a number of similarities between
+HOPE and HEU:
+
+        1.  Both heavily orchestrated by 2600 and Hack-Tic
+        2.  Both had in-house networks
+        3.  Both had token "fed" speakers
+        4.  Both had seminars on boxing, pagers, social engineering, history,
+            UNIX, cellular, magnetic cards, lock picking, legal issues, etc.
+        5.  Both drew extensive press attendees
+        6.  Both charged more than any other conferences.  (HOPE 25, HEU 50)
+        7.  Both had over a thousand attendees
+        8.  Both used computer equipment to make photo badges
+        9.  Both tried far too hard to be technical
+       10.  New York used to be New Amsterdam
+
+But I digress...
+
+Anyway, the network room was beginning to shape up quite nicely.  Young
+hacklets were already clicking away at their keyboards, oblivious to
+anything else save their screens.  Why anyone would travel all the way to
+New York to sit in front of a screen and type all by their lonesome
+left me stymied.  Isn't that what we all do back at home?
+
+The first people we ran into were Winn Schwartau and Bootleg.  I could
+be wrong, but I think a large factor in Winn's showing up at HOPE was
+to watch me get shot and write about it.  He told me his article would
+be titled, "Cyber-Christ gets nailed to the Cross."  Bootleg, however, was
+here to raise a little hell.  And goddamnit, so were we!
+
+Hacker conferences have always been an excuse for people who only knew
+each other over the phone and over the networks to actually meet face to
+face and hang out.  Anyone who tells you "Conferences today suck, there isn't
+enough technical inpho," is a clueless fuck.  You do not go to a conference
+expecting to learn anything.  If you don't already know, chances are pretty
+damn good that the people who do won't tell you.  You learn by doing, not by
+sitting in an audience at some hacker con.  Get a beer, make some new friends,
+and THEN maybe you might pick up something in casual conversation, but at
+least you will have a good time getting sloshed with new people who share
+common interests.  The only people who will learn something from
+hacker conferences are journalists who will then go on to write even
+more scathing sensationalist pieces about how hackers will destroy
+your credit and eavesdrop on your phone.  Is that what we really
+want?
+
+Me, Ice-9, Bootleg, Bootleg's friend from Oregon, and Thomas Icom took off
+to drink and see what debauchery lay waiting for us in Times Square.
+(Yes, it was a very, very, very mismatched looking group.)  Icom, armed
+with ever-present handheld scanner, kept a continual broadcast of NYPD's
+latest exploits.
+
+We ended up hanging out on the fringes of Times Square at some sidewalk
+deli bullshitting about anything and everything.  A recurring topic throughout
+the whole weekend was EMP and HERF weaponry.  I don't particularly know
+if anyone in the underground would more excited by setting off one of these
+devices, or merely being able to brag to everyone that they were in possession
+of one.
+
+We sat talking about the ramifications of setting off some such device on
+the roof of the building we were sitting in front of.  The thought of
+all the neon and electronics surrounding us simultaneously ceasing to
+function and imploding at the logic gate level provided for at least an
+hour of hacker masturbation material.  Bootleg reminisced about trying to
+track down decommissioned military radar equipment back in the early 80's
+for just such a project.  "I'm surprised it's taken this long for the
+underground to get up on this stuff," he said.
+
+As we headed back to the hotel, we passed by the coolest vehicle ever
+seen by hacker eyes.  The 2600 van was an exact replica of a NYNEX
+van, with the subtle addition of the magazines moniker instead of
+NYNEX, and a ball-capped hack-type tapping away on a notebook computer,
+plugged into the bell logo.  It was truly a sight to behold.  I began
+to drool.  All Phrack has is a beat up, red Toyota Corolla.
+
+Up in the network room those that were not deeply engrossed in hacking
+the hope.net linux box were either already plowed (Hi Torquie!) or about
+to be.
+
+It was late, so we decided to crash.
+
+Ice-9 and I managed to wake up at a reasonable hour, and took off to
+see the city.  I had seen an electronics store the night before, and
+had been looking for a PAL-NTSC-SECAM VCR for ages.  I found it.
+New York's only saving grace (well, except the huge amount of
+businesses there all screaming for security work) was cheap consumer
+electronics.  For 380 bucks I got a VCR that not only converted on the
+fly between any tape format, but also had a digital freeze frame
+for those elusive screen captures.  I was stoked.
+
+After some food, we headed back up to the conference.  The buzz was
+someone had several hundred cell phones confiscated by Cellular One
+reps after he off-handedly remarked that he would clone them
+to a potential buyer.  I then ran into two of my friends from WAY back
+in the early 80's:  Tuc and Agrajag.  Ag is an amazing guy.  Not only
+was he fantastic way back then, he went on to write UNIX for Commodore,
+pull stints at places like USL, and is now working with speech
+recognition and wireless networking.  Yet another fine example of
+those ne'er-do-well Legion of Doom guys the government always
+frowned upon.  Right.
+
+Later that afternoon, as I'm talking to someone in the network room, I feel
+someone bump into me.  "Oh, sorry," says the person, and I go on with my
+conversation.  A few seconds later, it happens again.  Same guy, same
+"Oh, sorry."  When it happens a third time I shove the guy back, and
+say, "Man, what the hell is your problem."  Mistake.  I look up straight
+into the eyes of a guy about 7 feet tall and 2 feet wide.  Well, I'm
+exaggerating but it sure seemed that way at the time.  All of a sudden
+I am an extra in the Puerto Rican version of "Of Mice and Men."
+"De Ratones Y Hombres"
+
+The first guy was about 5 feet tall, and scurried around within an arms
+reach of the big guy.  Immediately I realize that if I do ANYTHING, this
+big dude is more than ready to fuck me up, so the little guy must be a
+diversion.  The big guy grunts and begins to maneuver around me.
+The little guy then takes his cue and begins pushing me, all the while
+asking "What's your name?  What's your handle?"  I keep backing up keeping
+an eye on the big guy, who is staring daggers at me.  Well, at least with
+his one good eye.  His lazy eye, stared daggers at the wall, the carpet,
+and a few other places.
+
+Meanwhile, this little event has gathered the interest of many in the con.
+People began to gather around to see Erik Bloodaxe finally get beat down.
+Unfortunately for the would-be spectators, several others tried to intervene.
+Tuc and a few of the other larger attendees went up to the big guy and
+attempted to hold him back.  This only succeeded in him letting out a
+roar-like sound as he shrugged them off and continued coming towards me.
+
+Finally, I say to the little guy, who has been engaging me in what was
+basically the equivalent of the mosh pit at a Barry Manilow concert,
+(One fucked up guy running into people who don't want to play his game)
+"I'm Chris Goggans, who the hell are you?"  To which he yells, "I'M JULIO!"
+
+Julio, aka Outlaw, aka Broken Leg, was one of the MOD members who was
+raided by the FBI and Secret Service some years back.  While all
+his MOD brethren served jail time, Julio worked out a deal with the
+prosecutors in which he sold out his friends by agreeing to provide
+state's evidence against them should the cases go to court.
+
+And I'm the bad guy?
+
+Fuck, all I ever did was try to keep my business running free of
+interruptions from disgruntled, jealous teenagers.  I never turned state's
+evidence against my best friends to save my own ass.  What am I, Agent Steal?
+
+At this point everyone rushed in-between us and whisked Julio and his
+lazy-eyed, neandrethal boyfriend out the door.  (Notice, I can call him
+all kinds of names now, because I'm back home in Austin, several thousand
+miles away.)  I still have no idea who the big guy was.
+
+From now on, those of you who sincerely want to kick my ass, have the
+nerve to do it by yourself.  I mean, I only went as far up as green in
+Tae Kwan Do, but that was far enough to learn the sacred truth, "Never
+take on more than ONE person or you will get the shit kicked out of you."
+Leave your boyfriends at home and be a man.  If I have the balls to
+go thousands of miles away from home an enter the DMZ expecting to get
+shot, then you should have the balls enough to do something on your own.
+And remember:  take the first swing.
+
+Shortly after "the incident" as it came to be called, by everyone who
+approached me about it afterward, me, Winn, Dave Banisar, and Robert Steele
+took off to find food.  Steele decided we needed female accompaniment,
+so he invited a reporter from Details.  She brought along her camera crew,
+who had been taking so many pictures around the con, one would think
+they owned Polaroid stock.
+
+Robert Steele is an interesting character.  After a 20 year CIA tour he went
+on to found Open Source Solutions, a beltway operation that uses public
+sources of information to build intelligence dossiers.  He described
+himself as "a short, fat, balding old-guy."  This is like Rush Limbaugh
+calling himself "a harmless, loveable little fuzzball."  Their self-image
+is a bit removed from reality.  Steele carries himself with the air of
+a spy.  It's kind of hard to explain, but it would be easy to see Steele
+excusing himself from dinner, killing three guys in the alley, and coming
+back for a piece of apple pie without an accelerated heartbeat or breaking
+a sweat.
+
+On top of being so immersed in the spy game, and having been in charge of
+the design and implementation of the CIA's data center, Steele takes the
+severely radical viewpoint that hackers are America's most valuable
+resource, and should be put to productive use rather than jailed.  This
+man needs to come to more cons.
+
+Dinner was odd to say the least.  The media people sat together, somewhat
+removed from us.  They said approximately 5 words to us the whole time,
+possibly feeling somewhat bored by our drunken computer revelry.
+The reporter seemed visibly disturbed by all of us, and the guys
+looked like they would be more comfortable sitting in a coffee shop
+listening to Tom Waits while having a hearty debate over "Freud vs. Jung."
+
+Our discussions got louder and louder as the scotch flowed, and
+by the end of the evening most of the restaurant had heard such topics
+as "The CIA does most of its recruitment in the Mormon church," and
+"licking the floor at a Times Square peep show."  By the time the check
+came the Details people were more than happy to pay more than their share
+of the bill to get the hell out of Dodge.  A word of advice:  always
+get separate checks when dining out with any of us.
+
+Back in the hood, everyone was milling about waiting for the
+History of 2600 panel to begin.  There was some kind of problem with
+one of the displays, so people were beginning to grow restless.  Right
+about then one of the best looking girls at the con wandered by.  Taking
+a guess, I asked her, "Are you Morgen?"  She was.  It's almost unbelievable
+that someone who would waste time hanging out on IRC and who can actually
+interview for highly technical jobs could look like this.
+
+Morgen, Earle, Mr. Fusion, Ixom and Garbage Heap were heading out to
+get drunk, all of them rather disgusted by the regular con attendees.
+They invited me, so I tracked down Ice-9, who by that time was so ready
+for a pint of Guiness you could almost see the Harp Logo showing up
+on his skin like drunken stigmata.
+
+We ended up across the street at a little pub called the Blarney Rock.
+Pitchers drained like sieves, kamikazes dropped like WWII and tequila shots
+went down like Mexican whores.  Everyone was in agreement that this
+was the best time any of us had experienced  at HOPE.  In between everyone
+drinking, and leering at Morgen, we actually talked about hacking stuff too.
+Gee, and we weren't even on a panel!
+
+As the night progressed, almost everyone from the con ended up at the Blarney
+Rock.  The con took the place over.  The Blarney Rock probably made
+more money that night than they had any night in recent history.
+Everyone actually mingled, talked, planned and plotted.  Plans were thrown
+around for the next PumpCon (Boston?), everyone talked about "the time
+they were busted the first time," Steele showed up wearing a Chinese
+Communist Cap, Fusion cursed at passers by in Korean and almost started
+an incident, Lucifer 666 relayed in vivid detail his ex-girlfriend's
+Fallon-esque ability (much to the shock and envy of everyone listening),
+Count0 told his decapitated dog story, and there was much rejoicing.  (YAY!)
+
+As the night went on, Ice-9 and I decided now was the time to actually
+check out the seedy underbelly of Times Square.  At 1:00 in the evening.
+Alone.  Drunk.  Wide-eyed out-of-towners staggering up side streets in
+one of New York City's sleaziest areas.
+
+Within a few minutes of hitting 42nd and 7th, we were approached by a
+street hustler.  "Yo, what you need?  Crack?  Smoke?  H?  You like young
+girls?  What you need, mah man?"  Ice-9, in his drunken glory, "Yo man,
+you don't know who the fuck you're dealing with!  I'm the biggest fucking
+felon in the whole goddamn world.  You don't have shit that I couldn't
+get, and probably don't already have."  The hustler took a double-take
+and said, "Yo, I likes your style."  Ice replied, "You damn Skippy!"
+
+Shortly thereafter, another hustler showed up.  "Yo man, you want crack?
+I got the rock right here."  Ice looked at him and said, "Man, if I smoke
+any more crack tonight, I'm going to fucking explode."  The dealer went
+away fast.
+
+Times Square isn't quite as sleazy as it's made out to be actually.
+I've been in worse.  It does, however, have the most extensive and
+cheapest collection of European smut this side of Copenhagen.  In fact,
+the same movies from Holland would have cost 40 American dollars more in
+Holland than they did in New York.  Beyond that, Times Square had little
+to offer anyone.  That is, unless you wanted to spend a buck in a
+really sleazy peep show to grope some crack whore.  I think not.
+
+Somehow, we made it back to the Blarney Rock alive, only to find that they
+had kicked everyone out.  We headed back to our cell and passed out.
+
+The next morning, I came to early and wandered around the hotel.  The second
+floor had caught on fire recently, and one wing was completely
+barbecued.  All the gutted rooms were unlocked and the phones worked.
+God only knows why people weren't using these rooms as squatter's pads,
+considering how broke most hackers are.
+
+The main ballroom in the hotel was very cool.  It was easy to see how
+at one point in time the Pennsylvania was quite a sight to behold.
+I suppose it was much like New York itself in that respect:  Once
+a marvel of the modern world, now a festering sore crying out for
+a good cleaning and some antibiotic.
+
+We left New York at noon that day, and did not even get the chance to
+see the numerous panels scheduled for that day.  With my complete absence
+from any panel it's doubtful I would have made it anyway.
+
+-----------------------------------------------------------------------------
+
+So, did I like HOPE?  Yes.  I like cons for what they should be:
+a chance to hang out in person with your idiot online friends.  Hackers
+are an odd bunch.  We are all basically a bunch of self-involved,
+egomaniacal, borderline-criminal attention-seekers.  Rarely, if ever,
+can we expect to meet anyone stupid enough to share our interests.
+Normal citizens, with whom most of us share absolutely no common frame
+of reference, look at us as if we were Martians.  Even those
+computer-literate folk who talk geekspeak and understand most of
+what we are saying are left in the dark when we begin babbling
+about breaking into anything.
+
+Collectively, we are all fools, and without the opportunities of
+any social interaction with our peers, we will all fall prey to fear,
+uncertainty and doubt regarding each other.  We had the social aspect
+many years ago in the early 80's with the proliferation of BBSes and
+teleconferences.  Now, much of that interaction is lost.  Compared to
+our subculture's "Golden Age," the teleconferences and BBSes that exist
+today are a pale reflection of the ones of yesterday.  All we have is
+the inane banter provided by IRC and the occasional con.
+
+Our only hope is each other.
+
+See you all at Summercon 1995 - Atlanta, Georgia.
+
+-----------------------------------------------------------------------------
+

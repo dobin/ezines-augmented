@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x08 of 0x12",
+  "title": "Runtime Process Infection",
+  "authors": "anonymous <p59_08@author.phrack.org>",
+  "date": "",
+  "short_summary": "This article explores various methods for infecting binaries at runtime, focusing on techniques such as code injection and shared library manipulation. It provides practical examples and code snippets for Linux systems, particularly targeting x86 architecture.",
+  "summary": "The article delves into the concept of runtime process infection, outlining methods to manipulate and infect binaries while they are executing. It introduces the ptrace() function, a powerful Linux debugging API that allows one to attach to a running process and manipulate its memory. The author provides detailed code examples for attaching to a process, reading from and writing to its memory, and resolving symbols within the binary using the link_map structure. This is crucial for understanding how to intercept and modify function calls dynamically.\n\nThe article further discusses two primary methods of infection: plain assembly code injection and shared library (.so) injection. While the former is a traditional approach, the latter is highlighted as a more elegant solution that leverages the dynamic linker to load malicious code seamlessly. The author also touches on shared library redirection techniques, which can be used to replace existing functions with malicious ones. The conclusion emphasizes the stealthiness of runtime infections, which can bypass various security measures, making it a relevant topic for security researchers and practitioners interested in advanced exploitation techniques."
+}

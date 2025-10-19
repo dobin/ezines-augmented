@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Vecna's Random Boot Loader",
+  "authors": "[VRBL]",
+  "date": "",
+  "historical_context": "This article presents one of the earliest polymorphic engines designed for boot viruses, showcasing techniques that were innovative at the time.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article introduces a polymorphic engine for boot viruses, capable of generating random assembly instructions to evade detection. It includes detailed assembly code and explanations for creating a loader that can be placed in the MBR or boot sector.",
+  "summary": "Vecna's Random Boot Loader (VRBL) is a pioneering polymorphic engine specifically designed for boot viruses. The engine is compact, at only 739 bytes, and operates by generating a series of random assembly instructions such as MOVs, JUMPs, and XCHGs, which are executed in a single-step mode. This randomness is crucial for evading antivirus detection, as it creates a unique signature for each instance of the virus. The article provides detailed assembly code, including procedures for generating the loader and various instructions, emphasizing the importance of randomness in the virus's operation. The author also includes practical advice on setting segment values and managing memory to ensure the virus functions correctly without overwriting itself. Overall, this article serves as a technical guide for those interested in the intricacies of boot virus development and polymorphic techniques."
+}

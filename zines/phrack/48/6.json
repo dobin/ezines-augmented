@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Forty-Eight, File 6 of 18",
+  "title": "Motorola Command Mode Information",
+  "authors": "Cherokee",
+  "date": "",
+  "historical_context": "This article provides insights into the self-test modes of Motorola cellular phones, reflecting the early days of mobile technology and the hacker culture that sought to exploit it.",
+  "target_audience": "Hackers, security researchers, telecommunications professionals",
+  "short_summary": "The article details the self-test modes available on Motorola cellular phones, including how to enter these modes and the commands that can be executed. It highlights the potential for unauthorized monitoring of mobile communications.",
+  "summary": "In this article, Cherokee shares valuable information extracted from an official Motorola handbook regarding the self-test modes of Motorola cellular phones. The self-test mode operates at two levels: a status display level, which allows normal operation while providing status information, and a servicing level, which grants deeper control over the phone's functions. The author provides a step-by-step guide on how to enter these modes and execute various commands, such as muting audio and tuning into channels to potentially intercept conversations. While the article acknowledges the legal implications of monitoring mobile communications, it presents the information in a light-hearted manner, typical of hacker culture at the time.\n\nCherokee emphasizes that the commands may vary depending on the phone's ROM version, and he encourages readers to experiment with the test codes. The article serves as both a technical guide and a commentary on the ethical considerations of hacking, illustrating the tension between curiosity and legality in the world of telecommunications. Overall, it is a fascinating glimpse into the capabilities of early mobile technology and the mindset of those who sought to explore its boundaries."
+}

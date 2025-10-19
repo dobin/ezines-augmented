@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Replication from data files",
+  "authors": "roy g biv / defjam",
+  "date": "June 2002",
+  "historical_context": "This article discusses early techniques for creating viruses that can infect data files, a concept that was innovative at the time and reflects the evolving landscape of malware development.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in virus development and data file manipulation.",
+  "short_summary": "The article explores methods for creating viruses that can infect data files by manipulating the execution environment. It details several attempts to achieve this, culminating in a technique that allows scripts to be prepended to text files, effectively turning them into executable entities.",
+  "summary": "In 'Replication from data files', author roy g biv outlines a series of innovative attempts to create viruses capable of infecting data files, specifically focusing on text files. The article begins with the premise that while executable files can be directly manipulated, data files cannot. The author proposes changing the execution environment to treat data files as executable, leading to various methods of infection. The first attempts involve modifying registry settings to run text files as executables, but these methods encounter significant issues, such as system crashes when non-infected files are executed as binaries.\n\nThe article progresses through multiple iterations, ultimately arriving at a solution termed 'tar-script', which allows for the seamless integration of script code into data files without causing execution errors. By leveraging the Windows Scripting Host and manipulating file attributes, the author demonstrates how to prepend scripts to text files, thereby creating a stealthy virus that can replicate through any file type. This technique not only showcases the author's deep understanding of scripting and file manipulation but also serves as a historical reference to the creativity and technical prowess of early virus developers."
+}

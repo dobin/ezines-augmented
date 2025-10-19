@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x0b of 0x10",
+  "title": "The basics of Radio",
+  "authors": "shaun2k2 <shaun at rsc dot cx>",
+  "date": "Not specified",
+  "historical_context": "This article provides foundational knowledge about radio technology, which has been integral to communications since the early 20th century.",
+  "target_audience": "Hackers, electronics enthusiasts, radio hobbyists, and security professionals.",
+  "short_summary": "This article covers the fundamental concepts of radio technology, including radio waves, modulation techniques (AM and FM), and practical applications such as radio receivers and transmitters. It also touches on topics like pirate radio and wireless telephone tapping.",
+  "summary": "The article begins with an introduction to the basics of radio technology, explaining the nature of radio waves and their applications in everyday devices. It delves into the concepts of modulation, specifically Amplitude Modulation (AM) and Frequency Modulation (FM), detailing how these techniques are used to encode information onto radio waves. The author provides circuit diagrams for simple radio receivers and transmitters, making the content accessible for readers with basic electronics knowledge. Additionally, the article discusses the historical context of radio, including the rise of pirate radio stations and the techniques used for wireless telephone tapping, illustrating the dual nature of radio as both a communication tool and a means for subversion. Overall, it serves as a comprehensive primer for anyone interested in understanding or experimenting with radio technology."
+}

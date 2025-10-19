@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Eleven, Phile #4 of 12",
+  "title": "Hacking Voice Mail Systems",
+  "authors": "Black Knight from 713",
+  "date": "1987",
+  "historical_context": "This article was written during the early days of voice mail technology, a time when such systems were becoming increasingly common in business environments. The techniques discussed reflect the hacking culture of the 1980s, where exploring and exploiting telecommunication systems was a popular pursuit among phreakers.",
+  "target_audience": "Hackers, phreakers, security professionals, telecommunications enthusiasts",
+  "short_summary": "This article provides an overview of various voice mail systems and techniques for hacking into them. It details methods for accessing different types of voice mail systems, including Centagram, Sperry Link, RSVP, and A.S.P.E.N., highlighting their vulnerabilities and user-friendly features.",
+  "summary": "In 'Hacking Voice Mail Systems', Black Knight explores the burgeoning field of voice mail technology, which was gaining traction in the late 1980s. The article outlines the basic functionality of voice mail systems (VMS), explaining how users can leave and retrieve messages. It categorizes several VMS types, detailing their operational mechanics and vulnerabilities that hackers can exploit. The author emphasizes the ease with which one can gain unauthorized access to these systems, particularly through methods like guessing passwords or scanning for unassigned mailboxes. \n\nThe article serves as both a guide and a cautionary tale, illustrating the potential for misuse inherent in these systems. By providing specific examples of different VMSs, such as Centagram and A.S.P.E.N., Black Knight reveals the commonalities in their security flaws. The piece is a reflection of the hacker ethos of the time, encouraging readers to explore and understand the technology around them, while also highlighting the ethical implications of such actions."
+}

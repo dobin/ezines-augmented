@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Hide and Seek Game On Script Languages",
+  "authors": "Hamdi Ucar",
+  "date": "April 24, 2001",
+  "historical_context": "This article was written during a time when script languages were becoming more prevalent in web development, and the potential for malicious use was being recognized. It highlights the challenges antivirus companies faced in detecting self-modifying code, especially in the context of rapidly spreading email viruses.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in polymorphic code and antivirus detection methods.",
+  "short_summary": "The article discusses the potential for self-modifying code in script languages to evade traditional antivirus detection methods. It emphasizes the need for advanced heuristic detection techniques to combat the rapid spread of email viruses and provides a sample JavaScript code demonstrating these concepts.",
+  "summary": "In 'Hide and Seek Game On Script Languages', Hamdi Ucar explores the capabilities of script languages to create self-modifying code, which poses significant challenges for antivirus detection. The article argues that traditional pattern-based detection methods are insufficient against such polymorphic threats, especially as email viruses can spread rapidly before updates are available. Ucar suggests that antivirus companies need to invest in heuristic and advanced detection techniques to effectively identify these novel threats before they proliferate. \n\nThe article includes a JavaScript code sample that demonstrates self-modifying behavior, showcasing how the code can encode and decode itself while generating a new output each time it runs. This serves as a practical illustration of the weaknesses in current detection algorithms and highlights the necessity for proactive research and development in the field of antivirus technology. Ucar's insights remain relevant as the landscape of malware continues to evolve, emphasizing the ongoing battle between malicious actors and security professionals."
+}

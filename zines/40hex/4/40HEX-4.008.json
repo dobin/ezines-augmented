@@ -1,0 +1,11 @@
+{
+  "reference": "40Hex Issue 4, Phile #1 of 1",
+  "title": "The Marauder Virus",
+  "authors": "Hellraiser of Phalcon/Skism",
+  "date": "December 1991",
+  "historical_context": "This article reflects the early 1990s hacker culture, particularly the rise of virus creation and the experimentation with malware among young programmers.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in historical malware development.",
+  "short_summary": "The Marauder Virus is a non-overwriting, encrypting, semi-mutating .COM file infector that destroys files in the current directory on February 2nd. The article details its functionality and provides the assembly code for the virus.",
+  "summary": "In this article, Hellraiser introduces the Marauder Virus, a sophisticated piece of malware designed to infect .COM files. The virus operates by searching for uninfected .COM files in the current directory and its parent directories, adding 860 bytes to the infected files. Notably, it features a destructive payload that activates on February 2nd, erasing all files in the current directory. The author emphasizes the virus's ability to evade detection, as it does not alter file attributes or cause system errors, making it a stealthy threat. The article also showcases the author's progression from a novice virus hacker to a more advanced assembler programmer, reflecting the evolving landscape of malware development during this period.",
+  "code_snippet": "n target.com\ne 0100  E9 61 00 88 68 69 73 20 66 69 6C 65 20 69 73 20\ne 0110  69 6E 66 65 63 74 65 64 20 77 69 74 68 20 74 68\ne 0120  65 20 4D 61 72 61 75 64 65 72 20 76 69 72 75 73"
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 27, File 11 of 12",
+  "title": "Robert T. Morris Suspended From Cornell",
+  "authors": "New York Times",
+  "date": "May 25, 1989",
+  "historical_context": "This article discusses the suspension of Robert T. Morris, the creator of the first computer worm, which spread across the Internet in 1988, leading to significant discussions about computer security and legal implications.",
+  "target_audience": "Security professionals, hackers, computer science students, and those interested in the history of cybersecurity.",
+  "short_summary": "The article reports on the suspension of Robert T. Morris from Cornell University for violating the school's Code of Academic Integrity after creating the Internet worm. It highlights the legal uncertainties surrounding his case and the implications for computer security.",
+  "summary": "In May 1989, Cornell University suspended Robert T. Morris, a graduate student, for his role in creating the Internet worm that disrupted thousands of computers. The suspension was a result of a university panel's findings that he violated the school's Code of Academic Integrity. While no criminal charges were filed against him at the time, the case raised significant questions about the legal treatment of computer crimes and the responsibilities of computer scientists. Experts speculated that the Justice Department was hesitant to prosecute due to the potential implications for the Department of Defense, as the worm had affected military computers among others.\n\nThe article delves into the complexities of prosecuting Morris, noting that proving intent to harm would be challenging since the worm did not destroy or remove data. The discussion reflects the broader concerns in the tech community about how to handle emerging threats in computer security and the need for clear legal frameworks to address such incidents. Morris's case became a landmark moment in the evolution of computer crime legislation, highlighting the tension between innovation and security in the rapidly evolving digital landscape."
+}

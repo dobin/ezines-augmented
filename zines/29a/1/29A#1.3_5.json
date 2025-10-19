@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "TBAV: antidetection",
+  "authors": "Blade Runner",
+  "date": "Los Angeles, 2019",
+  "historical_context": "This article reflects the early days of virus detection and evasion techniques, showcasing the mindset of hackers during the late 1980s and early 1990s.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "The article provides a step-by-step guide on how to bypass the detection mechanisms of the TBAV 7.00 antivirus software, demonstrating the vulnerabilities in its heuristic checks.",
+  "summary": "In 'TBAV: antidetection', Blade Runner reveals the weaknesses in the TBAV 7.00 antivirus software, illustrating how easily it can be manipulated to ignore the presence of viruses. The author walks through the process of using a debugger to intercept and modify the code of TBAV, effectively disabling its heuristic detection capabilities. By capturing specific interrupts and altering conditional jumps, the article shows that with minimal effort, one can render the antivirus software ineffective against malware. This piece serves as both a technical guide and a commentary on the ongoing cat-and-mouse game between malware developers and antivirus solutions.",
+  "additional_notes": "The techniques described in this article highlight the importance of understanding software internals for both offensive and defensive security. It also emphasizes the need for continuous improvement in antivirus technologies to keep pace with evolving threats."
+}

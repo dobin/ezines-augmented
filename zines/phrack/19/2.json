@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 19, Phile #2 of 8",
+  "title": "DCL Utilities for the VMS Hacker",
+  "authors": "The Mentor",
+  "date": "Thanksgiving 1987",
+  "historical_context": "This article reflects the hacker culture of the late 1980s, particularly focusing on VAX systems and the DCL programming language, which was widely used in that era.",
+  "target_audience": "Hackers, VMS users, security professionals, and programmers interested in DCL.",
+  "short_summary": "The article presents a collection of DCL utilities designed for VMS hackers, showcasing their functionality and providing code examples. It emphasizes the power of DCL for enhancing user experience and efficiency in navigating VAX systems.",
+  "summary": "In 'DCL Utilities for the VMS Hacker', The Mentor introduces a suite of DCL (Digital Command Language) utilities tailored for users of VAX systems. The article begins with a brief overview of DCL, highlighting its capabilities and the importance of understanding its command structure. The utilities include 'CD.COM' for changing directories, 'HUNT.COM' for monitoring user logins, 'ALARM.COM' for setting alarms, and 'CGO.COM' for compiling and executing C programs. Each utility is accompanied by detailed explanations and code snippets, making it easy for readers to implement them in their own environments.\n\nThe Mentor encourages readers to engage with him for further programming discussions and offers to share additional resources. The article serves as both a practical guide for VMS users and a historical snapshot of the hacker ethos of the time, emphasizing the importance of community and knowledge sharing among programmers. The utilities not only enhance the functionality of VMS systems but also exemplify the creative problem-solving approach characteristic of the hacker culture."
+}

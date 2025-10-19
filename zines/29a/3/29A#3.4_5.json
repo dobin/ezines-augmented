@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Marburg virus - BioCoded",
+  "authors": "GriYo / 29A",
+  "date": "Not specified",
+  "historical_context": "The Marburg virus is a polymorphic Windows 95/98 virus that gained notoriety in the late 1990s, particularly after being distributed on popular game CDs. It is notable for its advanced polymorphic capabilities and was part of a wave of viruses that exploited the growing popularity of personal computing.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article provides a detailed analysis of the Marburg virus, a polymorphic Windows executable virus. It discusses its infection methods, polymorphic behavior, payload, and historical significance, including its accidental distribution on game CDs.",
+  "summary": "The Marburg virus is a direct action, polymorphic virus that infects Windows 95/98 executable files. Upon execution, it searches for other executable files in the current and system directories to infect. The virus employs size padding to mark infected files and can modify the entry-point field in some cases. Its polymorphic engine allows it to generate numerous variants, making detection challenging. The virus also deletes integrity checksum files from several antivirus products to evade detection. Notably, Marburg activates a payload three months after infection, displaying a Windows error icon on the screen at a specific time, showcasing its capability to create disruptions. The article also includes the source code of the virus, providing insights into its construction and functionality, which is a valuable resource for understanding malware development during that era."
+}

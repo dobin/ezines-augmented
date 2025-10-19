@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3d, Phile #0x0a of 0x0f",
+  "title": "Infecting loadable kernel modules",
+  "authors": "truff <truff@projet7.org>",
+  "date": "",
+  "historical_context": "This article discusses techniques for injecting code into loadable kernel modules (LKMs), a method commonly used in rootkits. It reflects the hacking culture of the early 2000s, focusing on stealth and persistence in malware.",
+  "target_audience": "Hackers, security researchers, and those interested in kernel-level programming and rootkit development.",
+  "short_summary": "The article presents techniques for infecting loadable kernel modules (LKMs) to hide malicious code and ensure persistence after reboots. It covers ELF file format manipulation, module loading processes, and practical examples of code injection.",
+  "summary": "This paper delves into the manipulation of loadable kernel modules (LKMs) to inject malicious code while maintaining stealth. It begins with an introduction to the ELF (Executable and Linking Format) file structure, highlighting the .symtab and .strtab sections crucial for symbol resolution. The author explains how to modify these sections to redirect function calls, effectively allowing an attacker to execute arbitrary code upon module loading. Techniques such as renaming symbols and linking additional code are discussed in detail, providing practical examples that demonstrate the process of creating an 'evil' module that can replace legitimate functionality without detection.\n\nThe article also addresses the implications of these techniques across different operating systems, including Solaris and various BSD variants, while emphasizing the importance of stealth in malware development. By ensuring that the original module's behavior remains intact, the injected code can operate undetected. The author concludes with a mini-howto for infecting an existing module, showcasing the ease with which these techniques can be applied. This work serves as both a technical guide and a historical reflection on the evolution of rootkit development."
+}

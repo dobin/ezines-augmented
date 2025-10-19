@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 1, File 000",
+  "title": "40Hex Issue 10",
+  "authors": "Phalcon/Skism",
+  "date": "March 13, 1993",
+  "historical_context": "This issue of 40Hex reflects the early 1990s hacker culture, particularly focusing on virus writing and the competitive nature of virus developers.",
+  "target_audience": "Virus developers, malware researchers, security professionals, and those interested in hacker culture.",
+  "short_summary": "This issue of 40Hex introduces new virus writing techniques and source code, while phasing out debug scripts. It features a competitive spirit among virus developers and critiques the claims of a rival group.",
+  "summary": "In this issue of 40Hex, Phalcon/Skism presents a wealth of information on virus writing techniques, emphasizing the importance of source code over debug scripts. The magazine welcomes its newest member, FirstStrike, and expresses confidence in his future contributions to virus development. The disassemblies, primarily done by Dark Angel, are noted for their clarity, although some parts remain uncommented due to their self-evident functions. Readers are encouraged to familiarize themselves with the entire disassembly to grasp the workings of the viruses presented.\n\nThe issue also showcases the Ontario 3 virus, created by Death Angel of YAM, and humorously critiques YAM's claims regarding their IVP virus, suggesting that it is merely a rewritten version of PS-MPC with minimal changes. This commentary reflects the competitive and often contentious nature of the virus writing community during this period, highlighting the rivalry and the pride taken in one's work. Overall, the issue serves as both a resource for aspiring virus developers and a commentary on the dynamics within the hacker community."
+}

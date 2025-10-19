@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 4, Phile #1 of 1",
+  "title": "A Further Look Into Cracking Encrypted Viruses",
+  "authors": "Unknown",
+  "date": "December 1991",
+  "historical_context": "This article is set in the early 1990s, a time when computer viruses were becoming more prevalent, and methods to analyze and counteract them were of great interest to the hacking community.",
+  "target_audience": "Hackers, malware analysts, security professionals",
+  "short_summary": "The article presents a method for decrypting encrypted computer viruses using a debugger, specifically Turbo Debugger. It outlines a step-by-step approach to modify the virus's encryption routine to produce an unencrypted, executable version of the virus.",
+  "summary": "In this article, the author expands on a previous method for decrypting encrypted viruses, presenting a straightforward approach that involves using a debugger. The process begins with creating a target file for the virus to infect, followed by infecting one copy of the file. The author emphasizes the importance of single-stepping through the virus code to identify the encryption routine, typically an XOR loop. By manipulating the encryption value during execution, the user can effectively bypass the encryption process and produce an unencrypted version of the virus that can be executed without modification.\n\nThe article provides detailed instructions on how to set up the debugging environment and the specific assembly code to look for. It highlights that this method is applicable primarily to non-resident .COM and .EXE infectors, cautioning readers against assuming it will work on more complex viruses. Overall, the article serves as a practical guide for those interested in malware analysis and reverse engineering, showcasing techniques that were relevant during the early days of computer viruses."
+}

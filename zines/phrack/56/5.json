@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0xa Issue 0x38, Phile #1 of 1",
+  "title": "BYPASSING STACKGUARD AND STACKSHIELD",
+  "authors": "Bulba and Kil3r <lam3rz@hert.org>",
+  "date": "05.01.2000",
+  "historical_context": "This article discusses techniques to exploit stack overflow vulnerabilities even in the presence of StackGuard and StackShield protections, which were significant security measures at the time.",
+  "target_audience": "Hackers, security researchers, and software developers interested in buffer overflow vulnerabilities and exploit techniques.",
+  "short_summary": "The article demonstrates methods to bypass StackGuard and StackShield protections against buffer overflow attacks, detailing how attackers can exploit vulnerabilities to alter function pointers and execute arbitrary code.",
+  "summary": "In this article, Bulba and Kil3r explore the limitations of StackGuard and StackShield, two security mechanisms designed to mitigate buffer overflow vulnerabilities. They explain how these protections can be bypassed by manipulating pointers in memory, specifically targeting function pointers and longjmp buffers. The authors provide detailed examples of vulnerable code and demonstrate how an attacker can exploit these vulnerabilities to gain control over program execution, even when the stack is marked as non-executable. The article emphasizes the importance of understanding the underlying mechanisms of these protections and the necessity for developers to write secure code to prevent exploitation.\n\nThe authors also discuss various techniques for crafting exploits, including overwriting the Global Offset Table (GOT) to redirect function calls to malicious code. They provide practical examples of exploit code and highlight the need for continuous improvement in security measures. The conclusion stresses that while StackGuard and StackShield offer some level of protection, they are not foolproof, and developers must remain vigilant and proactive in securing their applications against buffer overflow attacks."
+}

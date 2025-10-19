@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x06 of 0x10",
+  "title": "Kernel-mode backdoors for Windows NT",
+  "authors": "firew0rker <firew0rker@nteam.ru>, the nobodies <http://www.nteam.ru>",
+  "date": "",
+  "historical_context": "This article discusses the evolution of kernel-mode backdoors for Windows NT, a significant shift from user-mode tools that are easily detectable by antivirus software. It reflects the growing complexity and stealth required in malware development during the early 2000s.",
+  "target_audience": "Security researchers, malware analysts, and developers interested in kernel-mode programming and stealth techniques.",
+  "short_summary": "The article explores various kernel-mode backdoors for Windows NT, detailing their functionalities, stealth techniques, and the author's own variant. It emphasizes the challenges and complexities of developing such tools compared to user-mode backdoors.",
+  "summary": "This article provides an in-depth examination of kernel-mode backdoors for Windows NT, highlighting existing tools like Ntrootkit, He4Hook, and Slanret. It discusses their capabilities, such as remote command execution, process hiding, and stealthy communication methods. The author emphasizes the importance of kernel-mode backdoors due to their ability to evade detection by user-mode antivirus solutions, which typically focus on user-mode applications.\n\nThe author also presents their own variant, 'Thorny Path,' detailing the challenges faced in creating a fully functional kernel-mode backdoor. This includes the complexities of process creation and I/O redirection from kernel mode, as well as the need for stealth in network communications. The article concludes with a call for further exploration into hiding techniques for open sockets and TCP connections, suggesting that this topic warrants additional research and discussion."
+}

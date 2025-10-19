@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Shiver[DDE]",
+  "authors": "ALT-F11 /AVM",
+  "date": "",
+  "historical_context": "This article discusses the Shiver[DDE] virus, which is notable for being one of the first macro viruses to utilize Dynamic Data Exchange (DDE) to propagate between Microsoft Word and Excel applications. It reflects the early days of macro viruses in the late 1990s.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the Shiver[DDE] macro virus, which infects Microsoft Word and Excel documents using DDE. It outlines the virus's functionality, including its ability to cross-infect without needing external debugging tools.",
+  "summary": "The Shiver[DDE] virus, created by the Alternative Virus Mafia (AVM), is a pioneering macro virus that exploits the DDE feature in Microsoft Word and Excel to spread. The virus operates by embedding itself within Word and Excel documents, allowing it to execute malicious code across applications without requiring the presence of debugging tools like Debug.exe. The article provides a detailed breakdown of the virus's code, illustrating how it stealthily infects documents and modifies application settings to disable macro virus protection, thereby ensuring its persistence and ability to propagate. The use of humor and irreverent commentary within the code reflects the hacker culture of the time, showcasing a blend of technical prowess and subversive creativity. Overall, this article serves as both a technical guide and a historical artifact, shedding light on the early evolution of macro viruses and their implications for computer security."
+}

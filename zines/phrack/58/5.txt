@@ -1,0 +1,934 @@
+                             ==Phrack Inc.==
+
+               Volume 0x0b, Issue 0x3a, Phile #0x05 of 0x0e
+
+|=----=[ Armouring the ELF: Binary encryption on the UNIX platform ]=----=|
+|=-----------------------------------------------------------------------=|
+|=-------=[ grugq <grugq@lokmail.net>, scut <scut@team-teso.net> ]=------=|
+
+
+--[ Contents
+
+  - Introduction
+  - Why encrypt?
+  - What is binary encryption?
+  - The threat
+  - ELF format
+    - ELF headers
+    - ELF sections
+    - ELF segments
+    - ELF support and history
+  - ELF loading
+    - ELF loading - Linux
+    - ELF Linux - auxiliary vectors
+    - ELF mapping
+  - Binary encryption theory
+  - Runtime decryption techniques
+  - ELF parasite approach
+  - Packing/Userspace ELF loader
+  - The future
+  - References
+
+
+--[ Introduction
+
+The UNIX world has lagged far behind the Microsoft world (including both
+MS-DOS and MS Windows) in the twin realms of binary protection and reverse
+engineering.
+
+The variety and types of binary protection are a major area of difference.
+MS Windows PE binaries can be encrypted, packed, wrapped, and thoroughly
+obfuscated, and then decrypted, unpacked, unwrapped, and reconstructed.
+Conversely, the best that can be done to a UNIX ELF binary is stripping the
+debugging symbol table. There are no deconstructors, no wrappers, no
+encrypters, and only a single packer (UPX [12], aimed at decreasing disk
+space, not increasing protection) for the ELF. Clearly the UNIX ELF binary
+is naked compared to the powerful protections afforded the Windows PE binary
+format.
+
+The quantity and quality of reverse engineering tools are other key areas
+of significant gulf. The runtime environment of the PE binary, and indeed
+the very operating system it executes on, is at the mercy of the brilliant
+debugger SoftICE. Meanwhile the running ELF can only be examined one word
+at a time via the crippled system call ptrace(), imperfectly interfaced via
+adb and its brain dead cousin: gdb. The procfs, on those systems on which
+it is present, typically only provides the ability to examine a process
+rather than control it. Indeed, the UNIX world is an unrealised nightmare
+for the UNIX reverse engineer. Unrealised because up until now no one has
+bothered to protect an ELF binary.
+
+
+--[ Why encrypt?
+
+The prime motivator for protecting files on MS platforms has been to enforce
+copy protection in a failed attempt to ensure payment for shareware
+applications. As of now, there is no such motivation on the UNIX side, but
+there are other reasons to protect binaries.
+
+From the viewpoint of an attacker the reasons to protect binaries can be
+listed as:
+
+        - hindering forensic analysis in case of detection
+        - hindering copying of confidential data (possibly by other
+          attackers or commercially motivated forensic investigators*)
+        - adding functionality to the protected binary
+
+From the point of view of a defender, there are also good reasons to
+protect binaries. These can be enumerated as
+
+        - adding a level of authorization checks
+        - hindering analysis of customised intrusion detection tools (tools
+          that an attacker might figure out how to evade, were they to
+          discover their purpose)
+        - adding functionality to the protected binary
+
+The need to protect binaries from analysis in the UNIX world has clearly
+surfaced.
+
+* Certain big five companies sell their collections of recovered exploits
+  for an annual fee.
+
+
+--[ What is binary encryption?
+
+The reasons to protect a binary are clear, now we have to come up with a
+good design for the protection itself.  When we talk of protecting binaries
+it is important to know what sort of protection we expect to achieve; we
+must define our requirements. The requirements for this implementation are
+as follows:
+
+        - Only authorised individuals may execute the binary.
+        - The on disk binary must be immune for all methods of static
+          analysis which might reveal anything substantial about the
+          purposes/methods of the binary.
+        - The process image of the binary, something that unfortunately
+          cannot be hidden, must obscure the purposes/methods of the
+          binary.
+        - The mechanism for protecting the binary must be production
+          quality, being both robust and reliable.
+
+The best mechanism to fulfill all of these requirements is with some form of
+encryption. We know enough of what we want that we can now define the term
+"binary encryption" as the process of protecting a binary from reverse
+engineering and analysis, while keeping it intact and executeable to the
+underlying operating system. Thus, when we talk of binary encryption we refer
+to a robust security mechanism for protecting binaries.
+
+
+--[ The threat
+
+Today most of the so called "forensic analysts" have very few tools and
+knowledge at hand to counter anything more sophisticated than rm, strip and
+some uncautious attacker. This has been demostrated in the public analysis of
+the x2 binary [14]. Two seminal forensic investigators have been completely
+stumped by a relatively simple binary protection. It is worth mentioning
+that two private reverse engineers reversed the x2 binary to C source code
+in approximately one day.
+
+The Unix forensic investigater has an extremely limited range of tools at
+her disposal for analysis of a compromised machine. These tools tend to
+be targeted at debugging a misbehaving system, rather than analysing a
+compromised system. While locate, find, lsof and netstat are fine when
+attempting to keep a production system from falling over, when it comes to
+investigating a breakin, they fall short on usefulness. Even TCT is severly
+limited in its capabilities (although that is the subject of another
+paper).
+
+If the broad analysis of an entire system is so impaired, binary analysis
+is even more so. The forensic analyst is equiped with tools designed to
+debug binaries straight from the back end of an accomidating compiler, not
+the hostile binaries packaged by a crafty attacker. The list of tools is
+short, but for completeness presented here: strings, objdump, readelf,
+ltrace, strace, and gdb. These tools are all based on two flawed interfaces:
+libbfd and ptrace(). There are superior tools currently in development, but
+they are primarily intended for, and used by, Unix reverse engineers and
+other individuals with "alternative" motivations.
+
+Barring these private reverse engineering applications, no Unix tools exist
+to tackle sophisticated hostile code. This is because the basic Unix
+debugging hooks are very limited. The ubiquitus ptrace() can be easily
+subverted and confused, and while /proc interface is more feature rich, it is
+not uniform across platforms. Additionally the /proc debugging interface
+typically provides only information about the runtime environment of a
+process, not control over its exectuion. Even the most sophisticated procfs
+need not be of any help to the analyst, if the binary is sufficiently
+protected.
+
+That said, there has been some slight improvement in the quality of analysis
+tools. The powerful Windows only disassembler - IDA - now provides complete
+support for the ELF binary format. Indeed, with the latest release IDA can
+finally handle ELF binaries without a section header table (thanks Ilfak).
+
+These improvements in the available tools are meaningless however, unless
+there is an accompanying increase in knowledge and skill for the forensic
+analysers.  Given that there are almost no skilled reverse engineers in
+forensic analysis (based on the published material one could easily conclude
+that there are none), the hackers will have the upper hand at the start of
+this arms race.
+
+As the underground world struggles with with the issue of leaking exploits
+and full vs. non disclusure, more hackers will see binary encryption as a
+means of securing their intellectual property. Simultaneously the security
+community is going to be exposed to more encrypted binaries, and will have
+to learn to analyse a hostile binary.
+
+
+--[ ELF format
+
+The 'Executeable and Linking Format' is a standardized file format for
+executeable code. It is mostly used for executeable files (ET_EXEC) or for
+shared libraries (ET_DYN). Currently almost all modern Unix variants
+support the ELF format for its portability, standardized features and
+designed-from-scratch cleaness. The actual version of the ELF standard is
+1.2. There are multiple documents covering the standard, see [1].
+
+The ELF binary format was designed to meet the requirements of both linkers
+(typically used during compile time) and loaders (typically used only
+during run time). This nessicitated the incorporation of two distinct
+interfaces to describe the data contained within the binary file. These two
+interfaces have no dependancy on each other. This section will act as a
+brief introduction to both interfaces of the ELF.
+
+
+--[ ELF headers
+
+An ELF file must contain at a minimum an ELF header. The ELF header
+contains information regarding how the contents of the binary file should
+be interpreted, as well as the locations of the other structures describing
+the binary. The ELF header starts at offset 0 within the file, and has the
+following format:
+
+#define EI_NIDENT (16)
+
+typedef struct
+{
+  unsigned char e_ident[EI_NIDENT];     /* Magic number and other info */
+  Elf32_Half    e_type;                 /* Object file type */
+  Elf32_Half    e_machine;              /* Architecture */
+  Elf32_Word    e_version;              /* Object file version */
+  Elf32_Addr    e_entry;                /* Entry point virtual address */
+  Elf32_Off     e_phoff;                /* Program header table file offset */
+  Elf32_Off     e_shoff;                /* Section header table file offset */
+  Elf32_Word    e_flags;                /* Processor-specific flags */
+  Elf32_Half    e_ehsize;               /* ELF header size in bytes */
+  Elf32_Half    e_phentsize;            /* Program header table entry size */
+  Elf32_Half    e_phnum;                /* Program header table entry count */
+  Elf32_Half    e_shentsize;            /* Section header table entry size */
+  Elf32_Half    e_shnum;                /* Section header table entry count */
+  Elf32_Half    e_shstrndx;             /* Section header string table index */
+} Elf32_Ehdr;
+
+The fields are explained in detail below:
+
+    * e_ident has certain known offsets that contain information about how to
+      treat and interpret the binary. Be warned that Linux defines additional
+      indices and values that are not contained in the SysV ABI, and are
+      therefore non-portable. These are the official known offsets, and their
+      potential values:
+
+#define EI_MAG0         0               /* File identification byte 0 index */
+#define ELFMAG0         0x7f            /* Magic number byte 0 */
+
+#define EI_MAG1         1               /* File identification byte 1 index */
+#define ELFMAG1         'E'             /* Magic number byte 1 */
+
+#define EI_MAG2         2               /* File identification byte 2 index */
+#define ELFMAG2         'L'             /* Magic number byte 2 */
+
+#define EI_MAG3         3               /* File identification byte 3 index */
+#define ELFMAG3         'F'             /* Magic number byte 3 */
+
+#define EI_CLASS        4               /* File class byte index */
+#define ELFCLASSNONE    0               /* Invalid class */
+#define ELFCLASS32      1               /* 32-bit objects */
+#define ELFCLASS64      2               /* 64-bit objects */
+
+#define EI_DATA         5               /* Data encoding byte index */
+#define ELFDATANONE     0               /* Invalid data encoding */
+#define ELFDATA2LSB     1               /* 2's complement, little endian */
+#define ELFDATA2MSB     2               /* 2's complement, big endian */
+
+#define EI_VERSION      6               /* File version byte index */
+#define EV_CURRENT      1               /* Value must be EV_CURRENT */
+
+
+    * e_type describes how the binary is intended to be utilised. The following
+      are legal values:
+
+#define ET_NONE         0               /* No file type */
+#define ET_REL          1               /* Relocatable file */
+#define ET_EXEC         2               /* Executable file */
+#define ET_DYN          3               /* Shared object file */
+#define ET_CORE         4               /* Core file */
+
+    * e_machine indicates for which architecture the object file is
+      intended. The following is a short list of the most common values:
+
+#define EM_SPARC         2              /* SUN SPARC */
+#define EM_386           3              /* Intel 80386 */
+#define EM_SPARCV9      43              /* SPARC v9 64-bit */
+#define EM_IA_64        50              /* Intel Merced */
+
+    * e_version indicates which version of ELF the object file conforms too.
+      Currently it must be set to EV_CURRENT, identical to
+      e_ident[EI_VERSION].
+
+    * e_entry contains the relative virtual address of the entry point to the
+      binary. This is traditionally the function _start() which is located at
+      the start of the .text section (see below). This field only has meaning
+      for ET_EXEC objects.
+
+    * e_phoff conatins the offset from the start of the file to the first
+      Program Header (see below). This field is only meaningful in ET_EXEC and
+      ET_DYN objects.
+
+    * e_shoff contains the offset from the start of the file to the first
+      Section Header (see below). This field is always useful to the reverse
+      engineer, but only required on ET_REL files.
+
+    * e_flags contains processor specific flags. This field is not used on
+      i386 or SPARC systems, so it can be safely ignored.
+
+    * e_ehsize contains the size of the ELF header. This is for error checking
+      and should be set to sizeof(Elf32_Ehdr).
+
+    * e_phentsize contains the size of a Program Header. This is for error
+      checking and should be set to sizeof(Elf32_Phdr).
+
+    * e_phnum contains the number of Program headers. The program header table
+      is an array of Elf32_Phdr with e_phnum elements.
+
+    * e_shentsize contains the size of a Section Header. This is for error
+      checking and should be set to sizeof(Elf32_Shdr).
+
+    * e_shnum contains the number of Section headers. The section header table
+      is an array of Elf32_Shdr with e_shnum elements.
+
+    * e_shstrndx contains the index within the section header table of the
+      section containing the string table of section names (see below).
+
+
+The following two sections describe in detail the linking interface and the
+execution interface to the ELF, respectively.
+
+
+--[ ELF Sections
+
+The interface used when linking multiple object files together is the Section
+interface. The binary file is viewed as an collection of sections; each an
+array of bytes of which no byte may reside in more than one secion. The
+contents of a section may be interpreted in any way by the inspecting
+application, although there is helper information to enable an application
+to correctly interpret a section's contents. Each section is described by a
+section header, contained within a section header table typically located
+at the end of the object. The section header table is an array of section
+headers in arbitrary order, although usually in the same order as they
+appear in the file, with the only exeption being that the zeroeth entry is
+the NULL section: a section which is set to 0 and doesn't describe any part
+of the binary. Each section header has the following format:
+
+typedef struct
+{
+  Elf32_Word    sh_name;                /* Section name (string tbl index) */
+  Elf32_Word    sh_type;                /* Section type */
+  Elf32_Word    sh_flags;               /* Section flags */
+  Elf32_Addr    sh_addr;                /* Section virtual addr at execution */
+  Elf32_Off     sh_offset;              /* Section file offset */
+  Elf32_Word    sh_size;                /* Section size in bytes */
+  Elf32_Word    sh_link;                /* Link to another section */
+  Elf32_Word    sh_info;                /* Additional section information */
+  Elf32_Word    sh_addralign;           /* Section alignment */
+  Elf32_Word    sh_entsize;             /* Entry size if section holds table */
+} Elf32_Shdr;
+
+The fields of the section header have the following meanings:
+
+    * sh_name contains an index into the section contents of the e_shstrndx
+      string table. This index is the start of a null terminated string to
+      be used as the name of the section. There are reserved names, the
+      most important being:
+		.text		Executable object code
+		.rodata		Read only strings
+		.data		Initialised "static" data
+		.bss		Zero initialized "static" data, and the
+				base of the heap
+
+    * sh_type contains the section type, helping the inspecting application
+      to determine how to interpret the sections contents. The following
+      are legal values:
+
+#define SHT_NULL         0              /* Section header table entry unused */
+#define SHT_PROGBITS     1              /* Program data */
+#define SHT_SYMTAB       2              /* Symbol table */
+#define SHT_STRTAB       3              /* String table */
+#define SHT_RELA         4              /* Relocation entries with addends */
+#define SHT_HASH         5              /* Symbol hash table */
+#define SHT_DYNAMIC      6              /* Dynamic linking information */
+#define SHT_NOTE         7              /* Notes */
+#define SHT_NOBITS       8              /* Program space with no data (bss) */
+#define SHT_REL          9              /* Relocation entries, no addends */
+#define SHT_SHLIB        10             /* Reserved */
+#define SHT_DYNSYM       11             /* Dynamic linker symbol table */
+
+
+    * sh_flags contains a bitmap defining how the contents of the section
+      are to be treated at run time. Any bitwise OR'd value of the
+      following is legal:
+
+#define SHF_WRITE       (1 << 0)        /* Writable */
+#define SHF_ALLOC       (1 << 1)        /* Occupies memory during execution */
+#define SHF_EXECINSTR   (1 << 2)        /* Executable */
+
+
+    * sh_addr contains the relative virtual address of the section during
+      runtime.
+
+    * sh_offset contains the offset from the start of the file to the first
+      byte of the section.
+
+    * sh_size contains the size in bytes of the section.
+
+    * sh_link is used to link associated sections together. This is
+      typically used to link a string table to a section whose contents
+      require a string table for correct intepretation, e.g. symbol tables.
+
+    * sh_info is a used to contain extra information to aid in link
+      editing. This field has exactly two uses, indicating which section a
+      relocation applies to for SHT_REL[A] sections, and holding the
+      maximum number of elements plus one within a symbol table.
+
+    * sh_addralign contains the alignment requirement of section contents,
+      typically 0/1 (both meaning no alignment) or 4.
+
+    * sh_entsize, if the section holds a table, contains the size of each
+      element. Used for error checking.
+
+
+--[ ELF Segments
+
+The ELF segment interface is used to during the creation of a process
+image. Each segment, a contiguous stream of bytes, (not to be confused with
+a memory segment, i.e. one page) is described by a program header. The
+program headers are contained in a program header table described by the
+ELF header. This table can be located anywhere, but is typically located
+immediately after the ELF header *. The program header is now described in
+depth:
+
+typedef struct
+{
+  Elf32_Word	p_type;			/* Segment type */
+  Elf32_Off	p_offset;		/* Segment file offset */
+  Elf32_Addr	p_vaddr;		/* Segment virtual address */
+  Elf32_Addr	p_paddr;		/* Segment physical address */
+  Elf32_Word	p_filesz;		/* Segment size in file */
+  Elf32_Word	p_memsz;		/* Segment size in memory */
+  Elf32_Word	p_flags;		/* Segment flags */
+  Elf32_Word	p_align;		/* Segment alignment */
+} Elf32_Phdr;
+
+The fields have the following meanings:
+
+    * p_type describes how to treat the contents of a segment. The
+      following are legal values:
+
+#define PT_NULL         0               /* Program header table entry unused */
+#define PT_LOAD         1               /* Loadable program segment */
+#define PT_DYNAMIC      2               /* Dynamic linking information */
+#define PT_INTERP       3               /* Program interpreter */
+#define PT_NOTE         4               /* Auxiliary information */
+#define PT_SHLIB        5               /* Reserved */
+#define PT_PHDR         6               /* Entry for header table itself */
+
+    * p_offset contains the offset within the file of the first byte of the
+      segment.
+
+    * p_vaddr contains the realtive virtual address the segment expects to
+      be loaded into memory at.
+
+    * p_paddr contains the physical address of the segment expects to be
+      loaded into memory at. This field has no meaning unless the hardware
+      supports and requires this information. Typically this field is set to
+      either 0 or the same value as p_vaddr.
+
+    * p_filesz contains the size in bytes of the segment within the file.
+
+    * p_memsz contains the size in bytes of the segment once loaded into
+      memory. If the segment has a larger p_memsz than p_filesz, the
+      remaining space is initialised to 0. This is the mechanism used to
+      create the .bss during program loading.
+
+    * p_flags contains the memory protection flags for the segment once
+      loaded. Any bit wise OR'd combination of following are legal values:
+
+#define PF_X            (1 << 0)        /* Segment is executable */
+#define PF_W            (1 << 1)        /* Segment is writable */
+#define PF_R            (1 << 2)        /* Segment is readable */
+
+    * p_align contains the alignment for the segment in memory. If the
+      segment is of type PT_LOAD, then the alignment will be the expected
+      page size.
+
+* FreeBSD's dynamic linker requires the program header table to be located
+within the first page (4096 bytes) of the binary.
+
+
+--[ ELF format - support and history
+
+The ELF format has widely gained acceptance as a reliable and mature
+executeable format. It is flexible, being able to support different
+architectures, 32 and 64 bit alike, without compromising too much of its
+design.
+
+As of now, the following systems support the ELF format:
+
+        DGUX             | ELF, ?, ?
+        FreeBSD          | ELF, 32/64 bit, little/big endian
+        IRIX             | ELF, 64 bit, big endian
+        Linux            | ELF, 32/64 bit, little/big endian
+        NetBSD           | ELF, 32/64 bit, little/big endian
+        Solaris          | ELF, 32/64 bit, little/big endian
+        UnixWare         | ELF, 32 bit, little endian
+
+The 32/64 bit differences on a single system is due to different
+architectures the operating systems is able to run on.
+
+
+--[ ELF loading
+
+An ELF binary is loaded by mapping all PT_LOAD segments into memory at the
+correct locations (p_vaddr), the binary is checked for library dependancies
+and if they exist those libraries are loaded. Finally, any relocations that
+need to be done are performed, and control is transfered to the main
+executable's entry point. The accompanying code in load.c demonstrates one
+method of doing this (based on the GNU dynamic linker).
+
+
+--[ ELF loading - Linux
+
+Once the userspace receives control, we have this situation:
+
+        - All PT_LOAD segments of the binary, or if its dynamicly linked:
+          the dynamic linker, are mapped properly
+        - Entry point: In case there is a PT_INTERP segment, the program
+          counter is set to the entry point of the program interpreter.
+        - Entry point: In case there is no PT_INTERP segment, the program
+          counter is initialized to the ELF header's entry point.
+        - The top of the stack is initialized with important data, see
+          below.
+
+When the userspace receives control, the stack layout has a fixed format.
+The rough order is this:
+
+       <arguments> <environ> <auxv> <string data>
+
+The detailed layout, assuming IA32 architecture, is this (Linux kernel
+series 2.2/2.4):
+
+  position            content                     size (bytes) + comment
+  ------------------------------------------------------------------------
+  stack pointer ->  [ argc = number of args ]     4
+                    [ argv[0] (pointer) ]         4   (program name)
+                    [ argv[1] (pointer) ]         4
+                    [ argv[..] (pointer) ]        4 * x
+                    [ argv[n - 1] (pointer) ]     4
+                    [ argv[n] (pointer) ]         4   (= NULL)
+
+                    [ envp[0] (pointer) ]         4
+                    [ envp[1] (pointer) ]         4
+                    [ envp[..] (pointer) ]        4
+                    [ envp[term] (pointer) ]      4   (= NULL)
+
+                    [ auxv[0] (Elf32_auxv_t) ]    8
+                    [ auxv[1] (Elf32_auxv_t) ]    8
+                    [ auxv[..] (Elf32_auxv_t) ]   8
+                    [ auxv[term] (Elf32_auxv_t) ] 8   (= AT_NULL vector)
+
+                    [ padding ]                   0 - 16
+
+                    [ argument ASCIIZ strings ]   >= 0
+                    [ environment ASCIIZ str. ]   >= 0
+
+  (0xbffffffc)      [ end marker ]                4   (= NULL)
+
+  (0xc0000000)      < top of stack >              0   (virtual)
+  ------------------------------------------------------------------------
+
+When the runtime linker (rtld) has done its duty of mapping and resolving
+all the required libraries and symbols, it does some initialization work
+and hands over the control to the real program entry point afterwards. As
+this happens, the conditions are:
+
+        - All required libraries mapped from 0x40000000 on
+        - All CPU registers set to zero, except the stack pointer ($sp) and
+          the program counter ($eip/$ip or $pc). The ABI may specify
+          further initial values, the i386 ABI requires that %edx is set to
+          the address of the DT_FINI function.
+
+
+--[ ELF loading - auxiliary vectors (Elf32_auxv_t).
+
+The stack initialization is somewhat familar for a C programmer, since he
+knows the argc, argv and environment pointers from the parameters of his
+'main' function. It gets called by the C compiler support code with exactly
+this parameters:
+
+    main (argc, &argv[0], &envp[0]);
+
+However, what is more of a mystery, and usually not discussed at all, is
+the array of 'Elf32_auxv_t' vectors. The structure is defined in the elf.h
+include file:
+
+typedef struct
+{
+        int a_type;                     /* Entry type */
+        union
+        {
+                long int a_val;         /* Integer value */
+                void *a_ptr;            /* Pointer value */
+                void (*a_fcn) (void);   /* Function pointer value */
+        } a_un;
+} Elf32_auxv_t;
+
+It is a generic type-to-value relationship structure used to transfer very
+important data from kernelspace to userspace. The array is initialized on
+any successful execution, but normally it is used only by the program
+interpreter. Lets take a look on the 'a_type' values, which define what
+kind of data the structure contains. The types are found in the 'elf.h'
+file, and although each architecture implementing the ELF standard is
+free to define them, there are a lot of similarities among them. The
+following list is from a Linux 2.4 kernel.
+
+/* Legal values for a_type (entry type).  */
+#define AT_NULL         0               /* End of vector */
+#define AT_IGNORE       1               /* Entry should be ignored */
+#define AT_EXECFD       2               /* File descriptor of program */
+#define AT_PHDR         3               /* Program headers for program */
+#define AT_PHENT        4               /* Size of program header entry */
+#define AT_PHNUM        5               /* Number of program headers */
+#define AT_PAGESZ       6               /* System page size */
+#define AT_BASE         7               /* Base address of interpreter */
+#define AT_FLAGS        8               /* Flags */
+#define AT_ENTRY        9               /* Entry point of program */
+#define AT_NOTELF       10              /* Program is not ELF */
+#define AT_UID          11              /* Real uid */
+#define AT_EUID         12              /* Effective uid */
+#define AT_GID          13              /* Real gid */
+#define AT_EGID         14              /* Effective gid */
+#define AT_CLKTCK       17              /* Frequency of times() */
+
+Some types are mandatory for the runtime dynamic linker, while some are
+merely candy and remain unused. Also, the kernel does not have to use every
+type, infact, the order and occurance of the elements are subject to change
+across different kernel versions. This turns out to be important when
+writing our own userspace ELF loader, since the runtime dynamic linker may
+expect a certain format, or even worse, the headers we receive by the
+kernel ourselves are in different order on different systems (Linux 2.2 to
+2.4 changed behaviour, for example). Anyway, if we stick to a few simple
+rules when parsing and setting up the headers, few things can go wrong:
+
+        - Always skip sizeof(Elf32_auxv_t) bytes at a time
+        - Skip any unknown AT_* type
+        - Ignore AT_IGNORE types
+        - Stop processing only at AT_NULL vector
+
+On Linux, the runtime linker requires the following Elf32_auxv_t
+structures:
+
+        AT_PHDR, a pointer to the program headers of the executeable
+        AT_PHENT, set to 'e_phentsize' element of the ELF header (constant)
+        AT_PHNUM, number of program headers, 'e_phnum' from ELF header
+        AT_PAGESZ, set to constant 'PAGE_SIZE' (4096 on x86)
+        AT_ENTRY, real entry point of the executeable (from ELF header)
+
+On other architectures there are similar requirements for very important
+auxiliary vectors, with which the runtime linker would not be able to work.
+
+Some further details about the way Linux starts up an executeable can be
+found at [11].
+
+
+--[ Binary encryption theory
+
+There is nothing new about encrypting binaries, indeed since the 1980's
+there have been various mechanisms developed for protecting binaries on
+personal computers. The most active developers of binary protections have
+been virus writers and shareware developers. While these techniques have
+evolved with advances in processing power and operating system architecture,
+most of the basic concepts remain the same. Essentially a plaintext
+decryption engine will execute first and it will decrypt the next encrypted
+section of code, this might be the main .text, or it might be another
+decryption engine.
+
+Barring a flawed and easily cracked encryption technique (e.g. XOR with a
+fixed value), the first plaintext decryptor is the usually the weak point of
+any encrypted binary. Due to this weakness, a number of various methods have
+been developed for making the initial decryption engine as difficult to
+reverse engineer as possible.
+
+The following is just a brief list of methods that have been used to
+protect the initial decryption engine:
+
+    * Self Modifying Code: Code which alters itself during run time, so that
+      analysis of the binary file on disk is different from analysis of the
+      memory image.
+
+    * Polymorphic Engines: Creates a unique decryption engine each time it is
+      used so that it is more difficult to compare two files. Also, it is
+      slightly more difficult to reverse engineer.
+
+    * Anti-Disassembling/Debugging tricks: Tricks which attempt to confuse
+      the tools being used by the reverse engineer. This makes it difficult
+      for the analyst to discover what the object code is doing.
+
+
+The following is a short list of encryption methods that have been used to
+protect the main object code of the executable:
+
+    * XOR: The favourite of any aspiring hacker, xor is frequently used to
+      obfuscate code with a simple encryption. These are usually very easily
+      broken, but extend slightly the time it takes to reverse engineer.
+
+    * Stream Ciphers: Ideal for binary encryption, these are usually strong,
+      small and can decrypt an arbitray number of bytes. A binary properly
+      encrypted with a stream cipher is impregnable to analysis.
+
+    * Block Ciphers: These are more awkward to use for binary encryption
+      because of the block alignment requirements.
+
+    * Virtual CPUs: A painstaking and powerful method of securing a binary.
+      The object code actually runs on a virual CPU that needs to be
+      independantly analysed first. Very painful for a reverse engineer (and
+      also the developer).
+
+There are even mechanisms to keep the plaintext as safe as possible in
+memory. Here is a partial list of some of these mechanisms:
+
+   * Running Line Code: This is when only the code immediately needed is
+     decrypted, and then encrypted again after use. CPU intensive, but
+     extremely difficult to analyse.
+
+   * Proprietary Binary Formats: If the object code is stored in an unknown
+     format, it is quite difficult for the reverse engineer to determine what
+     is data and what is text.
+
+
+--[ Runtime encryption techniques
+
+--[ The virus approach
+
+Adding code to an ELF executeable is far from being new. There have been
+known ELF viruses since about 1997, and Silvio was the first to publish
+about it [2], [3].
+
+One nasty property about the ELF format is its "easy loading" design
+goal. The program headers and the associated segments map directly into the
+memory, speeding up the preparation of the executeable when executing it.
+The way its implemented in the ELF format makes it difficult to change the
+file layout after linking. To add code or to modify the basic structure
+becomes nearly impossible, since a lot of hardcoded values cannot be
+adjusted without knowing the pre-linking information, such as relocation
+information, symbols, section headers and the like. But most of such
+information is either gone in the binary or incomplete.
+
+Even with such information, modifying the structure of the ELF
+executeable is difficult (without using a sophisticated library such as
+libbfd). For an in-depth discussion about reducing the pain when modifying
+shared libraries with most of the symbol information intact, klog has
+written an article about it [4].
+
+Because of this difficulties, most attempts in the past have focused on
+exploiting 'gaps' within the ELF binary, that get mapped into memory when
+loading it, but remain unused. Such areas are needed to align the memory on
+pages. As mentioned earlier, ELF has been designed for fast loading, and
+this alignment in the file guarantees a one-to-one mapping of the file into
+the memory. Also, as we will see below, this alignment allows easy
+implementation of page-wise granularity for read, write and execution
+permission.
+
+So the 'usual' ELF virus searches through the host executeable for such
+gaps, and in case a sufficient large area has been found it writes a copy
+of itself into it. Afterwards it redirects the execution flow of the
+program to its own area, often by just modifying the program entry point in
+the ELF header. There have been numerous examples for such viruses, most
+notable the 'VIT' [5] and 'Brundle-Fly' [6] virii.
+
+While this approach works moderatly well in practice, it cannot infect
+every ET_EXEC ELF executeable. The page size (PAGE_SIZE) on a UNIX system
+is often 4096, and since the padding can take up at max a whole page, the
+chances of finding a possible gap is dependant on the virus size and the
+host executeable. An average virus of the above type takes about 2000 bytes
+and hence can infect only about 50 percent of all executeables. While for
+virii this adds some non-deterministic fun and does not really matter, for
+reliable binary encryption this approach has serious drawbacks.
+
+However, there have been mad people using this approach for basic binary
+encryption purposes. The program which does this is called dacryfile. There
+is a demonstration copy of dacryfile* available from [7]. Dacryfile uses a
+data injected parasite to perform the run time decryption of the host file.
+While dacryfile is undocumented, a limited amount of information is provided
+here for the curious.
+
+Dacryfile is a collection of tools which implement the following concept.
+The host file is encrypted from the start of the .text section, to the end
+of the .text segment. The file now has its object code and its read only
+data protected by encryption, while all its data and dynamic objects are
+open to inspection. The host file is injected with a parasite that will
+perform the runtime decryption. This parasite can be of arbitrary size
+because it is appended to the end of the .data segment.
+
+The default link map of a gcc produced Linux ELF has the .dynamic section
+as the last prior to the .bss section. The .dynamic section is an array of
+Elf32_Dyn structures, terminated by a NULL struct tag. Therefore, regardless
+of how big the .dynamic section, processing of its contents will halt when
+the terminating Elf32_Dyn struct is encountered. A parasite can be injected
+at the end of the section without damaging the host file in any way. The
+dacryfile program "inject" appends the .text section from a parasite object
+file onto the .dynamic section of a host binary.
+
+The parasite itself is fairly simple, utilising the subversive dynamic
+linking Linux library to access libc functions, and rc4 to decrypt the host.
+
+The dacryfile collection is unsupported and undocumented, it and all other
+first generation binary encryptors, are a dead end. However, a dacryfile
+protected binary will be extremely immune from the recent pitiful attempts
+at reverse engineering by the forensic experts. Provided the encryption
+passphrase remains secret, and is strong enough to withstand a brute force
+attack, a dacryfile protect binary will keep is its object code or read-only
+data secure from examination. The dynamic string table will still be
+available, but that will provide limited information about the functionality
+of the binary.
+
+Also included with the article is a stripped down but functional loader of
+the burneye runtime encryption program. It is commented and should work
+just fine.
+
+* dacryphilia is a fetish in which one gains sexual arousal through the
+  tears of one's partner.
+
+
+--[ Packing/Userspace ELF loader
+
+The most flexible approach to wrap an executeable has been invented by the
+developers of the UPX packer [12], by John Reiser to be exact :). They load
+the binary in userspace, much like the kernel does it. When done properly
+there is no visible change in behaviour to the wrapped program, while it
+has no constrains on either the wrapper or the wrapped executeable, as the
+techniques mentioned before have. So this is the way we want to encrypt
+binaries, by loading them from userspace.
+
+Normally the kernel is responsible for loading the ELF executeable into
+memory, setting page permissions and allocating storage. Then it passes
+control to the code in the executeable.
+
+On todays system this is not fully true anymore. The kernel still does a
+lot of initial work, but then interacts with a userspace runtime linker
+(rtld) to resolve libraries dependancies, symbols and linking preparations.
+Only after the rtld has done the whole backstage work, control is passed to
+the real programs entry point. The program finds itself in a healthy
+environment with all library symbols resolved, well prepared memory layout
+and a carefully watching runtime linker in the background.
+
+In normal system use this is a very hidden operation and since it works
+so smooth nobody really cares. But as we are going to write a userspace ELF
+loader, we have to mess with the details. To get a rough impression, just
+write a simple "hello world" program in C, compile it, and instead of just
+running it, do a strace on it. Ever wondered what happens as so many
+syscalls are issued by your one-line executeable?
+
+This is the runtime linker in action, trying to resolve your 'printf'
+symbol after it mapped the entire C library into memory and prepared the
+page permissions.
+
+A lot of interesting details about the history of linkers and program
+loading can be found in [8].
+
+
+--[ The future
+
+Forensic work on binary executeables will become very difficult, and most
+of the people who do forensics nowadays will drop out of the field. Most
+likely some people from the reverse engineering 'scene' will convert more
+to network security and become forensics.
+
+There are promising approaches to incorporating decompilation and
+data/code flow analysis techniques into binary encryption to implement
+further protections against tampering, analyzing and deprotecting such
+binaries.
+
+The strength of the next protections will rely on the missing debug
+interfaces on most UNIX's, that are able to deal with hostile code. The
+generation of protections that come afterwards will rely solely on their
+sophisticated obfuscation approaches to deny attempts of static and
+dead-listing type of analysis.
+
+There are approaches to replace the overtaxed ptrace interface [9] with
+more powerful debug interfaces that can deal with hostile code. Also work
+on kernel space debuggers has been done, such as the Pice debugger [10].
+
+Aside from poor debugging tools and bad debugging hooks, the only thing
+that can be used to armour the run time binary is heavy obfuscation that
+will make it harder for a reverse engineer to see what is actually going
+on. You have to remember that a reverse engineer can see each atomic
+operation that is performed, as well as what is going on in memory (i.e.
+change variables, new mmaps, read()s, etc. etc. If this is to be defeated,
+they need to be swamped with information. They need to be so bady off that
+they cry about each time they have to restart their debuggers!
+
+
+--[ References
+
+  [1] Tool Interface Standard, Executeable and Linking Format, Version 1.2
+      http://segfault.net/~scut/cpu/generic/TIS-ELF_v1.2.pdf
+
+      http://www.caldera.com/developers/gabi/latest/contents.html
+      http://www.caldera.com/developers/devspecs/gabi41.pdf
+
+      additional per-architecture information is available from
+      http://www.caldera.com/developers/devspecs/
+
+  [2] Silvio Cesare, Unix viruses
+      http://www.big.net.au/~silvio/unix-viruses.txt
+
+  [3] Silvio Cesare, Unix ELF parasites and virus
+      http://www.big.net.au/~silvio/elf-pv.txt
+
+  [4] klog, Phrack #56 article 9, Backdooring binary objects
+      https://phrack.org/issues/56/9.html#article
+
+  [5] Silvio Cesare, The 'VIT' virus
+      http://www.big.net.au/~silvio/vit.html
+
+  [6] Konrad Rieck, Konrad Kretschmer
+      'Brundle-Fly', a good-natured Linux ELF virus
+      http://www.roqe.org/brundle-fly/
+
+  [7] The grugq, dacryfile binary encryptor
+      http://hcunix.7350.org/grugq/src/dacryfile.tgz
+
+  [8] John R. Levine, Linkers & Loaders
+      ISBN 1-55860-496-0
+
+  [9] Linux ptrace man page (see if you can catch the three errors)
+      http://www.die.net/doc/linux/man/man2/ptrace.2.html
+
+ [10] PrivateICE Linux system level symbolic source debugger
+      http://pice.sourceforge.net/
+
+ [11] Konstantin Boldyshev, Startup state of Linux/i386 ELF binary
+      http://linuxassembly.org/startup.html
+
+ [12] UPX, the Ultimate Packer for eXecutables
+      http://upx.sourceforge.net/
+
+ [13] GNU binutils
+      ftp://ftp.gnu.org
+
+ [14] Forensic analysis of a burneye protected binary
+      http://www.incidents.org/papers/ssh_exploit.pdf
+      http://staff.washington.edu/dittrich/misc/ssh-analysis.txt
+
+ [15] The grugq, Subversive Dynamic Linking
+      http://hcunix.7350.org/grugq/doc/subversivedl.pdf
+
+
+|=[ EOF ]=---------------------------------------------------------------=|

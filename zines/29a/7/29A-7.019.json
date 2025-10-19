@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Hooking Windows API",
+  "authors": "Holy_Father <holy_father@phreaker.net>",
+  "date": "6.10.2002",
+  "historical_context": "This article was written during a time when Windows NT technology was becoming prevalent, and the techniques described are foundational for understanding API hooking, which is relevant in both malware development and security research.",
+  "target_audience": "Hackers, security researchers, malware developers, and anyone interested in low-level Windows programming.",
+  "short_summary": "This article explores various methods of hooking API functions on Windows, detailing techniques for modifying function behavior both before and during runtime. It covers practical examples and code snippets for implementing these techniques.",
+  "summary": "The article provides an in-depth examination of API hooking techniques on Windows systems, particularly those based on NT technology. It begins with an introduction to the concept of hooking, emphasizing the ability to replace the code of API functions to alter program behavior. The author categorizes hooking methods into two main types: hooking before running a process and hooking during its execution. Each method is elaborated with practical examples, including code snippets that demonstrate how to manipulate the Import Address Table (IAT) and rewrite function entry points. The discussion extends to advanced techniques such as DLL injection and independent code execution, highlighting the complexities and considerations involved in each approach.\n\nThroughout the article, the author emphasizes the importance of understanding the underlying Windows architecture, including PE file structure and memory management. The techniques presented are not only applicable for legitimate software development but also have implications for malware creation and evasion tactics against security software. The article concludes with an invitation for further contributions to the topic, underscoring the evolving nature of hooking methods and their relevance in the security landscape."
+}

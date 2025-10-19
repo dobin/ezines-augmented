@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 2, Phile #00C of 11",
+  "title": "Virus Contest! 'The Spammies(tm)'",
+  "authors": "Unknown",
+  "date": "July 4th, 1992",
+  "historical_context": "This article reflects the early 1990s hacker culture, where virus creation was seen as a form of programming challenge and creativity. The contest aimed to encourage original virus development rather than mere hacking.",
+  "target_audience": "Hackers, virus developers, security researchers",
+  "short_summary": "The article announces the first-ever virus contest, 'The Spammies', encouraging programmers to create original viruses with a chance to win significant prizes. It outlines the rules for submission, judging criteria, and the spirit of competition in the hacker community.",
+  "summary": "In this groundbreaking announcement, the 'Spammies' contest invites programmers to showcase their creativity by developing original viruses. The contest emphasizes originality over hacking, aiming to motivate participants to produce unique code. With a deadline set for July 4th, 1992, the contest outlines strict rules, including the requirement for original source code, compilation without errors, and the necessity for stealth against virus scanners. Participants are encouraged to detail their virus's unique characteristics, infection methods, and encryption routines, fostering a competitive atmosphere among virus creators.\n\nJudging will be conducted by a panel of experts based on criteria such as stealth, size, reproductivity, and performance. The contest not only offers the allure of a substantial monetary prize but also the prestige of being recognized in the hacker community for innovative virus development. This article captures the essence of early hacker culture, where programming skill was celebrated, and contests like these served as a platform for showcasing talent in a rapidly evolving digital landscape."
+}

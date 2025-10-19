@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Two, Phile 6 of 9",
+  "title": "Toward Universal Information Services Via ISDN",
+  "authors": "Taran King",
+  "date": "",
+  "historical_context": "This article discusses the evolution of telecommunications networks in the late 1980s, focusing on the transition from voice-oriented services to integrated digital services.",
+  "target_audience": "Telecommunications professionals, network engineers, and technology enthusiasts.",
+  "short_summary": "The article outlines the progression of telecommunications networks towards Universal Information Services, emphasizing the role of ISDN in providing integrated digital access for voice and data. It discusses the current state of networks and future developments expected in the 1990s.",
+  "summary": "In 'Toward Universal Information Services Via ISDN', Taran King explores the transformation of local networks from primarily voice-oriented systems to more sophisticated digital infrastructures capable of supporting a variety of services. The article highlights the advancements in technology, such as the AT&T Network Systems 5ESS switch and the Integrated Special Services Network (ISSN), which are paving the way for enhanced customer control and data capabilities. King emphasizes that while overlay networks are currently managing the demand for digital transmission, the integration of these networks into a single framework would yield greater efficiency and effectiveness in service delivery.\n\nThe piece further delves into the concept of the Integrated Services Digital Network (ISDN), which aims to provide users with a high-bandwidth digital subscriber line capable of transmitting both voice and data simultaneously. King discusses the anticipated developments in ISDN technology, including the introduction of software that will enable switches to accommodate higher bandwidth channels. The article concludes with a vision of Universal Information Services, projecting that the 1990s will see a significant evolution in network capabilities, allowing for diverse service offerings from a unified network infrastructure."
+}

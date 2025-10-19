@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "APPLE SHAPE TABLES (a short introduction)",
+  "authors": "The Dark Static",
+  "date": "1988",
+  "historical_context": "This article was published during the late 1980s, a time when personal computing was becoming more accessible, and programming for graphics on home computers like the Apple II was a popular hobby among enthusiasts.",
+  "target_audience": "Hackers, programmers, and retro computing enthusiasts.",
+  "short_summary": "This article introduces Apple shape tables, explaining how to manipulate them in memory to create and plot graphics on the Apple II. It provides practical programming examples and tips for beginners.",
+  "summary": "In 'APPLE SHAPE TABLES', The Dark Static presents a concise guide to understanding and using shape tables on the Apple II. The article begins by defining shape tables as binary data structures that can be manipulated to create graphics. It details the necessary commands to store and access these tables in memory, emphasizing the importance of correctly setting the X and Y coordinates for shape plotting. The author provides a straightforward program to help users calculate these coordinates, making the process accessible even for beginners. \n\nThe article further explains how to plot shapes using commands like HGR and XDRAW, and discusses how to manipulate the rotation and scale of shapes for various visual effects. With practical examples and a sample program included, this piece serves as a valuable resource for anyone interested in graphics programming on the Apple II, showcasing the creativity and technical skills of early computer enthusiasts."
+}

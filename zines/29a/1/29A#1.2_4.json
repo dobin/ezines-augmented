@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Upper Memory Residency",
+  "authors": "IntrusO",
+  "date": "",
+  "historical_context": "This article discusses techniques used by viruses in the DOS environment, particularly focusing on memory management and upper memory residency, which were critical concepts in early computer virus development.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in computer virus history.",
+  "short_summary": "The article explores methods used by viruses to copy themselves into upper memory in DOS, detailing the structure of memory blocks and the techniques employed by the Neuroquila virus for residency.",
+  "summary": "In 'Upper Memory Residency', IntrusO delves into the intricacies of how viruses, particularly Neuroquila, manipulate upper memory in DOS systems. The author explains the concept of Upper Memory Blocks (UMBs) and the Memory Control Blocks (MCBs) that govern memory allocation. By detailing the structure of these blocks, IntrusO provides insight into how a virus can allocate and manage memory to ensure its persistence in the system. The article also includes specific assembly code snippets that illustrate the techniques used to allocate memory and modify MCBs, showcasing the technical prowess required to develop such malware.\n\nThe discussion extends to the use of the XMS controller, which allows for enhanced memory management capabilities in DOS. IntrusO emphasizes the importance of understanding these memory management functions, as they are crucial for any virus seeking to remain resident in memory. The article serves as both a technical guide and a historical perspective on early virus development, offering valuable lessons for those interested in the evolution of malware and computer security."
+}

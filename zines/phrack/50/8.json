@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Fifty, Phile #8 of 16",
+  "title": "Cracking NT Passwords",
+  "authors": "Nihil",
+  "date": "1997",
+  "historical_context": "This article discusses a significant breakthrough in cracking Windows NT passwords, leveraging the Samba team's work. It reflects the early days of Windows NT security vulnerabilities and the hacker community's response to them.",
+  "target_audience": "Hackers, security researchers, system administrators",
+  "short_summary": "The article introduces a method for cracking NT passwords using a dictionary attack on the one-way functions stored in the Security Account Manager (SAM) database. It discusses the vulnerabilities in Windows NT's password hashing mechanisms and provides code for a simple password cracker.",
+  "summary": "In 'Cracking NT Passwords', Nihil explores the vulnerabilities in Windows NT's password storage mechanisms, particularly focusing on the one-way functions (OWF) used to hash passwords. The article highlights a tool called PWDUMP, developed by Jeremy Allison, which allows administrators to extract these hashes from the Security Account Manager (SAM) database. This capability not only aids system administrators in managing user databases but also provides attackers with the means to perform dictionary attacks against user passwords. The author explains the two types of hashes used by Windows NT: the LanMan and NT OWFs, detailing how they are generated and their respective weaknesses.\n\nThe article includes a straightforward implementation of a dictionary-based password cracker, demonstrating how to utilize the extracted hashes to recover user passwords. Nihil emphasizes the ease of cracking the LanMan password compared to the NT password, while also hinting at the potential for network-based attacks using the hashes. The code provided is a practical example for readers with programming skills, encouraging them to experiment and enhance the tool further. Overall, the article serves as both a technical guide and a commentary on the security shortcomings of Windows NT, reflecting the hacker ethos of the time."
+}

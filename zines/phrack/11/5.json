@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Eleven, Phile #5 of 12",
+  "title": "Simple Data Encryption",
+  "authors": "The Leftist",
+  "date": "",
+  "historical_context": "This article reflects the early days of online bulletin board systems (BBS) and the growing concerns about privacy and security in digital communications during the late 1980s.",
+  "target_audience": "Hackers, BBS operators, electronics enthusiasts",
+  "short_summary": "This article provides a simple method for encrypting data transmitted over modems using a hex inverter circuit. It is aimed at BBS operators who wish to enhance their security against unauthorized access.",
+  "summary": "In 'Simple Data Encryption', The Leftist introduces a straightforward electronic method for encrypting data sent over modems, specifically targeting BBS operators concerned about unauthorized access. The encryption technique relies on a hex inverter chip, which flips binary data—turning 1's into 0's and vice versa—effectively obscuring the data being transmitted. The article outlines the necessary components, including a 9-volt battery and a 74HC/HCT04 CMOS hex inverter, and provides a detailed schematic for setting up the circuit. This approach is particularly relevant for those operating BBS systems in an era when digital privacy was becoming increasingly important, yet technical knowledge was still limited among users. \n\nThe author emphasizes that both the sender and receiver must implement this encryption method to ensure effective communication. By detailing the pin connections and providing a non-technical explanation, The Leftist makes the concept accessible to a broader audience, encouraging even those with minimal electronics experience to enhance their data security. This article serves as a practical guide for individuals looking to protect their communications in a time when the threat of surveillance was a growing concern."
+}

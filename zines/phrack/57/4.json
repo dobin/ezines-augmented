@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x04 of 0x12",
+  "title": "The Phrack Editorial Policy",
+  "authors": "phrackstaff",
+  "date": "",
+  "historical_context": "This article marks a transition in the editorial control of Phrack from a single editor to a collective group, emphasizing the importance of maintaining quality and originality in submissions.",
+  "target_audience": "Hackers, security researchers, aspiring writers in the field of information security.",
+  "short_summary": "The article outlines the editorial policy of Phrack, emphasizing the importance of original research, clear writing, and comprehensive exploration of ideas in submitted articles.",
+  "summary": "In this editorial, the Phrack staff delineates the guiding principles for article submissions to the zine. The focus is on maintaining Phrack's reputation for publishing original and well-written content. The staff encourages authors to explore a wide range of topics related to information security without being confined to specific technologies. They stress the importance of clarity in writing, especially for a diverse audience that may include non-native English speakers. The article also highlights the necessity of fully developing ideas and providing references to support further research, thus fostering a culture of knowledge sharing within the hacker community. Overall, this editorial serves as a guide for aspiring authors looking to contribute to Phrack while ensuring the quality and relevance of the content published."
+}

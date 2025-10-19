@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #19 of 19",
+  "title": "Phrack Magazine Extraction Utility",
+  "authors": "Phrack Staff, sirsyko",
+  "date": "09.09.99",
+  "historical_context": "This article is part of Phrack's ongoing contributions to the hacker community, providing tools and insights into software development and extraction techniques.",
+  "target_audience": "Hackers, software developers, security professionals",
+  "short_summary": "This article presents the Phrack Magazine Extraction Utility (PMEU), a tool designed to extract text files from specially tagged flat files into a hierarchical directory structure. It includes various implementations in C, Perl, AWK, and shell script.",
+  "summary": "The Phrack Magazine Extraction Utility (PMEU) is a versatile tool designed to facilitate the extraction of text files from specially formatted flat files. The utility recognizes extraction tags formatted as '<++>' for the start of a file and '<-->' for the end, allowing users to organize extracted content into a structured directory hierarchy. The article provides a detailed explanation of the extraction process, including the use of CRC32 checks to ensure data integrity during extraction. The utility is implemented in multiple programming languages, including C, Perl, AWK, and shell script, catering to a wide range of user preferences and environments.\n\nThe article emphasizes the importance of proper tagging and directory creation during the extraction process, providing examples and usage instructions for each implementation. The PMEU serves as a practical tool for hackers and developers looking to manage and extract source code or other content from Phrack Magazine articles, showcasing the collaborative spirit of the hacker community in sharing tools and techniques. By offering multiple implementations, the article encourages readers to adapt the utility to their specific needs, reinforcing the ethos of customization and flexibility in hacker culture."
+}

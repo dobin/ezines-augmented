@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "IDEA Virus COM/EXE/ZIP Infecteur Resident polymorphe lourdement crypt",
+  "authors": "Fauzan Mirza",
+  "date": "1998",
+  "historical_context": "This article discusses the IDEA virus, a polymorphic virus that infects COM, EXE, and ZIP files, showcasing advanced techniques in virus development during the late 1990s.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the development and functionality of the IDEA virus, which employs polymorphic techniques and encryption to evade detection. It outlines the virus's structure, infection methods, and its stealth capabilities.",
+  "summary": "The IDEA virus represents a significant advancement in malware design, utilizing a combination of polymorphism and encryption to avoid detection by antivirus software. The article provides an in-depth look at the virus's architecture, including its resident memory techniques and the various modifications made to enhance its stealth and infection capabilities. The author describes how the virus can infect COM and EXE files, as well as ZIP archives, and discusses the cryptographic methods employed to secure its payload and ensure its persistence in infected systems.\n\nThe technical details include the use of the IDEA encryption algorithm, which is applied to the virus's code to create a highly obfuscated version that is difficult for antivirus programs to analyze. The article also highlights the virus's ability to modify file attributes and timestamps to maintain its stealth, making it a notable example of the evolving complexity of malware during this era. Overall, the IDEA virus serves as a case study in the intersection of cryptography and malware, illustrating the lengths to which virus authors will go to evade detection and maintain control over infected systems."
+}

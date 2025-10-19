@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 18, Phile #3 of 11",
+  "title": "An Introduction To Packet Switched Networks",
+  "authors": "Epsilon",
+  "date": "05/3/88",
+  "historical_context": "This article was written during the rise of packet-switched networks, which were becoming crucial for telecommunications and data transfer in the late 1980s.",
+  "target_audience": "Hackers, telecommunications professionals, and security researchers.",
+  "short_summary": "This article provides an overview of packet-switched networks, detailing their advantages for users and hackers alike. It explains the basic concepts, protocols, and the global landscape of these networks, emphasizing their efficiency and accessibility.",
+  "summary": "Epsilon further elaborates on the global presence of PSNs, listing notable networks across various countries and their respective Data Network Identification Codes (DNICs). The article emphasizes the accessibility of these networks, particularly in the United States, where users can connect to multiple public PSNs like Telenet and Tymnet. Additionally, the author discusses the potential for accessing private data networks through PSNs, cautioning readers about the need for discretion when exploring these systems. The piece concludes with a call to share knowledge gained from exploring PSNs while advocating for responsible usage to ensure the longevity of these valuable resources."
+}

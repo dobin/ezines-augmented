@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Forty-Nine, Phile #12 of 16",
+  "title": "FEDLINE (Message and Code Definitions)",
+  "authors": "ParMaster",
+  "date": "",
+  "historical_context": "This article provides insights into the FEDLINE software, which is crucial for financial institutions in the U.S. and highlights the importance of secure electronic funds transfer systems.",
+  "target_audience": "Security professionals, financial institution employees, hackers interested in banking systems.",
+  "short_summary": "The article details the message and code definitions used in the FEDLINE software, which facilitates electronic funds transfers for banks and financial institutions. It categorizes various transaction types and their statuses, providing a comprehensive reference for understanding the system's operations.",
+  "summary": "In this article, ParMaster presents a detailed overview of the FEDLINE software package, which serves as a critical interface for banks and financial institutions to conduct electronic funds transfers. The article categorizes various message types, including funds transfer messages, foreign funds transfers, and securities transfer messages, along with their respective accounting status codes. Each message type is accompanied by a description, providing clarity on how transactions are processed within the FEDLINE system.\n\nThe author emphasizes that the document is not an attempt to demystify the operation of FEDLINE but rather a categorical list of codes that are essential for understanding the software's functionality. By outlining the status codes and their meanings, the article serves as a valuable reference for professionals working in the financial sector, particularly those involved in electronic transactions and security. Overall, this piece is a significant contribution to the understanding of secure banking communications and the operational standards that govern them."
+}

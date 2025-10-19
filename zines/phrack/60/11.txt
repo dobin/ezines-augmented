@@ -1,0 +1,1500 @@
+               Volume 0x0b, Issue 0x3c, Phile #0x0b of 0x10
+
+|=---------------------=[ SMB/CIFS BY THE ROOT ]=------------------------=|
+|=-----------------------------------------------------------------------=|
+|=---------------=[ ledin <ledin@encephalon-zero.com> ]=-----------------=|
+
+
+
+--[ Contents
+
+ 1 - Introduction
+ 
+ 2 - What is SMB/CIFS
+ 
+ 3 - Session establishment
+     How does a client establish a SMB session with a server ? 
+ 
+ 4 - Security level of SMB
+ 
+ 5 - Passwords
+ 
+ 6 - Description of several SMB packets
+ 
+   6.1 - The general aspect of a SMB packet
+   6.2 - NETBIOS and SMB
+   6.3 - The SMB base header
+   6.4 - Description of the most importants SMB commands
+   6.5 - How I can recover SMB passwords in clear from the network when 
+        they should be encrypted ?
+   6.6 - Man in the middle attack
+   6.7 - Notes about windows 2k/XP SMB operating over TCP 
+	
+ 7 - Transaction subprotocol and RAP commands 
+   
+   7.1 - RAP commands
+ 
+ 8 - Using RAP commands to list shares available on  a server
+   
+   8.1 - TconX packets
+   8.2 - Explanation of the RAP command "NetshareEnum"
+ 
+ 9 - Conclusion
+ 
+ 10 - References
+ 
+ 11 - Thanks 
+
+ Appendix A
+
+ Appendix B
+ 
+ 
+ 
+--[ 1 - Introduction
+
+
+   In this article, I will try to explain what CIFS and SMB are , how
+it works and some common insecurities present on these protocols.
+This article constitue  a useful source of knowledge about Microsoft 
+networking. The SMB protocol is one of the most used protocols on LAN.
+I have also included source code in the aim of giving a good expamle 
+of SMB operating.
+
+   You will learn how to use ARP poisoning to have password in clear 
+from the network when all SMB passwords are encrypted (without brute 
+forcing). You will be able to understand the link between SMB and 
+NETBIOS. You will also learn what is and how works the Microsoft 
+Remote Administration Protocol (RAP) for scanning remote shares on a
+SMB server.
+
+   Programs and information are given for educational purpose only. 
+I could be not responsable of what you will make with.
+
+--[ 2 - What is SMB/CIFS ?
+
+
+According to Microsoft CIFS is intended to provide an open cross-
+platform mechanism for client systems to request file and print 
+services from server systems over a network. It is based on the
+standard Server Message Block (SMB) protocol widely in use by 
+personal computers and workstations running a wide variety of 
+operating systems.
+
+In fact, SMB (for Server Message Block) is a protocol which operates
+the data transfert between sharing files, devices, named pipes 
+or mail slot across a network. CIFS is a public version of SMB.
+
+SMB clients available :
+
+ from Microsoft : Windows 95, Windows for workgroups 3.x, 
+ Windows NT,2000 and XP
+
+ for Linux :
+ Smblient from Samba
+ Smbfs for Linux
+
+SMB servers :
+ Samba
+ Microsoft Windows for Workgroups 3.x
+ Microsoft Windows 95
+ Microsoft Windows NT 
+ The PATHWORKS family of servers from Digital
+ LAN Manager for OS/2,SCO,etc
+ VisionFS from SCO
+ TotalNET Advanced Server from Syntax
+ Advanced Serverfor UNIX from AT&T (NCR?)
+ LAN Server for OS/2 from IBM.
+
+--[ 3 - Session establishment
+
+
+   Note : SMB protocol was developed to run on DOS ( powered by an 
+Intel chip) so byte ordering is little-endian the opposite of network
+ ordering.
+
+   SMB can run over TCP/IP, NetBEUI, DECnet Protocol and IPX/SPX. 
+With a SMB implementation over TCP/IP, DECnet or NETBEUI, the 
+NETBIOS names must be use.
+
+   I will explain in the sixth chapter what NETBIOS is. But for the 
+moment, you just have to know that a NETBIOS name identifies one computer
+on a Microsoft network.
+
+   The development of SMB has begun in the eighties, so there is a lot
+of versions of the SMB protocol. But the most used (on Windows 95, 
+98, Windows NT, Windows 2000 and XP) is the NT LM 0.12 
+version. This article is based on the NT LM 0.12 version.
+
+   You have to know that a SMB Domain name identifies a group of 
+ressource (users, printers, files ..) on a SMB server.
+
+How does a client establish a SMB session with a server ?
+
+
+   Let's take this situation : a client  wants to access to a specific
+ressource on a server.
+
+1 - To begin the client requests the server for a NETBIOS session. 
+The client sends his encoded NETBIOS name to the SMB server 
+(which listening connection requests on port 139). 
+The server receives the NETBIOS name and replies with a NETBIOS 
+session packet to valid the session. The client enters after in a 
+SMB session establishment i.e the identification of the client 
+to the SMB server.
+
+2 - The client sends a SMB negprot request packet (negprot for 
+"negotiate protocol"). The client gives a list of SMB protocol 
+versions supported.
+Then the server sends a SMB negprot reply packet (with informations 
+like SMB domain name, maximun connections accepted, 
+SMB protocol versions supported ...)
+
+3 - After the negotiation of protocols, the client processes to a user
+or share identification on the server.(see the next chapter to know 
+ what is the difference between a share and a user identification)
+
+This process is operated by the SesssetupX request packet (SesssetupX 
+for Session Setup and X).
+The client sends a couple login/password or a simple password to the 
+server that refuses or allows the conection with a SessetupX reply 
+packet.
+
+4 - Ok, when the client has finished with negotiation and identification
+it sends a tconX packet for specifying the network name of the ressource
+that it wants to access, and the server sends a Tconx reply indicating 
+if the connection is accepted or not.
+
+
+
+
+                                 netbios session request 
+                                      (netbios name)
+              [client]       --------------------------->   [server]
+1)
+                                 netbios session granted
+	      [client]       <--------------------------    [server]
+	      
+	  
+
+                                  SMB negprot request
+              [client]       --------------------------->   [server]
+2)
+                                  SMB negprot reply
+              [client]       <--------------------------    [server]
+	      
+	      
+
+                                SMB sesssetupX request
+              [client]       --------------------------->   [server]
+3)
+                                 SMB sesssetupX reply
+              [client]       <--------------------------    [server]
+	      
+
+                                 SMB TconX request
+              [client]       --------------------------->   [server]
+4)
+                                 SMB TconX reply
+              [client]       <--------------------------    [server]
+	      
+	      
+A complete description of each packets is given in the chapter six.
+
+
+--[ 4 - Security level of SMB 
+ 
+
+There is two types of security models on SMB :
+
+   The first is  the "Share level" security model. This security model
+associates a password to a shared ressource on the network. The user 
+logs to this ressource (IPC, Disk, Printers) with the correct password.
+The user is anyone on the network who knows the name of the server where 
+the ressource is.
+
+   The second is the "User Level". This security model is an enhanced
+implementation of the first. It consists to associate a couple of 
+login/password to a shared ressource. So if a person wants to 
+connect to this shared ressource, he has to know the login/password 
+couple. This security level is useful to know who makes what.
+
+
+--[ 5 - Passwords
+
+
+   With SMB, when you have to make an identification on a server, your
+password could be sent in clear or encrypted. If the server supports
+encryption, the client will have to answer a challenge. The server
+knows the password, so in the negprot reply packet, an encryption key
+will be send to the client. The client encrypts the password,
+and sends it in the SesssetupX request packet, the server verifies the
+validity of the password and allows the session or not.
+
+You have to know that a SMB password (not encrypted) is 14 bytes 
+long maximum. The size of the encryption key is usually 8 bytes long.
+The size of the encrypted password is 24 bytes. With ANSI password, the
+characters of the password are converted in upper case for the 
+encryption.
+
+The password is encrypted with a DES encryption in block mode.
+
+
+--[6 - Description of several SMB packets
+
+
+   In this part I will give the description of the most important 
+packets types involved in SMB protocol. I know it's a bit boring 
+but this is the base to understand how works SMB and the attacks.
+I will explain what is very important in each type of packet.
+For each type of command correspond two types of packets. The request 
+packet and the reply packet.
+
+----[ 6.1 - The general aspect of a SMB packet.
+
+
+   In the majority of case SMB runs over TCP/IP protocol suite. 
+So let's consider that SMB runs over TCP layer for us. Over the TCP 
+layer, you will always find the NETBIOS (NBT) header. Over NBT you 
+have the SMB base header. Over the SMB base header, you have an 
+another type of header, which depends of the specific command you 
+request.
+
+                    ----------------------
+                    |      TCP header    |
+                    ----------------------
+                    |   NETBIOS header   |
+                    ----------------------
+                    |   SMB base header  |
+                    ----------------------
+                    | SMB Command header |
+                    ----------------------
+                    |        DATA        |
+                    ----------------------
+			      
+The "SMB Base header" contains several informations, like the size of 
+reception buffers, maximum connexions allowed... It also contains a 
+number that identifies the command requested. 
+
+"SMB command header" is a header with all the parameters for the 
+requested command (a command like negotiate protocol versions ... )
+
+"DATA" is the data for the requested command.
+
+I call "SMB packet", the NETBIOS Header + the SMB base header +
+the SMB Command header + DATA.
+
+NOTE :  I will use this definitions :
+
+typedef unsigned char UCHAR;          // 8 unsigned bits
+typedef unsigned short USHORT;        // 16 unsigned bits
+typedef unsigned long ULONG;          // 32 unsigned bits
+
+and STRING defined a null terminated ASCII string. 
+
+
+----[ 6.2 - NETBIOS and SMB
+
+
+NETBIOS (for NETwork Basic Input and Outpout System) is widely use 
+on Microsoft networks. It is a sofware interface and a naming system.
+Each computer has a NETBIOS name, which is 15 characters long, and a 
+sixteenth character is used to identify the type of computer 
+( Domain Name server, workstation...).
+
+Value for the sixteenth character :
+
+0x00 base computer, workstation.
+0x20 resource sharing server.
+
+There are other values but these are the most interessant for us. The 
+first (0x00) identify a workstation and the second (0x20) the server. 
+
+On a SMB packet, the NETBIOS header corresponds to the NETBIOS 
+Session header, defined like this :
+ 
+                UCHAR Type;   	// Type of the packet
+                UCHAR Flags;  	// Flags
+                USHORT Length;	// Count of data bytes (netbios header
+                                                        not included)
+	      
+For the "Flags" field, the value is always 0. (with SMB, not in general !)
+
+For the "Type" field, several values are possible :
+
+               0x81 corresponds to a NETBIOS session request. This code
+is used when the client sends its NETBIOS name to the server.
+
+               0x82 is a positive response to a NETBIOS session request.
+This code is used by the server to authorize a NETBIOS session. 
+
+               0x00 correspond to a session message. This code is always 
+used in a SMB session i.e when the client has sent his NETBIOS name to 
+the server and has received a positive reply.	       
+	       
+The "Length" field contains a count of data bytes (The netbios header 
+is not included), "data" means what is above the NETBIOS header (it 
+could be the SMB Base header + SMB Command header + DATA or NETBIOS 
+names). 
+
+NETBIOS names and encoding
+
+
+A NETBIOS encoded name is 32 bytes long.
+
+A NETBIOS name is always given in upper case characters.
+
+It's very easy to encode a NETBIOS name. For example the NETBIOS name 
+of my computer is "BILL" and it's a workstation so there is a "0x00"
+for the sixteenth character.
+
+Firstly, when a NETBIOS name is shorter than 15 bytes, it may be padded
+on the right with spaces.
+
+     "BILL           "      
+
+In hexadecimal  0x42 0x49 0x4c 0x4c 0x20 0x20 ......0x00
+
+Each bytes are splited into 4-bit halves.
+
+0x4 0x2 0x4 0x9 0x4 0xc 0x4 0xc 0x2 0x0 .......
+
+And each 4-bit half is added to the ASCII value of the 'A' letter (0x41)
+
+0x4 + 0x41 = 0x45  -> ASCII value = E
+
+0x2 + 0x41 = 0x43  -> ASCII value = C
+...
+
+And you have the encoded NETBIOS name which is 32 bytes long.
+
+Note :
+
+ SMB can run directly over TCP without NBT (it's supported on Win2k 
+and XP on port 445). The NETBIOS name are not limited to 15 characters. 
+
+You don't need to know more, if you want to have more information 
+about NETBIOS read [3] and [4].
+
+----[ 6.3 - The SMB base header    
+
+
+This header is used in all SMB packets, this is its definition :
+
+    UCHAR Protocol[4];                // Contains 0xFF,'SMB'
+    UCHAR Command;                    // Command code
+    union {
+        struct {
+            UCHAR ErrorClass;         // Error class
+            UCHAR Reserved;           // Reserved for future use
+            USHORT Error;             // Error code
+        } DosError;
+        ULONG Status;                 // 32-bit error code
+    } Status;
+    UCHAR Flags;                      // Flags
+    USHORT Flags2;                    // More flags
+    union {
+        USHORT Pad[6];                // Ensure section is 12 bytes long
+        struct {
+            USHORT PidHigh;           // High part of PID
+            ULONG  Unused;            // Not used
+            ULONG  Unused2;
+    } Extra;
+    };
+    USHORT Tid;                       // Tree identifier
+    USHORT Pid;                       // Caller's process id
+    USHORT Uid;                       // Unauthenticated user id
+    USHORT Mid;                       // multiplex id
+    UCHAR  WordCount;                 // Count of parameter words
+    USHORT ParameterWords[ WordCount ];    // The parameter words
+    USHORT ByteCount;                 // Count of bytes
+    UCHAR  Buffer[ ByteCount ];       // The bytes
+
+
+The "Protocol" field contains the name of the protocol (SMB) with a 
+0xFF before.
+
+The "Command" field contains the value of the requested command. For 
+example 0x72 is for the "negotiate protocol" command.
+ 
+The "Tid" field is used when the client is successfully connected to a
+ressource on a SMB server . The TID number identifies this ressource.
+
+The "Pid" field is used when the client has successfully created a 
+process on the server. The PID number identifies this process.
+
+The "Uid" field is used when a user is successfully authenticated 
+on a server. The UID number identify this user.
+
+The "Mid" field is used in couple with the PID when a client has 
+several requests on the server ( process, threads, file acess...).
+
+The "Flags2" field is also important, when the bit 15 is armed, the 
+strings are UNICODE strings .  
+
+
+
+----[ 6.4 - Description of the most importants SMB commands
+
+
+ SMB negotiate Protocol (negprot)
+ 
+   The Negotiate Protocol Command is used in the first step of the SMB 
+session establishment.
+
+The Command code for the field "Command" in the SMB Base header is : 0x72.
+
+Here is the description of the negprot request and reply headers : 
+
+  Request header
+    
+ UCHAR WordCount;              Count of parameter words = 0
+ USHORT ByteCount;             Count of data bytes
+ struct {
+   UCHAR BufferFormat;        0x02 -- Dialect
+   UCHAR DialectName[];       ASCII null-terminated string
+ } Dialects[];
+
+   This packet is sent by the client to give the server its list of 
+SMB protocol versions supported.
+
+   Just three things to say, for this packets, "WordCount" field is 
+always set to zero, "ByteCount" field is equal to the size of the 
+"Dialects" structure, the field "BufferFormat of "Dialects" is always
+equal to 0x02.
+
+   The "DialectName" string contains the name of the several SMB 
+protocol versions supported by the client.    
+ 
+  Reply header
+    
+ UCHAR WordCount;           Count of parameter words = 17
+ USHORT DialectIndex;       Index of selected dialect
+ UCHAR SecurityMode;        Security mode:
+                            bit 0: 0 = share, 1 = user
+                            bit 1: 1 = encrypt passwords
+ USHORT MaxMpxCount;        Max pending multiplexed requests
+ USHORT MaxNumberVcs;       Max VCs between client and server
+ ULONG MaxBufferSize;       Max transmit buffer size
+ ULONG MaxRawSize;          Maximum raw buffer size
+ ULONG SessionKey;          Unique token identifying this session
+ ULONG Capabilities;        Server capabilities
+ ULONG SystemTimeLow;       System (UTC) time of the server (low).
+ ULONG SystemTimeHigh;      System (UTC) time of the server (high).
+ USHORT ServerTimeZone;     Time zone of server (min from UTC)
+ UCHAR EncryptionKeyLength; Length of encryption key.
+ USHORT ByteCount;          Count of data bytes
+ UCHAR EncryptionKey[];     The challenge encryption key
+ UCHAR OemDomainName[];     The name of the domain (in OEM chars)
+
+
+This packet is sent by the server to give the client the list 
+of SMB protocol versions supported, the SMB domain name of the server 
+and an encryption key if necessary. 
+ 
+IMPORTANT  :
+ 
+The first interessant field is the "SecurityMode" byte. If the bit 0 
+is armed we have a user security level. If it's not, we have a 
+share security level. If the bit 1 is armed the password is encrypted
+with a DES encryption in block mode.
+
+The "SessionKey" field is used to identify the session . There is one 
+single session key for one session.
+ 
+The "Capabilities" field indicates if the server supported UNICODE 
+strings or NT LM 0.12 particular commands ...
+ 
+The datas are at the end of the header. With a negprot reply, 
+these datas corespond to the strings "EncryptionKey" and 
+"OemDomainName".
+
+The length of these two strings together is given by the "Bytecount" 
+field.
+ 
+The length of the "EncrytionKey" string is given by the field 
+"EncryptionKeyLength". The "EncryptionKey" string contains the Key for
+the encryption of the password.
+
+The length of "OemDomainName" is given by 
+     (Bytecount - EncryptionKeyLength). 
+The "OemDomainName" string contains the SMB domain name of the server
+(in OEM chars).
+
+
+ Session setup and X
+  
+   The Session Setup and X packets (SesssetupX or setupx for 
+abbrevation) are used to deal with the identity of a user or when you
+have to give a password to acess a ressource. 
+
+   The Command code for the Session Setup and X command is 0x73.
+
+  Request header
+  
+ UCHAR WordCount;               Count of parameter words = 13
+ UCHAR AndXCommand;             Secondary (X) command;  0xFF = none
+ UCHAR AndXReserved;            Reserved (must be 0)
+ USHORT AndXOffset;             Offset to next command WordCount
+ USHORT MaxBufferSize;          Client's maximum buffer size
+ USHORT MaxMpxCount;            Actual maximum multiplexed pending
+                                requests
+ USHORT VcNumber;               0 = first (only), nonzero=additional
+                                VC number
+ ULONG SessionKey;              Session key (valid iff VcNumber != 0)
+ USHORT                         Account password size, ANSI
+ CaseInsensitivePasswordLength;
+ USHORT                         Account password size, Unicode
+ CaseSensitivePasswordLength;
+ ULONG Reserved;                must be 0
+ ULONG Capabilities;            Client capabilities
+ USHORT ByteCount;              Count of data bytes;    min = 0
+ UCHAR                          Account Password, ANSI
+ CaseInsensitivePassword[];
+ UCHAR CaseSensitivePassword[]; Account Password, Unicode
+ STRING AccountName[];          Account Name, Unicode
+ STRING PrimaryDomain[];        Client's primary domain, Unicode
+ STRING NativeOS[];             Client's native operating system,
+                                Unicode
+ STRING NativeLanMan[];         Client's native LAN Manager type,
+                                Unicode
+
+This packet gives a lot of information about the client's system.
+
+The field "MaxBufferSize" is very important, it gives the maximun 
+size of data that the client can receive. If you set it to zero 
+you will not receive any type of data from the server.
+ 
+For the data, you have several strings. The most important are 
+"CaseSensitivePassword" (password in UNICODE characters)
+and "CaseInsensitivePassword" (password in ANSI characters).
+
+One of both is used, it depends if the server is supporting UNICODE
+strings or not (see negatiate protocol reply packet description). 
+The length of the password is given in the fields 
+"CaseInsensitivePasswordLength" or in
+"CaseSensitivePasswordLength" .
+
+For the other strings, see the description. The count of data bytes
+is given by the "Bytecount" field.
+
+ 
+  Reply header
+  
+ UCHAR WordCount;                   Count of parameter words = 3
+ UCHAR AndXCommand;                 Secondary (X) command;  0xFF =
+                                    none
+ UCHAR AndXReserved;                Reserved (must be 0)
+ USHORT AndXOffset;                 Offset to next command WordCount
+ USHORT Action;                     Request mode:
+                                    bit0 = logged in as GUEST
+ USHORT ByteCount;                  Count of data bytes
+ STRING NativeOS[];                 Server's native operating system
+ STRING NativeLanMan[];             Server's native LAN Manager type
+ STRING PrimaryDomain[];            Server's primary domain
+
+Again, there are a lot of information on this packet : OS Type,
+version of the SMB server software running on server and DomainName.
+
+If the connection failed, there is nothing for NativeOS, NativeLanman
+and PrimaryDomain strings.
+
+OK I have finished with the "hard" part, we can play a little with 
+the SMB protocol.
+
+If you want to learn more about it, read [1].
+
+
+----[ 6.5 - How I can recover SMB passwords in clear from the network 
+            when they should be encrypted 
+
+
+   During the session establishment, the password is sent to the server
+during the SMB setupx Session. The SMB negprot reply packet contains 
+a bit in the "SecurityMode" field which allows password encryption 
+or not.
+
+   So if you want to have a password in clear when all is encrypted, you
+have two possibilities.
+
+   The first one is to catch the encryption key and the encrypted 
+password and brute force it ! It can be very long ...
+
+	Some programs like LophtCrack (with SMBGrinder), dsniff or readsmb2 
+sniff SMB encrypted passwords.
+
+   The second way is to hijack the connection and to make the client 
+believe that the password should not be encrypted.
+
+   This technic is a bit complex to explain, but I will say how to 
+do it !
+
+   If the server is configured to encrypt password, the SMB negprot 
+reply packet has the bit 1 of the "SecurityMode" field armed. But if 
+an attacker sends a negprot reply packet with this bit equal to 
+zero before the server, the password will be in clear in the 
+SessetupX request packet .
+
+
+                   negprot request 
+  [client]     ------------------------>         [server]
+
+                [attacker waits for a negprot request]
+
+  [client]   <-------------|                     [server]
+                           | fake negprot reply
+                           |
+                [attacker sends his fake neprot reply]
+
+
+                  real negprot reply
+  [client]   <----------------------------------  [server]
+
+
+                [attacker (does nothing)]
+
+
+               sessetupX request with the password in clear text
+  [client]    ----------------------------------> [server]
+
+                [attacker sniffs the password in clear text]
+
+
+These diagrams illustrate a direct packet injection on the network.
+In majority of case, this method doesn't work because the fake
+negprot reply could treated after the real. There is also other 
+problems, session failures, validity of password, does not work
+in a switched environment...
+We can avoid all of these problems by using Arp-Poisoning.
+
+I will not explain and describe what is ARP-Poisoning, you could find a 
+lot of docs about it on internet . But, if you don't know what it is, 
+you just have to know that this attack allow the attacker to redirect 
+and modify the traffic between the server and the client.
+
+If you consider this situation, the attacker is between the both.
+
+He is the man in the middle ...
+
+
+----[ 6.6 - Man in the middle attack
+
+
+          "Attack where your enemy is not expecting you"
+                  
+                                 Sun Tzu, "The art of war"
+
+Now I will describe the man in the middle attack. This attack allow 
+you to bypass switches, to avoid connection failures and to grab the 
+password in clear.
+
+Let's consider that the traffic between the client and the server 
+is redirected by the attacker ( thanks to ARP poisoning !).
+The client requests a SMB session to the server. 
+The client will send packets to the SMB port (139) of the server. The 
+attacker receives them. But the attacker doesn't redirect the packet to
+the server. 
+The whole incoming traffic to the server's SMB port (so to the attacker's 
+machine) is redirected on the local port 1139 of the attacker (very easy 
+to do with NAT and iptables).
+The whole traffic (not only SMB) is redirected also with iptables and 
+NAT. 
+On the port 1139, there is a program (a transparent proxy program) that 
+assumes the modification and redirection of the SMB packets.
+
+
+The two iptables/NAT commands are :
+
+To redirect the incoming traffic (on port 139 ) to a local port (1139 for
+example).
+
+#iptables -t nat -A PREROUTING -i eth0 -p tcp -s 192.168.1.3 \
+--dport 139 -j REDIRECT --to-port 1139
+
+192.168.1.3 is the IP address of the client 
+
+To redirect the whole traffic
+
+#iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+What are the modifications ? :
+
+The attacker modifies the negprot reply to have password in
+clear text. The attacker recovers also the encryption key.
+The attacker set to zero the value of the length of the encryption 
+key and put the domain name instead of the encryption key. 
+He sets the encryption bit of the "SecurityMode" field to 0. 
+With this, the password will not be encrypted.
+
+The client will send the password in clear in a sesssetupx request. 
+When the attacker has the password, he encrypts it with the encryption
+key recovered before and sends the sesssetupx request (with 
+the encrypted password) to the server.
+
+The server sends a sesssetupx reply to accept or refuse the session.
+The attacker redirects the sesssetupx reply and the whole traffic 
+after.
+
+The session will not fail and nobody has saw our man in the middle !.
+
+
+Description :
+
+
+           ARP-P                  ARP-P
+[client] <---------  [attacker]  ---------> [server]
+
+The attacker processes to a ARP Poisoning attack to redirect the whole
+traffic between the two machines.
+
+
+
+[client] <---------> [attacker] <---------> [server]
+ 
+
+The traffic redirection is operated with NAT and iptables.
+
+
+
+            port 139
+[client] -----------------> [attacker]        [server]
+
+The attacker receives the first packet to the SMB server port.
+
+
+
+
+[client]  ----------------->[attacker 139]        [server]
+                                |
+                                V
+                            [attacker 1139]
+
+The attacker redirects it to the port 1139.
+On the port 1139, our proxy program is listening. 
+
+
+
+          negprot request
+[client] -----------------> [attacker]        [server]
+
+The attacker receives the negprot request.
+
+
+
+                                     negprot request
+[client]                   [attacker]---------------> [server]
+
+The attacker redirects directly the negprot request to the server.
+
+
+                                     negprot reply
+[client]         [attacker] <----------------------------    [server]
+                                 (encryption bit set
+                              to have password encrypted)
+
+The server replies with a negprot reply with the encryption 
+bit set to have the password encrypted. The attacker doesn't
+redirects this packet. He changes the encryption bit to have
+plain text password .
+
+
+
+                  negprot reply
+[client] <----------------------------- [attacker]        [server]
+               (encryption bit set
+           to have plain text password )
+
+The attacker sends the modified negprot reply with the encryption 
+bit changed to have the password in clear text. 
+
+
+
+
+            sesssetupX request
+[client] ------------------------> [attacker]        [server]
+         (password in clear text)
+
+The client sends the password in clear text, the attacker recovers 
+it.
+
+
+                                     sesssetupX request
+[client]                [attacker] --------------------->  [server]
+                                    (password encrypted)
+
+The attacker sends a sesssetupx request to the server with the 
+encrypted password.
+
+
+
+                                    sesssetupX reply
+[client] <------------- [attacker] <----------------  [server]   
+
+The servers sends the sesssetupx reply. The attacker redirects it.
+
+
+
+[client] <------------> [attacker] <--------------> [server]
+
+The attacker continues to redirect traffic between the two machines 
+until the end of the SMB session.
+
+
+The implementation of the man in the middle attack is given in the
+Appendix A (the NAT and iptables rules are given also).
+
+Take a look at the source code, you will learn a lot of
+details !.
+
+
+----[ 6.7 - Notes about windows 2k/XP SMB operating over TCP/IP 
+
+As I wrote before, on Windows 2k/XP, SMB can run directly over TCP.
+The SMB server is listening incoming connexions on port 445.
+But it's not so "directly". In fact instead of having a NETBIOS header
+which is 4 bytes long, we have a other header which is 4 bytes long too.
+
+Description :
+
+        |---------------|
+        |      TCP      |
+        |---------------|
+        |SPECIAL HEADER |
+        |---------------|
+        |  SMB BASE HDR |
+        |---------------|
+
+This special header is defined like this :
+
+                UCHAR Zero;   	// Set to zero
+                UCHAR Length[3];// Count of data bytes (the 4 bytes of
+                                   the header are not included)
+
+This special header is not very different than the NETBIOS header. You 
+will understand why.
+
+This is the NETBIOS header :
+
+                UCHAR Type;   	// Type of the packet
+                UCHAR Flags;  	// Flags
+                USHORT Length;	// Count of data bytes (netbios header
+                                                        not included)
+							
+When SMB is running over TCP, the NETBIOS request session should 
+be not used.
+
+In fact, the NETBIOS names of the client and of the server should not 
+be sent. So the value of the "Type" field in the NETBIOS is always 
+equal to zero (the "Type" field is different from zero when the client
+sends his encoded NETBIOS name - Type = 0x81 - and when it receives 
+the reply - Type = 0x82 -). Remember, during the SMB session the
+Type field is equal to zero ( it's the "Type" code for the NETBIOS 
+session message).
+
+For the first byte nothing is different.
+
+For the last three bytes now :
+
+The "Flags" field of the NETBIOS header is always set to zero.
+The length of the packet only takes the two last bytes of the special
+header.
+
+The three last bytes are the same.
+
+To conclude there is no difference between the NETBIOS and the special
+header when NETBIOS is not used.
+
+Downgrade attack :
+
+If the client (running on windows XP or 2k) has NBT enabled, it always
+try to connect to the port 139 and 445 simultaneously. If the client 
+has a response from the port 445, the client will send a RST packet 
+to the port 139. If the client has no response from the port 445, it 
+will try to connect on port 139. If it has no response from the both, 
+the session will fail.
+If the client has NBT disabled, the client will try on the port 445 
+only.
+
+To perform a Downgrade attack i.e force the client to not use the port 
+445 and to use the port 139, you have to make believe to the client 
+that the 445 is closed. With the transparent proxy attack it's very 
+easy, with iptables you have just to redirect the incoming traffic
+on the attacker's machine on port 445 to a closed port. With this
+the client will use the port 139 (the iptables rules for this is
+given in appendix A).
+This will work if NBT is enabled.
+
+If the client has NBT disabled, the transparent proxy will operate the 
+SMB traffic on port 445. You've got an option on the program for this.
+
+Ok, we have finished with the attack for recovering passwords.
+We will study now an another important part of SMB.
+
+                  
+--[ 7 - Transaction subprotocol and RAP commands
+
+
+I will explain in this chapter a panel of special (and obscur ) 
+SMB commands : the RAP commands.
+These commands use the transaction subprotocol. 
+I will also describe this subprotocol.
+
+----[ 7.1 - The transaction subprotocol
+
+When a large amount of data is sent during a SMB session or if there is
+a specific operation requested,the SMB protocol includes a transaction 
+subprotocol.  
+
+The transaction subprotocol is mainly used for SMB Remote Procedure 
+Calls : The RAP commands (RAP for Remote Administration Protocol). 
+But I will explain it later. 
+
+The transaction subprotocol is not a derived protocol of SMB. The 
+transaction subprotocol is just an other command for SMB. So the
+transaction subprotocol is layered on SMB base header and the command 
+code for the transaction subprotocol is 0x25.
+
+Like the other commands there is a request and a reply.
+
+This is the Transaction request header :
+				  
+ UCHAR WordCount;                 Count of parameter words;   value =
+                                  (14 + value of the "SetupCount" field)
+ USHORT TotalParameterCount;      Total parameter bytes being sent
+ USHORT TotalDataCount;           Total data bytes being sent
+ USHORT MaxParameterCount;        Max parameter bytes to return
+ USHORT MaxDataCount;             Max data bytes to return
+ UCHAR MaxSetupCount;             Max setup words to return
+ UCHAR Reserved;
+ USHORT Flags;                    Additional information:
+                                  bit 0 - also disconnect TID in TID
+                                  bit 1 - one-way transaction (no
+                                  response)
+ ULONG Timeout;
+ USHORT Reserved2;
+ USHORT ParameterCount;           Parameter bytes sent this buffer
+ USHORT ParameterOffset;          Offset (from header start) to
+                                  Parameters
+ USHORT DataCount;                Data bytes sent this buffer
+ USHORT DataOffset;               Offset (from header start) to data
+ UCHAR SetupCount;                Count of setup words
+ UCHAR Reserved3;                 Reserved (pad above to word)
+ USHORT Setup[SetupCount];        Setup words (# = SetupWordCount)
+ USHORT ByteCount;                Count of data bytes
+ STRING Name[];                   Name of transaction (NULL if
+                                  SMB_COM_TRANSACTION2)
+ UCHAR Pad[];                     Pad to SHORT or LONG
+ UCHAR Parameters[                Parameter bytes (# = ParameterCount)
+ ParameterCount];
+ UCHAR Pad1[];                    Pad to SHORT or LONG
+ UCHAR Data[ DataCount ];         Data bytes (# = DataCount)
+
+In a majority of case, a RAP command sent with  Transaction subprotocol 
+may need several Transaction packets for sending the parameters 
+and data bytes. The parameters bytes are usually sent first, followed 
+by the data bytes. If several transaction packets must be involved, 
+the server sends this small packet for acknoledgement between each 
+transaction packets :
+
+Interim Reply packets :
+
+ UCHAR WordCount;                 Count of parameter words = 0
+ USHORT ByteCount;                Count of data bytes = 0
+
+For the transaction request header, the "TotalParameterCount" field 
+represents a count of paramaters bytes to be sent and it's the same 
+for the "TotalDataCount" field (count of data bytes to be sent). 
+ 
+The offset from the start of the SMB base header to the parameters 
+bytes and the data bytes are given with the "ParameterOffset" and 
+"DataOffset" fields. 
+
+The parameters bytes are in the "Parameters" field.
+The data bytes are in the "Data" field.
+
+You must understand that these "Parameters" and "Data" fields are used 
+for the RAP command. "Parameters" contains the parameters bytes for 
+the RAP command and "Data", the data bytes.
+
+The fields for "DataCount" and "ParameterCount" represent respectivily 
+the count of data bytes and the count of parameters bytes present in 
+the considereted transaction packet. If these fields are equal to 
+the "TotalParameterCount" and the "TotalDataCount", it involved that 
+all parameter and data bytes fit in a single packet. If they are not, 
+it involved that the server (for request) or the client (for reply) 
+must wait for another packets. When all packets are received, the 
+parameter and data bytes are marshalled for analysis.
+
+Take a look at the field "WordCount", it contains the value  : 
+14 + "SetupCount" field, in majority of case SetupCount is equal to 0.
+
+The Transaction reply header: 
+
+There is not a big difference between the reply and the request
+
+ UCHAR WordCount;                 Count of data bytes; value = 10 +
+                                  "Setupcount" field.
+ USHORT TotalParameterCount;      Total parameter bytes being sent
+ USHORT TotalDataCount;           Total data bytes being sent
+ USHORT Reserved;
+ USHORT ParameterCount;           Parameter bytes sent this buffer
+ USHORT ParameterOffset;          Offset (from header start) to
+                                  Parameters
+ USHORT ParameterDisplacement;    Displacement of these Parameter
+                                  bytes
+ USHORT DataCount;                Data bytes sent this buffer
+ USHORT DataOffset;               Offset (from header start) to data
+ USHORT DataDisplacement;         Displacement of these data bytes
+ UCHAR SetupCount;                Count of setup words
+ UCHAR Reserved2;                 Reserved (pad above to word)
+ USHORT Setup[SetupWordCount];    Setup words (# = SetupWordCount)
+ USHORT ByteCount;                Count of data bytes
+ UCHAR Pad[];                     Pad to SHORT or LONG
+ UCHAR                            Parameter bytes (# = ParameterCount)
+ Parameters[ParameterCount];
+ UCHAR Pad1[];                    Pad to SHORT or LONG
+ UCHAR Data[DataCount];           Data bytes (# = DataCount)
+
+The client must use the "ParameterOffset" and "DataOffset" to know the 
+offset (from the beginning of the SMB base header) of data and 
+parameters bytes.
+
+
+----[ 7.2 - RAP commands     
+
+RAP (Remote Administration Protocol) is the SMB implementation of 
+RPC.   
+
+ 
+RAP request : 
+
+       |---------------------------|
+       |TCP HDR                    |
+       |---------------------------|
+       |NETBIOS HDR                |
+       |---------------------------|
+       |SMB BASE HDR               |
+       |---------------------------|
+       |SMB TRANSACTION REQUEST HDR|
+       |---------------------------|
+       |RAP REQUEST PARAMETERS     |
+       |---------------------------| 
+       |RAP REQUEST DATAS          | 
+       |---------------------------|
+       
+RAP Reply :
+
+       |---------------------------|
+       |TCP HDR                    |
+       |---------------------------|
+       |NETBIOS HDR                |
+       |---------------------------|
+       |SMB BASE HDR               |
+       |---------------------------|
+       |SMB TRANSACTION REPLY HDR  |
+       |---------------------------|
+       |RAP REPLY PARAMETERS       |
+       |---------------------------|
+       |RAP REPLY DATAS            |
+       |---------------------------| 	
+
+        
+ When you use a RAP command you always find the string "\PIPE\LANMAN" 
+ in the "Name" field in the transaction (request and reply) header.
+ 
+ These are several examples of RAP commands : 
+ 
+ -NETSHAREENUM : Retrieve information about each shared ressource 
+                 on a server
+
+ -NETSERVERENUM2 : List all the computer of specified types in a 
+                   specified domain
+
+ -NETSERVERGETINFO : Get information about a specified server
+
+ -NETSHAREGETINFO : Retrieve information about a paticular shared 
+                    ressource
+
+ -NETWKSTAUSERLOGON : Execute on a SMB server for logging an user.
+ 
+ -NETWSTAUSERLOGOFF : The same but for deloging.
+
+ -NETUSERGETINFO : Obtain information about a particular user.
+
+ -NETWKSTAGETINFO : Obtain information about a particular station.
+
+ -SAMOEMCHANGEPASSWORD : For changing the password of a specified user on 
+                         a remote SMB server.
+
+I'm not going to describe all of these commands, I will just take one for 
+example (to have a listing of shared resource avaible on a server).
+
+If you want to know more about RAP commands read [2].
+
+
+--[ 8 - Using RAP commands to list available shares on a server
+
+ 
+ This part is a complement of the previous chapter. I will explain 
+how the RAP commands work by giving an example.
+
+
+The program given in Appendix B is the implementation of what is 
+explained in this chapter. It does the same things that the commands 
+"net view \\ServerIP" (for DOS) or "smbclient -L ServerIP -N " 
+(on Linux).  But this program allows you to specified the NETBIOS 
+name, it is a bit anonymous. If you read this source you will 
+learn a lot a things about SMB network programming.
+ 
+How I can retrieve SMB everyone shares on a network :
+
+The process is easy to understand. The client must be authentificated 
+on the server . The client identifies itself with the process developed 
+in chapter 3 (with no password). When the server has checked the 
+identity of the client, the client sends a Tconx request (after the 
+Sessetupx reply).
+
+Tconx means "Tree CONnect and X).
+
+The TconX request packet is used to acess to a shared ressource.
+
+----[ 8.1 - Tconx Packets 
+ 
+
+ Request header
+  
+ The TconX packets are layered on the SMB Base Header ("Command" = 0x75).
+
+ 
+UCHAR WordCount;                   Count of parameter words = 4
+UCHAR AndXCommand;                 Secondary (X) command; 0xFF = none
+UCHAR AndXReserved;                Reserved (must be 0)
+USHORT AndXOffset;                 Offset to next command WordCount
+USHORT Flags;                      Additional information
+                                   
+USHORT PasswordLength;             Length of Password[]
+USHORT ByteCount;                  Count of data bytes;    min = 3
+UCHAR Password[];                  Password
+STRING Path[];                     Server name and share name
+STRING Service[];                  Service name
+
+
+
+The password was sent during the session establishement. 
+The Password length is set to 1 and and the Password 
+string contains null value (0x00).
+
+The string "Path" contains the name of the ressource that client wishes 
+connect. It use the unicode style syntax . For example I want to connect 
+ on a share called "myshare" on a server called "myserver" . The 
+Path string will containt "\\myserver\myshare". 
+
+The "Service" string contains the type of ressource requested :
+       	
+	string		Type of ressource
+	
+	"A:" 		disk share.
+	"LPT1:" 	printer.
+	"IPC"  	        named pipe.
+	"COMM" 	        communications device.
+	"?????" 	any type of device.
+ 
+For scaning any type of device you must use the "?????" string in the 
+"Service" field.
+
+After sending your Tconx request on the server. The server replies with 
+a TconX reply. You must recover the "Tid" field (in the SMB Base header) 
+which is the Transaction request with the RAP command. 
+You must specified to the server that you want to know which ressources 
+are available. For this, you must use the RAP command : NETSHAREENUM.
+
+
+----[ 8.2 - Explanation of the RAP command "NetShareEnum" :
+
+
+The RAP command that we will study is NetShareEnum.
+
+The RAP Command "NetshareEnum" request  :
+
+The field "Parameters" of the transaction request header received :
+
+  The 16 bit code of function NetShareEnum : 0;
+  
+  The parameter desriptor string : "WrLeh" 
+  
+  Data descriptor string for returned data : "B13BWZ"
+  
+  A 16 bit integer with a value of x01;
+  
+  A 16 bit integer that contains the size of the receive buffer.
+
+It will be too long to explain how parameter and data descriptor strings 
+works. These strings are used to know the size and the format of 
+parameters and datas. One parameter and one data descriptor string 
+is defined for each RAP command.
+
+if you want to know more about this strings, read [2].
+
+No datas are needed for this request so the "DataCount" and 
+"TotalDataCount" fields are equal to zero. 
+
+
+  |--------------------------------------------|
+  |             NETBIOS HDR                    |---------> 4 bytes
+  |--------------------------------------------| 
+  |             SMB BASE HDR   	               |---------> 32 Bytes
+  |--------------------------------------------|	
+  |        SMB TRANSACTION REQUEST HDR         |
+  |--------------------------------------------|
+
+The Transaction request "Parameters" field receives the parameters 
+for the RAP request : 
+
+  |--------------|
+  |      0x0000  | ----------------------------------------> A
+  |--------------|--------------|--------------|
+  |   W       r  |  L        e  |  h       0x00|-----------> B
+  |--------------|--------------|--------------|-------|
+  |   B       1  |  3        B  |  W         Z |  0x00 |---> C
+  |--------------|--------------|--------------|-------|
+  |     0x0001   |     0xffff   |--------------------------> D
+  |--------------|--------------|
+  
+  
+  A : The NetshareEmun function code : 0x00                            
+  B : The parameter descriptor string
+  C : The data descriptor string
+  D : 0x01 (defined value) and 0xffff (Max size of the received buffer) 
+  
+And the server replies :
+
+the "Parameters" field of the transaction reply header receives :
+
+ A 16 bit integer word that contains the return status code :
+
+ Succes 0
+ Access Denied 5
+ Network Acess Denied 65
+ More data 234
+ Server not started 2114
+ Transaction configuration bad 2141
+
+ A 16 bit "converted word", uses to calculate an offset to remark 
+strings.
+ 
+ A 16 bit containts the number of entries returned = number of 
+ SHARE_INFO structure (see below ).
+ 
+ A 16 bit representing the number of available entries.
+ 
+ 
+ The field "Data" of the transaction reply header contains the several
+SHARE_INFO structures.
+ 
+ The SHARE_INFO structure contains the information about each shared
+ressource available and it is defined like this :
+ 
+  struct SHARE_INFO {
+    char shi1_netname[13]; /*Name of the ressource*/
+    
+    char shi1_pad; /*Pad to a word*/
+                     
+		     
+    unsigned short shi1_type; 
+
+       /*Code specifies the type of the shared resssource :
+          0 Disk Directory tree
+          1 Printer queue 
+          2 Communications device 
+          3 IPC*/
+
+
+    char *shi1_remark; /*Remark on the specified 
+                         ressource*/
+
+		      }
+
+ shi1_remark is a 32 bits pointer to a string. This string contains a
+ remark about a shared ressource. You must substract the 16 lower 
+ bits of "shi1_remark" to the "converter word" to know the offset 
+ between this string and the beginning of the RAP reply parameters 
+ header.
+ 
+ In fact with a ascii schema :
+ 
+  |--------------------------------------------|
+  |             NETBIOS HDR                    |------------> 4 bytes
+  |--------------------------------------------|
+  |             SMB BASE HDR   	               |------------> 32 Bytes
+  |--------------------------------------------|	
+  |             SMB TRANS REPLY HDR            |
+  |--------------------------------------------|
+ 
+Description of the "Parameters" section of the Transaction reply packet 
+(corresponding to the parameters of the NetShareEnum reply) :
+ 
+  |--------------------------------------------|
+  |           status code                      |-------------> 2 bytes
+  |--------------------------------------------|
+  |           converted word                   |-------------> 2 bytes
+  |--------------------------------------------|
+  |           number of entries returned       |-------------> 2 bytes
+  |--------------------------------------------|
+  |           number of entries available      |-------------> 2 bytes
+  |--------------------------------------------|
+  
+Data section of the Transaction reply (corresponding to the 
+several SHARE_INFO structures if there is more than one ressource
+available) :  
+  
+  |--------------------------------------------|
+  |         shi1_netname                       |-----------> 13 bytes
+  |--------------------------------------------|
+  |         shi1_pad to pad to word            |-----------> 1 byte  
+  |--------------------------------------------|
+  | type of service                            |-----------> 2 bytes
+  |--------------------------------------------|
+  | pointer to remark string                   |-----------> 4 bytes
+  |--------------------------------------------|
+                .
+          Another SHARE_INFO structures	
+	        .
+  |--------------------------------------------|
+  |               remark string 1              |
+  |--------------------------------------------|
+  |          another remarks strings           |
+  |--------------------------------------------|
+
+
+--[ 9 - Conclusion :
+
+ I hope you have learned a lot of things in this article.
+ If you have any comments, questions, send it at :
+ 
+                   <ledin@encephalon-zero.com>
+
+--[ 10 - References
+
+[1] "A common Internet File System (CIFS/1.0) Protocol
+    Preliminary Draft", Paul J.Leach and Dilip C. Naik
+    http://www.snia.org/tech_activities/CIFS/CIFS-TR-1p00_FINAL.pdf
+
+[2] "CIFS Remote Administration Protocol Preliminary Draft"
+    Paul J.Leach and Dilip C. Naik
+    http://us6.samba.org/samba/ftp/specs/cifsrap2.txt
+
+[3] RFC 1001
+    http://www.faqs.org/rfcs/rfc1001.html
+
+[4] RFC 1002
+    http://www.faqs.org/rfcs/rfc1002.html
+
+--[ 11 - Thanks
+
+Just a Merry Christmas to TearDrop, Frealek and "el Tonio".
+
+A big thank to TearDrop for all. Without him, nothing could
+be possible !
+
+Take a look at <gps.sourceforge.net>, you will find a very good 
+(and free) scanner !.
+
+Thanks to Mr D. (my network administrator !), for all the advices
+and the several Linux distribs.
+
+Thanks to the Chemical brothers for the inspirational music.
+
+Thanks to the phrack staff, for all their remarks and particulary 
+about the transparent proxy attack.
+
+To you for reading this article ;).
+
+
+
+--[  Appendix A
+
+This program allows you to have password in clear directly from
+the network when they should be encrypted. It works with libnet 
+(v 1.1 !) and libpcap.
+This is the implementation of the Transparent proxy attack of the
+chapter 6.6.
+
+libnet : www.packetfactory.net
+
+libpcap : www.tcpdump.org
+
+You must be root to compile and to execute this program !
+
+If you want to compile it, you could use : 
+       "gcc SMBproxy.c -o SMBproxy -lnet -lpcap"
+
+If you want to use it :
+       "SMBproxy -i interface  
+                  -c Client's IP address 
+		  -s Server's IP address 
+		  -f your fake IP (what you want : 6.6.6.6 for example)"
+                  -l listening port (1139 by default)
+
+Be careful the program will ask you about Windows 2k/XP specifictions
+support. But you must answer "y" when NBT is disabled not when it's 
+enabled on Windows 2k/XP !
+
+You give the IP adress of a client and of the server, this program 
+waits a connection of the client to a SMBserver, launches the attack, 
+recovers the password and redirects the traffic.
+
+The fake IP parameter corresponds to your fake IP, give what you want !
+The attacker's machine should have no active connections with the server 
+or with the client (like FTP or telnet ...).
+The default listening port is 1139
+
+This program gives the password and the user name (if necessary). It 
+also gives the security level (share or user). If the connection has 
+succeeded, it gives the name of the share and a message like "password 
+valid". If it has failed, it gives nothing (just the password and the
+user name).
+
+This program should be compiled on Linux for some technical reasons,
+like the network byte ordering. You shouldn't use it on the loopback
+interface.
+
+Support Windows 2k/XP specifications.
+
+This is the iptables/NAT command to execute on the attacker's machine
+
+To redirect incoming traffic to port 139 on port 1139
+
+#iptables -t nat -A PREROUTING -i eth0 -p tcp -s 192.168.1.3 \
+--dport 139 -j REDIRECT --to-port 1139
+
+192.168.1.3 is the IP address of the client. 
+
+
+To redirect the whole traffic
+
+#iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+To redirect incoming traffic to port 445 on port 1139
+
+(for Windows 2k/XP client with NBT disabled)
+
+#iptables -t nat -A PREROUTING -i eth0 -p tcp -s 192.168.1.3 \
+--dport 445 -j REDIRECT --to-port 1139
+
+192.168.1.3 is the IP address of the client. 
+
+
+if you want to perform the downgrade attack of the chapter 6.8 remplace
+the port 1139 by a closed port.
+
+Be careful, for the traffic redirection, this line must be present in the
+/etc/sysconfig/network :
+
+FORWARD_IPV4=true
+
+This program doesn't support UNICODE strings.
+
+Successfully tested with samba server 2.0 .
+
+|=[ EOF ]=---------------------------------------------------------------=|
+

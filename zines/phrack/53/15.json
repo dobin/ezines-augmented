@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 53, article 15 of 15",
+  "title": "Phrack Magazine Extraction Utility",
+  "authors": "Phrack Staff, Timmy 2tone, sirsyko, Daos",
+  "date": "July 8, 1998",
+  "historical_context": "This article discusses the extraction utility for Phrack Magazine articles, showcasing various scripts written in different programming languages to facilitate the extraction of embedded files from the magazine's content.",
+  "target_audience": "Hackers, programmers, security professionals, and enthusiasts interested in file extraction techniques and scripting.",
+  "short_summary": "The article presents a utility for extracting text files from specially tagged flatfiles in Phrack Magazine. It includes multiple implementations in C, Perl, AWK, Shell, and Python, demonstrating various approaches to file extraction.",
+  "summary": "The Phrack Magazine Extraction Utility article introduces a set of scripts designed to extract text files from Phrack Magazine's specially formatted articles. The utility allows users to extract source code and other embedded files from the magazine's content, which is particularly useful for preserving and organizing the information. The article includes implementations in several programming languages, including C, Perl, AWK, Shell, and Python, showcasing the versatility of the extraction process. Each script is tailored to handle the extraction tags used in the magazine, enabling users to create a hierarchical directory structure for the extracted files.\n\nThe C implementation, extract.c, is highlighted for its aesthetic improvements and ability to accept file globs, while the Perl, AWK, Shell, and Python scripts offer alternative methods for achieving the same goal. The article serves as a practical guide for readers interested in automating the extraction of embedded files, emphasizing the importance of such utilities in the hacker culture and the preservation of digital information. Overall, this article remains relevant for those looking to understand file manipulation and extraction techniques in programming."
+}

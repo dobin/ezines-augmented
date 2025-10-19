@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-One, File 6 of 13",
+  "title": "A Brief Guide to Definity G Series Systems a.k.a System 75 - 85",
+  "authors": "Scott Simpson",
+  "date": "Not specified",
+  "historical_context": "The article discusses the Definity G Series systems, which were prevalent in the late 20th century, particularly in corporate telephony.",
+  "target_audience": "Hackers, phreakers, telecommunications professionals, and security researchers.",
+  "short_summary": "This article provides an overview of the Definity G Series systems, detailing their history, functionalities, and methods for accessing and manipulating these systems. It covers basic commands, potential vulnerabilities, and how to set up a PBX.",
+  "summary": "Scott Simpson's guide delves into the Definity G Series systems, specifically the System 75 and 85 models, which emerged in the late 1970s and saw significant updates in the 1980s. The article outlines the systems' capabilities, including voicemail boxes (VMB), bridging, and private branch exchange (PBX) functionalities. It emphasizes the importance of understanding the system's architecture for potential hacking endeavors, particularly focusing on the default access methods and commands that can be exploited for unauthorized access.\n\nThe guide details the process of discovering and accessing a System 75, including the use of specific tools like ToneLoc to identify carriers and the significance of default accounts for initial exploration. Simpson explains how to navigate the system's commands, manipulate trunk groups, and set up a PBX, providing a step-by-step approach for those interested in exploiting these systems. The article serves as both a historical reference and a practical manual for hackers looking to understand and utilize the vulnerabilities within corporate telephony systems."
+}

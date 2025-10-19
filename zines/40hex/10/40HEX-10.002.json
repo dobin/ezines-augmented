@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 10 Volume 3 Number 1 File 002",
+  "title": "The Phalcon/Skism Shiny Happy Virus",
+  "authors": "Dark Angel and Hellraiser",
+  "date": "Not specified",
+  "historical_context": "This article discusses a virus created in the early 1990s, a time when DOS-based systems were prevalent and viruses were becoming more sophisticated.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in historical malware techniques.",
+  "short_summary": "The Shiny Happy Virus is a semi-stealth DOS virus that modifies keyboard interrupts to change emoticons from happy to sad. It employs techniques to evade detection and infection mechanisms.",
+  "summary": "The Shiny Happy Virus, crafted by Dark Angel and Hellraiser, is a notable example of early malware that showcases innovative evasion techniques. Instead of replacing the DOS interrupt 21h vector, it cleverly encodes an interrupt instruction, making it highly resistant to debuggers. This virus infects files upon execution and cleverly hides its presence by concealing file size increases in directory listings, thus avoiding common detection methods like CHKDSK cross-linking errors. The virus activates on keyboard interrupts, specifically targeting emoticons, changing them from happy faces to frowns, which adds a unique twist to its functionality.\n\nThe article includes a detailed assembly code listing for the virus, illustrating its infection mechanism and operational logic. It describes how the virus hooks into the keyboard interrupt to monitor for specific characters and manipulate them accordingly. The authors provide a debug script to recreate the virus, emphasizing the technical aspects of its design. This piece serves as both a historical artifact and a technical guide, reflecting the creativity and technical prowess of early virus developers in the hacker community."
+}

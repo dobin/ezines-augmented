@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Strange Days",
+  "authors": "Reptile/29A",
+  "date": "",
+  "historical_context": "This article discusses the first macro virus capable of infecting multiple Microsoft Office applications, which was a significant development in the evolution of malware.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the workings of the 'Strange Days' macro virus, which infects Word and Excel files, showcasing its propagation methods and stealth capabilities.",
+  "summary": "In 'Strange Days', Reptile/29A introduces a groundbreaking macro virus that can infect both Word and Excel files within Microsoft Office 97. This virus, named after its internal location 'teonanacatl', is notable for its ability to infect multiple applications, a feat previously achieved only by a few viruses. The article breaks down the virus's code, which is organized into eight functions that facilitate its infection routine, including AutoClose and AutoOpen functions that allow it to spread stealthily by disabling macro viewing and virus protection features in the applications it infects.\n\nThe virus employs clever techniques to propagate itself, such as exporting its code to a hidden file and using the Import/Export VisualBasic functions to infect other documents. It also creates infected template files that ensure its code is loaded whenever the applications are started. The article highlights the virus's destructive capabilities, including a routine that deletes files on the 26th of each month, and its ability to evade detection by manipulating system settings. This detailed examination serves as an early warning of the potential threats posed by macro viruses, which would become increasingly prevalent in the years to follow."
+}

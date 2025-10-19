@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #13 of 19",
+  "title": "Black Book of AFS",
+  "authors": "nicnoc",
+  "date": "09.09.99",
+  "historical_context": "This article discusses the Andrew File System (AFS), a distributed filesystem that was widely used in academic environments during the late 1990s.",
+  "target_audience": "Hackers, security professionals, and those interested in distributed file systems.",
+  "short_summary": "This article serves as an introductory guide to the Andrew File System (AFS), detailing its structure, access control mechanisms, and available resources. It also highlights potential access points and interesting areas for exploration within AFS.",
+  "summary": "The 'Black Book of AFS' provides a comprehensive introduction to the Andrew File System (AFS), which is commonly used in academic and research settings. The article outlines the basic terminology associated with AFS, such as 'cell', 'node', and 'ACL' (Access Control List), and explains how access permissions are managed independently from traditional Unix file permissions. It also details commands for managing ACLs and the underlying protocols that facilitate AFS operations over TCP/IP networks, including a modified Kerberos authentication system.\n\nAdditionally, the article discusses legitimate access methods to AFS, including gateways that allow external users to connect to AFS resources. The author shares a list of active nodes and interesting directories that can be explored, emphasizing the importance of responsible use of the information provided. This article serves as a valuable resource for those looking to understand AFS's architecture and its potential for exploration, while also cautioning against misuse of the information."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 53, article 07 of 15",
+  "title": "A Stealthy Windows Keylogger",
+  "authors": "markj8@usa.net",
+  "date": "July 8, 1998",
+  "historical_context": "This article was written during a time when Windows 95 was prevalent, and security concerns regarding user privacy were beginning to gain traction. Keyloggers were a growing concern as they could be used for malicious purposes.",
+  "target_audience": "Hackers, security professionals, and those interested in software development for Windows.",
+  "short_summary": "The article describes the creation of a stealthy keylogger for Windows 95 that captures keystrokes without user detection. It details the technical approach, including the use of Windows assembly language and the manipulation of the Interrupt Descriptor Table (IDT).",
+  "summary": "In this article, the author shares their experience of developing a stealthy keylogger for Windows 95, motivated by the need to capture keystrokes on a TCP-IP network. The author initially sought existing solutions but found them inadequate, leading to the decision to create a custom program. The keylogger operates as a 16-bit Windows application, leveraging the shared Interrupt Descriptor Table (IDT) to intercept keystrokes from all user applications, except for DOS boxes. This allows it to log keystrokes without drawing attention to itself.\n\nThe implementation details include using Borland C to compile the keylogger, which saves the captured keystrokes in a hidden DLL file. The author provides instructions on how to ensure the keylogger runs at startup and discusses methods to retrieve the log file over a network. The article serves as both a technical guide and a cautionary tale about the potential for misuse of such software, highlighting the ethical considerations surrounding keylogging and user privacy."
+}

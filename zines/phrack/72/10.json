@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Popping an alert from a sandboxed WebAssembly module",
+  "authors": "Thomas Rinsma",
+  "date": "Not specified",
+  "historical_context": "This article discusses a security vulnerability in WebAssembly modules that allows for sandbox escape, a topic of increasing relevance as WebAssembly becomes more widely used in web applications.",
+  "target_audience": "Security researchers, web developers, and hackers interested in WebAssembly and JavaScript security.",
+  "short_summary": "The article explores a method to escape the sandbox of a WebAssembly module using JavaScript features, ultimately leading to the execution of arbitrary code. It details the steps taken to exploit the prototype chain and the implications for security in WebAssembly applications.",
+  "summary": "In this article, Thomas Rinsma presents a detailed exploration of a security vulnerability in WebAssembly (WASM) modules, specifically focusing on how to escape their sandboxed environment. The author begins by explaining the interface between WebAssembly and JavaScript, highlighting how imports from the JavaScript prototype can be leveraged to gain unintended access to functionality. By exploiting the prototype chain, the article demonstrates how an attacker can import methods and properties that should not be accessible, ultimately leading to the execution of arbitrary JavaScript code within the WASM context. The author meticulously outlines the steps involved in constructing a payload that triggers an alert, showcasing the intricacies of the exploit and the underlying JavaScript mechanisms at play.\n\nThe article also discusses potential mitigations for developers, emphasizing the importance of using a null-prototype for import objects when running untrusted WASM modules. Rinsma concludes with a retrospective on the exploit's development, reflecting on the challenges faced and the collaborative efforts with browser vendors to address the issue. This piece serves as a critical reminder of the security implications of WebAssembly and the need for vigilance in its implementation."
+}

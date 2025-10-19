@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Eleven, Phile #8 of 12",
+  "title": "Telephone Signalling Methods",
+  "authors": "Doom Prophet",
+  "date": "",
+  "historical_context": "This article provides foundational knowledge about telephone signaling methods during a time when phreaking was a popular subculture, helping readers understand the underlying technology of telecommunication systems.",
+  "target_audience": "Phreakers, telecommunications enthusiasts, and those interested in the history of telephone technology.",
+  "short_summary": "This article explains the basic signaling methods used in telephone systems, covering both analog and digital techniques. It is aimed at less experienced phreaks but also serves as a review for more knowledgeable readers.",
+  "summary": "In 'Telephone Signalling Methods', Doom Prophet delves into the fundamental signaling techniques employed in telephone systems, making it accessible for novice phreakers while still valuable for seasoned practitioners. The article begins by distinguishing between analog and digital signals, explaining how voice signals are transmitted and processed. It highlights the importance of multiplexing, specifically Frequency Division Multiplexing (FDM) for analog signals and Time Division Multiplexing (TDM) for digital signals, providing a clear understanding of how multiple signals can share the same transmission medium.\n\nThe article further explores various signaling methods, including Reverse Battery Signaling, E and M leads, and Single Frequency (SF) and Multi-Frequency (MF) signaling. Each method is described in detail, illustrating how they function in real-world scenarios, such as call placement and trunk management. By breaking down complex concepts into digestible segments, Doom Prophet equips readers with a comprehensive overview of telephone signaling, making it a valuable resource for anyone interested in the technical aspects of telecommunication systems."
+}

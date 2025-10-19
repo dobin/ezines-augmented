@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 2, File 000",
+  "title": "40Hex Issue 11",
+  "authors": "Phalcon/Skism",
+  "date": "",
+  "historical_context": "40Hex was a notable virus information magazine during the rise of computer viruses in the early 1990s, providing insights into virus programming and culture.",
+  "target_audience": "Virus programmers, malware researchers, hackers, and security professionals.",
+  "short_summary": "This issue of 40Hex features advanced virus programming techniques, including source code for the Predator virus and a polymorphic routine known as DAME. It serves as a resource for those interested in the technical aspects of virus creation.",
+  "summary": "In this edition of 40Hex, the magazine continues its tradition of providing in-depth information on virus programming and related topics. The issue introduces a new member, Priest, who contributes the source code for an advanced virus named Predator. This showcases the ongoing evolution of malware development and the community's focus on sharing knowledge among its members. Additionally, the magazine includes Dark Angel's Multiple Encryptor (DAME), a sophisticated polymorphic routine that enhances the stealth and adaptability of viruses. The inclusion of source code for both Predator and DAME allows readers to experiment and learn from these advanced techniques.\n\nThe magazine's tone is unapologetically irreverent, reflecting the hacker culture of the time, where creating and disseminating viruses was seen as a form of digital art and rebellion. The content is aimed at those who are not only interested in the technicalities of virus creation but also in the broader implications of malware in the digital landscape. With a mix of programming insights and community updates, this issue of 40Hex serves as both a technical guide and a cultural artifact from the early days of computer viruses."
+}

@@ -1,0 +1,1846 @@
+                              ==Phrack Inc.==
+
+                Volume 0x0e, Issue 0x44, Phile #0x0f of 0x13
+
+|=-----------------------------------------------------------------------=|
+|=------------------=[ Similarities for Fun & Profit ]=------------------=|
+|=-----------------------------------------------------------------------=|
+|=---------------=[ Pouik (Androguard Team) and G0rfi3ld ]=--------------=|
+|=------------------=[ d@t0t0.fr / g0rfi3ld@gmail.com ]=-----------------=|
+|=-----------------------------------------------------------------------=|
+
+
+1/ Introduction
+    1.1 Complexity of a sequence
+    1.2 Histograms and classical Shannon Entropy
+    1.3 From the Classical Entropy towards Descriptional Entropy
+    1.4 Normalized Compression Distance (NCD)
+2/ Similarities
+    2.1 Between two sets of elements
+    2.2 In a set of elements
+3/ Real World: Android
+    3.1 Similarities between two applications
+    3.2 Differences between two applications
+    3.3 Looking for a signature in applications
+4/ Conclusion
+5/ References
+6/ Code
+
+
+--[ 1 - Introduction
+
+How can we verify that two numerical objects are identical? It's easy, you
+just have to compare all characters, one by one. But how can we say that
+two numerical objects are "similar" but not identical?
+
+Can we define a measure of "similarity", which will give ipso facto a
+measure of "dissimilarity"?
+
+But what are these numerical files that we want to analyze or compare? It
+could be anything, from pictures to numerical data files. We will focus in
+this work on goodware and malware, (a goodware is not a malware :). So, if
+the numerical objects are software, can we define a measure of similarity
+and how? And why? We will see this.
+
+Our problem can be simply defined as: How can we choose quickly, from a set
+M of known software files {m1, ..., mn}, with n >= 1, the subset of the
+files of M that are the "most similar" to a target A? And how can we find
+quickly interesting differences without using a direct approach like graph
+isomorphism [21, 25] between two similar but different applications?
+
+We will show you how we can use a filtering tactic to select the best (i.e.
+the "most similar" to a target A) files out of the malware set M. We
+propose the use of two different tactics, using the entropy as a first
+filtering tactic to filter the set M and the Normalized Compression
+Distance (NCD) for a second filtering tactic. We also propose a new entropy
+which is a simple generalization of the classical Shannon entropy. We call
+this entropy the "descriptional entropy", which to the authors knowledge,
+is presented here for the first time.
+
+While the tools that we present here are truly generic, i.e. they can be
+used with any files, we will give some examples through the analysis and
+comparison of Android applications.
+
+----[ 1.1 Complexity of a sequence
+
+We want to compare DNA sequences [24], music files or pictures [20].
+We need a notion of the "complexity" of a sequence, to be able to compare
+them, to sort them or to index them. But what is a complex sequence or how
+do we define a complex sequence? There are lots of situations where we need
+a tool to answer. To be more exact, we need a computable measure of the
+complexity of a sequence, to index for example a set of files. The sequence
+can be the bytes of a picture, a DNA sequence, a source code or an
+executable file; in other words, whatever can be stored in a file. In this
+paper, we will say sequence, for any sequence of ASCII characters.
+
+So, can we define the "complexity" of a sequence? Let us give a toy
+example, we consider the four sequences:
+
+    - S1 = "aaabbb"
+    - S2 = "ababab"
+    - S3 = "bbbaaa"
+    - S4 = "abbaab"
+
+Intuition tells us that:
+
+    - S1 and S3 are more similar than S1 and S2 or S2 and S3.
+    - S1 is more "simple" than S2.
+    - S1, S2 and S3 are more "simple" than S4.
+
+It is easy to see that S1 is the reverse of S3, so it could be interesting
+for any function Comp() defined as a measure of the complexity of a
+sequence to verify that Comp(S1) = Comp(S3).
+
+----[ 1.2 Histograms and classical Shannon Entropy
+
+Let S be a sequence of characters, with an "alphabet" of n different
+symbols (generally characters). Let pi be the computed probability of
+occurrence of each of the n character in S, we will call the histogram
+vector Hist = {p1, ..., pn} and then the classical Shannon entropy of the
+sequence S is defined by:
+
+               n
+              __
+              \
+    H(S)= -   /  pi log(pi)
+              |__
+              i=1
+
+(where log(x) is the logarithmic function in base 10).
+
+In our toy example, S1 = "aaabbb", S2 = "ababba" and S3 = "bbbaaa", the
+alphabet is {"a", "b"}. They have a same histogram vector entropy:
+
+    Hist(S1) = Hist(S2) = Hist(S3) = {1/2, 1/2}
+
+which will give the same entropy:
+
+    H(S1) = H(S2) = H(S3) = 1.
+
+If we use the classical Shannon entropy H(), the equation holds as
+H(S1) = H(S3). However we also have H(S1) = H(S2) which contradicts 'S1 is
+more simple than S2'. So the function is not suitable.
+
+Let's see another problem with the classical Shannon entropy: if S is a
+sequence of characters with S...S a concatenation of S and H() the Shannon
+entropy, then we have H(S) = H(SS) = H(SSS) = H(S...S). This is not really
+good for our purposes!
+
+We will see that we can do better with a generalization of the Shannon
+entropy which we will call "Descriptional Entropy".
+
+----[ 1.3 From the Classical Shannon Entropy towards the Descriptional 
+          Entropy
+
+A lot of ways to measure the complexity of a sequence have been proposed.
+For example, the Lempel-Ziv complexity [29,30] is defined as the number of
+different subsequences (patterns) in a sequence when we apply the LZ
+algorithm.
+
+The sequence complexity, or the complexity index, of a sequence S = s1...sn
+is defined as the number of different subsequences in S [31,32].
+
+In all cases we obtain a number which is difficult to use, or we have to
+take the histogram vector. But to compare two histogram vectors of unequal
+size is not easy. We propose here a new approach.
+
+Given a complexity measure based on the count of different subsequences,
+and if we have N different subsequences, we can compute the histogram
+vector Hist(S) = {P1, ..., PN} for this set, with P1+...PN=1 of course. So
+now we can compute the entropy of this histogram vector; we propose to call
+this entropy the "Descriptional Entropy" of a sequence:
+
+                     N
+                     __
+                     \
+    Hd(Hist(S))= -   /  Pi log(Pi)
+                     |__
+                     i=1
+
+To simplify we will write Hd(S) for Hd(Hist(S)). From now we will use the
+log2(x) function, i.e. the log base 2 function.
+
+Let us show it with the toy example, again, S1 = "aaabbb", S2 = "ababba",
+S3 = "bbbaaa" and S4 = "abbaab". If we choose to count all different
+subsequences we will have (to simplify we neglect the "empty" sequence
+which is used sometimes):
+
+(1) For S1 = "aaabbb": the subsequence set is (in alphabetical order)
+
+    {a,aa,aaa,aaab,aaabb,aaabbb,aab,aabb,aabbb,ab,abb,abbb,b,bb,bbb}
+
+    and the histogram vector:
+    Hist(S1)={1/7,2/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,
+              1/7,2/21,1/21}.
+
+    If we sort it we have:
+    {1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,2/21,2/21,
+    1/7,1/7}
+
+    and so the descriptional entropy will be (remember: we use the base 2
+    logarithmic function log2(x)):
+    Hd(S1) = - ( 1/21 log2(1/21) x 11 + 2/21 log2(2/21) x 2 + 1/7 log2(1/7)
+                 x 2 )
+    Hd(S1) =  11/21 log2(21) + 4/21 log2(21/2) + 2/7 log2(7)
+    Hd(S1) =  11/21 log2(21) + 4/21 log2(21) - 4/21 log2(2) + 2/7 log2(7)
+    Hd(S1) =  5/7 log2(21) - 4/21 log2(2) + 2/7 log2(7)
+
+    which gives:
+    Hd(S1) = 3.74899
+
+
+(2) For S2 = "ababab": the subsequence set is (in alphabetical order):
+
+    {a,ab,aba,abab,ababa,ababab,b,ba,bab,baba,babab}
+
+    and the histogram vector:
+    Hist(S2)= {1/7,1/7,2/21,2/21,1/21,1/21,1/7,2/21,2/21,1/21,1/21}
+
+    If we sort it we have:
+    {1/21,1/21,1/21,1/21,2/21,2/21,2/21,2/21,1/7,1/7,1/7}
+
+    and the descriptional entropy will be:
+    Hd(S2) = 3 log2(7) / 7 + 8 log2(21/2) / 21  + 4 log2(21) / 21
+
+    which gives:
+    Hd(S2) = 3.3321
+
+(3) For S3 = "bbbaaa": the subsequence set is (in alphabetical order)
+
+    {a,aa,aaa,aaab,aaabb,aaabbb,aab,aabb,aabbb,ab,abb,abbb,b,bb,bbb}
+
+    and the histogram vector:
+    Hist(S3)={1/7,2/21,1/21,1/7,1/21,1/21,1/21,2/21,1/21,1/21,1/21,
+              1/21,1/21,1/21,1/21}
+
+    If components are sorted we have:
+    {1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,2/21,2/21,
+    1/7,1/7}
+
+    and the descriptional entropy will be:
+    Hd(S3) = 2 log2(7))/7 + 4 log2(21/2))/ 21 + 11 log2(21)/21
+
+    which gives:
+    Hd(S3) = 3.74899
+
+(4) For S4 = "abbaab": the subsequence set is (in alphabetical order)
+
+    {a,aa,aab,ab,abb,abba,abbaa,abbaab,b,ba,baa,baab,bb,bba,bbaa,bbaab}
+
+    and the histogram vector:
+    Hist(S4) = {1/7,1/21,1/21,2/21,1/21,1/21,1/21,1/21,1/7,1/21,
+                1/21,1/21,1/21,1/21,1/21,1/21}
+
+
+    If components are sorted we have:
+    {1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,1/21,
+    2/21,1/7,1/7}
+
+    and the descriptional entropy will be:
+    Hd(S4) = 2 log2(7) / 7 + 2 log2(21/2) / 21 + 13 log(21) / 21
+
+    which gives:
+    Hd(S4) = 3.84423
+
+So, we have:
+
+    Hd(S2) = 3.3321 < Hd(S1) = Hd(S3) = 3.74899 < Hd(S4) = 3.84423.
+
+The result Hd(S1) = Hd(S3) = 3.74899 is expected. However, the result
+Hd(S2) = 3.3321 < Hd(S1) is a little bit surprising, but the whole set of
+inequalities is correct. S4 is more "complex" than S1, S2 and S3.
+
+Let us give another simple example, if we choose S5 = "bbbbbaaaaa" and
+S6 = S5S5 = "bbbbbaaaaabbbbbaaaaa". We will have:
+
+    Hd(S5) = 4.82265 and Hd(S6) = 6.68825,
+
+and it is not so difficult to prove that:
+
+for any sequence S:
+    Hd(S) < Hd(SS) < Hd(SSS) < Hd(S......S).
+
+This sounds good :)
+
+However there is a drawback since for a very long sequence S the
+(practical) computational complexity of the computation of Hd(S) is not
+cheap. Well, it's true, of course. We could probably find a fast(er)
+algorithm, based for example on some variation of the Aho-Corasick,
+Boyer-Moore or Knuth-Morris-Pratt algorithms. We can also say that we only
+consider subsequences of length bounded by a suitable integer k.
+
+----[ 1.4 Normalized Compression Distance (NCD)
+
+The Kolmogorov complexity is a very interesting concept and it has a lot of
+applications [18,23]. We present here this concept to explain the power of
+Normalized Compression Distance (NCD).
+
+Let us cite Wikipedia [26]: "In algorithmic information theory (a subfield
+of computer science), the Kolmogorov complexity of an object, such as a
+piece of text, is a measure of the computational resources needed to
+specify the object. It is named after Soviet Russian mathematician Andrey
+Kolmogorov. Kolmogorov complexity is also known as descriptive complexity,
+Kolmogorov Chaitin complexity, algorithmic entropy, or program-size
+complexity."
+
+Well, it is a very good abstract. Unfortunately, The Kolmogorov complexity
+K(S) of a sequence S is not computable, so we can just approximate it.
+The use of any compression algorithm gives a trivial and evident upper
+bound of K(S). Read the book [22] for a deep and modern presentation and
+for applications. (Yes there are applications).
+
+We switch now to the NCD, which is always computable.
+
+To be able to use the Kolmogorov complexity we need to extend the
+informational distance to have a normalized value which indicates the
+similarities or dissimilarities between two elements/strings. Let us recall
+what a distance is.
+
+Wikipedia says: "...a distance function on a given set M is a
+                 function d: MxM -> R, the set of real numbers, that
+                 satisfies the following conditions:
+
+    a) d(x,y) >= 0, and d(x,y) = 0 if and only if x = y. (Distance is
+    positive between two different points, and is zero precisely from a
+    point to itself.)
+    b) It is symmetric: d(x,y) = d(y,x). (The distance between x and y is
+    the same in either direction.)
+    c) It satisfies the triangle inequality: d(x,z) <= d(x,y) + d(y,z).
+    (The distance between two points is the shortest distance along any
+    path).
+
+Such a distance function is known as a metric."
+
+Suppose we have two sequences x and y. We consider the concatenated
+sequence xy, and a compressor algorithm Comp with L(Comp(S)) the length of
+the compressed string, i.e. the number of bytes of the compressed string.
+
+The main idea of the NCD [17,33] is that L(Comp(xy)) will be almost equal
+to L(Comp(x)) if x = y. And L(Comp(xy)) will be close to L(Comp(x)) if x
+and y are similar without being equal.
+
+Let us give now the definition of dNCD(x,y):
+
+
+                         (L(Comp(x|y)) - min{L(Comp(x)), L(Comp(y))})
+        - dNCD(x, y) = -------------------------------------------------
+                                max{L(Comp(x)), L(Comp(y))}
+
+
+This formula returns a value from 0.0 (maximally similar) to 1.0 (maximally
+dissimilar). 1.0? Oh yes if the compressor works correctly, but practically
+we can manage this.
+
+--[ 2 - Similarities
+
+In the next two sections, we will present two algorithms which can be used
+with any set of elements. Elsim (included in the code archive at the end of
+this paper) is our implementation of those algorithms. It is open source
+software (LGPL), and with it you can compute similarities between any
+"described" elements :)
+
+----[ 2.1 Between 2 sets of elements
+
+In this part we will describe how we can create a generic algorithm to
+search the similarities between 2 sets of elements. This algorithm can be
+used to compare all kind of elements if you are able to find a correct way
+to represent your data.
+
+For the comparison of our data, we will use the NCD, thus indirectly the
+Kolmogorov complexity. One of the major drawbacks [16] of the compression
+is the "time" required :) The tool can be powerful, but if you use a
+compression algorithm like LZMA, you are limited to "hello world" problems
+due to the speed of the compression. You need to choose carefully your
+(lossless) compressor.
+
+A compressor C is "normal" if the following properties (inequalities) are
+satisfied [17]:
+
+    1) Idempotency: C(xx) = C(x), and C(E) = 0,
+        where E is the empty string.
+    2) Monotonicity: C(xy) >= C(x).
+    3) Symmetry: C(xy) = C(yx).
+    4) Distributivity: C(xy) + C(z) <= C(xz) + C(yz).
+
+The important theorem from [18] reveals the power of the dNCD distance:
+
+"if the compressor C is normal, then the dNCD is a normalized admissible
+distance satisfying the metric inequalities that is, a similarity metric."
+
+With this theorem, we can use the NCD as a simple tool to measure the
+similarity between elements.
+
+We have performed tests on different compressors to test them in respect to
+both the previous properties and their speed. If the algorithm is too slow
+it will be really useless for practical purposes. We chose to compress
+random signatures (see 3.1) because it's close to our application domain
+(see 3).
+
+##########################################################################
+Property | Number of success | size of final compression | speed (seconds)
+##########################################################################
+d@t0t0:~/elsim$ ./tests/test_similarity.py
+*  LZMA
+Idempotency         0/9             1167                    1.82118797
+Monotonicity        72/72           13258                   9.40736294
+Symetry             72/72           17380                   9.32561111
+Distributivity      504/504         214466                  133.67427087
+
+*  BZ2
+Idempotency         0/9             1947                    0.00075889
+Monotonicity        72/72           18248                   0.00626206
+Symetry             72/72           221744                  0.00735211
+Distributivity      504/504         279944                  0.09816098
+
+*  ZLIB
+Idempotency         0/9             1073                    0.00033116
+Monotonicity        72/72           11850                   0.00224590
+Symetry             72/72           15348                   0.00276113
+Distributivity      504/504         190386                  0.03468490
+
+*  XZ
+Idempotency         0/9             1900                    0.55278206
+Monotonicity        72/72           17544                   4.41346812
+Symetry             72/72           21008                   4.35566306
+Distributivity      504/504         269864                  61.70975709
+
+*  VCBLOCKSORT
+Idempotency         0/9             8129                    0.00140786
+Monotonicity        72/72           86960                   0.01695490
+Symetry             10/72           115168                  0.02190304
+Distributivity      504/504         1414896                 0.21149492
+
+*  SNAPPY
+Idempotency         0/9             1153                    0.00009203
+Monotonicity        72/72           12952                   0.00057387
+Symetry             72/72           17184                   0.00059295
+Distributivity      504/504         210952                  0.01117182
+###########################################################################
+
+Snappy [19] is really fast and respects, as do the others, the four
+conditions. It is interesting to see that the first property will never be
+satisfied by the NCD. This happens because in practice it is impossible to
+obtain those conditions even if we have close results (which is why the
+algorithm works :).
+
+It is possible to execute the similarity library in Elsim to use
+independently the Kolmogorov complexity and the NCD:
+
+###########################################
+In [1]: from elsim.similarity import similarity
+In [2]: s =
+similarity.SIMILARITY("./elsim/similarity/libsimilarity/libsimilarity.so")
+
+// change the type of compressor (bzip2)
+In [3]: s.set_compress_type( similarity.BZ2_COMPRESS )
+// Get the kolmogorov complexity (by using the compressor, so this function
+// returns the length of the compression
+In [4]: s.kolmogorov("W00T W00T PHRACK")
+Out[4]: (52L, 0)
+
+// Get the similarity distance between two strings
+In [5]: s.ncd("W00T W00T PHRACK", "W00T W00T PHRACK")
+Out[5]: (0.057692307978868484, 0)
+In [6]: s.ncd("W00T W00T PHRACK", "W00T W00T PHRACK STAFF")
+Out[6]: (0.17543859779834747, 0)
+In [7]: s.ncd("W00T W00T PHRACK", "HELLO WORLD")
+Out[7]: (0.23076923191547394, 0)
+// As you can see :
+//      - the elements of the first comparison are closer
+//        than the elements of the second comparison
+//      - the elements of the second comparison are closer
+//        than the elements of the third comparison
+//      - the result of the first comparison is not 0, that is why
+//        we don't respect the first property but practically it works
+//        because we are not far from 0
+
+// change the type of compressor (Snappy)
+In [8]: s.set_compress_type( similarity.SNAPPY_COMPRESS )
+In [9]: s.ncd("W00T W00T PHRACK", "W00T W00T PHRACK")
+Out[9]: (0.6666666865348816, 0)
+In [10]: s.ncd("W00T W00T PHRACK", "W00T W00T PHRACK STAFF")
+Out[10]: (0.6818181872367859, 0)
+In [11]: s.ncd("W00T W00T PHRACK", "HELLO WORLD")
+Out[11]: (0.7777777910232544, 0)
+
+// As you can see, Snappy is very bad with such kind of strings, even if
+// the algorithm respects the dissimilarities between the comparison.
+
+// If we test this compressor with longer strings, and strings of
+// signatures (3.1), we have better results:
+In [12]: s.ncd("B[I]B[RF1]B[F0S]B[IF1]B[]B[]B[S]B[SS]B[RF0]B[]B[SP0I]"\
+         "B[GP1]",
+         "B[I]B[RF1]B[F0S]B[IF1]B[]B[]B[S]B[SS]B[RF0]B[]B[SP0I]B[GP1]")
+Out[12]: (0.0784313753247261, 0)
+
+In [13]: s.ncd("B[I]B[RF1]B[F0S]B[IF1]B[]B[]B[S]B[SS]B[RF0]B[]B[SP0I]"\
+         "B[GP1]",
+         "B[I]B[RF1]B[F0S]B[IF1]B[]B[]B[S]B[SS]B[RF0]B[]B[SP0I]")
+Out[13]: (0.11764705926179886, 0)
+
+In [14]: s.ncd("B[I]B[RF1]B[F0S]B[IF1]B[]B[]B[S]B[SS]B[RF0]B[]B[SP0I]"\
+         "B[GP1]",
+         "B[G]B[SGIGF0]B[RP1G]B[SP1I]B[SG]B[SSGP0]B[F1]B[P0SSGR]B[F1]"\
+         "B[SSSI]B[RF1P0R]B[GSP0RP0P0]B[GI]B[P1]B[I]B[GP1S]")
+Out[14]: (0.9270833134651184, 0)
+
+###########################################
+
+Snappy maybe the fastest algorithm but its rate compression is the worst.
+However, it is not of particular importance. Why? Because it is not a
+problem if the properties are respected. Moreover if you want an end value
+which respects more the idea of similarities, you can still switch to some
+other compressor, such as ZLIB, LZMA or BZ2.
+
+The first thing to do is to describe our "basic" element which will be used
+for a comparison. An element is composed of:
+        - a string
+        - a hash
+
+Oh wait, that's all? Yes, we need to compare strings and not other things.
+But the strings themselves will highly depend of your similarity problem.
+For example, if your problem is to compare two binaries, it's a bad idea to
+compare the listings corresponding to a specific function. You need to find
+the best way to transform your data into suitable strings, and it's
+probably the most difficult part. Of course it is not our job in this
+article:) It is not easy to transform your data to a string and it will be
+specific to each problem. For example, if your data is a chemical molecule
+you need probably to use SMILES to convert the structure to an ASCII string
+[34].
+
+Remember that you can't compare elements that easily, you really need a
+transformation because the Kolmogorov complexity is not magical. Using it
+requires the normalization of your data. Finally, the hash is only used to
+quickly remove the identical elements.
+
+The algorithm is the following one:
+
+    - input: A:set(), B:set()
+      where A and B are sets of elements
+
+    - output: I:set(), S:set(), N:set(), D:set(), Sk:set()
+      where I: identical elements, S: similar elements, N: new elements,
+      D: deleted elements, Sk: skipped elements
+
+    - Sk: Skipped elements by using a "filtering" function (helpful if we
+      wish to skip some elements from a set (small size, known element from
+      a library, etc.)
+
+    - Identify internal identical elements in each set
+
+    - I: Identify "identical" elements by the intersection of A and B
+
+    - Get all others elements by removing identical elements
+
+    - Perform the "NCD" between each element of A and B
+
+    - S: "Sort" all similarities elements by using a threshold
+
+    - N,D: Get all new/deleted elements if they are not present in one of
+      the previous sets
+
+The following diagram describes this algorithm:
+
+
+|--A--|                 |--B--|
+|  A1 |                 |  B1 |
+|  A2 |                 |  B2 |
+|  A3 |                 |  B3 |
+|--An-|                 |--Bn-|
+   |      |---------|      |
+   |- --->|FILTERING|<-----|
+          |---------|
+             |   |
+             |   |--------->|Sk|
+             |
+             |      |---------|
+             |----->|IDENTICAL|------>|I|
+                    |---------|
+                         |
+                         |
+                         |     |---|---use-->|Kolmogorov|
+                         |---->|NCD|
+                               |---|
+                                 |
+                                 |
+                                 |
+                                 |         |---------|-->|Threshold|
+                                 |-------->| SORTING |
+                                           |---------|
+                                                |
+                                                |
+                                               /|\
+                                              / | \
+                                             /  |  \
+                                            /   |   \
+                                           /    |    \
+                                          /     |     \
+                         |N|<------------/      |      \-------->|D|
+                                                |
+                                                |---->|S|
+
+
+Moreover we can calculate a similarity "score" using the number of
+identical elements and the value of the similar elements.
+
+Here is a simple example showing you how it is possible to use the
+algorithm (elsim_text.py). In this case, it's used to compare two plain
+text files. We modified the COPYING.LESSER text by changing the order of
+few paragraphs and removing (or adding) words:
+
+###########################################
+ds@t0t0:~/elsim$ ./tests/example_text_sim.py -i
+examples/text/COPYING.LESSER examples/text/COPYING.LESSER.MODIF_REORDER
+Elements:
+        IDENTICAL:     106
+        SIMILAR:         2
+        NEW:             0
+        DELETED:         0
+        SKIPPED:         2
+       --> sentences: 99.783060% of similarities
+###########################################
+
+As you can see, with a few modifications the two files are maximally
+similar even if the elements are not at the same place. And if you add some
+debugging information, you can see the two modified sentences:
+
+###########################################
+[...]
+SIMILAR sentences:
+       138 'This version of the GNU Lesser General Public License
+       incorporates the terms and conditions of version 3 of the GNU
+       General Public License' --> 131 'This version of the GNU General
+       Public License incorporates the terms and conditions of version 3
+       of the GNU General Public License' 0.105263158679
+       71 'and the "GNU GPL" refers to version 3 of the GNU General Public
+       License' --> 76 'and the "GNU GPL HOOK" refers to version 3 of the
+       GNU General Public License' 0.129032254219
+[...]
+###########################################
+
+----[ 2.2 In a set of elements
+
+The previous algorithm is interesting in order to compare two elements, but
+if you have more or if you wish to search for a specific signature in a set
+of elements, it can be very long. That's why we need to use a clustering
+algorithm [28] to accelerate it.
+
+So, an element will be defined by:
+    - a string (a signature),
+    - a set of float values.
+
+The float values are classically features vectors that we will use the set
+of floats to perform the clustering (and you can use specific weights if
+you think that some elements of the set are more important than others).
+For example if you consider that the first float value if more important
+than the second one for clustering you can add a higher weight.
+
+In order to have more complex searches (i.e. if you wish to match multiple
+elements at the same time or only a specific element and not another, etc.)
+we will use a signature which will be composed of several elements and a
+Boolean formula whose purpose is to check if a signature matches.
+
+The algorithm is:
+
+    - Load signatures from the database and elements
+
+    - Execute a classical clustering [28] algorithm (kmeans [3] for
+      example) to reduce the number of comparisons by using the set of
+      float values
+
+    - For each cluster, compare the loaded from the database signatures
+      with the elements
+
+        - If the NCD value is below the threshold and if the Boolean
+          formula is true then we have found a valid signature (so we have
+          a valid match!)
+
+|---SIGN---|                 |---ELEM---|
+|    X1    |                 |    E1    |
+|    X2    |                 |    E2    |
+|    X3    |                 |    E3    |
+|----Xn----|                 |----En----|
+     |        |----------|        |
+     |------->|CLUSTERING|<-------|
+              |----------|
+                |  |  |
+                |  |  |->Cn
+                |  |
+                |  |->Cn-1
+                |
+                |
+                |
+                |   __C1__
+                |->|  X1  |       |---|---------->|Kolmogorov|
+                   |  E1  |------>|NCD|
+                   |  ..  |   ^   |---|
+                              |     |
+                              |     |
+                              |     |
+                              |     |---------->|Threshold|
+                              |                      |
+                              |                      |
+                              |                      |
+                              |                      |
+                              |                     / \
+                              |                    /   \
+                              |                   /     \
+                              |                  F       T
+                              |                 /         \
+                              |----------------/           |
+                              |                            |
+                              |                        |--------|
+                              |                        |   BF   |
+                              |                        |--------|
+                              |                            |
+                              |                            |
+                              |                           / \
+                              |                          /   \
+                              |                         F     T
+                              |------------------------/       \
+                                                                |
+                                                             |-----|
+                                                             | OK  |
+                                                             |-----|
+
+Simple, no ? :)
+
+Here is an example (example_sign.py) which shows you how to load signatures
+and elements, and check if a signature is present.
+
+In the following example, we have two signatures composed of elements and a
+set of "external" data to test. In the dataset, we have a corresponding
+signature and a false positive:
+
+###########################################
+SIGNS = [
+            [ "Sign1", "a",
+                [ [ 4.4915299415588379, 4.9674844741821289,
+                    4.9468302726745605, 0.0 ], "HELLO
+                    WORLDDDDDDDDDDDDDDDDDDDDDDD" ] ],
+                [ "Sign2", "a && b",
+                    [ [ 2.0, 3.0, 4.0, 5.0 ], "OOOPS !!!!!!!!" ],
+                    [ [ 2.0, 3.0, 4.0, 8.0], "OOOOOOOOPPPPPS !!!" ] ],
+]
+ELEMS = [
+            [ [ 4.4915299415588379, 4.9674844741821289,
+            4.9468302726745605, 0.0 ], "HELLO WORLDDDDDDDDDDDDDDDDDDDDDDD"
+            ],
+            [ [ 4.4915299415588379, 4.9674844741821289,
+            4.9468302726745605, 1.0 ], "FALSE POSITIVE" ],
+            [ [ 2.0, 3.0, 4.0, 5.0 ],
+            "HELLO WORLDDDDDDDDDDDDDDDDDDDDDDD" ],
+            [ [ 2.0, 3.0, 4.0, 5.0 ],
+            "HELLO WORLDDDDDDDDDDDDDDDDDDDDDDD" ],
+            [ [ 2.0, 3.0, 4.0, 5.0 ],
+            "HELLO WORLDDDDDDDDDDDDDDDDDDDDDDD" ],
+            [ [ 2.0, 3.0, 4.0, 5.0 ],
+            "HELLO WORLDDDDDDDDDDDDDDDDDDDDDDD" ],
+]
+###########################################
+
+Each signature is composed of either one or several elements and a Boolean
+formula ("a" is the first element, "b" is the second element, etc.).
+
+By running the example, we can see that one signature is detected. It is
+displayed along with several statistics (such as the number of clusters,
+the number of comparisons (1) and the number of comparisons without (18)
+this algorithm).
+
+###########################################
+d@t0t0:~/elsim/elsim/elsign$ ./example_sign.py
+['Sign1', [0, 1, 0.1875]]
+[SIGN:3 CLUSTERS:3 CMP_CLUSTERS:2 ELEMENTS:6 CMP_ELEMENTS:1
+-> 18 5.555556%]
+###########################################
+
+If we remove the matching element, we can see that we can't detect a match
+of the signature anymore, even if we have close entropies (fake values in
+this case) with a signature (but the string is not the same):
+
+###########################################
+d@t0t0:~/elsim/elsim/elsign$ ./example_sign.py
+[None]
+[SIGN:3 CLUSTERS:2 CMP_CLUSTERS:2 ELEMENTS:5 CMP_ELEMENTS:3
+-> 15 20.000000%]
+###########################################
+
+--[ 3 - Real World: Android
+
+Now we can apply our algorithms to a real world problem domain. We have
+chosen that of Android applications and malware identification. One of the
+main problems with Android Apps is the plagiarism due to the facilities to
+modify and spread an application.
+
+----[ 3.1 Similarities between two applications
+
+To use our generic algorithm, we must first define what are the "string"
+and the "hash" properties of an element. So, what is an element in the case
+of an Android application? We define it as a method or a class. The
+"string" is the signature of a method and the "hash" is the sequence of
+instructions.
+
+Our signature is based on the grammar described by Silvio Cesare [2]. This
+grammar is very simple:
+
+#########################################################################
+Procedure ::= StatementList
+StatementList ::= Statement | Statement StatementList
+Statement ::= BasicBlock | Return | Goto | If | Field | Package | String
+Return ::= 'R'
+Goto ::= 'G'
+If ::= 'I'
+BasicBlock ::= 'B'
+Field ::= 'F'0 | 'F'1
+Package ::= 'P' PackageNew | 'P' PackageCall
+PackageNew ::= '0'
+PackageCall ::= '1'
+PackageName ::= Epsilon | Id
+String ::= 'S' Number | 'S' Id
+Number ::= \d+
+Id ::= [a-zA-Z]\w+
+#########################################################################
+
+For example if we have the following code:
+
+    mov X, 4
+    mov Z, 5
+    add X, Z
+    goto +50
+    add X, Z
+    goto -100
+
+Then the signature is:
+
+    B[G]B[G]
+
+We do not take into account the different instructions but rather the
+information about the structure of the method.
+
+With an Android method, this gives a more complex signature:
+
+Code:
+       [...]
+       call [ meth@ 22 Ljava/lang/String; valueOf
+              ['(I)', 'Ljava/lang/String;'] ]
+       goto 50
+
+Signature:
+       B[P1{Ljava/lang/String; valueOf (I)Ljava/lang/String;}G]
+
+We only use the control flow graph (CFG) of the methods along with specific
+instructions of the CFG such as "if*" or "goto". All the instructions like
+sparse/packed switch [4] are translated to "goto" instructions without
+details. We can add information about the packages, and especially about
+the Android/Java packages. Indeed, it's an important information to include
+in the signature (e.g.: you must use the sendTextMessage API to send an
+SMS).
+
+In the signature we can also add if a method of a package is called, or if
+there is the creation of an object, or even if a field is read or written.
+Of course, it's possible to modify this kind of signature if you want to
+take into account each instruction of the method. However in our case (and
+after experimental results) it seems useless since we don't depend on the
+"nature" of each instruction, but only on higher level information.
+
+We can extend this concept by using "predefined" signatures to help us:
+
+    - 0: information about packages (called/created) and fields, no
+         specific information about string
+
+    - 1: 0 + but with the size of strings,
+
+    - 2: 0 + filtering android packages names,
+
+    - 3: 0 + filtering Java packages names,
+
+    - 4: 0 + filtering Android/Java packages.
+
+If we have different types of signatures, we are then able to change
+dynamically the signature in case the global structure of a function or the
+Android packages in the structure are more interesting to us.
+
+For example, if we disassemble a particular method using Androguard [1] or
+smali/baksmali [27], we obtain different signatures:
+
+#########################################################################
+d@t0t0:~/androguard$ ./androlyze.py -s
+Androlyze version 1.0
+In [1]: a, d, dx =
+AnalyzeAPK("./examples/android/TestsAndroguard/bin/TestsAndroguard.apk")
+In [5]: d.CLASS_Ltests_androguard_TestIfs.METHOD_testCFG.pretty_show()
+       METHOD access_flags=public (Ltests/androguard/TestIfs; testCFG,()V)
+       local registers: v0...v7
+return:void
+testCFG-BB@0x0 :
+       0(0) const/4 v0 , [ #+ 1 ] // {1}
+       1(2) const/4 v1 , [ #+ 1 ] // {1}
+       2(4) const/4 v2 , [ #+ 1 ] // {1}
+       3(6) const/4 v3 , [ #+ 1 ] // {1} [ testCFG-BB@0x8 ]
+
+testCFG-BB@0x8 :
+       4(8) iget-boolean v4 , v7 , [ field@ 14 Ltests/androguard/TestIfs;
+            Z P ]
+       5(c) if-eqz v4 , [ + 77 ] [ testCFG-BB@0x10  testCFG-BB@0xa6 ]
+
+testCFG-BB@0x10 :
+       6(10) move v1 , v0
+       7(12) iget-boolean v4 , v7 , [ field@ 15 Ltests/androguard/TestIfs;
+             Z Q ]
+       8(16) if-eqz v4 , [ + 70 ] [ testCFG-BB@0x1a  testCFG-BB@0xa2 ]
+
+testCFG-BB@0x1a :
+       9(1a) const/4 v3 , [ #+ 2 ] // {2} [ testCFG-BB@0x1c ]
+
+testCFG-BB@0x1c :
+       10(1c) add-int/lit8 v2 , v2 , [ #+ 1 ] [ testCFG-BB@0x20 ]
+
+testCFG-BB@0x20 :
+      11(20) sget-object v4 , [ field@ 0 Ljava/lang/System;
+             Ljava/io/PrintStream; out ]
+       12(24) new-instance v5 , [ type@ 25 Ljava/lang/StringBuilder; ]
+       13(28) invoke-static v0 , [ meth@ 22 Ljava/lang/String; valueOf
+              ['(I)', 'Ljava/lang/String;'] ]
+       14(2e) move-result-object v6
+       15(30) invoke-direct v5 , v6 , [ meth@ 25 Ljava/lang/StringBuilder;
+              ['(Ljava/lang/String;)', 'V'] ]
+       16(36) const-string v6 , [ string@ 5 ',' ]
+       17(3a) invoke-virtual v5 , v6 , [ meth@ 31
+              Ljava/lang/StringBuilder; append ['(Ljava/lang/String;)',
+              'Ljava/lang/StringBuilder;'] ]
+       18(40) move-result-object v5
+       19(42) invoke-virtual v5 , v1 , [ meth@ 28
+              Ljava/lang/StringBuilder; append ['(I)',
+              'Ljava/lang/StringBuilder;'] ]
+       20(48) move-result-object v5
+       21(4a) const-string v6 , [ string@ 5 ',' ]
+       22(4e) invoke-virtual v5 , v6 , [ meth@ 31
+              Ljava/lang/StringBuilder; append ['(Ljava/lang/String;)',
+              'Ljava/lang/StringBuilder;'] ]
+       23(54) move-result-object v5
+       24(56) invoke-virtual v5 , v2 , [ meth@ 28
+              Ljava/lang/StringBuilder; append ['(I)',
+              'Ljava/lang/StringBuilder;'] ]
+       25(5c) move-result-object v5
+       26(5e) const-string v6 , [ string@ 5 ',' ]
+       27(62) invoke-virtual v5 , v6 , [ meth@ 31
+              Ljava/lang/StringBuilder; append ['(Ljava/lang/String;)',
+              'Ljava/lang/StringBuilder;'] ]
+       28(68) move-result-object v5
+       29(6a) invoke-virtual v5 , v3 , [ meth@ 28
+              Ljava/lang/StringBuilder; append ['(I)',
+              'Ljava/lang/StringBuilder;'] ]
+       30(70) move-result-object v5
+       31(72) invoke-virtual v5 , [ meth@ 32 Ljava/lang/StringBuilder;
+              toString ['()', 'Ljava/lang/String;'] ]
+       32(78) move-result-object v5
+       33(7a) invoke-virtual v4 , v5 , [ meth@ 8 Ljava/io/PrintStream;
+              println ['(Ljava/lang/String;)', 'V'] ] [ testCFG-BB@0x80 ]
+
+testCFG-BB@0x80 :
+       34(80) iget-boolean v4 , v7 , [ field@ 16
+              Ltests/androguard/TestIfs; Z R ]
+       35(84) if-eqz v4 , [ + 4 ] [ testCFG-BB@0x88  testCFG-BB@0x8c ]
+
+testCFG-BB@0x88 :
+       36(88) add-int/lit8 v3 , v3 , [ #+ 4 ] [ testCFG-BB@0x8c ]
+
+testCFG-BB@0x8c :
+       37(8c) iget-boolean v4 , v7 , [ field@ 17
+              Ltests/androguard/TestIfs; Z S ]
+       38(90) if-eqz v4 , [ + -8 ] [ testCFG-BB@0x94  testCFG-BB@0x80 ]
+
+testCFG-BB@0x94 :
+       39(94) add-int/lit8 v0 , v0 , [ #+ 6 ]
+       40(98) iget-boolean v4 , v7 , [ field@ 18
+              Ltests/androguard/TestIfs; Z T ]
+       41(9c) if-eqz v4 , [ + -74 ] [ testCFG-BB@0xa0  testCFG-BB@0x8 ]
+
+testCFG-BB@0xa0 :
+       42(a0) return-void
+
+testCFG-BB@0xa2 :
+       43(a2) const/4 v3 , [ #+ 3 ] // {3}
+       44(a4) goto [ + -68 ] [ testCFG-BB@0x1c ]
+
+testCFG-BB@0xa6 :
+       45(a6) add-int/lit8 v2 , v2 , [ #+ 2 ]
+       46(aa) goto [ + -69 ] [ testCFG-BB@0x20 ]
+#########################################################################
+
+By using the first kind of predefined signature, we can see each basic
+block with some information. By filtering Java packages we have more
+information about the behavior of the method:
+
+#########################################################################
+In [6]: dx.get_method_signature(d.CLASS_Ltests_androguard_TestIfs.
+METHOD_testCFG, predef_sign = analysis.SIGNATURE_L0_0).get_string()
+Out[6]: 'B[]B[I]B[I]B[]B[]B[P0P1P1P1P1P1P1P1P1P1P1]B[I]B[]B[I]B[I]B[R]
+B[G]B[G]'
+In [9]: dx.get_method_signature(d.CLASS_Ltests_androguard_TestIfs.
+METHOD_testCFG, predef_sign = analysis.SIGNATURE_L0_3).get_string()
+Out[9]: 'B[]B[I]B[I]B[]B[]B[P0{Ljava/lang/StringBuilder;}P1
+{Ljava/lang/String;valueOf(I)Ljava/lang/String;}
+P1{Ljava/lang/StringBuilder;(Ljava/lang/String;)V}
+P1{Ljava/lang/StringBuilder;append(Ljava/lang/String;)
+Ljava/lang/StringBuilder;}
+P1{Ljava/lang/StringBuilder;append(I)Ljava/lang/StringBuilder;}
+P1{Ljava/lang/StringBuilder;append(Ljava/lang/String;)
+Ljava/lang/StringBuilder;}
+P1{Ljava/lang/StringBuilder;append(I)Ljava/lang/StringBuilder;}
+P1{Ljava/lang/StringBuilder;append(Ljava/lang/String;)
+Ljava/lang/StringBuilder;}
+P1{Ljava/lang/StringBuilder;append(I)Ljava/lang/StringBuilder;}
+P1{Ljava/lang/StringBuilder;toString()Ljava/lang/String;}
+P1{Ljava/io/PrintStream;println(Ljava/lang/String;)V}]
+B[I]B[]B[I]B[I]B[R]B[G]B[G]'
+#########################################################################
+
+With SIGNATURE_L0_0 being 0 and SIGNATURE_L0_3 being 3.
+
+We can test our signature with a real malware like Foncy [5]:
+
+#########################################################################
+In [15]: a, d, dx =
+AnalyzeAPK("./apks/malwares/foncy/6be2988a916cb620c71ff3d8d4dac5db2881c6\
+75dd34a4bb7b238b5899b48600")
+#########################################################################
+
+In this case, we are more interested in signatures embedding Android
+packages, Java packages or both:
+
+#########################################################################
+In [16]: dx.get_method_signature(d.CLASS_Lorg_eapp_MagicSMSActivity.
+METHOD_onCreate, predef_sign = analysis.SIGNATURE_L0_2).get_string()
+Out[16]: 'B[P1{Landroid/app/Activity;onCreate(Landroid/os/Bundle;)V}P0
+P1{Landroid/os/Environment;getExternalStorageDirectory()Ljava/io/File;}P1
+P1P1P1P1P0P0P1P1P1P1P1P1I]B[R]B[P1]
+B[P1{Landroid/telephony/SmsManager;getDefault()
+Landroid/telephony/SmsManager;}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}
+P1{Landroid/telephony/SmsManager;sendTextMessage(Ljava/lang/String;
+Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent;
+Landroid/app/PendingIntent;)V}P2
+P1{Landroid/widget/Toast;makeText(Landroid/content/Context;
+Ljava/lang/CharSequence; I)Landroid/widget/Toast;}
+P1{Landroid/widget/Toast;show()V}G]B[G]'
+
+In [17]: dx.get_method_signature(d.CLASS_Lorg_eapp_MagicSMSActivity.
+METHOD_onCreate, predef_sign = analysis.SIGNATURE_L0_3).get_string()
+Out[17]: 'B[P1P0{Ljava/lang/StringBuilder;}P1
+P1{Ljava/io/File;getAbsolutePath()Ljava/lang/String;}
+P1{Ljava/lang/String;valueOf(Ljava/lang/Object;)Ljava/lang/String;}
+P1{Ljava/lang/StringBuilder;(Ljava/lang/String;)V}
+P1{Ljava/lang/StringBuilder;append(Ljava/lang/String;)
+Ljava/lang/StringBuilder;}
+P1{Ljava/lang/StringBuilder;toString()Ljava/lang/String;}
+P0{Ljava/io/File;}
+P0{Ljava/lang/StringBuilder;}
+P1{Ljava/lang/String;valueOf(Ljava/lang/Object;)Ljava/lang/String;}
+P1{Ljava/lang/StringBuilder;(Ljava/lang/String;)V}
+P1{Ljava/lang/StringBuilder;append(Ljava/lang/String;)
+Ljava/lang/StringBuilder;}
+P1{Ljava/lang/StringBuilder;toString()Ljava/lang/String;}
+P1{Ljava/io/File;(Ljava/lang/String;)V}
+P1{Ljava/io/File;exists()Z}I]B[R]
+B[P1{Ljava/io/File;createNewFile()Z}]
+B[P1P1P1P1P1P1P1P1P1P1P1P1P1P1P1P1P1P1P1P1P1P2P1P1G]B[G]'
+
+In [18]: dx.get_method_signature(d.CLASS_Lorg_eapp_MagicSMSActivity.
+METHOD_onCreate, predef_sign = analysis.SIGNATURE_L0_4).get_string()
+Out[18]: 'B[P1{Landroid/app/Activity;onCreate(Landroid/os/Bundle;)V}
+P0{Ljava/lang/StringBuilder;}
+P1{Landroid/os/Environment;getExternalStorageDirectory()Ljava/io/File;}
+P1{Ljava/io/File;getAbsolutePath()Ljava/lang/String;}
+P1{Ljava/lang/String;valueOf(Ljava/lang/Object;)Ljava/lang/String;}
+P1{Ljava/lang/StringBuilder;(Ljava/lang/String;)V}
+P1{Ljava/lang/StringBuilder;append(Ljava/lang/String;)
+[...]
+Landroid/app/PendingIntent;)V}
+[...]
+B[G]'
+#########################################################################
+
+It's interesting to see that even if our basic blocks are in a different
+order, the Kolmogorov complexity is preserved and that we observe an
+important similarity (TestReorg function). If we reorganize each basic
+block in the signature we can see that the results are quite the same (so
+basically the NCD bypasses a basic CFG obfuscation):
+
+#########################################################################
+d@t0t0:~/elsim$ ./tests/test_similarity.py
+*  LZMA
+(0.031779661774635315, 0)
+(0.031779661774635315, 0)
+(0.04237288236618042, 0)
+(0.040169134736061096, 0)
+(0.03983228653669357, 0)
+(0.03991596773266792, 0)
+(0.042016807943582535, 0)
+(0.039256200194358826, 0)
+(0.04356846585869789, 0)
+(0.03933747485280037, 0)
+(0.03719008341431618, 0)
+(0.043478261679410934, 0)
+(0.043478261679410934, 0)
+(0.04025423899292946, 0)
+(0.04411764815449715, 0)
+(0.041580040007829666, 0)
+(0.04149377718567848, 0)
+(0.03563941270112991, 0)
+(0.03966597095131874, 0)
+(0.03563941270112991, 0)
+(0.04184100404381752, 0)
+(0.04393305256962776, 0)
+(0.03974895551800728, 0)
+(0.03983228653669357, 0)
+(0.041753653436899185, 0)
+[....]
+#########################################################################
+
+The "hash" is the sequence of instructions in each method, and for each
+instruction we remove the information depending on the compilation
+(registers, etc.).
+
+Having defined the "string" and the "hash" properties in the specific
+context of Android Apps, we can now test the algorithm on various samples.
+We use a tool called "androsim.py" which is a simple script based on
+"Elsim".
+
+This tool detects and reports:
+
+    - the identical methods;
+    - the similar methods;
+    - the deleted methods;
+    - the new methods;
+    - the skipped methods.
+
+Moreover, a similarity score (between 0.0 to 100.0) is calculated upon the
+values of the identical methods (1.0) and the similar methods (in this
+particular case, we calculate the final values using the BZ2 compressor due
+to the fact that the return value is more "interesting" for the score). It
+is more interesting because you will have an understandable value related
+to the similarity.
+
+For the first test we use the "opfake" malware [6]. If we take two samples
+from the same family, an important value of similarity is revealed:
+
+#########################################################################
+d@t0t0:~/androguard$ ./androsim.py -i
+apks/malwares/opfake/\
+b79106465173490e07512aa6a182b5da558ad2d4f6fae038101796b534628311
+apks/malwares/opfake/\
+b906279e8c79a12e5a10feafe5db850024dd75e955e9c2f9f82bbca10e0585a6
+
+Elements:
+        IDENTICAL:     34
+        SIMILAR:        5
+        NEW:            0
+        DELETED:        0
+        SKIPPED:        0
+       --> methods: 99.100500% of similarities
+#########################################################################
+
+These two samples have similar methods and it's possible to have more
+information by specifying the "-d" option:
+
+#########################################################################
+SIMILAR methods:
+       Lcom/reg/MainRegActivity; displayFakeProgress ()V 61
+               --> Lcom/reg/MainRegActivity; displayFakeProgress ()V
+                   61 0.0909090936184
+       Lcom/reg/MainRegActivity; getNextButton ()Landroid/widget/Button;
+       40
+               --> Lcom/reg/MainRegActivity; getNextButton
+               ()Landroid/widget/Button; 40 0.125
+       Lcom/reg/MainRegActivity; showLinkForm ()V 111
+               --> Lcom/reg/MainRegActivity; showLinkForm ()V
+               111 0.183673471212
+       Lcom/reg/MainRegActivity; showRules ()V 132
+               --> Lcom/reg/MainRegActivity; showRules ()V
+               132 0.0731707289815
+       Lcom/reg/MainRegActivity; setMainScreen ()V 147
+               --> Lcom/reg/MainRegActivity; setMainScreen ()V
+               147 0.319148927927
+IDENTICAL methods:
+       Lcom/reg/MainRegActivity; PushMsg (Ljava/lang/String;
+       Ljava/lang/String;)V 76
+               --> Lcom/reg/MainRegActivity; PushMsg (Ljava/lang/String;
+               Ljava/lang/String;)V 76
+
+       Lcom/reg/SmsReceiver; setListener (Lcom/reg/SMSAction;)V 3
+               --> Lcom/reg/SmsReceiver; setListener
+               (Lcom/reg/SMSAction;)V 3
+
+       Lcom/reg/MainRegActivity; loadString (I)Ljava/lang/String; 52
+               --> Lcom/reg/MainRegActivity; loadString (I)
+               Ljava/lang/String; 52
+
+       Lcom/reg/MainRegActivity; access$600 ()Ljava/lang/String; 3
+               --> Lcom/reg/MainRegActivity; access$600
+               ()Ljava/lang/String; 3
+
+       Lcom/reg/ParseXml; getXMLTags (Ljava/lang/String;
+       Ljava/lang/String;)Ljava/util/Vector; 82
+               --> Lcom/reg/ParseXml; getXMLTags (Ljava/lang/String;
+               Ljava/lang/String;)Ljava/util/Vector; 82
+
+       Lcom/reg/ParseXml; getXMLExtra (Ljava/lang/String;
+       Ljava/lang/String;)Ljava/lang/String; 52
+               --> Lcom/reg/ParseXml; getXMLExtra (Ljava/lang/String;
+               Ljava/lang/String;)Ljava/lang/String; 52
+
+       Lcom/reg/MainRegActivity; SaveSuccess ()V 23
+               --> Lcom/reg/MainRegActivity; SaveSuccess ()V 23
+
+       Lcom/reg/SmsReceiver; onReceive (Landroid/content/Context;
+       Landroid/content/Intent;)V 59
+               --> Lcom/reg/SmsReceiver; onReceive
+               (Landroid/content/Context; Landroid/content/Intent;)V 59
+
+       Lcom/reg/ParseXml; getXMLIntElement (Ljava/lang/String;
+       Ljava/lang/String;)I 55
+               --> Lcom/reg/ParseXml; getXMLIntElement
+               (Ljava/lang/String; Ljava/lang/String;)I 55
+
+       Lcom/reg/MainRegActivity; getCountry ()Ljava/lang/String; 13
+               --> Lcom/reg/MainRegActivity; getCountry
+               ()Ljava/lang/String; 13
+
+       Lcom/reg/MainRegActivity$5; onReceive (Landroid/content/Context;
+       Landroid/content/Intent;)V 35
+               --> Lcom/reg/MainRegActivity$5; onReceive
+               (Landroid/content/Context; Landroid/content/Intent;)V 35
+
+       Lcom/reg/MainRegActivity$1; (Lcom/reg/MainRegActivity;)V 6
+               --> Lcom/reg/MainRegActivity$1;
+               (Lcom/reg/MainRegActivity;)V 6
+
+       Lcom/reg/MainRegActivity$S_itm; (Lcom/reg/MainRegActivity;)V 21
+               --> Lcom/reg/MainRegActivity$S_itm;
+               (Lcom/reg/MainRegActivity;)V 21
+[...]
+NEW methods:
+DELETED methods:
+SKIPPED methods:
+#########################################################################
+
+Basically we are able to determine if two samples are from the same malware
+family. If they are, the analyst can start his analysis from the similar
+methods.
+
+In the next part we will see how we can see the differences (what
+instructions have been modified) between two similar methods. If we test
+the tool by using two different samples (like opfake and foncy) we observe
+the following:
+
+#########################################################################
+d@t0t0:~/androguard$ ./androsim.py -i
+apks/malwares/opfake/\
+b79106465173490e07512aa6a182b5da558ad2d4f6fae038101796b534628311
+apks/malwares/foncy/\
+01f6f6379543f4aaa0d6b8dcd682f4e2b106527584b3645eb674f1646faccad5
+
+Elements:
+        IDENTICAL:     1
+        SIMILAR:       0
+        NEW:           2
+        DELETED:       38
+        SKIPPED:       0
+       --> methods: 33.333333% of similarities
+#########################################################################
+
+We see a strange similarity score due to the fact that all methods,
+including those of small size, have been compared. We can skip the specific
+case of methods having a small size using the "-s" option (to filter
+according to the size of the method in bytes):
+
+#########################################################################
+d@t0t0:~/androguard$ ./androsim.py -i
+apks/malwares/opfake/\
+b79106465173490e07512aa6a182b5da558ad2d4f6fae038101796b534628311
+apks/malwares/foncy/\
+01f6f6379543f4aaa0d6b8dcd682f4e2b106527584b3645eb674f1646faccad5 -s 10
+
+Elements:
+        IDENTICAL:     0
+        SIMILAR:       0
+        NEW:           2
+        DELETED:       29
+        SKIPPED:       33
+       --> methods: 0.000000% of similarities
+#########################################################################
+
+We can do a lot of things with this kind of tool such as:
+        - detecting plagiarism between two android applications
+        - checking if an application is correctly protected with
+          an obfuscator
+        - extracting easily injected codes (if you know the original
+          application)
+
+There are many other interesting "ways" to use this tool such as
+discovering if malware samples have been written by the same author, or if
+some pieces of code have been reused. Analyzing the "faketoken" [7] sample
+and the "opfake.d" sample we have observed an interesting result.
+
+The first sample "faketoken" is detected by 19/43 antivirus products on
+VirusTotal [8]. The second sample "opfake.d" is detected by 16/41 antivirus
+products on VirusTotal [9]. All of these antivirus products are using
+different names  with the exception of DrWeb.
+
+Now if we run our tool we observe the following output:
+
+#########################################################################
+d@t0t0:~/androguard$ ./androsim.py -i
+apks/plagiarism/opfake/\
+f7c36355c706fc9dd8954c096825e0613807e0da4bd7f3de97de0aec0be23b79
+apks/plagiarism/opfake/\
+61da462a03d8651a6088958b438b44527973601e604e3ca18cb7aa0b3952d2ac
+
+Elements:
+        IDENTICAL:     951
+        SIMILAR:       5
+        NEW:           34
+        DELETED:       23
+        SKIPPED:       0
+       --> methods: 96.516954% of similarities
+#########################################################################
+
+We can skip specific libraries common to these samples such as
+"Lorg/simpleframework/xml" and methods of small sizes. This provides us
+with an even more interesting result:
+
+#########################################################################
+d@t0t0:~/androguard$ ./androsim.py -i
+apks/plagiarism/opfake/\
+f7c36355c706fc9dd8954c096825e0613807e0da4bd7f3de97de0aec0be23b79
+apks/plagiarism/opfake/\
+61da462a03d8651a6088958b438b44527973601e604e3ca18cb7aa0b3952d2ac
+-e "Lorg/simpleframework/" -s 100 -d
+
+Elements:
+        IDENTICAL:     9
+        SIMILAR:       3
+        NEW:           14
+        DELETED:       11
+        SKIPPED:       5260
+       --> methods: 44.998713% of similarities
+
+SIMILAR methods:
+       Ltoken/bot/MainApplication; loadStartSettings
+       (Ljava/lang/String;)Ltoken/bot/StartSettings; 230
+               --> Lcom/load/wap/MainApplication; loadStartSettings
+               (Ljava/lang/String;)Lcom/load/wap/StartSettings; 190 0.375
+
+       Ltoken/bot/MainService; threadOperationRun
+       (I Ljava/lang/Object;)V 197
+               --> Lcom/load/wap/MainService; threadOperationRun
+               (I Ljava/lang/Object;)V 122 0.319999992847
+
+       Ltoken/bot/ServerResponse; ()V 133
+               --> Lcom/load/wap/ServerResponse; ()V 125 0.214285716414
+
+IDENTICAL methods:
+       Ltoken/bot/Settings; isDeleteMessage (Ljava/lang/String;
+       Ljava/lang/String;)Z 132
+               --> Lcom/load/wap/Settings; isDeleteMessage
+               (Ljava/lang/String; Ljava/lang/String;)Z 132
+
+       Ltoken/bot/UpdateActivity; setMainScreen ()V 107
+               --> Lcom/load/wap/UpdateActivity; setMainScreen ()V 107
+
+       Ltoken/bot/MainApplication; sendGetRequest (Ljava/lang/String;
+       Ljava/util/List;)V 132
+               --> Lcom/load/wap/MainApplication; sendGetRequest
+               (Ljava/lang/String; Ljava/util/List;)V 132
+
+       Ltoken/bot/MainService; onStart (Landroid/content/Intent; I)V 106
+               --> Lcom/load/wap/MainService; onStart
+               (Landroid/content/Intent; I)V 106
+
+       Ltoken/bot/MainApplication; sendPostRequest (Ljava/lang/String;
+       Ljava/util/List;)V 197
+               --> Lcom/load/wap/MainApplication; sendPostRequest
+               (Ljava/lang/String; Ljava/util/List;)V 197
+
+       Ltoken/bot/MainApplication; DownloadApk (Ljava/lang/String;
+       Ljava/lang/String;)Z 106
+               --> Lcom/load/wap/MainApplication; DownloadApk
+               (Ljava/lang/String; Ljava/lang/String;)Z 106
+
+       Ltoken/bot/Settings; isCatchMessage (Ljava/lang/String;
+       Ljava/lang/String;)Ltoken/bot/CatchResult; 165
+               --> Lcom/load/wap/Settings; isCatchMessage
+               (Ljava/lang/String; Ljava/lang/String;)
+               Lcom/load/wap/CatchResult; 165
+
+       Ltoken/bot/MainApplication; getContacts
+       (Landroid/content/Context;)Ljava/util/Vector; 230
+               --> Lcom/load/wap/MainApplication; getContacts
+               (Landroid/content/Context;)Ljava/util/Vector; 230
+
+       Ltoken/bot/MainApplication; dateFromString
+       (Ljava/lang/String;)Ljava/util/Date; 103
+               --> Lcom/load/wap/MainApplication; dateFromString
+               (Ljava/lang/String;)Ljava/util/Date; 103
+#########################################################################
+
+As we can see, the names of the methods are "exactly" the same, and the
+signatures (the bytecodes with a high probability) are the same. It can be
+really interesting to detect if your software has been ripped off by
+someone.
+
+----[ 3.2 Differences between two applications
+
+Up to this point, we have a tool which is able to recognize similar
+methods, but we would like more information about the differences between
+each method.
+
+For that we will apply the same algorithm but we will change the
+"granularity" and focus on basic blocks in order to extract differences.
+However, in this specific case, we will not use our classical signature for
+each basic block but rather a simple "string" which represents the sequence
+of instructions. So, finally, as in the previous algorithm, we will have:
+    - identical basic blocs
+    - similar basic blocs
+    - new basic blocs
+    - deleted basic blocs
+
+With the list of similar basic blocks, we can apply a standard "diff"
+algorithm between each similar basic blocks to know which instructions have
+been added or removed.
+
+The Longuest Common Subsequence (LCS) algorithm [11] can then be used to
+obtain all differences. In order to apply the LCS algorithm, we will map
+each unique instruction to a simple string:
+
+    ADD 3       -> "\00"
+    ADD 1       -> "\01"
+    MOV 3       -> "\02"
+    ADD 3       -> "\00"
+
+If we have two basic blocks, we must translate each basic block into a
+final string:
+
+ADD 3
+ADD 1
+SUB 2
+IGET           => "\x00\x01\x02\x03\x00\x04"
+ADD 3
+GOTO
+
+ADD 3
+ADD 3
+SUB 2
+IGET           => "\x00\x00\x02\x03\x05\x04"
+MUL 4
+GOTO
+
+The application of the LCS algorithm[11] between these two strings reveals
+the instructions that have been added or removed:
+
+#########################################################################
+In [5]: from elsim_dalvik.py import LCS
+In [7]: a = "\x00\x01\x02\x03\x00\x04"
+In [9]: b = "\x00\x00\x02\x03\x05\x04"
+In [10]: z = LCS(a, b)
+
+In [12]: from elsim_dalvik import getDiff
+In [13]: l_a = []
+In [14]: l_r = []
+In [15]: getDiff(z, a, b, len(a), len(b), l_a, l_r)
+In [16]: l_a
+Out[16]: [(1, '\x00'), (4, '\x05')]
+// "ADD 3" and "MUL 4" have been added in the second basic bloc
+In [17]: l_r
+Out[18]: [(1, '\x01'), (4, '\x00')]
+// ""ADD 1" and "ADD 3" have been remove in the first basic bloc
+#########################################################################
+
+Although it's also possible to use a better algorithm such as the Needleman
+algorithm [10] (used in biology for "sequence alignment" [12], or in the
+comparison of network traces [35]), the tests performed have demonstrated
+that the LCS algorithm was sufficient.
+
+Now, we have a new tool called "androdiff.py" which can be used to extract
+and observe differences between two Android applications. We have tested it
+against two versions of the Skype application to analyze the patch of a
+security vulnerability [13] (mainly due to incorrect use of file
+permissions):
+
+#########################################################################
+d@t0t0:~/androguard$ ./androsim.py -i
+elsim/examples/android/com.skype.raider_1.0.0.831.apk
+elsim/examples/android/com.skype.raider_1.0.0.983.apk -c BZ2
+
+Elements:
+        IDENTICAL:     2059
+        SIMILAR:       167
+        NEW:           27
+        DELETED:       0
+        SKIPPED:       0
+       --> methods: 98.192539% of similarities
+#########################################################################
+
+We have several methods to analyze, but only a few new methods are present,
+and two of them are particularly interesting:
+
+#########################################################################
+       Lcom/skype/ipc/SkypeKitRunner; chmod (Ljava/io/File;
+                Ljava/lang/String;)Z 61
+       Lcom/skype/ipc/SkypeKitRunner; fixPermissions ([Ljava/io/File;)V 47
+#########################################################################
+
+So we can now search in the similar methods where these new methods are
+called:
+
+#########################################################################
+d@t0t0:~/androguard$ ./androdiff.py -i
+elsim/examples/android/com.skype.raider_1.0.0.831.apk
+elsim/examples/android/com.skype.raider_1.0.0.983.apk -d
+[...]
+[ ('Lcom/skype/ipc/SkypeKitRunner;', 'run', '()V') ] <->
+[ ('Lcom/skype/ipc/SkypeKitRunner;', 'run', '()V') ]
+run-BB@0xae run-BB@0xae
+Added Elements(2)
+        0xba 3 invoke-virtual v8 , [ meth@ 5897
+        Ljava/security/MessageDigest; reset ['()', 'V'] ]
+        0xc0 4 sget-object v9 , [ field@ 1299
+        Lcom/skype/ipc/SkypeKitRunner; [B MAITSEAINE ]
+Deleted Elements(0)
+
+run-BB@0x320 run-BB@0x316
+Added Elements(1)
+        0x332 5 const/4 v8 , [ #+ 0 ] // {0}
+Deleted Elements(1)
+        0x328 5 const/4 v8 , [ #+ 3 ] // {3}
+
+run-BB@0x352 run-BB@0x348
+Added Elements(1)
+        0x364 4 const-string v5 , [ string@ 2921 'chmod 750 ' ]
+Deleted Elements(1)
+        0x35a 4 const-string v5 , [ string@ 2904 'chmod 777 ' ]
+
+run-BB@0x52c run-BB@0x522
+Added Elements(10)
+        0x59e 29 invoke-virtual v4 , [ meth@ 109
+        Landroid/content/Context; getFilesDir ['()', 'Ljava/io/File;'] ]
+        0x5a4 30 move-result-object v4
+        0x5a6 31 invoke-virtual v4 , [ meth@ 5719
+                 Ljava/io/File; getAbsolutePath ['()',
+                 'Ljava/lang/String;'] ]
+        0x5ac 32 move-result-object v4
+        0x5be 37 move-object/from16 v0 , v19
+        0x5c2 38 iget-object v0 , v0 , [ field@ 1314
+                 Lcom/skype/ipc/SkypeKitRunner;
+                 Landroid/content/Context; mContext ]
+        0x5c6 39 move-object v4 , v0
+        0x5d8 44 move-object/from16 v0 , v19
+        0x5dc 45 move-object v1 , v4
+        0x5de 46 invoke-direct v0 , v1 , [ meth@ 1923
+                 Lcom/skype/ipc/SkypeKitRunner; fixPermissions
+                 ['([Ljava/io/File;)', 'V'] ]
+Deleted Elements(0)
+[...]
+#########################################################################
+
+As you can see, some constants are changed (3 to 0, 777 to 750) to patch an
+incorrect use of file permissions (you need to take the original CFG to
+view the details (maybe in a new version we will see the results in one
+CFG)). A new method is called to fix the existing permissions of the files.
+
+----[ 3.3 Looking for a signature in applications
+
+Now, if you wish to detect if a specific method (or a class) is present in
+another application, you need to check all methods of this application with
+your method.
+
+Moreover, if we have a database of signatures, we must check if each
+signature is present in our application. For example, if your database is
+composed of 1000 signatures, and our application contains 1000 methods we
+will need to perform:
+        - 1000 * 1000 -> 1.000.000 of comparisons to know the result
+
+That's why we need another solution and we will use the second algorithm
+(2.2). In this algorithm we need a set of float values to perform the
+clustering. So, in this example, we will use different sources of
+entropies.
+
+We have already described the generic algorithm (2.2), so we only need to
+define our element in this implementation. An element (in fact a part of
+our  signature) will be composed of:
+        - a string which represents the method (or the class)
+          (in fact it is a signature obtained by the grammar (3.1))
+        - a set of entropies (float values)
+
+The most important part is the set of entropies. We have used different
+sources of entropies to have better results. An Android application
+provides an important amount of information. One of them is the API that is
+used (the Android/Java API). Another one is the exceptions because they
+define very well a method. We can also use the entropy of the signature and
+the bytecode. Maybe we have redundancy by using these entropies (due to the
+fact that the entropy of the signature is composed of both the Android/Java
+packages and the exceptions), so we need to work more on this subject but
+this problem will not produce false positives.
+
+We will also define a simple JSON file that we will use to generate our
+signature in order to extract information like the entropies and to add it
+in a database. We take the "logastrod" [14] malware and we create the
+signature after the analysis of this malware in order to find where are the
+most interesting malicious parts:
+
+#########################################################################
+d@t0t0:~/androguard$ cat signatures/logastrod.sign
+[ { "SAMPLE" :
+"apks/malwares/logastrod/ \
+f18891b20623ad35713e7f44feade51a1fd16030af55056a45cefa3f5f38e983"
+}, { "BASE" : "AndroidOS", "NAME" : "Logastrod", "SIGNATURE" :
+[ { "TYPE" :
+"METHSIM", "CN" : "Lcom/pavel/newmodule/RuleActivity;", "MN" : "onCreate",
+"D" : "(Landroid/os/Bundle;)V" }, { "TYPE" : "METHSIM", "CN" :
+"Lcom/pavel/newmodule/LicenseActivity;", "MN" : "onCreate", "D" :
+"(Landroid/os/Bundle;)V" } ], "BF" : "a && b" } ]
+#########################################################################
+
+The name of this signature is "Logastrod" and we need to recognize the two
+methods (the boolean formula) to make a positive match.
+
+By using the "androcsign.py" tool we can extract the entropies and
+signatures of the methods from the specified sample, and add it to our
+database:
+
+#########################################################################
+d@t0t0:~/androguard$ ./androcsign.py -i signatures/logastrod.sign -d
+signatures/dbandroguard
+[{u'Logastrod': [[[0, 'Qlt[...]kdd',
+4.809434597538392, 4.584117420715886, 4.538809415871831, 0.0]], u'a && b'
+]}]
+#########################################################################
+
+Now it is possible to use "androsign.py" to check a particular file or an
+entire directory by using a database of signatures.
+
+"f22affca4ea15e58d8b4d345e54a7910b03c37fa70941bbcf36659cb809f13d9" is a
+sample of this "logastrod" malware:
+
+#########################################################################
+d@t0t0:~/androguard$ ./androsign.py -i
+apks/malwares/logastrod/f22affca4ea15e58d8b4d345e54a7910b03c37fa70941bbcf36
+659cb809f13d9 -b signatures/dbandroguard -c signatures/dbconfig -v
+[SIGN:69 CLUSTERS:10
+CMP_CLUSTERS:8 ELEMENTS:31 CMP_ELEMENTS:39 -> 2139 1.823282%] [[91, 92,
+0.27931034564971924], [91, 93, 0.18803419172763824]] ----> Logastrod
+#########################################################################
+
+As you can see, we have only done "39" comparisons thanks to the
+clustering. Without this method, "2139" comparisons would have been
+required for the same result.
+
+#########################################################################
+d@t0t0:~/androguard$ ./androsign.py -d apks/malwares/logastrod/ -b
+signatures/dbandroguard -c signatures/dbconfig
+f22affca4ea15e58d8b4d345e54a7910b03c37fa70941bbcf36659cb809f13d9 : ---->
+Logastrod
+a0a42b9f1d45a0e09a8da6d9ce8e74952340a538251d0e697cfe1b16e5ac6696 : ---->
+Logastrod
+77943921c7d6bad5f2e45fa22df4c23d034021ae56f0b09ecac8efb97830e0de : ---->
+Logastrod
+fea4dd75dfc4bfe279faf0b7675c48166ecac57bc8e8436c277a6da20582892f : ---->
+Logastrod
+f18891b20623ad35713e7f44feade51a1fd16030af55056a45cefa3f5f38e983 : ---->
+Logastrod
+e45caa25f87531cff2ee2803374ac78de0757941dd1311e3411ce4cdf6d5d942 : ---->
+Logastrod
+#########################################################################
+
+We can see that on VirusTotal all these samples are not detected
+identically by few AV products:
+
+#########################################################################
+f22affca4ea15e58d8b4d345e54a7910b03c37fa70941bbcf36659cb809f13d9 :
+22/43 antivirus
+a0a42b9f1d45a0e09a8da6d9ce8e74952340a538251d0e697cfe1b16e5ac6696 :
+19/43 antivirus
+77943921c7d6bad5f2e45fa22df4c23d034021ae56f0b09ecac8efb97830e0de :
+22/43 antivirus
+fea4dd75dfc4bfe279faf0b7675c48166ecac57bc8e8436c277a6da20582892f :
+21/43 antivirus
+f18891b20623ad35713e7f44feade51a1fd16030af55056a45cefa3f5f38e983 :
+19/43 antivirus
+e45caa25f87531cff2ee2803374ac78de0757941dd1311e3411ce4cdf6d5d942 :
+21/43 antivirus
+#########################################################################
+
+We maintain an Open Source Database of Android Malware [15] where you can
+find analysis links and a few signatures for Android malware. The main
+difficulty is to create a signature because you must choose carefully which
+method/class you wish to add to the database in order to avoid as much as
+possible false positives. In other terms, don't add a method/class from a
+free/proprietary "API" or project in a malware database :)
+
+You can use this tool to check if your application has been stolen by
+someone else using a multiple file analysis. Imagine that you have created
+an uber open source && l33t algorithm and you wish to know if your
+algorithm has been ripped off and included in a proprietary software. Of
+course, it is possible to build databases of many "things", from a
+cryptographic functions database to a DNA database...
+
+--[ 4 - Conclusion
+
+The similarity is a difficult problem but it is possible to achieve an
+interesting result by using the NCD and the entropy with "normalized"
+data.
+
+So, at the end of this paper, you will find two tools. The first one is
+Androguard in the first stable 1.0 version. Androguard is a known framework
+in Python to manipulate, reverse engineer, and play with Android
+applications. The stable version we release with this paper brings a lot of
+new things (especially the stability of the similarities tools) and a few
+tips and tricks to reverse engineer Android Apps (such as dealing with
+non-ASCII names).
+
+In this framework, several tools are using the new open source software
+Elsim to search the similarities/dissimilarities in different sets of
+elements. We have described two kinds of "generic" algorithms. The first
+one can be used if you wish to find the similarities between two sets of
+elements. The second one can be used if you have a database of signatures
+and you need a quick engine to search the signatures in a set of elements.
+
+Finally we described a new algorithm of entropy ("Descriptional entropy")
+which can be used to classify and obtain more information from an element
+and two new algorithms which can help you to answer to a similarity
+"problem".
+
+But Elsim is not limited to Android applications, and the tool will be
+improved in the next months to support x86 and ARM binaries in order to
+have an open source software with such capabilities.
+
+Many thanks to the Phrack staff for the suggestions on how to improve this
+work.
+
+"Talk is cheap. Show me the code". Torvalds, Linus"
+
+--[ 5 - References
+
+[1] Androguard. http://code.google.com/p/androguard/
+[2] Silvio Cesare (2010). "Classification of malware using structured
+    control flow".
+[3] MacQueen, J. B. (1967). "Some Methods for classification and Analysis
+    of Multivariate Observations".
+[4] Android source code (dalvik). http://source.android.com/
+[5] Foncy Android Malware.
+http://code.google.com/p/androguard/wiki/DatabaseAndroidMalwares#foncy
+[6] Opfake Android Malware.
+http://code.google.com/p/androguard/wiki/DatabaseAndroidMalwares#opfake_\
+(all)
+[7] Faketoken Android Malware.
+http://code.google.com/p/androguard/wiki/DatabaseAndroidMalwares#faketoken
+[8] https://www.virustotal.com/file/\
+f7c36355c706fc9dd8954c096825e0613807e0da4bd7f3de97de0aec0be23b79/analysis/
+[9] https://www.virustotal.com/file/\
+61da462a03d8651a6088958b438b44527973601e604e3ca18cb7aa0b3952d2ac/analysis/
+[10] Needleman, Saul B and Wunsch, Christian D. (1970). "A general method
+     applicable to the search for similarities in the amino acid sequence
+     of two proteins"
+[11] L. Bergroth and H. Hakonen and T. Raita (2000). "A Survey of Longest
+     Common Subsequence Algorithms".
+[12] Sequence Alignement. http://en.wikipedia.org/wiki/Sequence_alignment
+[13] Android Police. http://www.androidpolice.com/2011/04/14/\
+     exclusive-vulnerability-in-skype-for-android-is-exposing-your-name\
+     -phone-number-chat-logs-and-a-lot-more/.
+[14] Logastrod Android Malware.
+http://code.google.com/p/androguard/wiki/DatabaseAndroidMalwares#Logastrod
+[15] Opensource Database of Android Malware.
+http://code.google.com/p/androguard/wiki/DatabaseAndroidMalwares
+[16] Manuel Cebrian, Manuel Alfonseca and Alfonso Ortega. "Common Pitfalls
+     Using Normalized Compression Distance: What to Watch Out for in a
+     Compressor"
+[17] R. Cilibrasi and P. M. B. Vitanyi. "Clustering by compression"
+[18] Kolmogorov A. N (1965). "Three Approaches for Defining the Concept
+     of Information Quantity"
+[19] Snappy compressor. http://code.google.com/p/snappy/
+[20] Cilibrasi, R. & Vitanyi, P. (2005). "Clustering by compression"
+[21] Dullien, T. & Rolles, R. (2005). "Graph-based comparison of
+     executable objects"
+[22] M. Li and P. Vitanyi (1997). "An introduction to Kolmogorov
+     Complexity and Its Applications"
+[23] D. Sankoff and J. Kruskal (1983, 1989).
+     "Time warps, string edits and macromolecules"
+[24] J. Shallit, M.-W.  Wang. "Automatic Complexity of Strings".
+[25] T. Sabin. "Comparing binaries with graph isomorphisms".
+    http://razor.bindview.com/publish/papers/comparingbinaries.html
+[26] Wikipedia: http://en.wikipedia.org/wiki/Kolmogorov_complexity
+[27] Jesus Freke. http://code.google.com/p/smali/
+[28] http://en.wikipedia.org/wiki/Cluster_analysis
+[29] A. D. Danaksok and F. G. Gologlu, On Lempel-Ziv. "Complexity of
+     Sequences"
+[30] Lempel, A., Ziv, J. "On the complexity of finite sequences"
+[31] S. Janson, S. Lonardi and W. Szpankowski. "On average sequence
+     complexity"
+[32] J. Shallit. "On the maximum number of distinct factors in a
+     binary string"
+[33] http://www.c-sharpcorner.com/uploadfile/acinonyx72/calculating\
+     -the-normalized-compression-distance-between-two-strings/$
+[34] SMILES
+http://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system
+[35] Netzob http://www.netzob.org/
+
+--[ 6 - Code
+
+--[ EOF

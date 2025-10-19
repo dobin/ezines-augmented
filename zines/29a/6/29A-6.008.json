@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Inside of Avp4",
+  "authors": "Unknown",
+  "date": "Not specified",
+  "historical_context": "This article delves into the internal workings of AVP4 files, which are associated with Kaspersky antivirus software. It reflects the hacker culture's interest in reverse engineering proprietary software during the late 1990s.",
+  "target_audience": "Hackers, security researchers, reverse engineers",
+  "short_summary": "The article reveals the internal structure of AVP4 files used by Kaspersky antivirus, detailing how to extract and understand the hidden resources and messages within these files.",
+  "summary": "The exploration of AVP4 files leads to the creation of a tool called AVP4 Secret Resources Unpacker (AVP4SRU), which the author and their peers developed to extract the hidden resources for fun. This article serves as a technical guide for those interested in reverse engineering antivirus software, showcasing the methods used to unpack and analyze proprietary formats. It reflects a broader trend in hacker culture where understanding and manipulating software is a form of both challenge and entertainment."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3c, Phile #0x07 of 0x10",
+  "title": "Burning the bridge: Cisco IOS exploits",
+  "authors": "FX of Phenoelit <fx@phenoelit.de>",
+  "date": "Not specified",
+  "historical_context": "This article discusses vulnerabilities in Cisco IOS, particularly focusing on heap overflows, which were prevalent in older versions of IOS. The techniques described are relevant for understanding the exploitation of network devices.",
+  "target_audience": "Security researchers, penetration testers, and network security professionals.",
+  "short_summary": "The article explores the exploitation of a specific heap overflow vulnerability in Cisco IOS, particularly through the TFTP server. It details the memory layout, identification of overflows, and crafting of exploit payloads to gain control over the device.",
+  "summary": "This article serves as a comprehensive guide to exploiting a heap overflow vulnerability found in Cisco IOS, specifically through the TFTP server filename overflow. The author begins by explaining the unique memory management of IOS, which is primarily heap-based, and outlines the steps to identify and exploit the overflow. The discussion includes the intricacies of IOS memory layout, the role of the 'Check heaps' process, and how to manipulate memory blocks to execute arbitrary code. The author emphasizes the rarity of such vulnerabilities and the need for precise timing to avoid detection by IOS's built-in checks.\n\nThe article further delves into writing shellcode for Cisco devices, focusing on the Motorola 68k architecture. It provides insights into how to bypass IOS's memory protections and modify the device's configuration through NVRAM manipulation. The author concludes with a reminder of the importance of understanding legacy systems, as many organizations still run outdated versions of IOS, making them susceptible to these types of attacks. The techniques discussed remain relevant for security professionals looking to understand the exploitation landscape of network devices."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 5, Phile #008 of 11",
+  "title": "CODE OPTIMISATION, A BEGINNER'S GUIDE",
+  "authors": "Dark Angel",
+  "date": "",
+  "historical_context": "This article reflects the early 1990s hacker culture, where virus writing was a prevalent activity among programmers and hackers. It provides insights into the techniques used to optimize code, particularly in the context of creating compact and efficient viruses.",
+  "target_audience": "Hackers, virus writers, security researchers, and programmers interested in low-level code optimization.",
+  "short_summary": "The article discusses techniques for optimizing virus code to reduce size and improve performance. It covers structural and local optimizations, providing examples and practical advice for programmers looking to create efficient code.",
+  "summary": "In 'CODE OPTIMISATION, A BEGINNER'S GUIDE', Dark Angel introduces essential techniques for optimizing virus code, emphasizing the importance of size and efficiency. The article begins by advising against premature optimization, suggesting that code should first function correctly before any optimization efforts are made. It highlights the necessity of maintaining backups, as optimization can lead to unforeseen issues in code functionality. The author categorizes optimizations into structural and local types, providing clear examples of how to restructure code to save bytes and enhance performance.\n\nThe article delves into specific optimization techniques, such as eliminating unnecessary function calls and merging instructions to reduce byte size. Dark Angel illustrates these concepts with practical examples from the 8086 instruction set, demonstrating how simple changes can lead to significant savings in code size. The piece concludes by stressing that effective optimization is often context-specific and requires a deep understanding of the instruction set, encouraging programmers to design their code with optimization in mind from the outset. Overall, this guide serves as a valuable resource for anyone interested in the intricacies of low-level programming and virus development."
+}

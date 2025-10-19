@@ -1,0 +1,60 @@
+{
+  "articles": [
+    {
+      "reference": "Volume 0x0e, Issue 0x44, Phile #0x01 of 0x13",
+      "title": "Spamming PHRACK for fun & profit",
+      "authors": "darkjoker",
+      "date": "",
+      "short_summary": "This article discusses how to bypass a captcha system using a simple C program, demonstrating the weaknesses in captcha implementations.",
+      "summary": "In this article, darkjoker explains the process of bypassing a captcha system, specifically the one used by Phrack. The author provides a step-by-step guide on how to download captchas, clean the images, and ultimately create a bot that can recognize and bypass the captcha. The article includes code snippets in PHP and C that illustrate the techniques used to remove noise from the captcha images and identify the characters. The author emphasizes the weaknesses of the captcha system and suggests that this could lead to spam issues on the site. This article serves as a cautionary tale for web developers about the importance of robust captcha implementations."
+    },
+    {
+      "reference": "Volume 0x0e, Issue 0x44, Phile #0x02 of 0x13",
+      "title": "The Dangers of Anonymous Email",
+      "authors": "DangerMouse",
+      "date": "",
+      "short_summary": "This article highlights the risks associated with using anonymous email services, particularly in the context of spam and account security.",
+      "summary": "DangerMouse discusses the rise of email anonymizers like Mailinator as a response to the overwhelming spam problem. While these services provide a quick way to create disposable email addresses, they also pose significant security risks. The article illustrates how users often create predictable email addresses for various sites, making it easy for malicious actors to exploit password reset functionalities. The author warns that even security-conscious individuals may fall victim to this practice, emphasizing the need for more creative approaches to using anonymous email services. The article serves as a reminder of the potential vulnerabilities that come with convenience in online interactions."
+    },
+    {
+      "reference": "Volume 0x0e, Issue 0x44, Phile #0x03 of 0x13",
+      "title": "Captchas Round 2",
+      "authors": "PHRACK PHP CoderZ Team",
+      "date": "",
+      "short_summary": "This article critiques the design flaws in a popular captcha system and suggests improvements.",
+      "summary": "The PHRACK PHP CoderZ Team reflects on the shortcomings of their captcha implementation, revealing how easily it can be bypassed. They point out that the original script's limited character set and predictable positioning make it vulnerable to attacks, including OCR techniques. The article discusses how attackers can exploit the system by manipulating the number of characters in the captcha, leading to potential spam issues. The team concludes by advocating for a more robust captcha system that incorporates better design practices to enhance security and reduce spam."
+    },
+    {
+      "reference": "Volume 0x0e, Issue 0x44, Phile #0x04 of 0x13",
+      "title": "XSS Using NBNS on a Home Router",
+      "authors": "Simon Weber",
+      "date": "October 2011",
+      "short_summary": "This article explores a method for exploiting vulnerabilities in home routers using NBNS to execute cross-site scripting attacks.",
+      "summary": "Simon Weber presents a detailed examination of how certain home routers can be exploited through NBNS vulnerabilities to perform cross-site scripting (XSS) attacks. The article outlines the conditions under which these attacks can occur, specifically targeting routers that do not sanitize device names. By injecting malicious scripts into the router's web interface, an attacker can potentially steal credentials or manipulate the display of connected devices. The author provides a technical breakdown of the injection chaining technique and discusses the implications for small businesses and home users. The article serves as a warning about the security risks associated with poorly designed router firmware."
+    },
+    {
+      "reference": "Volume 0x0e, Issue 0x44, Phile #0x05 of 0x13",
+      "title": "Hacking the Second Life Viewer For Fun & Profit",
+      "authors": "Eva",
+      "date": "",
+      "short_summary": "This article details the process of modifying the Second Life viewer to export objects and textures without permission.",
+      "summary": "Eva provides an in-depth guide on how to hack the Second Life viewer to enable the export of objects and textures, circumventing the platform's permission checks. The article discusses the architecture of the viewer and identifies specific code segments that can be altered to disable restrictions on exporting assets. By modifying the viewer's source code, users can gain access to textures and objects that they do not own. The author also touches on the ethical implications of such modifications and the potential for abuse within the Second Life ecosystem. This article serves as a technical manual for those interested in exploring the vulnerabilities of virtual environments."
+    },
+    {
+      "reference": "Volume 0x0e, Issue 0x44, Phile #0x06 of 0x13",
+      "title": "How I misunderstood digital radio; or, \"Weird machines\" are in radio, too!",
+      "authors": "M.Laphroaig",
+      "date": "",
+      "short_summary": "This article discusses misconceptions about digital radio and the implications for security and data integrity.",
+      "summary": "M.Laphroaig reflects on personal misconceptions regarding digital radio technology, particularly the assumptions about the integrity and authenticity of data transmitted over radio waves. The author describes a pivotal moment when they discovered that packets could be injected into the radio stream, challenging the belief that Layer 1 provides a secure boundary for data integrity. The article delves into the technical aspects of how packet-in-packet exploits can occur, illustrating the vulnerabilities in digital radio systems. By drawing parallels to software vulnerabilities, the author emphasizes the importance of understanding the underlying mechanisms of technology to avoid falling prey to security flaws."
+    },
+    {
+      "reference": "Volume 0x0e, Issue 0x44, Phile #0x07 of 0x13",
+      "title": "The 1130 Guide to Growing High-Quality Cannabis",
+      "authors": "1130",
+      "date": "",
+      "short_summary": "This article provides a comprehensive guide on growing cannabis, covering various aspects from botany to harvesting.",
+      "summary": "The 1130 Guide offers an extensive overview of cannabis cultivation, detailing essential knowledge for both novice and experienced growers. The article covers topics such as the ideal growing environment, container selection, watering techniques, nutrient requirements, and the intricacies of hydroponics. It also discusses the importance of light and the various types of lighting suitable for different growth phases. The guide emphasizes the significance of monitoring plant health and recognizing signs of deficiencies or pests. With practical tips and a thorough understanding of botany, this article serves as a valuable resource for anyone looking to cultivate high-quality cannabis."
+    }
+  ]
+}

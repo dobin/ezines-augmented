@@ -1,0 +1,37 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #6 of 11",
+      "title": "Gaining passwords",
+      "authors": "Ratter/29A",
+      "date": "",
+      "historical_context": "This article is part of the early hacking culture, focusing on password retrieval techniques in Windows systems.",
+      "target_audience": "Hackers, security researchers, and those interested in password security.",
+      "short_summary": "The article discusses methods to retrieve passwords from Windows systems, including accessing the SAM database and using a Trojan to hook into the logon process.",
+      "summary": "In 'Gaining passwords', Ratter/29A presents various techniques for obtaining user passwords on Windows systems. The author begins by explaining how to access the DefaultPassword stored in the Security Account Manager (SAM) when admin privileges are available. A code snippet illustrates how to retrieve this password using Lsa APIs. The article then transitions to a more sophisticated method involving a Trojan that hooks into the Winlogon process. By modifying the Graphical Identification and Authentication (GINA) DLL, the author demonstrates how to log user credentials as they are entered, providing a more stealthy approach to password theft. The piece concludes with a brief mention of other methods, including brute force attacks on the SAM database.",
+      "closing": "Ratter emphasizes the importance of understanding these techniques for both offensive and defensive security measures."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #7 of 11",
+      "title": "Infecting Winlogon",
+      "authors": "Ratter/29A",
+      "date": "",
+      "historical_context": "This article reflects the techniques used by early malware authors to exploit Windows security mechanisms.",
+      "target_audience": "Malware developers, security researchers, and hackers.",
+      "short_summary": "The article explains how to modify the Winlogon process to gain elevated privileges and control over a Windows system.",
+      "summary": "In 'Infecting Winlogon', Ratter/29A explores the challenges of modifying the Winlogon process, a critical component of the Windows operating system. The author discusses two primary techniques: using global flags to enable debugging of the Win32 subsystem and leveraging the SeDebugPrivilege to gain access to modify Winlogon. The article provides code snippets demonstrating how to adjust privileges and exploit the system to run malicious code under elevated privileges. Ratter also mentions the potential of targeting other critical processes like lsass.exe, highlighting the broader implications of these techniques for malware development. The closing remarks encourage readers to explore these methods for both educational and practical applications in security.",
+      "closing": "The article serves as a cautionary tale about the vulnerabilities present in Windows systems and the importance of securing them against such exploits."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #8 of 11",
+      "title": "Opening NT boxes for you and your comrades in arms",
+      "authors": "Ratter/29A",
+      "date": "",
+      "historical_context": "This article is a guide for malware authors on how to maintain control over compromised Windows NT systems.",
+      "target_audience": "Malware developers, hackers, and security professionals.",
+      "short_summary": "The article outlines methods for maintaining access to a compromised NT system by adding users to the administrators group and modifying system privileges.",
+      "summary": "In 'Opening NT boxes for you and your comrades in arms', Ratter/29A provides a detailed guide on how to ensure persistent access to a Windows NT system after compromising it. The author discusses the straightforward method of adding accounts to the administrators group, but warns that this approach is not stealthy. Instead, Ratter suggests a more covert method: adjusting privileges for the Everyone group to include SeTcbPrivilege for impersonation and SeDebugPrivilege for system modifications. The article includes code snippets for adding privileges and clearing security event logs to cover tracks. Ratter emphasizes the importance of stealth in maintaining access and encourages readers to consider the implications of these techniques for both offensive and defensive security practices.",
+      "closing": "The article serves as a reminder of the ongoing battle between attackers and defenders in the realm of computer security."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "FAT16 Independent Replicative Emulator",
+  "authors": "Z0MBiE",
+  "date": "1998",
+  "historical_context": "This article is part of the early hacking culture that explored virus development and the manipulation of file systems, specifically targeting FAT16. It reflects the mindset of the late 90s hacker community, where creating and sharing virus code was a form of expression and technical challenge.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "The article presents a detailed assembly code for a FAT16 virus that replicates itself by scanning physical IDE drives, deleting antivirus files, and infecting executable files. It includes technical explanations of the infection method and directory scanning processes.",
+  "summary": "In this article, Z0MBiE introduces the FAT16 Independent Replicative Emulator, a virus designed to operate within the FAT16 file system. The virus employs a method of accessing IDE drives directly through IO-port commands, allowing it to identify all physical drives and their logical partitions. Once it locates the logical disks, the virus scans the directory tree to delete files that match specific antivirus signatures before proceeding to infect executable files. The code is meticulously crafted in assembly language, showcasing the author's technical prowess and understanding of low-level file system operations.\n\nThe infection process is particularly interesting as it involves allocating free clusters in the FAT, modifying directory entries, and creating a chain of clusters to house the virus code. The article also includes a list of antivirus file names that the virus targets for deletion, reflecting the adversarial relationship between malware authors and antivirus developers. Overall, this piece serves as both a technical guide for aspiring virus writers and a historical document illustrating the early days of computer virus development."
+}

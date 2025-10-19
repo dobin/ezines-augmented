@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 29, File #5 of 12",
+  "title": "Covert Paths",
+  "authors": "Cyber Neuron Limited and Synthecide",
+  "date": "November 1, 1989",
+  "historical_context": "This article was published during a time when hacking and phreaking were becoming more mainstream, and methods to evade detection were crucial for hackers.",
+  "target_audience": "Hackers, security professionals, and individuals interested in network security.",
+  "short_summary": "The article discusses various methods for maintaining anonymity while accessing systems, focusing on covert paths through networks and phone links. It provides practical tips for hackers to evade detection.",
+  "summary": "In 'Covert Paths', the authors delve into the importance of anonymity in hacking, emphasizing that a successful attack should not lead back to the hacker. They outline several techniques for achieving this, including tapping into local payphone lines, using long-haul services like Sprint or MCI, and leveraging midnight packet switching networks. Each method is designed to complicate tracking efforts by authorities, thereby providing hackers with a greater chance of remaining undetected. The article also mentions the use of network routers and gateways to obscure the hacker's data path, suggesting that utilizing guest accounts can add an additional layer of complexity for anyone attempting to trace the source of an attack.\n\nThe authors provide specific examples of accessible hosts and accounts, particularly from the University of California, Berkeley, which were known to be used by local hackers. They highlight the utility of Tymnet as a means to connect to various systems, noting that tracing back to a Tymnet node requires significant effort from authorities. The article serves as a practical guide for hackers looking to enhance their operational security and evade detection while conducting their activities."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virus disassembly by Tcp",
+  "authors": "Unknown",
+  "date": "Not specified",
+  "historical_context": "This article discusses a virus from the early 1990s, a time when computer viruses were becoming more sophisticated and prevalent.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The article provides a detailed disassembly of the TS.1423 virus, highlighting its encryption techniques and anti-debugging features. It offers insights into the virus's behavior and payloads, making it a valuable resource for understanding early malware.",
+  "summary": "In this article, the author dissects the TS.1423 virus, which is notable for its well-structured programming and advanced encryption routine that utilizes interrupt 1 for code tracing. This method complicates the virus's decryption and disassembly, showcasing the evolving sophistication of malware during this era. The virus infects COM and EXE files upon closing and employs a unique mechanism to mark floppy disk clusters as bad if the year exceeds 1995, demonstrating its payload capabilities. The author mentions that the source code is commented in Spanish but is straightforward enough for readers to understand without translation. Compiling instructions are provided for those interested in experimenting with the code themselves, emphasizing the hands-on approach typical of hacker culture at the time.\n\nThe article serves as both a technical analysis and a historical snapshot of malware development in the early 1990s. It highlights the challenges faced by security professionals in combating such threats and the innovative techniques employed by virus authors to evade detection. By dissecting the TS.1423 virus, the author contributes to the broader understanding of malware behavior and the ongoing cat-and-mouse game between hackers and security experts."
+}

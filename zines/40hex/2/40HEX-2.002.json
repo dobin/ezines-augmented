@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 2, Phile #2 of 11",
+  "title": "THE SAFE WAY TO EXPERIMENT WITH VIRUSES",
+  "authors": "HR",
+  "date": "",
+  "historical_context": "This article reflects the early days of virus experimentation when personal computer viruses were becoming more prevalent, and users were looking for safe methods to study them without damaging their systems.",
+  "target_audience": "Hackers, security researchers, and computer enthusiasts interested in virus experimentation.",
+  "short_summary": "The article provides a method to safely experiment with computer viruses using the DOS utility SUBST, allowing users to redirect disk access to a floppy disk instead of their hard drive, thus preventing potential damage.",
+  "summary": "HR also mentions an alternative for those who prefer not to waste floppy disks: using a RAM disk to conduct the experiments. This method allows for even greater flexibility and safety when dealing with potentially destructive software. The article serves as a valuable resource for hackers and security researchers who wish to explore the world of computer viruses without the fear of damaging their primary systems, highlighting the importance of safe practices in the realm of computer security."
+}

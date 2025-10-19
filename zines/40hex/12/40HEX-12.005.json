@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Natas Virus",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article discusses a polymorphic virus that infects COM and EXE files, showcasing techniques that were prevalent in early computer virus development.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The Natas Virus is a polymorphic virus that infects COM and EXE files, utilizing stealth techniques to evade detection. It includes a detailed assembly code implementation and describes its infection methods.",
+  "summary": "The Natas Virus represents a significant example of early malware development, showcasing the use of polymorphism to evade detection by antivirus software. The article provides a comprehensive assembly code implementation that outlines how the virus infects both COM and EXE files, as well as the boot sector of hard drives. The virus employs stealth techniques, such as hiding its presence in memory and modifying file attributes to avoid detection. It also includes methods for infecting the Master Boot Record (MBR) and executing its payload upon system boot, demonstrating a sophisticated understanding of DOS interrupt handling and file system operations.\n\nThe article serves as both a technical guide and a historical document, reflecting the hacker culture of the time and the ongoing cat-and-mouse game between malware developers and security professionals. The detailed assembly code provided can be a valuable resource for those studying malware behavior and the evolution of computer viruses, as it encapsulates the techniques used by early virus authors to create resilient and stealthy malware."
+}

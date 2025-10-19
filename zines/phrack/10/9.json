@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Ten, Phile #9 of 9",
+  "title": "Phrack World News",
+  "authors": "Knight Lightning",
+  "date": "December 25, 1986",
+  "historical_context": "This article was published during a time when the U.S. government was beginning to take computer crimes seriously, leading to the introduction of significant legislation like the Computer Fraud and Abuse Act.",
+  "target_audience": "Hackers, security professionals, and those interested in the evolution of computer crime legislation.",
+  "short_summary": "This issue of Phrack World News discusses the recent passage of the Computer Fraud and Abuse Act, highlighting its implications for hackers and the increasing scrutiny of computer-related crimes by the government.",
+  "summary": "The article also touches on the broader implications of this legislation for the hacker community, warning that the government is now equipped with legal tools to prosecute individuals who engage in unauthorized computer access. It outlines specific actions that could lead to criminal charges, such as accessing sensitive government information or altering data in federal interest computers. The piece serves as both a cautionary tale and a call to action for hackers to be aware of the legal landscape as it evolves, suggesting that the days of operating in a legal gray area may be coming to an end. Overall, it encapsulates a critical moment in the intersection of technology and law, foreshadowing the challenges that hackers would face in the years to come."
+}

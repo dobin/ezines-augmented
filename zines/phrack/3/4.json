@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Three, Phile 4 of 10",
+  "title": "Signalling Systems Around the World",
+  "authors": "TAP, Nick Haflinger",
+  "date": "12-85",
+  "historical_context": "This article provides insights into various international signalling systems used in telecommunication, reflecting the state of technology in the mid-1980s.",
+  "target_audience": "Phreakers, telecommunications enthusiasts, security professionals.",
+  "short_summary": "This article details various international signalling systems, including CCITT standards, and their applications in telecommunication. It highlights the evolution of these systems and their relevance to making international calls.",
+  "summary": "In 'Signalling Systems Around the World', the authors TAP and Nick Haflinger explore the intricacies of international telecommunication signalling systems, particularly focusing on the CCITT standards. The article outlines several systems, including CCITT 1 through CCITT 6, detailing their operational frequencies and applications across different countries. For instance, CCITT 5, which is prevalent in the US, utilizes 2400 Hz and 2600 Hz tones for link signaling, while CCITT 6 represents a shift towards digital data control, complicating traditional phreaking methods. The authors also introduce additional tones used for specific operator functions, enhancing the reader's understanding of the telecommunication landscape of the time.\n\nThis article serves as a valuable resource for phreakers and telecommunications enthusiasts, providing a historical perspective on signalling systems that were crucial for making international calls. The technical details presented not only inform about the operational aspects of these systems but also hint at the challenges and opportunities they present for those interested in exploring telecommunication networks. As technology has evolved, the relevance of these systems may have diminished, yet the foundational knowledge remains significant for understanding modern telecommunication protocols."
+}

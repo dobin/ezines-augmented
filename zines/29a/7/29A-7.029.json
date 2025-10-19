@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Partitionned Virus Body Using the Stack",
+  "authors": "LiTlLe VxW",
+  "date": "February 2004",
+  "historical_context": "This article is a tutorial on virus writing techniques, specifically focusing on a method to obfuscate the virus body to evade antivirus detection. It reflects the hacker culture of the early 2000s, where understanding and creating malware was often seen as a form of technical challenge.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in virus development.",
+  "short_summary": "The article provides a tutorial on creating a partitioned virus body that uses stack manipulation to evade antivirus detection. It explains the concepts of partitioning and fragmenting the virus body, along with the necessary code to implement these techniques.",
+  "summary": "In this tutorial, LiTlLe VxW introduces a method for creating a partitioned virus body that utilizes stack manipulation to avoid detection by antivirus software. The author clarifies that this technique is neither polymorphic nor metamorphic but aims to confuse antivirus systems by fragmenting the virus body into random partitions. The article outlines the structure of the virus, detailing how to create a partitions table and the steps required to fragment and unfragment the virus body using stack memory. The tutorial emphasizes the importance of careful stack manipulation to prevent crashes during execution.\n\nThe author provides code snippets to illustrate the process, explaining how to allocate memory, write the fragmented body, and subsequently unfragment it using stack operations. The tutorial is technical and assumes a certain level of familiarity with assembly language and virus writing concepts. The author concludes with a reminder to use this knowledge responsibly, highlighting the ethical considerations surrounding virus creation and distribution."
+}

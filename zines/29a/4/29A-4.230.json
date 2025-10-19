@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Hyper Infection",
+  "authors": "Prizzy/29A",
+  "date": "Not specified",
+  "historical_context": "This article discusses techniques for creating a virus that can rapidly infect files on Windows 9x systems, reflecting the hacker culture of the late 1990s focused on virus development.",
+  "target_audience": "Malware developers, security researchers, and those interested in virus creation techniques.",
+  "short_summary": "The article outlines the design and implementation of a virus called Win9x.Prizzy, focusing on a method termed 'hyper infection' that allows for rapid file infection. It details the technical aspects of searching for files on disks and the necessary API functions for compatibility.",
+  "summary": "In 'Hyper Infection', Prizzy/29A presents a method for creating a Windows 9x virus that aims to infect files as quickly as possible. The core concept revolves around a 'hyper infection' technique that activates every three seconds to search for new files on the disk. This method is designed to minimize the impact on system performance while maximizing the virus's ability to spread. The article provides a detailed breakdown of the necessary API functions, such as 'GetDriveTypeA', to determine the type of disk being accessed, and discusses the importance of compatibility with various system architectures. \n\nThe author delves into the technical specifics of implementing this hyper infection method, including the structure of data buffers and the use of hooking functions to ensure the virus remains undetected while it operates. The article concludes with a note on the author's intention to expand the virus's capabilities to include more file extensions, highlighting the ongoing evolution of malware development during this era. Overall, this piece serves as both a technical guide and a historical artifact of the hacker culture's fascination with virus creation."
+}

@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Apocalyptic Virus",
+  "authors": "WiNTeRMuTe/29A",
+  "date": "October, 1996",
+  "historical_context": "This article discusses the Apocalyptic virus, a notable example from the 1990s that showcases the complexity and stealth techniques of early malware.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The article details the characteristics and assembly instructions of the Apocalyptic virus, highlighting its stealth capabilities and payload mechanism.",
+  "summary": "In this article, WiNTeRMuTe/29A presents the Apocalyptic virus, a sophisticated TSR (Terminate and Stay Resident) infector targeting COM and EXE files. The virus employs a unique encryption routine using a combination of rotate, add, and XOR operations to obfuscate its code, making it difficult for antivirus software to detect. Notably, it incorporates stealth techniques that allow it to evade detection by popular antivirus programs of the time, such as F-Prot and TBAV. The virus's payload triggers on July 26, displaying files of a specific size, which adds a layer of mischief to its functionality. The author provides assembly code for assembling the virus, showcasing the technical prowess required to create such malware in the 1990s, and offers insights into the hacker culture surrounding virus creation and distribution.",
+  "additional_notes": "The article serves as both a technical guide for virus creation and a historical document reflecting the malware landscape of the 1990s."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "CYBERsitter",
+  "authors": "Peacefire",
+  "date": "01/01/1997",
+  "historical_context": "This article discusses the implications of web filtering software in the context of the early internet, particularly focusing on the CYBERsitter program, which was marketed as a parental control tool but raised concerns about censorship and freedom of information.",
+  "target_audience": "Hackers, security professionals, internet freedom advocates, and those interested in the history of internet censorship.",
+  "short_summary": "The article critiques CYBERsitter, a web filtering program that censors content deemed 'offensive' by its creators. It highlights the program's broad censorship policies and the lack of transparency in its operations, raising concerns about the implications for free speech and access to information.",
+  "summary": "The article further delves into the mechanics of CYBERsitter, explaining how it operates by scanning web pages and communications for banned phrases, replacing them with blank spaces, and logging these occurrences without notifying the affected parties. This lack of transparency and the absence of an appeals process for blocked sites raises significant ethical concerns. Peacefire encourages readers to challenge the censorship imposed by CYBERsitter and to support the sites that have been unfairly targeted. The piece serves as a rallying cry for internet freedom, urging users to be vigilant against such encroachments on their rights and to advocate for a more open and accessible internet."
+}

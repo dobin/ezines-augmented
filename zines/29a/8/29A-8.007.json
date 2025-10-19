@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Bypassing Klister 0.4 With No Hooks or Running a Controlled Thread Scheduler",
+  "authors": "90210//HI-TECH",
+  "date": "",
+  "historical_context": "This article discusses techniques for bypassing process detection mechanisms in Windows NT systems, specifically targeting Klister, a tool developed by Joanna Rutkowska for detecting hidden processes.",
+  "target_audience": "Hackers, security researchers, and those interested in rootkit development.",
+  "short_summary": "The article presents methods to bypass Klister 0.4, a detection tool for hidden processes in Windows NT, by implementing a controlled thread scheduler that allows hidden threads to execute without detection. It details the inner workings of the NT scheduler and provides code examples for creating a custom scheduler.",
+  "summary": "In this article, 90210//HI-TECH explores the limitations of Klister 0.4, a tool designed to detect hidden processes in Windows 2000. The author argues that Klister's assumptions about thread management can be exploited, allowing for the creation of a custom thread scheduler that can run hidden threads without being detected. The article delves into the intricacies of the NT scheduler, explaining how to manipulate its internal lists to exclude hidden threads from detection. By creating a copy of the scheduler code and patching it to use custom lists, the author demonstrates how to maintain control over hidden threads while circumventing Klister's detection mechanisms.\n\nThe article also provides detailed technical insights, including code snippets and explanations of how to find non-exported symbols necessary for the implementation. It emphasizes the importance of understanding the underlying architecture of the NT operating system to effectively hide processes from detection tools. The conclusion highlights the potential for further development of such techniques, suggesting that the current state of process detection tools may not be sufficient to counteract advanced hiding methods."
+}

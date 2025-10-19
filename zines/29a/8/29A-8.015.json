@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "ASM TUTORIAL FOR LINUX n' ELF FILE FORMAT",
+  "authors": "LiTlLe VxW",
+  "date": "March 2004",
+  "historical_context": "This tutorial was written during a time when assembly programming was less documented, especially for Linux. It reflects the hacker culture's interest in low-level programming and system calls.",
+  "target_audience": "Hackers, security professionals, and programmers interested in low-level programming and Linux system calls.",
+  "short_summary": "This tutorial provides an introduction to assembly programming on Linux, focusing on the ELF file format and system calls. It covers basic assembly syntax, the structure of ELF files, and practical examples of using system calls for file operations.",
+  "summary": "The article serves as a comprehensive introduction to assembly programming under Linux, emphasizing the importance of understanding the underlying system architecture. It begins with a discussion of the ELF file format, detailing the structure of ELF headers, program headers, and section headers. The author explains how these components interact to facilitate the execution of programs on Linux systems. The tutorial also highlights the significance of system calls, which allow programs to request services from the kernel, such as file operations and process management.\n\nThroughout the tutorial, the author provides practical examples, including a 'Hello World' program in both C and pure assembly, demonstrating how to compile and execute assembly code using NASM. The article includes a detailed list of common system calls, their parameters, and error codes, making it a valuable resource for anyone looking to deepen their understanding of Linux internals and assembly language programming. The author's informal tone and direct approach make complex topics accessible, encouraging readers to experiment with assembly programming and explore the Linux environment."
+}

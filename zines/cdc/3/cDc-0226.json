@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Simple Cryptology",
+  "authors": "Dave Ferret",
+  "date": "04/01/1993",
+  "historical_context": "This article was published during a time when cryptography was becoming increasingly relevant due to the rise of electronic communications and concerns over privacy.",
+  "target_audience": "Hackers, security professionals, cryptography enthusiasts.",
+  "short_summary": "This article provides an overview of cryptology, including definitions, types of encryption, and the importance of secure communications in the digital age. It discusses various encryption schemes such as one-way encryption, one-time pads, single-key encryption, and public-key encryption.",
+  "summary": "The article delves into various encryption methods, starting with one-way encryption algorithms, which are crucial for password validation. Ferret explains the one-time pad, a highly secure method that uses random numbers for encryption, and contrasts it with single-key encryption, which is more commonly understood. He also discusses public-key encryption, exemplified by systems like PGP, which allows secure communication between users without sharing private keys. The piece concludes with a list of recommended readings for those interested in further exploring cryptography, while cautioning against government attempts to impose backdoors in encryption systems, reinforcing the importance of privacy in digital communications."
+}

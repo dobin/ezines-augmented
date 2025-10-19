@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 2, Phile #1 of 11",
+  "title": "Memory Resident Anti-Virus Detection and Removal",
+  "authors": "DecimatoR PHALCON/SKISM",
+  "date": "",
+  "historical_context": "This article is set in the early 1990s, a time when personal computing was becoming more widespread, and the threat of computer viruses was emerging as a significant concern for users and developers alike.",
+  "target_audience": "Hackers, security researchers, and anyone interested in understanding anti-virus mechanisms and memory management.",
+  "short_summary": "The article provides a detailed list of methods to detect and remove memory-resident anti-virus utilities. It includes specific interrupt calls and expected return values for various anti-virus programs, offering insights into their operational mechanisms.",
+  "summary": "In 'Memory Resident Anti-Virus Detection and Removal', DecimatoR outlines a series of techniques for identifying and managing memory-resident anti-virus software. The article lists several anti-virus utilities, such as F-Protect and TBSCANX, detailing the specific interrupt calls (INT 21h and INT 2Fh) that can be used to check for their presence in memory. Each utility is accompanied by the necessary parameters and expected return values, providing a practical guide for those looking to understand or bypass these security measures. The focus on low-level system calls highlights the technical depth of the content, appealing to readers with a solid understanding of DOS and memory management in computing environments of the time. \n\nThe author encourages readers to contribute additional anti-viral IDs to expand the list, fostering a collaborative spirit within the hacker community. This article serves as a historical snapshot of the early days of computer security, illustrating the ongoing cat-and-mouse game between virus creators and anti-virus developers, and remains relevant for those studying the evolution of malware and security practices."
+}

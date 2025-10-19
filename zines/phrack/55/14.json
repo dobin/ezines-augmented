@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #14 of 19",
+  "title": "A Global Positioning System Primer",
+  "authors": "e5 <e.five@usa.net>",
+  "date": "09.09.99",
+  "historical_context": "This article was written at a time when GPS technology was becoming increasingly accessible to the public, following its full operational capability achieved in 1995.",
+  "target_audience": "Hackers, security professionals, telecommunications enthusiasts, and anyone interested in satellite navigation technology.",
+  "short_summary": "This article provides an overview of satellite communications and a detailed examination of the Global Positioning System (GPS), including its operational segments, accuracy levels, and technical specifications.",
+  "summary": "The article begins with a broad overview of satellite communications, highlighting the evolution and significance of satellites in global telecommunications. It discusses the historical milestones from the launch of Sputnik 1 to the establishment of international communication systems like Intelsat. The author explains the different types of satellite orbits—geosynchronous, medium, and low Earth orbits—each with its unique advantages and applications, particularly in voice transmission and data services.\n\nFocusing on the Global Positioning System, the article outlines its military origins and subsequent civilian adoption. It details the three segments of GPS: the space segment, which consists of 24 satellites; the control segment, responsible for tracking and maintaining satellite operations; and the user segment, which includes GPS receivers that convert satellite signals into usable data. The author also discusses the accuracy of GPS services, differentiating between the Precise Positioning Service (PPS) and the Standard Positioning Service (SPS), and explains the technical aspects of satellite transmissions and packet formats. The article concludes with a brief acknowledgment of the limited information available on GPS technicalities, hinting at future contributions to the zine."
+}

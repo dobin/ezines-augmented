@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 4, Phile #009 of 11",
+  "title": "Ear-6 Virus",
+  "authors": "Dark Angel",
+  "date": "1992",
+  "historical_context": "The Ear-6 Virus is a notable example of early computer viruses, showcasing the creativity and technical skills of hackers in the early 1990s. It reflects the growing concerns about malware during this period.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The Ear-6 Virus is a parasitic, non-resident virus that infects .COM and .EXE files. It activates on the first of each month, presenting a quiz to the user, and terminates if the user fails to answer correctly.",
+  "summary": "The Ear-6 Virus, crafted by Dark Angel of PHALCON/SKISM, is a unique parasitic virus that infects up to five .COM and .EXE files each time it is executed. Its design allows it to traverse directories in search of files to infect, demonstrating an early understanding of file systems and infection techniques. The virus is activated on the first day of the month, at which point it quizzes the user on ear anatomy, adding a layer of interactivity that was uncommon for malware at the time. If the user fails to answer correctly, the program terminates, showcasing a playful yet malicious intent behind its design.\n\nThe code itself is a mix of assembly language and playful commentary, reflecting the hacker culture of the early 90s. It includes various functions for file handling, infection routines, and user interaction, all while maintaining a compact footprint typical of early viruses. The Ear-6 Virus serves as a historical artifact, illustrating the creativity and technical prowess of its creator while also highlighting the emerging threats posed by computer viruses during this era."
+}

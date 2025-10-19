@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 2, Phile #1 of 2",
+  "title": "Vienna and Violator Viruses",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article discusses the Vienna virus and its strains, which became prevalent in the early 1990s. The Violator virus is also covered, showcasing the evolution of malware during this period.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in virus development.",
+  "short_summary": "The article provides an overview of the Vienna virus and its various strains, along with the source code for the original Vienna virus and the Violator-B strain. It highlights the technical aspects of virus creation and infection methods.",
+  "summary": "In this article, the author delves into the Vienna virus, which gained notoriety after its source code was released, leading to the emergence of over 20 known strains. The piece not only discusses the implications of such widespread malware but also provides the source code for the original Vienna virus, allowing readers to understand its structure and functionality. The article serves as a technical guide for those interested in the mechanics of virus creation, detailing how the virus infects .COM files and manipulates system calls to achieve its goals.\n\nAdditionally, the article introduces the Violator-B strain, which was revised to fix errors found in the original code. The Violator virus showcases more aggressive behavior, including the ability to format drives. The source code provided illustrates the techniques used to infect files and manipulate system resources, emphasizing the importance of understanding these methods for both malware research and defense strategies. Overall, this piece is a valuable resource for anyone looking to grasp the intricacies of early computer viruses and their impact on the computing landscape."
+}

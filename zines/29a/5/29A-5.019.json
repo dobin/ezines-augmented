@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "SMTP Client Implementation in Assembly",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article reflects the early days of email and network programming, showcasing how assembly language was used to interact with SMTP servers directly.",
+  "target_audience": "Hackers, security researchers, programmers interested in low-level network programming.",
+  "short_summary": "This article presents an SMTP client written in assembly language, demonstrating how to send emails using the Outlook SMTP server. It covers the necessary Windows API calls and the structure of SMTP commands.",
+  "summary": "The article details the implementation of a simple SMTP client using assembly language, specifically targeting the Outlook SMTP server. It begins by setting up the necessary data structures and external function calls required for Windows socket programming. The code is designed to retrieve the SMTP server address from the Windows registry, establish a socket connection, and send SMTP commands to relay an email. Key functions such as WSAStartup, socket creation, and data transmission are highlighted, along with error handling mechanisms to ensure robust communication with the SMTP server.\n\nThe SMTP commands are constructed in a structured manner, with the article providing a clear breakdown of the HELO, MAIL FROM, RCPT TO, and DATA commands necessary for sending an email. The use of assembly language allows for a deep understanding of how low-level networking works, making it a valuable resource for those interested in the intricacies of network programming and email protocols. The article serves as both a practical guide and a historical snapshot of programming practices during the early days of the internet."
+}

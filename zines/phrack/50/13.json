@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Fifty, Phile #13 of 16",
+  "title": "DTMF Encoding and Decoding In C",
+  "authors": "Mr. Blue",
+  "date": "Not specified",
+  "historical_context": "This article is part of the Phrack 50 issue, which reflects the hacker culture's interest in telecommunications and signal processing during the late 1990s.",
+  "target_audience": "Hackers, security professionals, telecommunications enthusiasts",
+  "short_summary": "The article provides source code for encoding and decoding DTMF tones using C, aimed at Unix systems. It discusses the potential applications of this code in various telecommunications contexts.",
+  "summary": "In 'DTMF Encoding and Decoding In C', Mr. Blue explores the generation and interpretation of Dual-Tone Multi-Frequency (DTMF) tones, which are the sounds produced when dialing on touch-tone phones. The article emphasizes that modern computers possess the necessary processing power to replicate the functions of traditional modems, allowing for the creation of more accessible and modifiable software solutions. The author provides C source code for both encoding and decoding DTMF tones, which can be utilized in various applications such as phone scanning, war dialing, and automated PBX systems. The code is designed for Unix environments, making it particularly relevant for users of that operating system.\n\nThe article does not delve deeply into the mathematical theories behind DTMF but encourages readers with a mathematical background to research the underlying algorithms. The provided code includes a Goertzel algorithm implementation for tone detection, which is crucial for identifying the frequencies associated with DTMF signals. This practical approach allows readers to implement the code directly or expand upon it for their own projects, fostering a spirit of knowledge sharing within the hacker community."
+}

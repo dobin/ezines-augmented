@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 4, Phile #8 of 11",
+  "title": "The Ashar Variant of the Brain Virus",
+  "authors": "Dark Angel of PHALCON/SKISM",
+  "date": "1986",
+  "historical_context": "The Brain virus, one of the first known computer viruses, emerged in the mid-1980s, marking the beginning of a new era in computer security challenges. The Ashar variant represents an early example of virus evolution.",
+  "target_audience": "Security researchers, malware analysts, computer historians, and enthusiasts of hacker culture.",
+  "short_summary": "This article dissects the Ashar variant of the Brain virus, detailing its structure and functionality as a floppy disk boot sector infector. It provides insights into early virus coding techniques and the challenges of malware detection.",
+  "summary": "In this article, Dark Angel presents a detailed disassembly of the Ashar variant of the Brain virus, a significant piece of malware from the 1980s. The article begins with a brief introduction to the virus's characteristics, emphasizing its status as a floppy disk boot sector infector. The disassembly reveals the intricate assembly code that enables the virus to replicate by infecting other disks, showcasing techniques such as direct disk access and manipulation of the FAT (File Allocation Table). The author explains how the virus executes its payload, including the methods it uses to evade detection and the strategies for infecting other systems through read attempts on the disk.\n\nThe article serves as both a technical guide and a historical document, illustrating the early days of computer viruses and the evolving landscape of cybersecurity. It highlights the importance of understanding malware behavior for developing effective countermeasures. By dissecting the Ashar variant, readers gain valuable insights into the foundational concepts of virus design and the ongoing battle between malware creators and security professionals. This piece remains relevant for those studying the history of computer security and the techniques used by early hackers."
+}

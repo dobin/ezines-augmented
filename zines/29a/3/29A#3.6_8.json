@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "DSA2 Virus",
+  "authors": "Rajaat / 29A",
+  "date": "December 1997",
+  "historical_context": "The DSA2 virus was created during a time when DOS was still widely used, and COM files were common. This period saw a rise in virus creation, as hobbyist programmers explored the capabilities of assembly language and the vulnerabilities of the DOS operating system.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of retro computing and virus development.",
+  "short_summary": "The DSA2 virus is a 245-byte resident virus targeting COM files, designed to infect files without decreasing memory. It employs a simplistic infection method and is noted for its stealth against certain monitors.",
+  "summary": "The DSA2 virus, authored by Rajaat of 29A, is a compact 245-byte virus that infects COM files by hooking into DOS interrupt 21h. When an infected COM file is executed, the virus becomes resident in memory, allowing it to monitor file writes. It specifically targets files of 0 bytes in length, ensuring that only suitable files are infected. The virus is designed to be a slow infector, meaning it does not immediately spread rapidly, which could help it evade detection by antivirus software. Notably, it does not employ polymorphism or encryption, making it relatively straightforward to analyze, yet it incorporates some tricks to complicate heuristic detection methods. Rajaat humorously notes the limitations of the virus and acknowledges the dwindling relevance of COM files in modern computing environments, while also dedicating the work to a friend in jest.",
+  "code_snippet": "main: push ax; dec bx; cld; lea bx,main; push bx; ... ; end main"
+}

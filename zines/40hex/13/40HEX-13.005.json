@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 4, Issue 1, Phile #5 of 11",
+  "title": "Mirror Virus",
+  "authors": "Bit Addict / TridenT",
+  "date": "",
+  "historical_context": "This article discusses the Mirror virus, a notable example of early malware that employed stealth techniques to evade detection.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The Mirror virus is designed to mislead antivirus scanners by making it appear that all programs are infected. It operates by infecting executable files that utilize internal overlays, effectively rendering them stealthy.",
+  "summary": "The Mirror virus represents a significant evolution in malware design, focusing on deception rather than concealment. Unlike traditional stealth viruses that hide their presence, the Mirror virus tricks scanners into believing that every executable is infected. This is achieved through a clever manipulation of the program's execution flow and memory management, allowing it to infect files without being detected. The virus is particularly effective against .EXE files that use internal overlays, making it a versatile threat in the early computing environment.\n\nThe article provides a detailed assembly code breakdown of the virus, illustrating its functionality and the techniques employed to achieve its stealthy behavior. It discusses how the virus interacts with the DOS operating system, including file handling and memory management. The Mirror virus serves as a case study in the evolution of malware, highlighting the increasing sophistication of threats faced by users and the importance of robust security measures in software development."
+}

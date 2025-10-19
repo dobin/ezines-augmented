@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Six, File 26 of 28",
+  "title": "KEYTRAP v1.0 - Keyboard Key Logger",
+  "authors": "Dcypher (Dcypher@aol.com)",
+  "date": "",
+  "historical_context": "This article is from the mid-1990s, a time when personal computing was becoming more widespread, and the concept of keyloggers was emerging as a significant security concern.",
+  "target_audience": "Hackers, security professionals, and those interested in computer security.",
+  "short_summary": "KEYTRAP is a keyboard key logger that captures keystrokes and logs them to a file for later analysis. It operates as a TSR (Terminate and Stay Resident) program, allowing it to run in the background while the user operates their computer.",
+  "summary": "KEYTRAP is a command-line utility designed to log keyboard scancodes into a specified logfile, which can later be converted into ASCII characters using a separate utility called CONVERT. The program installs as a TSR, meaning it remains in memory and continues to log keystrokes until the computer is turned off. Users can specify parameters such as the maximum size of the logfile, the number of keys to log per session, and the time interval between logging sessions. The utility is straightforward to use, requiring only a directory path and the specified parameters to function effectively. The author emphasizes that the program should not be used for illegal activities and disclaims any liability for misuse. This article serves as both a technical guide and a cautionary note about the ethical implications of using such software."
+}

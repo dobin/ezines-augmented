@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Deactivations",
+  "authors": "Blade Runner",
+  "date": "Los Angeles, 2019",
+  "historical_context": "This article reflects the early days of virus analysis and deactivation techniques, showcasing the mindset and methods of hackers in the late 1980s.",
+  "target_audience": "Hackers, security professionals, malware analysts",
+  "short_summary": "The article provides a step-by-step guide on how to deactivate a resident virus in memory, detailing the necessary tools and techniques for virus analysis and removal.",
+  "summary": "In 'Deactivations', Blade Runner outlines a straightforward process for deactivating a resident virus in memory, emphasizing the importance of understanding interrupt vectors. The article begins with a brief explanation of how viruses maintain residency by altering interrupt vectors, specifically focusing on the int 21h function. The author provides practical steps using tools like debug and AVPUtil, illustrating how to identify and replace the original interrupt vector addresses stored by the virus. This hands-on approach demystifies the process for readers who may not have extensive technical knowledge, while also offering insights for more experienced hackers to refine their skills.\n\nThe article progresses to a practical example involving a specific virus from the Barrotes family, demonstrating the use of a custom program, CrackVir, to intercept and neutralize the virus's ability to infect files. By detailing the memory status and the steps to locate and modify the interrupt vector, Blade Runner empowers readers to create their own memory removers for similar viruses. This piece serves as both a tutorial and a historical snapshot of early virus handling techniques, making it a valuable read for anyone interested in the evolution of malware analysis and hacker culture."
+}

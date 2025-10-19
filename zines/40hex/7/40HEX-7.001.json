@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 2, Issue 3, Phile #1 of 1",
+  "title": "WISHFUL THINKING WILL NOT MAKE PUBLICITY-SEEKING VIRUSES GO AWAY",
+  "authors": "Paul Melka",
+  "date": "4/27",
+  "historical_context": "This article discusses the aftermath of the Michelangelo virus, a significant event in the history of computer viruses that raised public awareness and concern about malware.",
+  "target_audience": "Security professionals, hackers, and anyone interested in computer virus evolution.",
+  "short_summary": "The article reflects on the implications of the Michelangelo virus, arguing that its publicity has spurred the creation of more sophisticated and destructive viruses. It emphasizes the need for vigilance and improved antivirus measures in the face of evolving threats.",
+  "summary": "Paul Melka's article provides a critical examination of the Michelangelo virus and its impact on the computer security landscape. He argues that while the initial panic surrounding the virus subsided without significant damage, it served as a catalyst for virus authors to innovate and create more potent threats. The emergence of polymorphic viruses, which can change their signatures to evade detection, is highlighted as a growing concern for antivirus developers who must react to these evolving threats. Melka warns that unless users and organizations take proactive measures against viruses, they risk facing a 'super virus' that could cripple major corporations.",
+  "rebuttal": "The article also includes a rebuttal that critiques Melka's predictions and emphasizes the responsibility of software publishers to ensure their products are virus-free. The rebuttal suggests that the sensationalism surrounding virus names contributes to their notoriety and that a more systematic approach to naming could reduce their appeal. The discussion reflects the ongoing tension between virus creators and antivirus advocates, highlighting the complexities of managing computer security in a rapidly evolving digital landscape."
+}

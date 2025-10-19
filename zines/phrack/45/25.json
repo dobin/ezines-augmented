@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Five, File 25 of 28",
+  "title": "THE MCX7700 PABX SYSTEM",
+  "authors": "[)elamo Labz",
+  "date": "09/05/92",
+  "historical_context": "This article discusses the vulnerabilities of the MCX7700 PBX system, highlighting its ease of exploitation, which reflects the security landscape of telecommunication systems in the early 1990s.",
+  "target_audience": "Hackers, phreakers, security professionals, and telecommunications enthusiasts.",
+  "short_summary": "The article provides a detailed overview of the MCX7700 PBX system, including its vulnerabilities and command structure. It serves as a guide for exploiting the system while cautioning users about potential detection.",
+  "summary": "In this article, The Evil [)r. [)elam introduces the MCX7700 PBX system, describing it as one of the easiest systems to hack. The author outlines the programming mode and the various two-digit command combinations that can be used to manipulate the system. Notably, the article emphasizes the importance of discretion when using the system to avoid detection, particularly by monitoring call records and exceptions reports. Users are advised to blend in with normal usage patterns to evade scrutiny from system administrators.\n\nThe article also includes a comprehensive list of commands available on the MCX7700, detailing functionalities such as clearing call records, setting trunk assignments, and generating reports on call statistics. The author encourages readers to document their findings on lesser-known systems, advocating for a culture of sharing knowledge within the hacking community. This piece not only serves as a technical guide but also reflects the ethos of the hacker culture during the early '90s, emphasizing the importance of exploration and documentation in the face of security vulnerabilities."
+}

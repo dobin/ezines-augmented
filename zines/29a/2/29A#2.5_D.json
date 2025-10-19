@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Prion",
+  "authors": "Darkman/29A",
+  "date": "",
+  "historical_context": "This article discusses a parasitic virus from the early days of computer security, showcasing techniques that were prevalent in the hacker culture of the late 1980s.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "Prion is a 313-byte parasitic virus that infects executable files in the current directory. It utilizes a direct action method to overwrite files with its own code, demonstrating early virus creation techniques.",
+  "summary": "In this article, Darkman/29A presents 'Prion', a compact 313-byte parasitic virus designed to infect executable files within the current directory. The virus operates by searching for a specific area of constant bytes in the target files and overwriting it with its own code. The author provides a brief overview of the assembly code used to create the virus, detailing how it interacts with the DOS operating system to locate and infect files. The virus includes an error handler to manage potential issues during execution, showcasing early programming techniques in malware development.\n\nThe article serves as a technical guide for aspiring virus writers, offering insights into the assembly language used for virus creation and the underlying principles of file infection. It reflects the hacker culture of the time, where creating and sharing such code was a form of experimentation and skill demonstration. The techniques described in 'Prion' are foundational for understanding the evolution of malware and the methods used by early hackers to manipulate executable files."
+}

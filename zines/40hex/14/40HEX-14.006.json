@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #6 of 11",
+  "title": "Junkie Virus",
+  "authors": "Dark Angel, Phalcon/Skism",
+  "date": "1994",
+  "historical_context": "The Junkie virus is a product of the early 1990s, a time when boot sector viruses were prevalent and the understanding of malware was still developing. This article reflects the coding practices and techniques of that era.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The Junkie virus is a boot sector and COM file infector characterized by poor coding practices that somehow function effectively. The article includes a disassembly of the virus, showcasing its structure and methods of infection.",
+  "summary": "The Junkie virus is an unremarkable yet intriguing example of early malware, specifically a boot sector and COM file infector. Written by Dark Angel of Phalcon/Skism, the article provides a detailed disassembly of the virus, revealing its simplistic yet effective coding techniques. The virus operates by infecting the boot sector and COM files, utilizing a series of assembly language instructions that manipulate disk operations and system interrupts to achieve its goals. Despite its poor coding quality, the virus manages to perform its intended functions, highlighting the often rudimentary nature of early malware development. The article serves as both a technical analysis and a historical snapshot of the malware landscape during the 1990s, making it a valuable read for those interested in the evolution of computer viruses and security practices."
+}

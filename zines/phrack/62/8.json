@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x08 of 0x10",
+  "title": "FIST! FIST! FIST! Its all in the wrist: Remote Exec",
+  "authors": "grugq",
+  "date": "",
+  "historical_context": "This article introduces the concept of data contraception as a third strategy in anti-forensics, expanding on earlier discussions of data destruction and data hiding.",
+  "target_audience": "Hackers, security professionals, and researchers interested in anti-forensics and remote execution techniques.",
+  "short_summary": "The article presents a novel anti-forensics strategy called data contraception, which aims to limit forensic evidence by executing binaries on remote systems without leaving traces on disk. It discusses the principles, requirements, and implementation of a tool called rexec.",
+  "summary": "In this article, grugq introduces the concept of data contraception, a strategy aimed at reducing the quantity and quality of forensic evidence by preventing valuable data from reaching the disk. The author outlines two core principles of this technique: operating purely in memory and utilizing common utilities instead of custom tools to execute binaries remotely. This approach is particularly relevant in the context of penetration testing and anti-forensics, where maintaining stealth is crucial. The paper also discusses existing tools that employ similar methodologies, such as MOSDEF and Core Impact, and highlights the importance of using common Unix utilities to avoid detection during forensic analysis.\n\nThe article details the design and implementation of a tool called rexec, which leverages the GNU debugger (gdb) as an Inter Userland Device (IUD) to execute binaries in memory. By using gdb, attackers can gain access to a remote system's address space without leaving forensic traces. The implementation involves creating a library called gdbrpc to facilitate communication with gdb and executing binaries using the ul_exec library. The paper concludes by emphasizing the significance of data contraception as a formalized anti-forensic strategy, providing a framework for future research and tool development in the field."
+}

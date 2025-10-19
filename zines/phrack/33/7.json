@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-Three, File 7 of 13",
+  "title": "Phreaking in Germany",
+  "authors": "-=+Ninja Master+=-",
+  "date": "",
+  "historical_context": "This article reflects the state of telecommunication systems in Germany during the early 1990s, particularly after the reunification, highlighting the differences in technology and legal implications compared to the US.",
+  "target_audience": "Hackers, phreakers, security professionals, and those interested in telecommunication systems.",
+  "short_summary": "The article explores the state of phreaking in Germany post-reunification, detailing techniques such as boxing and exploiting cordless phones. It discusses the mechanical nature of the phone systems and the legal ambiguities surrounding phreaking in Germany.",
+  "summary": "In 'Phreaking in Germany', -=+Ninja Master+=- provides an insightful look into the burgeoning phreaking scene in Germany following the reunification. The article highlights how the mechanical nature of the telecommunications infrastructure, especially in the former East Germany, makes phreaking techniques like boxing and line tapping relatively easy. The author explains the boxing process, which involves dialing a toll-free number to connect to US services and then manipulating the line using specific frequency tones, emphasizing the differences in legal repercussions for phreakers in Germany compared to the US. \n\nAdditionally, the article delves into the use of cordless phones for phreaking, detailing how to exploit their radio frequencies to connect to unsuspecting users' base units. The author notes the lack of scrambling features in many German cordless phones, making them an attractive target for phreakers. The legal landscape is also discussed, where the ambiguity surrounding phreaking laws in Germany contrasts sharply with stricter regulations elsewhere, leading to a unique environment for telecommunication exploitation. Overall, this article serves as both a guide and a commentary on the state of phreaking in a rapidly changing technological landscape."
+}

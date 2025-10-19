@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The number of detected virii war",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article reflects the competitive landscape of antivirus software in the early 1990s, highlighting the marketing tactics and claims made by antivirus companies.",
+  "target_audience": "Security professionals, antivirus developers, and hackers interested in malware detection.",
+  "short_summary": "The article discusses the competitive 'detected virii war' among antivirus companies, revealing how they inflate their detection numbers through various tactics. It critiques the misleading marketing practices in the antivirus industry.",
+  "summary": "In the early 1990s, antivirus companies engaged in a fierce competition to claim the highest number of detected viruses, leading to a phenomenon known as the 'detected virii war.' The article highlights how F-Prot's claim of detecting over 19,000 viruses prompted other companies to inflate their numbers, with Dr. Solomon and AVP quickly following suit. This race to the top resulted in dubious marketing practices, where companies would manipulate their detection capabilities to appear superior, often misleading consumers in the process. The author points out that even well-known figures in the industry, like Eugene Kaspersky, have been drawn into this battle, despite previously criticizing such tactics as deceptive. \n\nThe article further explains the technical aspects behind these inflated numbers, noting that antivirus companies often use the same virus signatures under different compilations to increase their detection counts. By employing virus construction kits and manipulating compilation commands, they can significantly boost their claimed detection rates. The author suggests that tools like AVLIST can provide a more accurate picture of an antivirus product's capabilities, revealing the stark contrast between claimed and actual detection numbers. This exposé serves as a cautionary tale about the marketing practices in the antivirus industry and the importance of transparency for consumers."
+}

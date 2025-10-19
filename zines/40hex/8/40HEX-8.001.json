@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 2, Issue 4, Phile #1 of 1",
+  "title": "Phalcon/Skism Mass-Produced Code Generator 0.90a",
+  "authors": "Dark Angel",
+  "date": "27 Jul 92",
+  "historical_context": "This article is part of the early hacker culture, showcasing the development of virus toolkits during the rise of computer viruses in the early 1990s.",
+  "target_audience": "Hackers, security researchers, and those interested in malware development.",
+  "short_summary": "The Phalcon/Skism Mass-Produced Code Generator is a tool designed to help users create their own viruses. It provides a framework for generating optimized viral code, with a focus on educational purposes rather than malicious intent.",
+  "summary": "The Phalcon/Skism Mass-Produced Code Generator (PS-MPC) is an innovative tool aimed at budding virus writers, allowing them to generate viral code tailored to their specifications. The program outputs code in Masm/Tasm-compatible Intel 8086 assembly language, which users can assemble into executable form. With over 150 encryption techniques and support for COM/EXE infections, the PS-MPC is designed to be compact and efficient. The author emphasizes that the tool is not intended for malicious use, but rather as a learning resource for understanding viral code development. The article also includes a history of virus toolkits, detailing the evolution from the Virus Construction Set (VCS) to more sophisticated tools like the Dark Avenger Mutation Engine and Virus Construction Laboratory (VCL). This context highlights the growing complexity and capabilities of malware during the early 1990s, reflecting the hacker culture's fascination with both creating and combating viruses.",
+  "code_snippet": "void code_activate(void) { if (config.activation) { printlabel(\"activate:\",\"Conditions satisfied\"); printlabel(\"; Insert your activation code here\",\" \"); print(\"jmp  exit_virus\",\" \"); printblank(); } }"
+}

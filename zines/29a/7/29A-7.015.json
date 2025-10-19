@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Per-process residency review: common mistakes",
+  "authors": "Bumblebee",
+  "date": "",
+  "historical_context": "This article discusses per-process residency in the context of virus writing on the Win32 platform, a significant topic in the evolution of malware techniques.",
+  "target_audience": "Hackers, virus writers, security researchers, and those interested in malware development.",
+  "short_summary": "Bumblebee critiques the common mistakes made in applying per-process residency techniques for virus creation on the Win32 platform, offering insights into more effective methods.",
+  "summary": "In this article, Bumblebee examines the per-process residency method for virus creation, originally discovered by Jack Qwerty. While this technique allows for hooking system calls on a per-process basis, Bumblebee argues that many implementations are flawed due to a misunderstanding of how Windows applications interact with file APIs. The author points out that many commonly hooked APIs are rarely called by user applications, leading to ineffective virus propagation. Instead, Bumblebee suggests focusing on directory changes and the behavior of GUI applications to enhance the effectiveness of per-process residency in malware design.\n\nBumblebee proposes innovative strategies for improving per-process residency, such as hooking APIs that interact with directories rather than individual files. By doing so, a virus can potentially infect new files opened by applications like Notepad, leveraging the user's actions to spread. The article concludes with a call to action for aspiring virus writers to refine their techniques and adapt to the evolving landscape of malware development, emphasizing that per-process residency remains a viable and exciting area of exploration in the field of virus creation."
+}

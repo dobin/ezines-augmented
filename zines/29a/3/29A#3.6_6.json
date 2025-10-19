@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Fick Nitzgerald Virus",
+  "authors": "Rajaat / 29A",
+  "date": "January 1999",
+  "historical_context": "This article discusses the development of a polymorphic virus during a time when viruses were becoming increasingly sophisticated. The late 1990s saw a rise in virus creation and distribution, with many programmers experimenting with new techniques.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The Fick Nitzgerald Virus is a polymorphic virus written in Borland C++ that targets COM and EXE files. It demonstrates advanced techniques such as stealth and retrovirus capabilities, making it a significant example of early malware development.",
+  "summary": "The Fick Nitzgerald Virus, authored by Rajaat of the 29A group, is a sophisticated piece of malware that showcases several advanced features for its time. Written in Borland C++ 3.1, the virus is designed to infect COM and EXE files, employing a polymorphic engine to evade detection. It operates by relocating its code to a segment boundary and hooking DOS interrupts to monitor file operations, allowing it to stealthily infect files without raising alarms. The virus's size and complexity are notable, as it took nearly three years to develop, reflecting the author's deep understanding of compilers and assembly language. The article provides insights into the virus's behavior, including its replication strategy and the challenges faced during its creation, such as extensive debugging and memory management issues. Rajaat concludes by expressing gratitude to his peers and hints at future projects, including a virus generator named GRACE, which aims to innovate in the field of malware development."
+}

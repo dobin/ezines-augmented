@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virus Times",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article reflects the early understanding of computer viruses and their evolution with the advent of the internet, particularly focusing on time-based attacks.",
+  "target_audience": "Hackers, security professionals, and those interested in malware development.",
+  "short_summary": "The article discusses the evolution of computer viruses and their reliance on time-based triggers, emphasizing the importance of accurate time synchronization for executing attacks. It also introduces two functions for handling SNTP to retrieve UTC time.",
+  "summary": "In 'Virus Times', the author explores the transition of computer viruses from relying on local time triggers to utilizing global time synchronization due to the internet's reach across various time zones. The piece highlights the potential for Distributed Denial of Service (DDoS) attacks that can cause widespread panic, referencing significant incidents like the root nameserver query flood that disrupted internet services. The discussion underscores the necessity for accurate time measurement in executing effective cyber attacks in a globally connected environment.\n\nThe article also provides practical coding insights by introducing two functions designed to facilitate the handling of the Simple Network Time Protocol (SNTP). These functions, `sntp_getftime` and `sntp_getstime`, are aimed at retrieving UTC time from a specified server and converting it into Win32 structures. This technical detail serves as a valuable resource for hackers and security professionals looking to understand the implications of time synchronization in malware development and network attacks."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win32 386+ Random-Number-In-Range Generator",
+  "authors": "Unknown",
+  "date": "N/A",
+  "historical_context": "This article reflects the early days of Windows programming and the need for reliable random number generation in software applications.",
+  "target_audience": "Hackers, programmers, security professionals",
+  "short_summary": "This article presents a simple and efficient random number generator for Win32 applications, addressing the predictability of existing generators at the time. It includes assembly code that demonstrates how to generate a random number within a specified range using a seed based on system ticks.",
+  "summary": "In this article, the author introduces a Win32 random number generator designed to overcome the limitations of existing generators that were often predictable. The provided assembly code is compact and efficient, utilizing the GetTickCount function to initialize a random seed. The generator produces a random number between 0 and a specified maximum value, showcasing a straightforward approach to random number generation in the Win32 environment.\n\nThe code employs a combination of seed adjustment and a CRC-32 algorithm to enhance the randomness of the output. By manipulating the seed and performing bitwise operations, the generator aims to produce a truly random number. This article serves as a practical guide for programmers looking to implement a reliable random number generator in their applications, highlighting the importance of randomness in software security and functionality."
+}

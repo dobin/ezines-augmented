@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 4, Issue 1, Phile #3 of 11",
+  "title": "Extracting virus signatures from F-PROT",
+  "authors": "Peter Vincent",
+  "date": "",
+  "historical_context": "This article discusses techniques for extracting virus signatures from the F-PROT antivirus software, which was widely used in the early 1990s. The methods described are relevant to understanding how antivirus software operates and how signatures are utilized for virus detection.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in antivirus technology and signature extraction.",
+  "short_summary": "The article provides a method for extracting virus signatures from the F-PROT antivirus software using a Turbo Pascal program. It explains the structure of the signatures and the process for creating files that list these signatures alongside their corresponding virus names.",
+  "summary": "In this article, Peter Vincent presents a detailed guide on extracting virus signatures from the F-PROT antivirus software, specifically version 2.11. The process involves using a Turbo Pascal program, GETFP211.PAS, which reads the signature files SIGN.DEF and VIRSTOP.EXE to generate two output files: F-PROT.STR and VIRSTOP.STR. Each output file contains the virus signatures and their associated names, facilitating further analysis or research into virus detection methods. The article emphasizes the importance of understanding the signature structure, which includes wildcards and specific byte values that can be ignored during matching, thus providing insights into the inner workings of antivirus software and its detection algorithms.\n\nVincent's code is well-commented and designed for ease of use, making it accessible for programmers familiar with Turbo Pascal. The article serves as both a practical guide for extracting signatures and a historical reference for the evolution of antivirus technology. By detailing the extraction process, it also highlights the significance of signature-based detection in the fight against malware, a topic that remains relevant in today's cybersecurity landscape."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 28, File #6 of 12",
+  "title": "Snarfing Remote Files",
+  "authors": "Dark OverLord",
+  "date": "",
+  "historical_context": "This article reflects the hacking techniques prevalent in the early 1990s, particularly focusing on Unix systems and their vulnerabilities.",
+  "target_audience": "Hackers, security researchers, Unix system administrators",
+  "short_summary": "The article outlines various methods for retrieving files from remote systems without authorization, focusing on Unix systems. It discusses techniques using TFTP, UUCP, and exploiting vulnerabilities in the sendmail daemon.",
+  "summary": "In 'Snarfing Remote Files', Dark OverLord presents a detailed guide on how to illicitly obtain files from remote Unix systems. The article highlights three primary methods: using the Trivial File Transfer Protocol (TFTP) to download files, exploiting UUCP connections to transfer files directly, and leveraging vulnerabilities in the sendmail daemon to access sensitive files. Each method is explained with step-by-step instructions, showcasing the simplicity of these techniques due to inadequate security measures on many systems at the time.\n\nThe author emphasizes the ease with which attackers can exploit these vulnerabilities, particularly focusing on the passwd file, which is commonly accessible on Unix systems. By providing practical examples and commands, Dark OverLord illustrates the potential risks posed by poorly configured systems and the importance of securing access points. The article serves as both a tutorial for aspiring hackers and a cautionary tale for system administrators, highlighting the need for robust security practices in the face of such straightforward exploitation techniques."
+}

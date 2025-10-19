@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 15, Phile #8 of 10",
+  "title": "Phrack World News, Part 1",
+  "authors": "Lewis F. Jackson II",
+  "date": "7/17/87",
+  "historical_context": "This article provides insight into early computer crime investigations and the methods used by law enforcement in the late 1980s, particularly focusing on the hacker group Legion of Doom.",
+  "target_audience": "Security professionals, hackers, and those interested in the history of computer crime.",
+  "short_summary": "The article details a search warrant affidavit regarding unauthorized access to Stanford University's computer systems by a hacker group known as Pink Floyd. It outlines the investigation process, the suspects involved, and the challenges faced by law enforcement in tracking and prosecuting computer crimes.",
+  "summary": "In this article, Lewis F. Jackson II presents a detailed affidavit concerning a series of unauthorized computer intrusions at Stanford University, attributed to a group of hackers using the alias Pink Floyd. The affidavit outlines the timeline of the intrusions, the methods employed by the hackers, and the investigative efforts undertaken by law enforcement, including the U.S. Secret Service. The document highlights the sophisticated nature of the hacker community and the challenges faced by investigators in tracing their activities, particularly due to the use of telecommunications lines that lacked immediate tracking capabilities.\n\nJackson emphasizes the importance of executing search warrants at opportune times to prevent the destruction of evidence, given the fragile nature of digital data. He discusses the interconnectedness of hackers and phreakers, illustrating how they communicate and collaborate through electronic bulletin boards. The article serves as a historical snapshot of the early days of computer crime, showcasing the evolving landscape of cybersecurity and the ongoing battle between hackers and law enforcement."
+}

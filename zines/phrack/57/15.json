@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x0f of 0x12",
+  "title": "Writing ia32 alphanumeric shellcodes",
+  "authors": "rix@hert.org",
+  "date": "Not specified",
+  "historical_context": "This article discusses techniques for writing alphanumeric shellcodes, which are crucial for evading input filters and intrusion detection systems prevalent in modern software.",
+  "target_audience": "Hackers, security researchers, and professionals interested in exploit development.",
+  "short_summary": "The article presents methods for creating IA32 alphanumeric shellcodes that can bypass input filters and IDS. It details the usable instructions, techniques for initializing registers, and methods for constructing shellcodes using stack manipulations and XOR patches.",
+  "summary": "In this article, the author delves into the necessity of writing alphanumeric shellcodes in the context of modern security measures that employ input filtering and opcode detection. The piece outlines the limitations imposed by these security measures and introduces techniques for crafting shellcodes using only alphanumeric characters. The author explains the relevant IA32 instructions and their constraints, emphasizing the importance of XOR operations and stack manipulations in generating effective shellcodes. The article also discusses the construction of shellcodes through two primary methods: using the stack to build original shellcode and employing XOR patches to modify existing code. The author provides practical examples and insights into the challenges faced when developing such shellcodes, making it a valuable resource for those interested in exploit development and computer security."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x44, Phile #0x0a of 0x13",
+  "title": "Pseudomonarchia jemallocum",
+  "authors": "argp | huku",
+  "date": "",
+  "historical_context": "This article provides a deep dive into the jemalloc memory allocator, which is widely used in modern applications, including Firefox. It discusses exploitation techniques relevant to memory corruption vulnerabilities, making it a significant contribution to the field of security research.",
+  "target_audience": "Security researchers, exploit developers, and those interested in memory management and exploitation techniques.",
+  "short_summary": "This article explores the jemalloc memory allocator's structure and vulnerabilities, focusing on exploitation tactics for memory corruption bugs. It provides a comprehensive overview of jemalloc's design and how attackers can manipulate memory allocations to achieve arbitrary code execution.",
+  "summary": "In this article, the authors investigate the jemalloc memory allocator, detailing its structure and the potential vulnerabilities that can be exploited. They begin with an overview of jemalloc's architecture, including its chunks, arenas, and runs, which are essential for understanding how memory is managed. The authors then delve into various exploitation tactics, such as adjacent region corruption, heap manipulation, and metadata corruption, providing concrete examples and pseudocode to illustrate their points. They emphasize the importance of understanding these tactics in the context of modern operating systems and applications, where memory corruption vulnerabilities remain a significant threat.\n\nThe article concludes with a discussion of a real vulnerability and the authors' plans for future research into jemalloc's red-black tree structures. This work serves as a foundational piece for those looking to understand memory allocation vulnerabilities and the intricacies of exploiting them, making it a valuable resource for security professionals and researchers alike."
+}

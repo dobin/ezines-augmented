@@ -1,0 +1,709 @@
+                             ==Phrack Inc.==
+
+                Volume 0x10, Issue 0x47, Phile #0x0E of 0x11
+
+|=-----------------------------------------------------------------------=|
+|=-------=[ Stealth Shell: A Fully Virtualized Attack Toolchain ]=-------=|
+|=-----------------------------------------------------------------------=|
+|=---------------=[ Ryan Petrich  (rpetrich@gmail.com) ]=----------------=|
+|=-----------------------------------------------------------------------=|
+
+Have you dreamed of a remote shell with the stealth of a custom in-memory
+implant and the comfort of a shell running on your local host? Dream no
+more, comrade – enjoy this exhaustive discussion of such a tool.
+
+
+                             Introduction
+                             ~~~~~~~~~~~~
+
+Attackers consider remote shells a foundational element of the attack
+development lifecycle because they allow us to carry out operations on a
+victim machine. Yet, the "market" for remote shell implementations is
+rather stale and stagnant, with vendors offering proprietary tools and
+everyone else building custom ones or binding standard in/out/error to a
+remote socket before execing the system shell.
+
+Traditional post-exploitation toolchains are either noisy and flexible,
+or stealthy and cumbersome. But stealthy remote code execution need not
+be unwieldy and slow to operationalize. By rethinking what the "remote"
+in remote shell means, we can make shelling into exploited systems much
+more difficult to detect.
+
+This paper scrutinizes the remote shell status quo, describes a new class
+of shell to simplify target puppetry, and traverses the syscall hells
+along the way.
+
+
+                 What is a remote interactive shell?
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An interactive shell is a prompt that accepts textual commands as input
+from a user and acknowledges the output to the user. Prior to the
+popularization of graphical interfaces, shells were the primary mechanism
+for users to interact with their computers and still are for many people
+of software. Those of us old enough to use DOS may remember the
+C:\> prompt fondly, and those older than I may remember earlier ones.
+
+Choice of shell is often personal to those who interact with computers
+over extended periods, and experienced hackers customize their shells
+with custom prompts, aliases, and scripts.
+
+A *remote* interactive shell performs our commands over a network on
+another computer instead of the one we're physically interacting with.
+SSH is the canonical tool for legitimate remote interactive shells.
+
+A classic approach is to write an exploit that creates a new socket,
+connects to a predefined network address (where we're already listening),
+then binds that new socket to standard input and output. After we bind it,
+we exec the system's shell interpreter – replacing the service we
+exploited (like nginx) with a shell under our control. We call this a
+"connectback" shell because the exploit connects back to us.
+
+Alternatively, we could reuse an existing socket (rather than creating a
+new socket); we can choose the same socket we used to exploit the target
+to maximize our convenience. With this approach, we write our exploit to
+bind standard input and output to the existing network socket and exec the
+system's shell interpreter. This is creatively known as a "socket reuse"
+shell.
+
+Yet another approach involves writing an exploit that launches an implant 
+– a bit of software that exists only to receive and perform commands
+over a network socket – as well as building a custom interactive prompt
+that accepts commands from us locally (which we send over the network to
+the implant). This approach avoids running a shell on the victim's
+infrastructure, but is cumbersome and requires anticipating which
+commands we might need ahead of time.
+
+
+                 Why do attackers use remote shells?
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+I am making the generous assumption that Phrack's audience still consists
+of offense-minded folks – i.e., "attackers" – rather than middle-aged
+exploit authors who sold out to enrich venture capitalists. So, when I
+say, "we," assume our jolly group includes attack-oriented programmers.
+
+When we exploit a vulnerability in a target system, remote shells allow us
+to interact with the victim's system and spare us from pre-emptively
+defining exactly which tasks we want to perform (when we don't even know
+much about the system). For this reason, we often spawn shells during the
+exploitation phase of our operations. Interactive prompts make us more
+nimble; if we realize we need to do something we hadn't anticipated, we
+aren't forced to re-exploit the system with a new payload (which is both
+annoying and possibly expensive).
+
+Just as legitimate system administrators often need to log into their
+systems and explore them interactively, we will need to explore the
+systems under our purview interactively as surprise system administrators.
+
+
+           The disparate hemispheres in traditional shells
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Classic connectback or socket reuse shells only give us access to whatever
+packages and tools are on the victim's machine already, in whatever
+configuration that system's operator decided. Custom interactive prompts
+that communicate with a hand-crafted implant are brittle and make us
+reinvent an interactive environment from scratch.
+
+Like most people of software, I heavily customize my environment and do
+not like the interactive prompts available for Windows. I am also a lazy
+attacker. I refuse the indignity of Powershell and cling to the Linux
+utilities burned into my brain, so much so that I descended into a
+labyrinthian rabbit hole and traversed the bowels of Linux, macOS, and
+Windows for an unreasonable hoard of hours to create my own toolchain and
+indulge my persnickety laziness.
+
+You deserve a more civilized attack workflow, too. Let's discuss this
+extravagant contraption in detail.
+
+
+                           Stealth Shell
+                           ~~~~~~~~~~~~~
+
+Stealth shell tooling simplifies how we interact with remote victim
+systems while muffling any side effects to elude discovery by defenders.
+It not only improves the interactive experience of remote shells, but
+veils their activity like custom in-memory exploits (without the
+inconvenience of a custom non-standard interactive environment or worse,
+being limited to the preordained shellcode we crafted during the
+operation's initial stages).
+
+What qualities constitute a tool capable of creating stealth shells? There
+are three key criteria a tool must satisfy:
+
+1. Unify the computational resources of multiple machines as if they were
+   one system
+
+2. Expose access to this system via a standard shell interface that can
+   run arbitrary programs
+
+3. Hide execution inside an in-memory implant to avoid detection
+
+How does this innovate beyond existing commercial tools like Immunity
+Canvas and Core Impact? Those are special, proprietary tools with their
+own proprietary ecosystems that you have to buy; any extensions you build
+are locked into those walled ecosystems. They also don't do anything to
+unify multiple machines under a single illusion; they force you to
+explicitly talk to the remote machine using their proprietary
+commands and APIs.
+
+A stealth shell is special because the way you interact with it is not
+special. It reifies a regular Linux shell so we can use standard UNIX
+tools to puppeteer our target machines. This simplifies our workflow to:
+
+1. Discover vulnerable target service
+
+2. Exploit the target service (bring your own vulnerability),
+   instantiating the stealth shell implant
+
+3. Interact with the target system as if it were local using the virtual
+   stealth shell:
+
+   ~* Finding their cyberinsurance policy is as simple as grep; *~
+   ~* Copying the victim's files is as simple as running cp; *~
+   ~* Querying their databases is as simple as running psql; *~
+   ~* Adding a backdoor ssh key is as simple as writing to the target's
+      .ssh/authorized_keys file; *~
+   ~* Fetching data from other services is as simple as running curl; *~
+   ~* Imaging their disk is as simple as dd; *~
+   ~* Exfiltrating data is as simple as rsync; *~
+   ~* Computing SHA256 hashes using their CPU is as simple as running
+      xmrig; *~
+
+A stealth shell can access all the packages installed on our machine. It
+respects our local configuration, line discipline, and window sizing. We
+can use our favorite scripting languages to automate operations against
+the victim's machine rather than gluing random snippets of shellcode
+together by hand.
+
+At the highest level, the stealth shell collection of tools contain a
+fully virtualized attack toolchain. They virtualize the filesystem,
+network, and compute resources of both the remote victim system and our
+local system, transmogrifying these disparate hemispheres into a unified,
+distributed Linux machine at our disposal.
+
+This unified, distributed Linux machine lives in the initial shell process
+and any subsequent subprocesses we spawn when interacting with the shell.
+We can execute these subprocesses locally or embed them on our victim's
+machine via the implant; Stealth shells bequeath us equal access to files
+and network connections on either hemisphere of the distributed system
+(i.e. both our machine as an attacker and our target / victim machine).
+
+
+                 System call remoting with an implant
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+How is it possible for us to command both our system and our victim's as
+if they were one distributed Linux machine? We employ the age-old
+technique of system call remoting (publicized and later commercialized by
+CORE). On whatever machine we're using to mount our attack operation, we
+run programs locally but proxy our commands over the network to the target
+(victim) machines so our implant executes them instead.
+
+This makes an implant the first critical ingredient we need for syscall
+remoting. A stealth shell's implant is lightweight, performing only a few
+necessary behaviors. On start, the implant searches for the incoming
+socket (the one that triggered the exploit). It next reuses that socket
+and sends a hello message to us (on our local machine) indicating the
+exploit succeeded. The implant then attentively listens (in a loop) for
+when we send it commands to perform.
+
+Stealth shell's implant accepts the following commands:
+
+1. Perform a syscall and report the result back
+2. Call a function and report the result back
+3. Peek at a range of memory and report the bytes back
+4. Poke at a range of memory, writing a specific sequence of bytes into it
+
+Stealth shell uses these commands to perform operations on our behalf.
+Let's say we type `stat /target/etc/passwd` into the stealth shell on our
+local machine. On the remote victim machine, the implant performs a
+newfstatat(AT_FDCWD, "/etc/passwd", ..., AT_SYMLINK_NOFOLLOW) syscall and
+dutifully reports back that yes, it did find a passwd file and shows us
+the file's attributes.
+
+Similarly, let's say we type `cat /target/etc/passwd` into the stealth
+shell. This will have the implant perform openat(AT_FDCWD, "/etc/passwd",
+O_RDONLY) followed by a series of read syscalls on the resulting remote
+file descriptor. cat will then print the contents of the remote file to
+the terminal.
+
+This is all the support we need from the implant to support a stealth
+shell for syscall remoting.
+
+
+                  Intercepting local syscall operations
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Great! We exploited a given target, then installed the implant that reuses
+the victim socket and listens for commands to perform on the (remote)
+victim machine. But how do we interact with the victim's remote machine as
+if it were our local machine? How can we ensure the commands we enter on
+our local machine execute on our victim's remote machine? We need
+something that can tell the implant what to do based on what we type into
+our local shell. Specifically, we need a component on our machine that
+intercepts local syscall requests and instead sends them over the network
+for the implant to execute on the victim's system.
+
+To understand how syscall interception works, let's start with "typical"
+syscall behavior. How do syscalls normally work when we aren't
+manipulating them for crimes, espionage, or escapades? When a process
+performs a syscall, the operating system wakes up and its kernel figures
+out what operation is associated with the syscall. The kernel performs
+the operation on the process and then resumes executing the program.
+The program continues doing work, relying on the operation it asked the
+kernel to perform.
+
+If we can somehow direct the kernel to hand control over to us, we can
+replace the behavior of the operating system with behaviors of our own.
+
+Enter axon, the monitor component that intercepts syscalls in my
+implementation of stealth shell. When the kernel receives a syscall from
+a process, rather than determining and executing the appropriate
+operation, it instead switches to axon and tells it (roughly), "hey, the
+program asked me to perform this syscall operation, but you told me to
+deliver these requests to you, so now it's your responsibility and I'm not
+going to do anything more with the syscall." axon is now the anointed
+entity that figures out what to do and when to resume the program.
+
+How do we, the attacker, interact with axon? When we try to interact with
+a remote resource via a program we're running in the shell (say, for
+example, `cat /target/etc/passwd`), doing whatever we want to do, axon
+interrupts the shell, packages the program's request (in this case,
+open "/etc/passwd") into a message, sends the message to the implant, and
+waits for the implant's response. Once it receives the implant's response
+(like "hello here is a file descriptor number representing the file you
+asked me to open"), axon resumes our shell – and our shell then continues
+with the next step of the program (like cat, which will immediately try to
+read the bytes in the file).
+
+Let's inspect each of these steps to see how axon makes this happen.
+
+axon waits on our host (i.e. our local machine) for the implant's hello
+message. When it receives the hello message, axon knows the exploit
+succeeded and the implant is ready to receive commands. Axon spawns a
+subprocess and asks the kernel to deliver all syscall attempts from the
+subprocess to axon. Inside the local subprocess, it execs bash, which will
+become our running stealth shell. bash begins its normal startup process,
+executing as intended… until it tries to perform a syscall.
+
+This (local) bash process tries to perform a syscall operation by sending
+its request to the local kernel – but the kernel instead is like, "hold up,
+I gotta hand this over to my new bff axon so they can figure out what to
+do with it."
+In more technical terms, the kernel traps bash's attempt to perform a
+syscall operation and delivers the trap to axon as a signal. axon examines
+the syscall request described in the signal and inspects its arguments to
+decide how to process the syscall.
+
+If the syscall references a path, file descriptor, or network address,
+axon must select whether it's a local or remote operation – that is,
+whether the implant on the remote victim machine should perform the
+operation or if our local machine should instead. The syscall request
+itself indicates when commands should be performed on the target (i.e.
+remote victim machine) by one of:
+
+1. A path beginning with the /target/ prefix
+2. A relative path referencing files out of /target
+3. A network address in the virtual target address range
+4. A file descriptor the shell process previously opened against a remote
+   path or network address
+
+We can therefore think of axon as a syscall dispatcher. It examines the
+incoming syscalls and, based on their arguments, appropriately routes them
+to the host bearing the associated resource.
+
+For example, if we run `stat /etc/hostname`, axon determines that
+/etc/hostname is a local path and performs our stat operation locally.
+If instead we run `stat /target/etc/passwd`, axon determines that
+/target/etc/passwd is a remote path and runs a stat /etc/passwd operation
+remotely by asking the implant to perform the operation on our behalf.
+This orchestration powers our distributed system.
+
+Let's go a layer deeper, starting with local operations (since that
+reflects the simpler path axon can take). If the syscall request doesn't
+have any of the indicators of a remote resource described above, axon
+calls back into the kernel and requests the exact same syscall operation
+the subprocess initially requested. When the syscall completes, axon
+delivers the results to the subprocess and resumes the subprocess's
+execution. In replaying the syscall request it received, axon behaves as
+a "manipulator in the middle" between the running shell process and our
+local kernel.
+
+What if we ask the shell to interact by specifying one of the "plz perform
+on the victim machine" indicators? For remote operations, axon translates
+the resulting syscall operation to the equivalent command the implant
+should execute on the target – and respects compatibility with the
+target's operating system (like translating a Linux open syscall to
+a Windows CreateFileEx function call). axon then serializes this
+translated command into a sequence of bytes representing it, sends the
+serialized bytes over the network socket (the socket shared with the
+implant), and waits for the implant to send a response indicating it
+executed the command.
+
+axon's message wakes the remote implant running on our target (it rests in
+an idle state while awaiting our signal to perform some remote
+operations). The implant accepts axon's serialized bytes, deserializes our
+command into a local buffer, and performs axon's requested syscall. When
+the syscall completes, the implant serializes the result – including any
+mutated data – into a sequence of bytes representing it. It then sends
+these serialized bytes back over the network as a response to axon, before
+waiting for further commands to perform.
+
+Upon receipt, axon first deserializes the response into its constituent
+components; for example, a response to a read request will include the
+status of the read syscall, as well as whatever bytes the implant read.
+Then axon writes any updated data into the subprocess' address space and
+resumes the bash subprocess, awaiting our additional commands (i.e.
+syscall requests).
+
+With axon dispatching our commands across the network and the remote
+implant executing them on the victim's machine, we've covered the basics
+of syscall remoting. To summarize, we can manipulate the target's file and
+disk as if they were local files via syscall interception and the implant.
+We can remotely puppeteer the victim's system using our local (Linux)
+processes. (In practice, we are subject to many fiddly details since axon
+must coordinate the simultaneous execution of multiple subprocesses that
+each possess distinct emulated file descriptor tables.)
+
+We can now treat the remote (victim) system like it's part of our local
+system; we can restore our dignity when targeting Windows or macOS
+machines by automagically translating our Linux commands into these
+foreign tongues. Is that enough? To reasonable people, yes. But we are
+not reasonable people, are we? We need to treat *both* sides as a unified
+distributed system to realize the more civilized world of Linux everything
+everywhere all at once.
+
+Let's now discuss how a stealth shell does just that.
+
+
+              ti esrever dna ti pilf nwod gnaht ym tup I
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section has the same basic goals as the prior section and shares much
+of the same approach, but runs it backwards and is more extra. Why would
+we do this? Because sometimes we want to do crimes on the victim's machine
+but do the not-crimes on our local machine, like loading libraries or
+writing log messages to our local disk. The more we can do stuff on our
+local machine, the more we slink past the defender's gaze.
+
+Consider a crime like cryptomining on the victim's machine. We could:
+
+1. adjust xmrig to be in a big block of shellcode containing all of its
+   libraries and configuration
+
+2. turn off all its logging
+
+3. have it proxy its network activity through the socket connecting the
+   victim and us
+
+4. and mask off any other feature that might lead to our discovery
+
+That is a lot of fiddly, manual work and it would be disastrously easy to
+slip up – like it writing files onto the victim's disk, trying to activate
+a GPU the victim doesn't have, or making bitcoin network requests that the
+victim's security stack should trivially detect. Remember, we are
+engineers. Like any decent engineer, we should spare ourselves of this
+tedious labor by wormholing into building tools to handle this
+automatically instead. And that's precisely what I did.
+
+How can we transplant some of the target operations back to our local
+machine to suppress noisy side effects? A stealth shell takes the same
+mechanism that remotes syscalls and applies it in reverse, executing
+programs inside the remote implant. We call these embedded running
+programs "picoprocesses" because they're regular Linux programs that each
+think they're running as a Linux process, when actually they're embedded
+in the implant running inside another process. These picoprocesses even
+think they are regular Linux processes when they're running on Windows
+or macOS.
+
+Are these real processes? What is real? To them they are.
+How can picoprocesses be real if our eyes aren't real?
+
+texec is our stealth shell's mechanism for executing entire programs
+remotely on the victim's computer (loading them inside the implant);
+texec is short for "target exec" because it execs a program on the
+target. To picoprocesses, the previous rules about what is local and what
+is remote are flipped – paths prefixed with /target/ reference local
+files, with any remaining paths referencing remote files living on our
+system. This lets programs running as picoprocesses send commands back to
+our local system so texec (which runs locally on our machine) can
+perform them.
+
+Note that this also means the target could manipulate our machine if they
+discover our presence in their systems. In the spirit of Secure by Design,
+stealth shell makes you opt in by prefixing your commands with our helper
+program `texec`. (The reference implementation also does some things not
+described here to detect and limit the effects of target tampering; we
+recommend carrying out your operations from heavily sandboxed
+environments).
+
+But that addressable hazard aside, it's just as straightforward for us to
+run the same syscall interception activities with the roles reversed. Let's
+explore how.
+
+
+                      Offloading syscalls with texec
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+How do we intercept syscalls the picoprocess performs without alerting
+defenders (or, more realistically, SREs) to our presence? To remain
+concealed, the implant shouldn't launch new processes and shouldn't
+perform bizarre operations the exploited program wouldn't perform, like
+attaching a seccomp trap, ptracing a peer thread, or opening /dev/kvm.
+These options aren't available when the target is Windows or macOS anyway.
+
+Prepare for a journey, because performing these functions under such a
+restrictive regime requires rather lavish resourcefulness.
+
+With axon, we intercepted syscall events by asking the OS to deliver them
+to us rather than letting the kernel execute them by default; we
+automatically routed syscalls referencing /target to the implant on the
+victim machine (to execute remotely) and let axon handle the other
+syscalls on our machine (to execute locally).
+
+texec takes a different approach to syscall interception: texec creates a
+virtual remote process by puppeteering the implant into creating and
+subsequently executing a Linux program inside the implant's address space
+as a picoprocess. texec analyzes programs just-in-time as we request them
+and replaces any syscall instructions with a jump to its own handler that
+emulates the syscall. In contrast to axon, texec sends any syscalls
+referencing /target to the implant (to execute *locally*) and the rest to
+texec running on our machine (to execute *remotely*).
+
+Let's tease out this trick, starting with the initial stages of remote
+program execution.
+
+texec begins by mapping a small runtime into the target's address space.
+It requests the implant call mmap or VirtualAllocEx to reserve some memory
+for the runtime and pokes the runtime's contents into memory. The runtime
+includes all the facilities texec needs to receive syscall requests,
+dispatch syscalls remotely to the attacker's host (a reversal of axon's
+role), dispatch them locally on the victim's machine, and manage a virtual
+file descriptor table.
+
+With the runtime mapped into the victim process' memory, texec proceeds to
+the next phase: running our naughty program of choice inside the implant.
+For example, if we enter `texec /bin/xmrig`, we want texec to run the
+xmrig binary on the target so we can convert the victim's computational
+resources into coins. texec first resolves and maps the main binary into
+local memory, then pokes it into remote memory by calling mmap or
+VirtualAllocEx again. If the main binary requires an ELF interpreter,
+as most do, texec maps the interpreter into memory, too.
+
+Once texec loads our binaries in local memory and in the remote implant,
+it just-in-time analyzes the local copy of the binaries' .text sections
+for syscall instructions. x86_64 systems represent syscall instructions
+with the two-byte "0f 05" sequence. For each syscall instruction texec
+encounters, it prepares a detours-style patch by analyzing the
+nearby instructions and relocating enough of them to insert
+a jmp (e8 xx xx xx xx) instruction.
+
+texec replaces (i.e. "patches") each relocated syscall instruction with a
+jump to a trampoline containing:
+
+1. relocated instructions from before the original syscall instruction
+2. instructions that spill and restore the syscall arguments
+3. a call into the runtime texec mapped earlier
+4. any relocated instructions from after the original syscall instruction
+5. and a jump back to the original instruction sequence.
+
+Here's the stencil for the trampoline:
+```
+# relocated prefix instructions
+{relocated_prefix}
+# save syscall number
+mov %rax, %r11
+# save flags
+lahf
+seto %al
+# skip red zone
+sub $128, %rsp
+# spill registers to stack
+push %rax
+push %r9
+push %r8
+push %r10
+push %rdx
+push %rsi
+push %rdi
+push %r11
+# move address of spilled registers into first arg
+mov %rsp, %rdi
+# call the runtime's syscall handler
+movabs ${runtime handler address}, %rcx
+call *%rcx
+# restore registers from stack
+pop %rcx
+pop %rdi
+pop %rsi
+pop %rdx
+pop %r10
+pop %r8
+pop %r9
+pop %rax
+# restore previous stack
+add $128, %rsp
+# restore flags
+add $0xff, %al
+sahf
+# move result into rax
+mov %rcx, %rax
+# relocated suffix instructions
+{relocated_suffix}
+# resume patched function
+jmp {resume_address}
+```
+
+Once texec prepares all the patches for the program's syscall
+instructions, it remotely pokes each patch into place via the implant.
+It also must correct each segment's memory protection so the victim's
+system will allow the instructions to execute on the victim's CPU; for
+the parts of the picoprocess that contain instructions, texec marks them
+as executable.
+
+With that final step of poking patches into memory (and ensuring the
+patched instructions can execute), we've tampered with the binary,
+replacing its syscall instructions with jumps to trampolines. But we still
+need to launch the picoprocess to achieve the dream of running a Linux
+program inside the implant.
+
+For these last few steps before the picoprocess launches, texec constructs
+a main thread stack for the picoprocess by commanding the implant call
+mmap or CreateThread.
+
+To match what the Linux kernel would do when executing a new program,
+the stack needs a description of the arguments and environment variables
+to launch the picoprocess with. This data's format is called a System V
+auxiliary vector. texec crafts a SysV auxiliary vector mimicking what a
+real Linux kernel would produce when executing a program, and pokes
+the vector into the remote stack it just created.
+
+The last step before launch has texec command the implant to perform a
+clone syscall or call ResumeThread to start executing the remotely loaded
+program. The picoprocess now runs in the implant as an embedded thread.
+Anyone examining the target system in ps, top, or Task Manager would only
+see an additional thread on the existing process – no suspicious
+subprocesses, binaries on disk, or program names. texec then waits for
+commands from the remote picoprocess (running on the victim's machine),
+just as the implant awaits our local commands.
+
+Meanwhile, the picoprocess runs inside of the implant as a dedicated
+thread, executing until it reaches its first patched (i.e. replaced)
+syscall instruction. Remember, we tampered with the syscall instructions
+so the picoprocess jumps to texec's handler instead. This means that,
+instead of attempting a syscall, the picoprocess jumps to the designated
+trampoline and calls the runtime's syscall handler to process what would
+have been a syscall operation. The runtime determines whether to emulate
+the program's syscall request locally or perform it remotely (on our
+machine) by serializing the syscall's arguments, then sends the serialized
+syscall across the network to the texec process waiting on our machine –
+similar to what axon performs in the other direction.
+
+The runtime's message wakes the texec running on our machine (it rests
+in an idle state while awaiting our signal to perform some remote
+operations). texec accepts the runtime's serialized bytes, reads our
+command into a local buffer, and performs the runtime's requested
+syscall. When the syscall completes, the texec serializes the result –
+including any mutated data – into a network representation. It then sends
+this serialized representation back over the network as a response to the
+runtime before waiting for further commands to perform.
+
+Upon receipt, the runtime first deserializes the response into its
+constituent components; for example, a response to a read request will
+include the status of the read syscall, as well as whatever bytes
+the implant read. Then the runtime writes any updated data into the
+picoprocess's address space and returns into the trampoline to resume the
+picoprocess, awaiting its additional commands (i.e. syscall requests).
+
+This may sound familiar — it's the exact series of events as earlier
+when we discussed axon, but reversing the direction of traffic across the
+network socket.
+
+Now that texec can load programs remotely and process their syscall
+requests, we can run programs and access either side's data on both
+"hemispheres" of our unified distributed system. With the implant + axon +
+texec + texec's runtime, we can access our local and our victim's remote
+resources and command them as we please. We have one distributed system
+spread across a network, hidden from the victim system's operator.
+
+
+                          Multi-platform support
+                          ~~~~~~~~~~~~~~~~~~~~~~
+
+We've definitely skimmed over multi-OS support as if it were trivial until
+this point. As foreshadowed, we must translate Linux syscalls into the
+remote system's OS interface if we want to target multiple operating
+systems. Executives don't seem to care about hacks unless they're on a
+machine they use – which is almost always Windows – so our tooling doesn't
+suffice until we support the big three.
+
+What do we need to support each major OS?
+
+Linux targets are straightforward: the target shares the same syscall
+interface, though potentially an older version with fewer features.
+Enterprises tend to run older LTS systems. The only hazard we face is
+copying input and output data correctly.
+
+macOS targets have many syscalls similar to Linux, albeit with different
+numeric IDs and calling conventions. Some Linux syscalls, however, have
+different data layouts in their macOS equivalent or are simply
+unavailable. To remotely perform a macOS syscall, a stealth shell must
+translate between the two ABIs.
+
+For Windows targets, the entire API is different; the design distinctly
+differs from UNIX operating systems. CreateFileEx is similar to open,
+and the HANDLEs it produces can be thought of as file descriptors by
+another name, but all the other syscalls stymie direct translation.
+If you want to extend stealth shell support to Windows targets, be
+prepared to invest heavily into your Windows translation layer. It took
+a hundred or so hours as a humble software engineer, so surely your leet
+attack team can build it without sacrificing their sanity in the pursuit
+of perfection. Perhaps read cygwin for inspiration.
+
+
+                               Conclusion
+                               ~~~~~~~~~~
+
+Stealth shells make remote interactive shells even more flexible while
+remaining as perniciously sneaky as custom in-memory exploits. There is
+no tradeoff: we can be both quiet and nimble. It extends the practice of
+syscall remoting so we can enjoy the comfort and familiarity of the Linux
+ecosystem while maximizing pwnage possibilities on target systems,
+regardless of OS.
+
+Our stealth shell uses an implant and two interrelated syscall
+dispatchers – axon and texec – to interrupt syscalls and redirect them
+for execution on the appropriate resource (either the victim's machine or
+our own). axon coordinates and dispatches the syscall activity of a tree
+of subprocesses, bridging two systems together into one interactive
+environment and minimizing side effects on the victim's system. texec
+instantiates and coordinates the activity of a remote picoprocess,
+converting regular Linux programs into spooky execution at a distance.
+
+Stealth shells are just as cloaked to defenders as vastly more cumbersome
+custom in-memory exploits (and are certainly as sneaky as prior syscall
+remoting approaches). If a hyperfocused SRE can detect an in-memory
+implant, they can detect stealth shell's in-memory implant. If they can
+detect an in-memory implant loading new/more code, they can detect texec
+loading a picoprocess.
+
+With that said, we can layer a stealth shell with other evasive
+techniques – such as tunneling through DNS, reusing an existing socket,
+and, with additional effort, mimicking an existing protocol like HTTP.
+We will leave that as an exercise for the reader.
+
+Exploits get most of the hype, but toolchains and workflows are what make
+or break real attack operations. Plus, we deserve civilized workflows that
+don't require us to cosplay as Windows sysadmin. I hope this inspires other
+obsessive systems nerds to brainstorm what other tools need a refresh to
+ferry them into the modern ops era.
+
+
+                          ~~~~~~~~~~~~~~~~
+
+Greetz and the deepest thanks to &void; who pushed me to publish this
+paper and employed their writing wizardry to make it readable.
+
+|=[ EOF ]=---------------------------------------------------------------=|

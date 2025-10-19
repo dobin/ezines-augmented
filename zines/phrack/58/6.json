@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x06 of 0x0e",
+  "title": "Sub proc_root Quando Sumus (Advances in Kernel Hacking)",
+  "authors": "palmers <palmers@team-teso.net>",
+  "date": "12/02/2001",
+  "historical_context": "This article discusses advanced techniques for kernel hacking, specifically focusing on the Linux proc filesystem, which was a significant area of interest for hackers and security researchers in the early 2000s.",
+  "target_audience": "Hackers, security researchers, kernel developers.",
+  "short_summary": "This article explores advanced techniques for manipulating the Linux kernel's proc filesystem to achieve various goals, including process hiding, privilege escalation, and denial of service. It provides code examples and discusses the implications of these techniques.",
+  "summary": "In 'Sub proc_root Quando Sumus', palmers delves into the intricacies of the Linux kernel's proc filesystem, highlighting its potential for exploitation. The article begins with an introduction to the virtual filesystem (VFS) and the unique characteristics of the proc filesystem, which operates entirely in kernel memory. The author outlines several techniques that can be employed to manipulate proc entries, such as altering permissions, hiding processes, and redirecting system calls to achieve stealthy backdoor functionality. Each technique is accompanied by code snippets, demonstrating practical implementations that can be adapted for various kernel versions.\n\nThe article emphasizes the ease with which a malicious user can exploit these techniques to undermine system security. For instance, by modifying the proc_dir_entry structure, an attacker can hide processes from standard tools or elevate privileges by redirecting write operations on proc files. The author cautions that while these methods can be powerful, they also come with risks, particularly regarding system stability and integrity. Ultimately, palmers presents this information as a proof of concept, urging readers to approach these techniques with caution and responsibility."
+}

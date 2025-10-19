@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 54, Phile #5 of 12",
+  "title": "Linux and Random Source Bleaching",
+  "authors": "Phunda Menta <phundie@usa.net>",
+  "date": "Dec 25th, 1998",
+  "historical_context": "This article discusses the methods of generating high-quality random numbers in Linux, which is crucial for cryptographic applications. The techniques described are still relevant today as secure random number generation remains a critical aspect of computer security.",
+  "target_audience": "Security professionals, cryptographers, Linux users, and hackers interested in random number generation.",
+  "short_summary": "The article explains how to generate high-quality random numbers in Linux using both software and hardware methods. It discusses the limitations of existing pseudo-random number generators and introduces techniques for improving randomness through hardware sources like sound cards and FM radios.",
+  "summary": "In this article, Phunda Menta delves into the importance of random number generation in cryptography and the challenges associated with obtaining high-quality random bits in Linux. The author describes the pseudo-devices /dev/random and /dev/urandom, explaining their mechanisms and limitations. While /dev/random provides better quality random bits, it is limited in size, making /dev/urandom a more practical choice for many applications despite its pseudo-random nature. To enhance randomness, the article introduces a hardware solution using sound cards as a source of entropy. By capturing static noise from an FM radio and processing it, users can create a more reliable source of random bits. The article also details methods for 'bleaching' the data stream to ensure that the output passes statistical randomness tests, such as the Diehard suite. Techniques like XOR and transition mapping are discussed, along with the use of cryptographic hash functions for added security. Overall, this article provides valuable insights into improving random number generation, which is essential for secure cryptographic practices."
+}

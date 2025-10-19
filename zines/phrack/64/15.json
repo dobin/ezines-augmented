@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The art of Exploitation: Come back on a exploit",
+  "authors": "vl4d1m1r of Ac1dB1tch3z",
+  "date": "2004",
+  "historical_context": "This article discusses the CVS 'Is-modified' exploit, which was a significant vulnerability discovered in 2004, showcasing the evolution of exploitation techniques.",
+  "target_audience": "Hackers, security researchers, and those interested in the technical aspects of exploit development.",
+  "short_summary": "This article provides a deep dive into the CVS 'Is-modified' exploit, detailing its history, technical workings, and the artistic nature of exploit development. It emphasizes understanding the exploit rather than just using it.",
+  "summary": "In this article, vl4d1m1r of Ac1dB1tch3z explores the CVS 'Is-modified' exploit, a notable vulnerability that emerged in 2004. The piece is structured as an autopsy of the exploit, aiming to demystify the technical intricacies behind it. The author emphasizes that exploitation is not merely a technical task but an art form that requires a deep understanding of the system's memory management and the exploit's underlying mechanics. The article serves as a tribute to the original creators of the exploit, highlighting the creativity and determination involved in crafting a reliable and effective exploit.\n\nThe article details the process of exploiting the vulnerability under both Linux and BSD systems, explaining how the exploit was initially unreliable but evolved into a targetless and 'oneshot' exploit. The author provides insights into memory allocation techniques, heap management, and the importance of understanding the exploit's context. By dissecting the exploit's code and methodology, the article aims to educate readers on the complexities of exploit development, encouraging them to appreciate the artistry involved in creating effective exploits rather than simply using them for malicious purposes."
+}

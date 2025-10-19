@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "AVP 3.0 Weekly Update Generator",
+  "authors": "AVP Research and Distribution Team & Z0MBiE/29A",
+  "date": "1998",
+  "historical_context": "This article reflects the hacking culture of the late 1990s, particularly the development of malware and trojan horses during a time when antivirus software was becoming more prevalent.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article presents a generator for creating trojan addons for the AVP 3.0 antivirus software, detailing how to exploit its integrity checks to execute malicious code without user consent.",
+  "summary": "The 'AVP 3.0 Weekly Update Generator' is a detailed guide on creating trojan addons specifically designed to bypass the AVP 3.0 antivirus software. The generator produces a file named RULEZ.AVC, which can be renamed and distributed to unsuspecting users. When the AVP software checks its integrity upon launch, the trojan code is executed without any user prompts. The article outlines the technical requirements, including the necessary software and programming languages, such as TASM and MASM, to compile the trojan code. It provides a step-by-step breakdown of the code structure, including sections for both DOS and Win32 environments, and explains how the trojan modifies the Master Boot Record (MBR) to ensure persistence and control over the infected system.\n\nThe article serves as both a technical manual and a commentary on the capabilities of antivirus software at the time, showcasing the cat-and-mouse game between malware developers and security professionals. The trojan's design includes recursive partition entries and a method for rebooting the PC through the PCI port, demonstrating a sophisticated understanding of system architecture. This piece is a significant artifact from the hacker culture of the 1990s, illustrating the mindset and technical prowess of its authors in the realm of malware development."
+}

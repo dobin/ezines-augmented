@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 29, File #6 of 12",
+  "title": "Bank Information",
+  "authors": "Legion Of Doom! EFT Division",
+  "date": "",
+  "historical_context": "This article provides insights into banking transaction codes and methods, reflecting the hacker culture's interest in exploiting financial systems during the early 1990s.",
+  "target_audience": "Hackers, security professionals, financial fraud investigators.",
+  "short_summary": "This article serves as a guide to understanding American banking transaction codes, including ABA transit numbers and Federal Reserve routing symbols. It discusses methods for executing bank transactions and the importance of precision to avoid detection.",
+  "summary": "In 'Bank Information', the authors from the Legion of Doom present a detailed overview of the coding systems used in American banking transactions, focusing on ABA transit numbers and Federal Reserve routing symbols. The article outlines how these codes are structured and their significance in facilitating electronic transactions. It emphasizes the need for a thorough understanding of these codes for anyone looking to engage in banking activities, whether legitimate or otherwise. The authors provide a breakdown of the various prefixes used to identify cities and states, as well as the implications of these codes in the context of wire transfers and check processing.\n\nThe article further delves into the practical aspects of executing bank transactions, highlighting the necessity for speed and accuracy to avoid drawing attention from financial institutions. It discusses strategies for minimizing suspicion, such as keeping transaction amounts below $10,000 and using false identities to open multiple accounts. The authors caution that any errors in these processes could lead to significant legal repercussions, making it crucial for individuals to execute their plans flawlessly. Overall, this piece serves as both an educational resource and a cautionary tale for those interested in the intersection of hacking and banking."
+}

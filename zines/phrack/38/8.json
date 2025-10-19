@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Eight, File 8 of 15",
+  "title": "Wide Area Information Servers",
+  "authors": "Mycroft",
+  "date": "",
+  "historical_context": "This article discusses the WAIS system, which was an early method for accessing and searching information over networks, predating modern search engines.",
+  "target_audience": "Hackers, security professionals, and anyone interested in information retrieval systems.",
+  "short_summary": "This article introduces the Wide Area Information Server (WAIS) system, explaining its functionality, how to set it up, and why it is beneficial for accessing vast amounts of information over a network.",
+  "summary": "The article provides a comprehensive introduction to the Wide Area Information Server (WAIS) system, developed by Thinking Machines Corp. WAIS allows users to search for and retrieve documents from various information sources using a simple keyword-based interface. The author highlights the ease of use and the relevance feedback mechanism that enhances search results based on user interest. Mycroft emphasizes the importance of WAIS, particularly for accessing Phrack Inc. issues and other valuable files, making it a significant tool for information retrieval during its time.\n\nThe article details the steps required to compile a WAIS client, find information sources, and perform queries. It outlines the available client programs, such as Xwais and SWAIS, and provides instructions for searching through a directory of servers. Mycroft also discusses potential improvements for WAIS, including keeping source files up to date and enhancing reliability through multiple servers. Overall, the article serves as both a practical guide and a reflection on the evolution of information access technologies."
+}

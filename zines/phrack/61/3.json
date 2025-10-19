@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3d, Phile #0x01 of 0x0f",
+  "title": "Windows named pipes exploitation",
+  "authors": "DigitalScream",
+  "date": "",
+  "short_summary": "This article discusses a method for exploiting Windows named pipes to escalate privileges to Local System on Windows NT-based systems. It details the process of creating a named pipe and impersonating a client to gain elevated access.",
+  "summary": "In this article, DigitalScream explores the vulnerabilities present in Windows named pipes, which can be exploited to escalate privileges to Local System. The author explains how named pipes function as a means of interprocess communication and how they can be manipulated to gain unauthorized access. By creating a named pipe and waiting for a client connection, an attacker can impersonate the client and obtain the necessary privileges to execute commands with Local System rights. The article provides a detailed code example demonstrating how to implement this exploit, emphasizing the ease with which a local user can gain elevated privileges if certain conditions are met, such as the presence of a vulnerable service that interacts with the named pipe.",
+  "historical_context": "This article reflects the security landscape of early 2000s Windows systems, where named pipes were a common target for privilege escalation attacks. The techniques discussed are relevant for understanding the evolution of Windows security vulnerabilities.",
+  "target_audience": "Security professionals, penetration testers, and ethical hackers interested in Windows security and privilege escalation techniques."
+}

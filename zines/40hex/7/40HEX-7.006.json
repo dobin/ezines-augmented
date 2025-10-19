@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 3, Phile #6 of 11",
+  "title": "Virus Spotlite on: Leap Frog",
+  "authors": "Dark Angel of PHALCON/SKISM",
+  "date": "",
+  "historical_context": "This article discusses a unique virus from the early 1990s, showcasing innovative techniques in virus residency that were emerging during the time.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in virus analysis and coding techniques.",
+  "short_summary": "The article presents an analysis of the 'Leap Frog' virus, detailing its unique residency technique that allows it to install itself in a DOS disk buffer. The author disassembles the virus code, highlighting its efficiency and some peculiarities in its design.",
+  "summary": "In 'Virus Spotlite on: Leap Frog', Dark Angel of PHALCON/SKISM explores the intricacies of the 'Leap Frog' virus, also known as USSR 516. This virus employs an innovative residency technique that allows it to embed itself within a DOS disk buffer, a method that diverges from traditional high-memory loading routines. The author provides a disassembled version of the virus, offering insights into its structure and functionality. Notably, the code is described as tight and efficient, making it a valuable study for both newcomers and experienced programmers in the field of malware analysis.\n\nThe article also points out certain inconsistencies within the virus's code, such as the unclear purpose of a timing routine and the unusual method of infecting COM files. Despite these quirks, the author praises the overall quality of the coding and encourages readers to examine specific features, including the residency routine and the use of stack frames in the interrupt handler. This piece serves as both an educational resource and a historical snapshot of virus development techniques during a pivotal time in computer security."
+}

@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 3, Issue 1, File 006",
+  "title": "Bad Boy 2 Virus",
+  "authors": "Dark Angel",
+  "date": "1993",
+  "historical_context": "This article discusses the Bad Boy 2 virus, which was notable during the early 1990s as a resident COM infector. It reflects the growing complexity of malware during this period.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of computer virus history.",
+  "short_summary": "The article presents the Bad Boy 2 virus, detailing its functionality as a resident COM infector that employs stealth techniques and has a self-limiting infection mechanism. It includes assembly code for the virus.",
+  "summary": "The Bad Boy 2 virus is a sophisticated piece of malware that infects COM files and employs several stealth techniques to evade detection. After infecting ten files, it disables itself, showcasing a self-limiting behavior that was relatively advanced for its time. The article critiques existing virus descriptions, particularly Patricia M. Hoffman's VSUM, labeling them as inadequate. The author provides a detailed assembly code for the virus, illustrating its structure and functionality, including how it manipulates the system file table and employs segment shuffling to obfuscate its presence. This technical insight serves as a valuable resource for understanding early malware development and the techniques used by virus authors to evade detection.",
+  "code_snippet": "The assembly code provided in the article demonstrates the virus's encryption and infection routines, including how it installs itself into memory and modifies system interrupt handlers."
+}

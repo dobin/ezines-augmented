@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 1, Phile #1 of 1",
+  "title": "HOW TO MODIFY A VIRUS SO SCAN WON'T CATCH IT - OR HOW TO CREATE NEW VIRUS STRAINS",
+  "authors": "HR",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early days of computer viruses and antivirus software, highlighting the cat-and-mouse game between virus creators and antivirus developers.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in virus modification techniques.",
+  "short_summary": "The article provides a step-by-step guide on how to modify existing computer viruses to evade detection by antivirus software. It discusses the tools needed and the technical process involved in altering virus code.",
+  "summary": "In this provocative piece, the author, HR, outlines a method for modifying existing computer viruses to bypass antivirus detection. The article begins with a critique of antivirus pioneer John McAfee, suggesting that his efforts have inadvertently led to the proliferation of viruses. HR then details a practical approach using tools like Norton Utilities and Turbo Debugger to alter the code of known viruses, making them undetectable by common scanning software. The process involves creating a target file, infecting it with a virus, and then using hex editing to manipulate the virus's identifiable strings. The author emphasizes the importance of understanding assembly language to successfully execute these modifications, warning that this technique is primarily effective on unencrypted viruses. The article serves as both a technical guide and a commentary on the ongoing battle between virus creators and antivirus developers."
+}

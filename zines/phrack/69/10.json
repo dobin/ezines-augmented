@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 0x0f, Issue 0x45, Phile #0x0a of 0x10",
+  "title": "The Art of Exploitation",
+  "authors": "Alisa Esage",
+  "date": "Not specified",
+  "historical_context": "This article discusses a vulnerability in Microsoft XML Core Services (CVE-2013-0007) that remained under the radar for two years despite being publicly known. It reflects on the challenges of vulnerability research in a commercialized environment.",
+  "target_audience": "Security researchers, vulnerability analysts, and those interested in exploit development.",
+  "short_summary": "The article provides a detailed analysis of a critical remote code execution vulnerability in Microsoft XML Core Services, demonstrating how to exploit it through self-patching techniques. It covers the vulnerability's impact, exploitability, and potential mitigations.",
+  "summary": "In this comprehensive analysis, Alisa Esage delves into a critical remote code execution vulnerability found in Microsoft XML Core Services, specifically CVE-2013-0007. The article outlines the vulnerability's trigger, impact vectors, and the intricate process of analyzing the crash and estimating exploitability. Esage emphasizes the importance of understanding the underlying architecture of the Microsoft XML internals and the challenges posed by modern mitigations in exploit development. The research is conducted on a synthetic platform, revealing the vulnerability's potential for exploitation despite its age. The author also introduces novel techniques for self-patching the vulnerable module, showcasing a unique approach to controlling the execution flow without traditional shellcode execution. This article serves as both a technical guide and a reflection on the evolving landscape of vulnerability research, highlighting the need for thorough analysis and innovative thinking in the face of increasing security measures.",
+  "code": "The article includes a proof-of-concept code demonstrating the exploitation of the vulnerability through JavaScript recursion and memory manipulation techniques."
+}

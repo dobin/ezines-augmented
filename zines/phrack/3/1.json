@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Three, Phile 1 of 10",
+  "title": "Phrack Inc. Issue Three",
+  "authors": "Various",
+  "date": "Feb 1, 1986",
+  "historical_context": "This issue of Phrack Inc. was released during the early days of hacking and phreaking culture, a time when the exploration of telecommunications systems was becoming increasingly popular among enthusiasts.",
+  "target_audience": "Hackers, phreakers, security professionals, telecommunications enthusiasts",
+  "short_summary": "This issue features a variety of articles covering topics from Rolm systems to eavesdropping techniques, providing insights into the hacking and phreaking culture of the mid-1980s.",
+  "summary": "Phrack Inc. Issue Three is a compilation of articles that delve into various aspects of hacking and telecommunications, reflecting the interests and techniques of the hacker community in the 1980s. The issue includes contributions from several authors, each bringing their unique perspective on topics such as Rolm systems, shell bombs, and eavesdropping methods. Notably, the articles are not just technical guides but also serve as a cultural artifact, showcasing the mindset and creativity of early hackers and phreakers.\n\nAmong the highlights, 'Making shell bombs' by Man-Tooth provides a detailed look at creating disruptive scripts, while 'Signalling systems around the world' by Data Line offers a global perspective on telecommunications infrastructure. The issue also features practical advice on building devices like shock rods and insights into private audience setups. Overall, this issue serves as a valuable resource for anyone interested in the history of hacking and the evolution of security practices."
+}

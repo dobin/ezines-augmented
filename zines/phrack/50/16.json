@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Fifty, Phile #16 of 16",
+  "title": "extract.c",
+  "authors": "Phrack Staff and sirsyko",
+  "date": "1997",
+  "historical_context": "This article is part of Phrack's ongoing contribution to hacker culture, providing tools and techniques for extracting and organizing code from text files. It reflects the era's focus on sharing knowledge and resources among hackers.",
+  "target_audience": "Hackers, programmers, and security professionals interested in file manipulation and code extraction techniques.",
+  "short_summary": "The article presents a C program, 'extract.c', designed to extract text files from a specially tagged flatfile into a hierarchical directory structure. It serves as a utility for organizing source code from Phrack articles.",
+  "summary": "The article introduces 'extract.c', a C program that allows users to extract source code from Phrack Magazine articles formatted with specific tags. The program reads an input file, identifies sections marked with '<++>' and '<-->', and creates a directory structure to store the extracted files. This utility is particularly useful for programmers and hackers who want to organize and access code snippets from the rich archive of Phrack articles. The program is straightforward to compile and run, requiring only a simple command line invocation with the input filename.\n\nThe code itself is a practical example of file handling in C, demonstrating the use of standard libraries for file operations, string manipulation, and directory creation. It emphasizes the importance of community-driven knowledge sharing in the hacker culture, providing a tool that enhances the accessibility of valuable programming resources. Overall, 'extract.c' is a testament to the collaborative spirit of the hacking community, encouraging users to build upon existing knowledge and tools."
+}

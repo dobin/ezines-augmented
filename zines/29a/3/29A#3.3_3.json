@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "How to fuck CRC16, CRC32, CRC48 for Adinf, AVPInspector, etc.",
+  "authors": "Zhengxi",
+  "date": "08.12.98",
+  "historical_context": "This article was written during a time when computer viruses were becoming increasingly sophisticated, and understanding how to manipulate checksums was crucial for malware developers.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "This article provides a detailed guide on how to manipulate CRC16, CRC32, and CRC48 checksums to create undetectable malware. It includes code snippets and explanations for various functions used in the process.",
+  "summary": "In 'How to fuck CRC16, CRC32, CRC48 for Adinf, AVPInspector, etc.', Zhengxi delves into the intricacies of checksum manipulation, a vital skill for anyone looking to develop stealthy malware. The article outlines the importance of CRCs in file integrity checks and how they can be exploited to evade detection by antivirus software. The author presents a series of C functions designed to calculate and manipulate CRC values, demonstrating how to create a virus that can modify its own checksum to appear legitimate to security software. \n\nThe code provided is a practical guide, showcasing how to implement these functions in a Win32 console application. Zhengxi explains the logic behind each function, including the use of magic numbers for CRC calculations and the process of 'infecting' a file while maintaining its original checksum values. This article serves as both a technical manual for aspiring malware developers and a historical artifact reflecting the hacker culture of the late 1990s, where understanding such techniques was essential for evading increasingly sophisticated security measures."
+}

@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 2, Issue 4, Phile #6 of 11",
+  "title": "Disassembly of the Michelangelo Virus",
+  "authors": "Dark Angel of PHALCON/SKISM",
+  "date": "",
+  "historical_context": "The Michelangelo virus gained notoriety in the early 1990s as one of the first major viruses to cause widespread concern, particularly due to its activation date on March 6th. It was a derivative of the earlier Stoned virus, which was one of the first boot sector viruses.",
+  "target_audience": "Security researchers, malware analysts, and those interested in computer virus history.",
+  "short_summary": "This article provides a detailed disassembly of the Michelangelo virus, highlighting its similarities to the Stoned virus and its functionality as a boot sector and partition table infector. It includes technical insights into the virus's code and behavior.",
+  "summary": "In this article, Dark Angel presents a comprehensive disassembly of the Michelangelo virus, illustrating its structure and operation. The analysis reveals that Michelangelo is a derivative of the Stoned virus, sharing similar characteristics and code patterns. The disassembly begins with the virus's entry point and outlines its interaction with the disk's boot sector and partition table, showcasing how it infects systems upon booting. The author meticulously breaks down the assembly code, explaining the purpose of various instructions and the flow of execution within the virus. Key functions such as `infectdisk` and `damagestuff` are highlighted, demonstrating the virus's capability to spread and cause damage to infected systems, particularly on its activation date of March 6th. This technical exploration serves as both a historical account of early malware and a resource for understanding the mechanics of boot sector viruses.",
+  "additional_notes": "The article is a valuable resource for those studying the evolution of computer viruses and the techniques employed in their creation and propagation."
+}

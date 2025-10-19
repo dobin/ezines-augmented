@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 23, File 8 of 12",
+  "title": "Getting Serious About VMS Hacking",
+  "authors": "VAXbusters International",
+  "date": "January 1989",
+  "historical_context": "This article was written during a time when VAX/VMS was considered one of the most secure operating systems, and it reflects the hacking culture of the late 1980s.",
+  "target_audience": "Hackers, security researchers, and VMS system administrators.",
+  "short_summary": "The article provides insights into the security features of the VAX/VMS operating system and discusses techniques for remaining undetected while exploring its vulnerabilities. It emphasizes the need for a deep understanding of the system's internals for effective hacking.",
+  "summary": "In 'Getting Serious About VMS Hacking', VAXbusters International delves into the complexities of the VAX/VMS operating system's security architecture. The authors outline the challenges of breaching VMS security, which is designed to thwart unauthorized access and maintain system integrity. They provide an overview of essential tools and privileges necessary for effective hacking, such as the System Dump Analyzer (SDA) and the PATCH utility, which allow users to analyze and modify system processes and binaries. The article stresses that a hacker must possess a comprehensive understanding of VMS internals to navigate its security landscape successfully.\n\nThe article also discusses various methods for evading detection, including manipulating process states and utilizing command procedures. Techniques for modifying accounting logs and file access dates are highlighted, showcasing the lengths to which a hacker might go to remain undetected. The authors conclude by emphasizing the intriguing nature of VMS kernel hacking, while acknowledging that the article is not exhaustive and encourages further exploration of the system's vulnerabilities. Overall, this piece serves as both a guide and a cautionary tale for those interested in the intricacies of VMS hacking."
+}

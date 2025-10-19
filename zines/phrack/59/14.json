@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x0e of 0x12",
+  "title": "Writing Linux Kernel Keylogger",
+  "authors": "rd <rd@thehackerschoice.com>",
+  "date": "June 19th, 2002",
+  "short_summary": "This article provides a comprehensive guide on creating a kernel-based keylogger for Linux, detailing the inner workings of the Linux keyboard driver and various methods for intercepting keystrokes. It introduces 'vlogger', a sophisticated keylogger implementation with multiple logging modes.",
+  "summary": "The article is divided into two main parts. The first part explains how the Linux keyboard driver operates, detailing the flow of keyboard input from the hardware to user processes. It discusses two primary approaches for implementing a kernel-based keylogger: writing a custom keyboard interrupt handler and hijacking existing input processing functions. The author emphasizes the importance of understanding Linux Loadable Kernel Modules (LKMs) for anyone looking to develop their own keylogger or keyboard driver.\n\nThe second part introduces 'vlogger', a kernel-based keylogger that utilizes the receive_buf() function to log keystrokes from both local and remote sessions. It features multiple logging modes, including a smart mode that detects password prompts, and provides detailed instructions on how to compile and use the keylogger. The article concludes with source code for vlogger and references to further reading, making it a valuable resource for both security professionals and hobbyist developers interested in kernel programming and security research."
+}

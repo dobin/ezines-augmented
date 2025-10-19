@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Three, Issue Thirty-Three, File 1 of 13",
+  "title": "Introduction to Phrack 33",
+  "authors": "Knight Lightning, Dispater",
+  "date": "September 15, 1991",
+  "historical_context": "This article marks the revival of Phrack after a shutdown by the U.S. Secret Service and reflects the transition in leadership and editorial direction.",
+  "target_audience": "Hackers, security professionals, and those interested in hacker culture.",
+  "short_summary": "The article introduces the new era of Phrack, detailing its transition from previous issues and the commitment to providing valuable information about system vulnerabilities while maintaining a balance of fun and professionalism.",
+  "summary": "In this introductory piece, Knight Lightning and Dispater announce the revival of Phrack, emphasizing the importance of continuity and the need for a responsible approach to hacking culture. Following the shutdown of the original Phrack by the U.S. Secret Service, the new editorial team aims to restore the zine's legacy while adapting to the changing landscape of computer security. The authors express gratitude to previous contributors and outline plans for a more professional format that still retains the engaging spirit of the original publication. They encourage readers to provide feedback and participate in the community, highlighting the importance of learning about system vulnerabilities to prevent intrusions.",
+  "additional_notes": "The article sets the tone for future issues, indicating a shift towards a more educational focus while still celebrating the hacker ethos."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-Three, File 9 of 13",
+  "title": "A Real Functioning RED BOX Schematic",
+  "authors": "R.J. \"BoB\" Dobbs",
+  "date": "",
+  "historical_context": "The Red Box was a popular device among phone phreakers in the 1970s and 1980s, allowing users to simulate coin deposits in payphones, thus enabling free calls.",
+  "target_audience": "Hackers, phreakers, electronics enthusiasts, and security professionals interested in telecommunication history.",
+  "short_summary": "This article provides a detailed schematic and instructions for building a Red Box, a device used to simulate coin deposits in payphones. It explains the circuit operation, alignment, and testing procedures necessary for functionality.",
+  "summary": "In this article, R.J. \"BoB\" Dobbs presents a comprehensive guide to constructing a Red Box, a device that tricks payphone systems into thinking coins have been deposited. The Red Box operates by generating specific audio tones that correspond to different coin types, allowing users to make calls without actually inserting money. The article outlines the necessary components, including dual timer ICs, op-amps, and various resistors and capacitors, along with a detailed schematic for assembly. It emphasizes the importance of careful construction and alignment for successful operation, providing tips for testing the device using a frequency counter or oscilloscope to ensure accurate tone generation. The Red Box serves as a fascinating example of early hacking culture and the lengths to which individuals would go to exploit telecommunication systems."
+}

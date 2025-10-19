@@ -1,0 +1,74 @@
+{
+  "articles": [
+    {
+      "reference": "Volume 0x0f, Issue 0x45, Phile #0x01 of 0x10",
+      "title": "Hacker Luddites",
+      "authors": "anonymous",
+      "date": "",
+      "short_summary": "This article critiques modern technology's impact on personal ownership and creativity, arguing against restrictive systems that limit user control.",
+      "summary": "The article discusses the concept of 'Hacker Luddites,' individuals who oppose technologies that limit human potential through artificial constraints. It highlights how modern technology often restricts creativity and ownership, particularly in the context of cloud computing and proprietary systems. The author argues that true ownership should allow for modification and adaptation of technology, and that the current trend of centralized control by corporations undermines this principle. The piece calls for a return to a more open and creative technological landscape, where users can freely engage with and modify their devices.",
+      "historical_context": "The article reflects a growing concern in the hacker community about the implications of cloud computing and proprietary software on personal freedom and creativity.",
+      "target_audience": "hackers, technology enthusiasts, and advocates for digital rights"
+    },
+    {
+      "reference": "Volume 0x0f, Issue 0x45, Phile #0x02 of 0x10",
+      "title": "Chesslin",
+      "authors": "Baudsurfer/Red Sector Inc.",
+      "date": "",
+      "short_summary": "A minimalist chess engine coded in 256 bytes, showcasing the art of sizecoding and the challenges of creating a playable game in such a limited space.",
+      "summary": "This article presents 'Chesslin,' a 256-byte chess engine that serves as a sizecoding exercise. The author warns that the engine is experimental and lacks many features of a full chess game, such as end-game detection and advanced AI. It operates on Windows XP SP3 and requires users to input moves in a specific format. The piece highlights the challenges of creating functional software within strict size constraints and celebrates the creativity involved in such endeavors. The source code is provided, allowing readers to explore the implementation details and engage with the nostalgic aspects of low-level programming.",
+      "historical_context": "The article is a nod to the retro computing and programming culture, emphasizing the skill and creativity involved in sizecoding.",
+      "target_audience": "programmers, retro computing enthusiasts, and those interested in game development"
+    },
+    {
+      "reference": "Volume 0x0f, Issue 0x45, Phile #0x03 of 0x10",
+      "title": "He Compels Secure Shells",
+      "authors": "DangerMouse",
+      "date": "",
+      "short_summary": "An exploration of breaking out of restricted shell environments, detailing methods and pitfalls associated with secure shells.",
+      "summary": "This article delves into the vulnerabilities of restricted shell environments, where users are granted limited access to system functionalities. The author outlines various methods to escape these restrictions, including exploiting execution primitives and leveraging common commands. Real-life examples illustrate how these techniques can be applied in practice, emphasizing the importance of understanding the underlying security mechanisms. The piece serves as both a guide for exploit developers and a cautionary tale about the inherent weaknesses in security implementations.",
+      "historical_context": "The article reflects ongoing discussions in the security community about the effectiveness of restricted shells and the challenges of securing user environments.",
+      "target_audience": "security researchers, penetration testers, and exploit developers"
+    },
+    {
+      "reference": "Volume 0x0f, Issue 0x45, Phile #0x04 of 0x10",
+      "title": "Personalized PGP Key IDs",
+      "authors": "f1los0tt1l3",
+      "date": "",
+      "short_summary": "A technical exploration of how to generate personalized PGP key IDs, including methods for brute-forcing and patching keys.",
+      "summary": "This article provides a detailed guide on generating personalized PGP key IDs, discussing the underlying mechanics of how key IDs are derived. The author outlines a brute-force approach to create keys with desired IDs, leveraging the OpenPGP specification. The piece includes practical steps for setting up the environment, generating keys, and patching them to achieve the desired results. It emphasizes the importance of understanding the cryptographic principles behind PGP and the potential implications of manipulating key IDs.",
+      "historical_context": "The article highlights ongoing concerns about key management and the security of cryptographic systems, particularly in the context of user privacy.",
+      "target_audience": "cryptography enthusiasts, security researchers, and PGP users"
+    },
+    {
+      "reference": "Volume 0x0f, Issue 0x45, Phile #0x05 of 0x10",
+      "title": "How to cheat at maths",
+      "authors": "chown",
+      "date": "",
+      "short_summary": "An introduction to using the Z3 SMT solver for simplifying complex mathematical problems in exploit development.",
+      "summary": "This article introduces readers to the Z3 SMT solver, demonstrating its utility in solving mathematical problems relevant to exploit development. The author provides a simple example of using Z3 to solve a mathematical puzzle, illustrating how the solver can handle constraints and provide solutions efficiently. The piece emphasizes the accessibility of Z3 for those intimidated by mathematics, encouraging its use in various scenarios, including vulnerability discovery and exploit development. The article serves as a practical guide for integrating formal methods into the hacking toolkit.",
+      "historical_context": "The article reflects a growing trend in the security community to incorporate formal methods and automated reasoning tools into exploit development practices.",
+      "target_audience": "exploit developers, security researchers, and anyone interested in formal methods"
+    },
+    {
+      "reference": "Volume 0x0f, Issue 0x45, Phile #0x06 of 0x10",
+      "title": "Shellcode the better way, or how to just use your compiler",
+      "authors": "fishstiqz",
+      "date": "",
+      "short_summary": "A guide on generating shellcode using C compilers, emphasizing the advantages over traditional assembly methods.",
+      "summary": "This article discusses the evolution of shellcode development, advocating for the use of C compilers instead of traditional assembly language for creating shellcode. The author outlines the prerequisites for using MinGW and provides examples of how to inline strings and order functions for effective shellcode generation. The piece includes practical examples, such as a simple shellcode that executes a command, and demonstrates how to extract and test the generated shellcode. The article aims to simplify the process of shellcode creation, making it more accessible to developers.",
+      "historical_context": "The article reflects a shift in the exploit development community towards higher-level programming languages and tools, making the process more efficient.",
+      "target_audience": "exploit developers, programmers, and security researchers"
+    },
+    {
+      "reference": "Volume 0x0f, Issue 0x45, Phile #0x07 of 0x10",
+      "title": "Resisting the Hy(p|v)e",
+      "authors": "anon & anon",
+      "date": "",
+      "short_summary": "A critical examination of the motivations behind vulnerability disclosure and the impact of hype in the security community.",
+      "summary": "This article critiques the current state of vulnerability disclosure, arguing that the hype surrounding security flaws often overshadows the actual technical issues at hand. The authors explore the motivations behind responsible disclosure, including the desire for fame, financial stability, and the common good. They challenge the notion that disclosing vulnerabilities is inherently beneficial, suggesting that it can sometimes exacerbate the problem. The piece calls for a more thoughtful approach to disclosure, encouraging individuals to reflect on their motivations and the broader implications of their actions in the security landscape.",
+      "historical_context": "The article addresses ongoing debates within the security community regarding the ethics of vulnerability disclosure and the commercialization of security research.",
+      "target_audience": "security researchers, ethical hackers, and anyone involved in vulnerability disclosure"
+    }
+  ]
+}

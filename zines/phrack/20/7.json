@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 20, File 7 of 12",
+  "title": "Metal Shop Private's -- Phreak/Hack Sub",
+  "authors": "Various",
+  "date": "April 26 - June 1, 1987",
+  "historical_context": "This article is a collection of discussions from a subboard dedicated to phreaking and hacking, reflecting the early days of telecommunications manipulation.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts, and security professionals.",
+  "short_summary": "This article compiles various discussions from a phreaking and hacking subboard, covering techniques like red-boxing, coin detection, and call blocking. It provides insights into the methods used by early hackers to manipulate payphones and telecommunications systems.",
+  "summary": "The 'Metal Shop Private's -- Phreak/Hack Sub' is a fascinating glimpse into the early hacker culture, showcasing a series of posts from various contributors discussing techniques and experiences related to phreaking. The discussions include practical methods for exploiting payphones, such as red-boxing, where users simulate the sound of coins being deposited to make free calls. Contributors share their experiments, including recording tones from payphones and using them to bypass payment systems, as well as insights into the inner workings of telecommunications systems like the Coin Detection & Announcement circuits and the complexities of call routing and billing data management.\n\nThe article also touches on the technical aspects of telecommunications, including discussions about multiplexing, ANI (Automatic Number Identification), and the implications of call blocking features. The contributors demonstrate a deep understanding of the technology of the time, revealing both their technical prowess and the playful, experimental nature of the hacker community. Overall, this compilation serves as a historical document that captures the ingenuity and resourcefulness of early hackers navigating the evolving landscape of telecommunications."
+}

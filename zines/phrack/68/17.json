@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x44, Phile #0x11 of 0x13",
+  "title": "Abusing Netlogon to steal an Active Directory's secrets",
+  "authors": "the p1ckp0ck3t",
+  "date": "Not specified",
+  "historical_context": "This article discusses techniques relevant to exploiting vulnerabilities in Active Directory, particularly through the Netlogon protocol, which has been a significant focus in security research and penetration testing.",
+  "target_audience": "Hackers, security professionals, penetration testers, and anyone interested in Active Directory security.",
+  "short_summary": "The article presents a method to exploit the Netlogon replication mechanism to extract secrets from Active Directory, specifically focusing on the use of Samba 4 and a tool called S4 to retrieve hashed passwords without triggering alarms from security software.",
+  "summary": "In this article, the author introduces a novel technique for extracting secrets from Active Directory by leveraging the Netlogon replication mechanism. The method circumvents traditional password dumping tools that are often detected by antivirus software, making it a stealthy alternative for attackers. The author emphasizes the importance of stability and stealthiness when targeting Domain Controllers (DCs), as crashing a DC can alert administrators to suspicious activity. The paper details the inner workings of the Samba 4 project, which allows Unix systems to integrate with Active Directory, and discusses how to utilize the NetrDatabaseSync function to retrieve user credentials securely. The author also introduces a tool named S4, which implements these techniques, allowing attackers to extract hashed passwords from the Active Directory without raising alarms. The article concludes with a comparison of the effectiveness of this method against Windows 2008 Domain Controllers, highlighting the evolution of security protocols and the need for continuous adaptation in hacking techniques."
+}

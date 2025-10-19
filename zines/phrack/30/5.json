@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 30, File #5 of 12",
+  "title": "The DECWRL Mail Gateway",
+  "authors": "Dedicated Link",
+  "date": "September 20, 1989",
+  "historical_context": "This article discusses the DECWRL mail gateway, a significant component in the early days of electronic mail systems, connecting various networks including DECNET and the Internet.",
+  "target_audience": "Hackers, network administrators, security professionals, and anyone interested in the history of electronic mail systems.",
+  "short_summary": "The article provides an overview of the DECWRL mail gateway, detailing its operation, how to send mail through it, and the various networks it connects. It emphasizes the importance of responsible usage to maintain network integrity.",
+  "summary": "In addition to the operational details, the article delves into the complexities of addressing mail across various networks, explaining the differences between Internet and UUCP addressing conventions. It also touches on the historical context of mail systems, illustrating how DECWRL fits into the broader landscape of electronic communication in the late 1980s. The author provides practical examples of how to format addresses correctly for successful mail delivery, ensuring that users can navigate the intricacies of the system effectively. Overall, this article serves as both a technical guide and a historical document, reflecting the evolution of electronic mail during a pivotal time in computing."
+}

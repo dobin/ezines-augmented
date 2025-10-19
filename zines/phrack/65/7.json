@@ -1,0 +1,14 @@
+{
+  "reference": "Volume 0x0c, Issue 0x41, Phile #0x07 of 0x0f",
+  "title": "System Management Mode Hack",
+  "authors": "BSDaemon, coideloko, D0nAnd0n",
+  "date": "March 29 2008",
+  "historical_context": "This article builds upon the earlier work of Duflot et al. regarding the exploitation of System Management Mode (SMM) in Intel processors, which was a novel approach to circumvent operating system security.",
+  "target_audience": "Security researchers, hackers, and professionals interested in low-level system security and malware development.",
+  "short_summary": "The article explores the exploitation of Intel's System Management Mode (SMM) to create hardware-protected malware. It details the architecture of SMM, challenges in manipulating it, and provides practical examples and a library for SMM manipulation.",
+  "summary": "This article delves into the intricacies of Intel's System Management Mode (SMM), a privileged mode designed primarily for power management but also capable of being exploited for malicious purposes. The authors explain the architecture of SMM, including its memory structure (SMRAM), the SMI handler, and how to trigger SMI interrupts. They build upon the foundational work of Duflot, expanding on the techniques to manipulate SMM for creating rootkits and other forms of malware. The authors discuss challenges such as cache-originated overwrites and SMM locking by modern BIOS, providing insights into how to bypass these obstacles. They also introduce a library for SMM manipulation, offering functions to open, close, and lock SMRAM, as well as enabling SMI globally. Practical examples illustrate how to insert malicious code into SMM, demonstrating the potential for deep system-level exploitation that remains relevant in today's security landscape.",
+  "library": {
+    "name": "SMM Manipulation Library",
+    "description": "A library that provides functions to manipulate SMM-related features, including opening and locking SMRAM, enabling SMI, and writing to the APM counter to generate an SMI."
+  }
+}

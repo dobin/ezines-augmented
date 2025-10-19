@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Decrypting TBSCAN32.EXE",
+  "authors": "Rajaat",
+  "date": "November 1998",
+  "historical_context": "This article was published during a time when software encryption was becoming more common, and understanding how to reverse engineer such protections was a valuable skill among hackers and security researchers.",
+  "target_audience": "Hackers, security researchers, software developers interested in reverse engineering.",
+  "short_summary": "This article provides a quick method to decrypt the TBSCAN32.EXE file by explaining the encryption method used and offering a simple code snippet for decryption.",
+  "summary": "In this brief article, Rajaat outlines a straightforward technique to decrypt the TBSCAN32.EXE executable. The author notes that while the encryption method employed by TBSCAN is not foolproof, it is based on standard techniques that can be easily understood and replicated. The article emphasizes the importance of knowing how the encryption works to successfully decrypt the file. Rajaat provides a code snippet written in Pascal that demonstrates the decryption process, detailing how to manipulate the file's binary data using bitwise operations and assembly language for efficiency.\n\nThe provided code reads the encrypted executable into a buffer, applies a series of XOR operations, and performs a bit rotation to reverse the encryption. This practical example serves as a valuable resource for those interested in reverse engineering and understanding software protections. The article is a testament to the hacker ethos of sharing knowledge and techniques, making it relevant for both historical context and ongoing discussions in the field of computer security."
+}

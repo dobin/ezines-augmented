@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-four, File #9 of 11",
+  "title": "Advanced Modem-Oriented BBS Security",
+  "authors": "Laughing Gas and Dead Cow",
+  "date": "8/22/91",
+  "historical_context": "This article was written during the early 1990s when Bulletin Board Systems (BBS) were popular, and security measures were becoming increasingly important as more users accessed these systems.",
+  "target_audience": "Hackers, BBS operators, security professionals, and those interested in modem technology.",
+  "short_summary": "This article provides a guide on implementing advanced security measures for Bulletin Board Systems (BBS) using modem commands. It details how to set up an access code system that requires users to know a specific code to connect, enhancing security against unauthorized access.",
+  "summary": "In 'Advanced Modem-Oriented BBS Security', the authors Laughing Gas and Dead Cow present a comprehensive guide for BBS operators looking to enhance their system's security through modem commands. The article explains how to configure a BBS so that callers must append a specific access code to their dialing string, which can be dynamically generated based on the date or other patterns. This method not only restricts access but also allows for various configurations, such as different codes for different user classes, enhancing the overall security framework of the BBS environment.\n\nThe authors delve into the technical aspects of modem commands, specifically focusing on Hayes 'AT' commands, and provide detailed examples of how these commands can be utilized to establish a secure connection. They also discuss the limitations of certain modems and offer alternative methods for users with less sophisticated equipment. Furthermore, the article touches on the potential for tone detection using modems, suggesting that this capability could be exploited for various purposes, including deciphering tones from recorded calls. Overall, this article serves as a valuable resource for anyone interested in BBS security and modem technology, showcasing innovative techniques that were ahead of their time."
+}

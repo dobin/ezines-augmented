@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "WinZip DOS Attack",
+  "authors": "Rajaat",
+  "date": "December, 1999",
+  "historical_context": "This article was written during a time when Denial of Service (DoS) attacks were becoming more prevalent, and antivirus software was starting to be integrated into corporate networks. The techniques discussed reflect the security landscape of the late 1990s.",
+  "target_audience": "Hackers, security researchers, and virus writers.",
+  "short_summary": "The article discusses a method to exploit vulnerabilities in WinZip and PKZIP for DOS to create a Denial of Service attack that can crash Windows systems. It highlights the potential impact on antivirus software and network security.",
+  "summary": "In 'WinZip DOS Attack', Rajaat reveals a method to exploit vulnerabilities in WinZip and PKZIP for DOS that can lead to a Denial of Service (DoS) attack on Windows systems. The author describes how a malformed ZIP file can cause a system to hang when unzipped, particularly when processed by antivirus software that relies on WinZip APIs for unpacking. This technique, while seemingly simplistic, poses a significant threat to network security, especially in environments where antivirus measures are critical for protecting against malware. Rajaat emphasizes that the attack could potentially take down firewalls or mail servers that scan incoming ZIP files, making it a relevant concern for security professionals at the time. \n\nThe article provides a step-by-step guide on how to create a malformed ZIP file using basic tools like PKZIP and a hex editor. By manipulating the file names within the ZIP archive, the author demonstrates how to craft an archive that exploits the way certain software handles reserved device names. Although the author notes that further testing is needed, particularly on different Windows platforms, the implications of this attack method are clear: it serves as a reminder of the vulnerabilities that can exist in widely used software and the importance of robust security measures in corporate environments."
+}

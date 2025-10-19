@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "APME.Demo.620 - Alpha PolyMorphic Engine v 1.04b",
+  "authors": "Darkman/29A",
+  "date": "Not specified",
+  "historical_context": "This article discusses a polymorphic engine, a significant concept in malware development, particularly during the early 1990s when malware authors began using such techniques to evade detection.",
+  "target_audience": "Security researchers, malware analysts, and programmers interested in assembly language and polymorphic techniques.",
+  "short_summary": "The article presents the Alpha PolyMorphic Engine (APME), a 620-byte generator that creates a new copy of itself upon execution. It details the assembly code for the engine and its functionality, including how it employs polymorphism to evade detection.",
+  "summary": "In this article, Darkman/29A dissects the Alpha PolyMorphic Engine (APME), a compact 620-byte generator designed to produce polymorphic copies of itself. The engine utilizes the Alpha PolyMorphic Engine v 1.04b, which is capable of generating code that changes its appearance while maintaining the same functionality. This technique is crucial for malware authors aiming to avoid detection by antivirus software, as it allows the generated code to appear different with each execution. The article includes detailed assembly code, providing insights into the inner workings of the engine, including how it manages memory and generates encrypted code segments.\n\nThe author also explains the structure of the code, including the use of garbage instructions to further obfuscate the generated output. By employing a combination of encryption and randomization, the APME demonstrates a sophisticated approach to malware development that was particularly relevant during its time. This article serves as a valuable resource for those looking to understand the principles of polymorphism in malware, as well as for programmers interested in assembly language and low-level programming techniques."
+}

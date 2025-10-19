@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 2, Issue 2, Phile #6 of 11",
+  "title": "Cornell Students Arrested for MBDF Virus",
+  "authors": "Mark Anbinder, Linda Grace-Kobas",
+  "date": "February 25, 1992",
+  "historical_context": "This incident follows the infamous Morris worm case from 1988, highlighting the ongoing issues of computer security and virus propagation in academic environments.",
+  "target_audience": "Security professionals, hackers, computer science students, and those interested in the history of computer viruses.",
+  "short_summary": "Two Cornell University students were arrested for allegedly creating and distributing the MBDF virus, which infected Macintosh computers worldwide. The article discusses the details of the arrest, the nature of the virus, and its implications for computer security.",
+  "summary": "In February 1992, two Cornell University sophomores, David Blumenthal and Mark Pilgrim, were arrested for allegedly creating and disseminating the MBDF virus, which had infected Macintosh computers globally. The virus was embedded in three games that were uploaded to public archives, leading to widespread infections as users downloaded the software. The university's vice president for information technologies, M. Stuart Lynn, emphasized the seriousness of the incident, noting that the virus caused unusual behavior and system crashes but did not appear to have malicious intent. The students were charged with second-degree computer tampering, a misdemeanor, and were held on bail as further investigations were anticipated, including potential federal involvement due to the nature of the crime. This incident drew parallels to the earlier Morris worm case, underscoring the ongoing challenges in managing computer security within academic institutions.",
+  "additional_notes": "The article provides insights into the early days of computer viruses and the legal ramifications of their creation and distribution, making it a relevant read for those studying the evolution of cybersecurity."
+}

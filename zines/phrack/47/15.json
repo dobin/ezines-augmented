@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Six, Issue Forty-Seven, File 15 of 22",
+  "title": "Substance's Complete Guide To Hacking Meridian Mail Systems (VMB) [PART 1]",
+  "authors": "Substance @ Another Way of Life",
+  "date": "Feb 1st, 1995",
+  "historical_context": "This article reflects the hacking culture of the mid-90s, focusing on exploiting vulnerabilities in voice mail systems, particularly Meridian Mail. It highlights the ease with which default passwords can be exploited, a common theme in early hacking literature.",
+  "target_audience": "Hackers, phreakers, and security professionals interested in telecommunication vulnerabilities.",
+  "short_summary": "This article serves as a practical guide for hacking Meridian Mail systems, detailing methods to identify and exploit vulnerabilities, particularly the use of default passwords. It provides step-by-step instructions for accessing voice mail boxes and making free calls through these systems.",
+  "summary": "In this first part of the guide, Substance introduces readers to Meridian Mail Box Systems, emphasizing their prevalence and the common security flaw of using default passwords. The article outlines techniques for identifying Meridian systems by their distinctive prompts and provides a list of potential mailbox numbers to try. Substance encourages readers to experiment with various combinations to gain access to these systems, highlighting the ease with which many users leave their passwords unchanged. \n\nThe guide continues with detailed instructions on how to navigate the Meridian system once access is gained, including options for listening to messages, forwarding mail, and changing greetings. The ultimate goal is to exploit the outdialing feature, allowing users to make free calls. Substance also shares a method for manipulating direct VMBs to make third-party billing calls, showcasing the creative and often mischievous spirit of the hacking community at the time. The article is a testament to the vulnerabilities present in telecommunication systems and serves as a call to action for aspiring hackers to explore and exploit these weaknesses."
+}

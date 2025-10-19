@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Explanation of registry shell spawning",
+  "authors": "Malfunction",
+  "date": "",
+  "historical_context": "This article discusses techniques relevant to early virus creation and exploitation of Windows registry settings, reflecting the hacker culture of the 1990s.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article explains the concept of registry shell spawning, a technique used to execute malicious code by manipulating Windows registry entries. It details how to set up a spawning file that infects executable files upon execution.",
+  "summary": "In 'Explanation of registry shell spawning', Malfunction delves into a method for executing malicious code by altering the Windows registry. The key focus is on the registry entry HKEY_CLASSES_ROOT\\exefile\\shell\\open\\command, which determines how executable files are launched. By changing this entry to point to a custom spawner executable, the author illustrates how every time an executable is run, the spawner can infect it before execution. The article emphasizes the importance of using the CreateProcessA API to avoid recursive execution loops that can occur with other APIs like WinExec or ShellExecuteA, which also rely on the modified registry entry.\n\nThe article further explores two primary methods for implementing registry shell spawning: carrying a self-created spawner within a virus or using an already infected file as the spawner. Malfunction provides a detailed walkthrough of how to set up the spawning mechanism, including handling command-line parameters and ensuring that the spawning file can infect other executables without causing execution errors. The author also shares practical tips for safely testing the virus, highlighting the risks of inadvertently infecting system tools like regedit.exe. Overall, this piece serves as a technical guide for aspiring malware developers, showcasing a clever exploitation technique that remains relevant in discussions of malware behavior and registry manipulation."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Ten, Phile #7 of 9",
+  "title": "Automatic Number Identification",
+  "authors": "Doom Prophet and Phantom Phreaker",
+  "date": "Jul 12 1986",
+  "historical_context": "This article discusses the implementation and workings of Automatic Number Identification (ANI) systems in telephone networks during the mid-1980s, a time when telecommunication technology was rapidly evolving.",
+  "target_audience": "Telecommunications engineers, security professionals, hackers interested in telephony, and phreakers.",
+  "short_summary": "The article provides a detailed overview of Automatic Number Identification (ANI) systems, explaining how they function to identify calling numbers in telephone networks. It covers the technical components involved and the process of recording call details for billing purposes.",
+  "summary": "In 'Automatic Number Identification', Doom Prophet and Phantom Phreaker delve into the intricacies of ANI systems, which automate the identification of a calling subscriber's number in telephone networks. The authors explain how ANI integrates with Centralized Automatic Message Accounting (CAMA) systems, detailing the components such as the directory number network, identifier circuits, and outpulser links that facilitate this process. They highlight the evolution from manual toll charge tracking to automated systems, emphasizing the efficiency gains achieved through ANI technology.\n\nThe article outlines the operational flow of an ANI system during a toll call, illustrating how the calling number is identified and transmitted to a tandem office for billing. The authors also discuss the technical challenges that can arise, such as Automatic Number Identification Failure (ANIF), and the fallback mechanisms like Operator Number Identification (ONI). By providing a comprehensive look at the technical workings of ANI, this article serves as a valuable resource for those interested in the historical context and technical aspects of telecommunication systems."
+}

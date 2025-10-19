@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win32 Bait Detection",
+  "authors": "SnakeByte",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early 2000s hacker culture, focusing on the development of polymorphic viruses and the methods used to evade antivirus detection.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article discusses various techniques to detect 'bait' files used by antivirus programs to identify polymorphic viruses. It provides a detailed analysis of file characteristics that can help malware developers avoid detection.",
+  "summary": "In 'Win32 Bait Detection', SnakeByte explores the intricacies of identifying bait files—files created by antivirus vendors to trap polymorphic viruses. The author emphasizes the importance of using multiple detection checks rather than relying on a single criterion. He outlines eight key characteristics to consider when developing a polymorphic virus, including file size, imported APIs, used DLLs, data size, code size, resources, filename patterns, and checksum generation. Each of these factors can help distinguish legitimate files from bait files, thereby enhancing the stealth of the malware.",
+  "summary_details": "The article begins with a brief introduction to bait files, explaining their purpose in antivirus detection. SnakeByte then elaborates on specific checks, such as ensuring a file has a minimum size of 40 KB and imports a sufficient number of APIs. He notes that typical applications use multiple DLLs and resources, while bait files often lack these features. The author also discusses the significance of file naming conventions and the potential for repeating patterns in generated bait files. Finally, he suggests generating checksums over the virus code to create unique variants that may evade detection, highlighting the ongoing cat-and-mouse game between malware developers and antivirus solutions."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x0d of 0x12",
+  "title": "Linux/390 shellcode development",
+  "authors": "johnny cyberpunk",
+  "date": "Not specified",
+  "historical_context": "This article discusses shellcode development for Linux running on IBM mainframes, specifically the s/390 architecture, which was gaining traction in the late 1990s.",
+  "target_audience": "Hackers, security researchers, and those interested in exploit development on mainframe systems.",
+  "short_summary": "The article provides a comprehensive guide to developing shellcode for Linux/390, covering the architecture, registers, instruction set, and practical examples of creating a bind shell.",
+  "summary": "In this article, johnny cyberpunk delves into the intricacies of writing shellcode for Linux/390, a version of Linux designed for IBM's mainframe architecture. The piece begins with a historical overview of Linux on s/390, detailing its development and the unique characteristics of the architecture, including its registers and instruction set. The author emphasizes the importance of understanding these elements for effective shellcode development, particularly in exploiting vulnerabilities in services running on mainframes owned by large organizations such as governments and insurance companies.\n\nThe article progresses to practical examples, illustrating how to create a bind shell using native assembly code. It addresses common challenges, such as avoiding the use of the 0x00 and 0x0a bytes in shellcode, which can disrupt execution. The author provides detailed code snippets and explanations, making it accessible for readers with a foundational understanding of assembly language and system calls. This work serves as both an educational resource and a practical guide for those looking to explore the realm of mainframe exploitation."
+}

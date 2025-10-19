@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "AVP-Aids",
+  "authors": "Tcp/29A",
+  "date": "6-April-96",
+  "historical_context": "This article was written during a time when antivirus software was becoming more prevalent, and the ability to create viruses was being explored by hackers. The AVP antivirus software was popular, and this article demonstrates its vulnerabilities.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article discusses the creation of a virus named AVP-Aids that exploits the AVP antivirus software's capabilities. It details how to use the AVPRO routine editor to write detection and disinfection routines, which can also be manipulated to create malware.",
+  "summary": "In 'AVP-Aids', Tcp/29A explores the vulnerabilities of the AVP antivirus software, highlighting its ability to allow users to write their own detection routines. This feature, while beneficial for legitimate users, can also be exploited by malicious actors to create viruses. The author provides a detailed walkthrough on how to use the AVPRO routine editor included with AVP to craft a virus that not only evades detection but also actively deletes competing antivirus software like F-Prot and TBScan. The virus, named AVP-Aids, is designed to weaken system defenses, allowing other viruses to infect the system without detection.\n\nThe article includes specific assembly code examples and instructions for compiling the virus, showcasing the technical skills required to manipulate the AVP software. Tcp/29A emphasizes that the creativity of the hacker is the only limit when it comes to developing malware using the AVP API. This piece serves as both a technical guide and a commentary on the ongoing cat-and-mouse game between antivirus developers and virus creators, making it a relevant read for those interested in the history of malware development and antivirus software vulnerabilities."
+}

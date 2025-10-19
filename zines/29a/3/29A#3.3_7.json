@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Advanced ZCME/32Bit [Win95]",
+  "authors": "Z0MBiE/29A",
+  "date": "24-07-98",
+  "historical_context": "This article is from the late 1990s, a time when Windows 95 was prevalent and malware development was becoming more sophisticated. It reflects the early days of virus creation and the techniques used to infect executable files.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article discusses the development of a Windows 95 virus called ZCME, detailing its architecture, infection techniques, and the use of a permutating engine to evade detection.",
+  "summary": "In 'Advanced ZCME/32Bit [Win95]', the author Z0MBiE/29A presents a detailed examination of a Windows 95 virus, focusing on its unique permutating engine designed to modify its code structure to avoid detection by antivirus software. The article outlines the architecture of the virus, including its use of the PE (Portable Executable) format, and provides insights into the various components involved in its operation, such as file I/O, command line parsing, and random number generation for obfuscation. The author emphasizes the importance of understanding these techniques for both malware development and defense strategies.\n\nThe article also includes code snippets that illustrate the virus's functionality, such as its ability to infect other executable files by modifying their headers and appending its own code. The discussion of the disassembly process and the manipulation of assembly language instructions highlights the technical depth of the content, making it a valuable resource for those studying malware behavior and the evolution of computer viruses. Overall, this piece serves as both a historical document and a technical guide for understanding early virus development techniques."
+}

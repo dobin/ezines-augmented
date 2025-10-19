@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #007 of 11",
+  "title": "Virus Spotlight: 3APA3A (ZARAZA)",
+  "authors": "Igor G. Muttik",
+  "date": "October 1994",
+  "historical_context": "This article discusses the 3APA3A virus, which was notable for being one of the first kernel infectors, emerging from Russia during a time when viruses were becoming a significant concern in the computing community.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The 3APA3A virus, discovered in Moscow, is a unique kernel infector that targets DOS core files. This article details its infection strategy, internal structure, and methods of evasion, highlighting its polymorphic nature and the challenges it poses for detection and removal.",
+  "summary": "The 3APA3A virus, also known as ZARAZA, represents a new class of malware known as kernel infectors. Unlike typical boot sector viruses, 3APA3A infects the DOS kernel file (IO.SYS or IBMBIO.COM) on hard disks, allowing it to remain active even after the system is rebooted. The virus is multipartite, infecting both floppy disks and hard drives, and employs a unique method of infection that involves modifying the root directory and creating a hidden copy of the original IO.SYS file. This clever design allows it to evade detection by many antivirus programs of the time, as the infected file is marked with a volume-label bit, making it invisible to standard file operations.\n\nThe article provides a detailed disassembly of the virus, explaining its internal structure and infection strategy. It describes how the virus uses polymorphic techniques to encrypt its code, making it harder to detect and analyze. The author discusses the virus's behavior during system boot, its memory usage, and the specific conditions under which it can infect a system. Additionally, the article outlines potential methods for removing the virus, emphasizing the challenges posed by its design. Overall, this piece serves as a critical resource for understanding early kernel infectors and the evolving landscape of computer viruses."
+}

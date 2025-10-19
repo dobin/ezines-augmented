@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x44, Phile #0x0d of 0x13",
+  "title": "Exploiting VLC",
+  "authors": "huku | argp",
+  "date": "Not specified",
+  "historical_context": "This article is part of a broader exploration of exploitation techniques in the context of modern security mechanisms like ASLR and NX, focusing on VLC media player vulnerabilities.",
+  "target_audience": "Security researchers, exploit developers, and those interested in vulnerability analysis.",
+  "short_summary": "This article presents a detailed case study on exploiting heap overflow vulnerabilities in VLC's MP4 demuxer and Real Media parser. It discusses the intricacies of memory management and the exploitation process, providing insights into the development of reliable exploits.",
+  "summary": "The article begins by discussing the challenges exploit developers face due to modern security mechanisms such as ASLR and NX. It emphasizes the importance of understanding memory management, particularly in the context of the jemalloc allocator used by VLC. The authors detail two specific vulnerabilities: one in the MP4 demuxer and another in the Real Media parser, both of which involve heap overflows. The MP4 vulnerability arises from incorrect memory allocation, leading to potential control over adjacent memory regions. The authors provide a step-by-step guide on how to exploit these vulnerabilities, including techniques for memory disclosure and the construction of reliable exploits that do not require user intervention for address discovery. They conclude with a demonstration of their exploit, showcasing the practical implications of their findings and the ongoing relevance of such vulnerabilities in modern software."
+}

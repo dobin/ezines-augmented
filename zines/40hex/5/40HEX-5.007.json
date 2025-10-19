@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 1, Phile #7 of 11",
+  "title": "HOW TO MODIFY A VIRUS SO SCAN WON'T CATCH IT PART II",
+  "authors": "Dark Angel",
+  "date": "",
+  "historical_context": "This article is part of a series on virus modification techniques, reflecting the hacker culture of the early 1990s where understanding and manipulating malware was a common practice among hackers.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "This article provides advanced techniques for modifying computer viruses to evade detection by antivirus scanning tools. It builds on previous methods and introduces more efficient strategies for isolating scan strings.",
+  "summary": "In this continuation of Hellraiser's previous work, Dark Angel delves into the intricate process of modifying a virus to avoid detection by antivirus software. The article outlines a methodical approach, starting with the creation of a carrier file and the infection process. The key innovation presented is the identification of the encryption mechanism within the virus, which allows for a more efficient isolation of the scan string. By using tools like V Communication's Sourcer 486 or even the DEBUG utility, hackers can trace through the virus code to locate unencrypted sections, significantly speeding up the modification process.\n\nDark Angel also introduces alternative methods for detecting scan codes, such as breaking the infected file into overlapping chunks to quickly identify the presence of scan strings. This practical advice is aimed at those looking to enhance their skills in virus modification, emphasizing the importance of understanding the underlying mechanisms of malware. The article serves as a valuable resource for hackers and security researchers interested in the technical aspects of virus evasion techniques."
+}

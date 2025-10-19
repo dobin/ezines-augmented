@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Widowmaker V1.02",
+  "authors": "ED-209/Immortal Riot",
+  "date": "July/August-1998",
+  "historical_context": "This article discusses a highly advanced polymorphic virus targeting MS-DOS systems, reflecting the hacker culture of the late 1990s when viruses were a significant concern for computer security.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "Widowmaker V1.02 is a multi-partite, stealthy, slow-polymorphic virus designed to infect boot, COM, and EXE files on MS-DOS systems. It employs advanced techniques to evade detection and can cause significant data corruption.",
+  "summary": "Widowmaker V1.02, crafted by ED-209/Immortal Riot, is a sophisticated multi-partite virus that infects various file types on MS-DOS compatible systems. Its stealth capabilities allow it to avoid detection by antivirus programs, employing techniques such as true redirection stealth and complex opcode manipulation. The virus can infect files during execution and utilizes a slow-polymorphic engine to generate unique decryptors for each infected file, making it difficult for signature-based detection methods to identify it. The payload of Widowmaker is particularly destructive, capable of random data corruption and system-wide damage if it detects that it is being debugged or cleaned by antivirus software. The author warns against experimenting with the virus due to its highly destructive nature, emphasizing the potential for irreversible data loss. This article serves as both a technical guide and a cautionary tale about the capabilities of malware during a time when computer security was becoming increasingly critical."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "VxD-infection",
+  "authors": "Z0MBiE/29A",
+  "date": "1998",
+  "historical_context": "This article discusses the methods for infecting VxDs (Virtual Device Drivers) on Windows 95 systems, a topic relevant during the late 1990s when computer viruses were becoming more sophisticated.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article outlines a method for infecting VxDs, detailing the infection process and the technical requirements for successful implementation. It also touches on the challenges faced when attempting to manipulate VxD files.",
+  "summary": "In 'VxD-infection', Z0MBiE/29A presents a technical exploration of how to infect Virtual Device Drivers (VxDs) on Windows 95 systems. The article describes a method reminiscent of the Navrhar virus, focusing on finding the DDEEntry, checking the CODE section for specific attributes, and ensuring there is enough free space for the infection. The author provides a detailed breakdown of the infection process, including patching control procedures to redirect execution to the virus code. The article emphasizes the importance of understanding the VxD structure and the limitations posed by packed data tables, which complicate the infection process. Z0MBiE also hints at future research directions, indicating a commitment to further exploration of VxD manipulation techniques. This piece serves as both a historical document and a technical guide for those interested in the intricacies of early malware development."
+}

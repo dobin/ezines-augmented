@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 22, File 10 of 12",
+  "title": "Computer Network Disrupted By 'Virus'",
+  "authors": "John Markoff",
+  "date": "November 3, 1988",
+  "historical_context": "This article discusses the first major computer virus incident in history, which raised awareness about computer security vulnerabilities.",
+  "target_audience": "Security professionals, computer scientists, hackers, and anyone interested in the history of computer security.",
+  "short_summary": "The article details a significant incident where a computer virus disrupted the Department of Defense's data network, highlighting vulnerabilities in computer systems and the potential for widespread chaos caused by malicious software.",
+  "summary": "The article provides an in-depth look at the mechanics of the virus, which exploited vulnerabilities in the Arpanet and Milnet networks. It was designed to replicate itself and spread without detection, showcasing the potential dangers of poorly understood software capabilities. The incident prompted immediate responses from computer security experts and military officials, who recognized the urgent need to address security flaws that allowed such an event to occur. The chaos caused by the virus served as a wake-up call for the computing community, highlighting the importance of robust security practices and the potential for future incidents if awareness was not heightened."
+}

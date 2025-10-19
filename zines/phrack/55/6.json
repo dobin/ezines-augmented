@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #6 of 19",
+  "title": "The Libnet Reference Manual v.01",
+  "authors": "route <route@infonexus.com>",
+  "date": "09.09.99",
+  "short_summary": "This article provides a comprehensive guide to Libnet, a C library designed for packet injection and network programming. It covers its design, functionality, and practical applications in network programming and security.",
+  "summary": "The Libnet Reference Manual serves as a detailed introduction to Libnet, a library that simplifies the process of creating and injecting network packets in C. The author discusses the motivation behind Libnet's creation, emphasizing the need for a straightforward API that abstracts the complexities of low-level network programming. The manual outlines the library's architecture, including its modular design, memory management, and error handling mechanisms. It also highlights the importance of Libnet in developing security-related tools and applications, showcasing its utility in crafting exploits and network tools.\n\nThe article further explains the operational steps required to use Libnet effectively, detailing the order of operations for packet injection, including network initialization, memory allocation, packet construction, checksum calculation, and the actual injection of packets into the network. The author provides insights into the library's functions, illustrating how developers can leverage Libnet to build robust network applications while avoiding common pitfalls associated with raw socket programming. Overall, this manual is an essential resource for anyone interested in network programming and security, providing both theoretical knowledge and practical guidance."
+}

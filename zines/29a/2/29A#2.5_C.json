@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Baby Bug",
+  "authors": "Tcp/29A",
+  "date": "1997",
+  "historical_context": "This article is from the late 1990s, a time when computer viruses were becoming more prevalent and the hacker community was actively exploring the implications of malware.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in virus development and DOS systems.",
+  "short_summary": "The article presents a 407-byte TSR (Terminate and Stay Resident) EXE infector virus called 'Baby Bug'. It details the coding process and provides the assembly code for the virus, showcasing unique techniques for infecting EXE files.",
+  "summary": "In 'Baby Bug', Tcp/29A introduces a compact 407-byte virus designed to infect DOS EXE files. The author expresses frustration over the non-publication of a previous virus and seizes the opportunity to create this new one during a delay in the magazine's release. The article includes the complete assembly code, demonstrating clever techniques to manipulate the EXE header and ensure the virus remains small and efficient. The virus employs a resident check to avoid multiple infections and utilizes DOS interrupts to perform file operations, showcasing a deep understanding of low-level programming and the DOS environment.\n\nThe coding process is meticulously outlined, with comments explaining each step, from memory allocation to the infection mechanism. Tcp/29A's approach reflects the hacker ethos of the time, emphasizing creativity and technical skill in virus development. This article serves as both a technical guide for aspiring virus writers and a historical artifact illustrating the evolution of malware in the hacker community."
+}

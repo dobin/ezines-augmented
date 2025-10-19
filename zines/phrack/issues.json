@@ -1,0 +1,362 @@
+[
+  {
+    "Issue": 1,
+    "ReleaseDate": "1985-11-17",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 2,
+    "ReleaseDate": "1986-01-01",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 3,
+    "ReleaseDate": "1986-02-01",
+    "Editor": "Cheap Shades"
+  },
+  {
+    "Issue": 4,
+    "ReleaseDate": "1986-03-13",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 5,
+    "ReleaseDate": "1986-04-18",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 6,
+    "ReleaseDate": "1986-06-10",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 7,
+    "ReleaseDate": "1986-09-25",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 8,
+    "ReleaseDate": "1986-11-01",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 9,
+    "ReleaseDate": "1986-12-01",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 10,
+    "ReleaseDate": "1987-01-01",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 11,
+    "ReleaseDate": "1987-02-17",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 12,
+    "ReleaseDate": "1987-03-29",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 13,
+    "ReleaseDate": "1987-04-01",
+    "Editor": "Taran King"
+  },
+  {
+    "Issue": 14,
+    "ReleaseDate": "1987-07-28",
+    "Editor": "Knight Lightning"
+  },
+  {
+    "Issue": 15,
+    "ReleaseDate": "1987-08-07",
+    "Editor": "Shooting Shark"
+  },
+  {
+    "Issue": 16,
+    "ReleaseDate": "1987-11-01",
+    "Editor": "Elric of Imrryr"
+  },
+  {
+    "Issue": 17,
+    "ReleaseDate": "1988-04-07",
+    "Editor": "Shooting Shark"
+  },
+  {
+    "Issue": 18,
+    "ReleaseDate": "1988-07-06",
+    "Editor": "Crimson Death"
+  },
+  {
+    "Issue": 19,
+    "ReleaseDate": "1988-09-01",
+    "Editor": "Crimson Death"
+  },
+  {
+    "Issue": 20,
+    "ReleaseDate": "1988-10-12",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 21,
+    "ReleaseDate": "1988-11-04",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 22,
+    "ReleaseDate": "1988-12-23",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 23,
+    "ReleaseDate": "1989-01-25",
+    "Editor": "Taran King & Knight Lightning"
+  },
+  {
+    "Issue": 24,
+    "ReleaseDate": "1989-02-25",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 25,
+    "ReleaseDate": "1989-03-29",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 26,
+    "ReleaseDate": "1989-04-25",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 27,
+    "ReleaseDate": "1989-05-20",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 28,
+    "ReleaseDate": "1989-07-10",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 29,
+    "ReleaseDate": "1989-11-17",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 30,
+    "ReleaseDate": "1989-12-24",
+    "Editor": "Knight Lightning & Taran King"
+  },
+  {
+    "Issue": 31,
+    "ReleaseDate": "1990-05-28",
+    "Editor": "DH"
+  },
+  {
+    "Issue": 32,
+    "ReleaseDate": "1990-11-17",
+    "Editor": "Crimson Death"
+  },
+  {
+    "Issue": 33,
+    "ReleaseDate": "1991-09-15",
+    "Editor": "Dispater & Knight Lightning"
+  },
+  {
+    "Issue": 34,
+    "ReleaseDate": "1991-10-13",
+    "Editor": "Dispater & Crimson Death"
+  },
+  {
+    "Issue": 35,
+    "ReleaseDate": "1991-11-17",
+    "Editor": "Dispater & Crimson Death"
+  },
+  {
+    "Issue": 36,
+    "ReleaseDate": "1991-12-31",
+    "Editor": "Dr. Dude & Compaq Disk"
+  },
+  {
+    "Issue": 37,
+    "ReleaseDate": "1992-03-01",
+    "Editor": "Dispater"
+  },
+  {
+    "Issue": 38,
+    "ReleaseDate": "1992-04-26",
+    "Editor": "Dispater"
+  },
+  {
+    "Issue": 39,
+    "ReleaseDate": "1992-06-26",
+    "Editor": "Dispater"
+  },
+  {
+    "Issue": 40,
+    "ReleaseDate": "1992-08-01",
+    "Editor": "Dispater"
+  },
+  {
+    "Issue": 41,
+    "ReleaseDate": "1992-12-31",
+    "Editor": "Dispater"
+  },
+  {
+    "Issue": 42,
+    "ReleaseDate": "1993-03-01",
+    "Editor": "Erik Bloodaxe"
+  },
+  {
+    "Issue": 43,
+    "ReleaseDate": "1993-07-01",
+    "Editor": "Datastream Cowboy"
+  },
+  {
+    "Issue": 44,
+    "ReleaseDate": "1993-11-17",
+    "Editor": "Erik Bloodaxe"
+  },
+  {
+    "Issue": 45,
+    "ReleaseDate": "1994-03-30",
+    "Editor": "Erik Bloodaxe"
+  },
+  {
+    "Issue": 46,
+    "ReleaseDate": "1994-09-20",
+    "Editor": "Erik Bloodaxe"
+  },
+  {
+    "Issue": 47,
+    "ReleaseDate": "1995-04-15",
+    "Editor": "Erik Bloodaxe"
+  },
+  {
+    "Issue": 48,
+    "ReleaseDate": "1996-01-09",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 49,
+    "ReleaseDate": "1996-11-08",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 50,
+    "ReleaseDate": "1997-04-09",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 51,
+    "ReleaseDate": "1997-09-01",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 52,
+    "ReleaseDate": "1998-01-26",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 53,
+    "ReleaseDate": "1998-08-07",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 54,
+    "ReleaseDate": "1998-12-25",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 55,
+    "ReleaseDate": "1999-09-09",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 56,
+    "ReleaseDate": "2000-01-05",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 57,
+    "ReleaseDate": "2001-08-11",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 58,
+    "ReleaseDate": "2001-12-28",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 59,
+    "ReleaseDate": "2002-07-28",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 60,
+    "ReleaseDate": "2002-12-28",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 61,
+    "ReleaseDate": "2003-08-13",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 62,
+    "ReleaseDate": "2004-07-13",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 63,
+    "ReleaseDate": "2005-01-08",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 64,
+    "ReleaseDate": "2007-05-27",
+    "Editor": "The Circle of Lost Hackers"
+  },
+  {
+    "Issue": 65,
+    "ReleaseDate": "2008-11-04",
+    "Editor": "TCLH"
+  },
+  {
+    "Issue": 66,
+    "ReleaseDate": "2009-11-06",
+    "Editor": "TCLH"
+  },
+  {
+    "Issue": 67,
+    "ReleaseDate": "2010-11-17",
+    "Editor": "The Phrack Staff"
+  },
+  {
+    "Issue": 68,
+    "ReleaseDate": "2012-04-14",
+    "Editor": "The Phrack Staff"
+  },
+  {
+    "Issue": 69,
+    "ReleaseDate": "2016-05-06",
+    "Editor": "The Phrack Staff"
+  },
+  {
+    "Issue": 70,
+    "ReleaseDate": "2021-10-05",
+    "Editor": "The Phrack Staff"
+  },
+  {
+    "Issue": 71,
+    "ReleaseDate": "2024-08-19",
+    "Editor": "Phrack Staff"
+  },
+  {
+    "Issue": 72,
+    "ReleaseDate": "2025-08-19",
+    "Editor": "Phrack Staff"
+  }
+]

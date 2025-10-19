@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Seven, Issue Forty-Eight, File 3 of 18",
+  "title": "PC-NFS Bug",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article discusses a security vulnerability in PC-NFS, a network file system for PCs, which was prevalent in the early 1990s.",
+  "target_audience": "Security professionals, network administrators, hackers",
+  "short_summary": "The article reveals a critical security flaw in PC-NFS version 5.x that allows attackers to extract sensitive information from a victim's machine through ICMP packets. It provides technical details on how to exploit this vulnerability and suggests mitigations.",
+  "summary": "The article uncovers a significant security vulnerability in PC-NFS version 5.x, where sending a specially crafted ICMP ping packet can reveal sensitive information such as the hostname, authentication server, username, and even the user's password in clear text. This vulnerability is particularly concerning as it affects multiple network interface configurations and can lead to a complete compromise of the victim's credentials. The author notes that the only partial mitigation available is the use of NETLOGIN, which employs XOR encryption, but this is deemed insufficiently secure. To protect against this vulnerability, the author recommends adjusting the Maximum Transmission Unit (MTU) settings on external routers to a value of no greater than 1350 bytes until a patch is applied by Sun Microsystems. The article serves as a stark reminder of the importance of securing network protocols and the potential consequences of overlooked vulnerabilities.",
+  "additional_notes": "The article also includes technical commands and examples for exploiting the vulnerability, making it a valuable resource for security researchers and network administrators looking to understand and mitigate similar issues."
+}

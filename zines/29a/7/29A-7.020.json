@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "PHP Virus Writing Guide",
+  "authors": "Second Part To Hell/[rRlf]",
+  "date": "October-November 2003",
+  "historical_context": "This article was written during a time when PHP was becoming increasingly popular for web development, and the concept of writing viruses in PHP was relatively novel. The first PHP virus, PHP.Pirus, had been released a few years prior, and the author aimed to explore and expand upon this emerging area of malware.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "The PHP Virus Writing Guide provides a comprehensive overview of techniques for writing PHP viruses, including file infection methods, encryption, polymorphism, and entry point obscuring. The author shares practical examples and code snippets to illustrate these concepts, aiming to educate readers on the intricacies of PHP malware development.",
+  "summary": "In this detailed guide, Second Part To Hell/[rRlf] explores the art of writing PHP viruses, emphasizing the importance of understanding file infection methods such as prepending and appending code to target files. The article discusses cross-infection techniques that allow a virus to spread across different file types, including VBS and CMD files. The author provides practical code examples for each method, demonstrating how to effectively infect PHP files while avoiding detection by antivirus software.\n\nThe guide also delves into advanced topics like encryption and polymorphism, offering strategies to obfuscate virus code and evade detection. Techniques such as changing variable names, adding 'trash' code, and altering numerical values are discussed in detail. The author encourages creativity and experimentation in virus writing, ultimately aiming to inspire a new generation of PHP malware developers. The article concludes with acknowledgments to influential figures in the virus-writing community and a call for further innovation in PHP malware creation."
+}

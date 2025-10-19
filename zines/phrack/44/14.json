@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 14 of 27",
+  "title": "A Guide to Data General Corporation's AOS/VS System PART I",
+  "authors": "Herd Beast",
+  "date": "31-May-93",
+  "historical_context": "This article provides a comprehensive guide to the AOS/VS system, which was relatively obscure at the time of writing. It reflects the hacker culture's interest in exploring and documenting lesser-known systems.",
+  "target_audience": "Hackers, security professionals, and enthusiasts of vintage computing.",
+  "short_summary": "This article serves as a detailed guide to the AOS/VS system, covering its commands, security features, and user privileges. It aims to provide insights into navigating and exploiting the system effectively.",
+  "summary": "In this extensive guide, Herd Beast delves into the intricacies of the AOS/VS system, a platform that had limited documentation available at the time. The article begins with an introduction to the system's identification and login processes, highlighting the unique prompts and error messages that distinguish it from other systems like VMS. The author emphasizes the importance of understanding the command line interface (CLI), detailing the various privilege levels and commands available to users. The guide also touches on the significance of user profiles, which dictate access rights and system capabilities, and discusses the implications of password security, especially in the context of networking with Data General's XODIAC software.\n\nThe article further explores the structure of the AOS/VS system, including directory navigation, file management commands, and the use of macros for automation. It provides practical examples of commands and their syntax, making it a valuable resource for anyone looking to gain proficiency in AOS/VS. The author’s informal tone and humorous asides add a unique flavor to the technical content, making it both informative and engaging for readers interested in the hacker culture and vintage computing systems."
+}

@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Billy Belceb Virus Writing Guide 1.03",
+  "authors": "Billy Belceb",
+  "date": "December 16, 1998",
+  "historical_context": "This guide reflects the early days of virus writing, focusing on DOS viruses and the techniques used by virus writers at the time. It serves as a historical document showcasing the mindset and methods of the virus writing community in the late 1990s.",
+  "target_audience": "Aspiring virus writers, security researchers, and those interested in the history of malware development.",
+  "short_summary": "The 'Billy Belceb Virus Writing Guide' provides a comprehensive overview of virus writing techniques, including infection methods, stealth tactics, and anti-debugging strategies. It is aimed at beginners looking to understand the fundamentals of creating DOS viruses.",
+  "summary": "In this guide, Billy Belceb introduces readers to the world of virus writing, emphasizing the importance of understanding assembly language and the DOS operating system. The document covers various types of viruses, including COM and EXE infectors, and explains the mechanics of infection, payloads, and stealth techniques. Belceb also discusses the ethical considerations of virus writing, stating that the guide is intended for educational purposes only. He provides practical examples and code snippets, encouraging readers to experiment and develop their skills in virus creation. The guide also touches on advanced topics such as polymorphism and anti-heuristic techniques, making it a valuable resource for those interested in the technical aspects of malware development.",
+  "additional_notes": "The guide is written in a casual tone, reflecting the hacker culture of the time. It includes a mix of technical jargon and personal anecdotes, making it both informative and engaging for readers interested in the underground virus writing scene."
+}

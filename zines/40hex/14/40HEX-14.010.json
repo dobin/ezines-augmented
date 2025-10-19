@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #14 of 14",
+  "title": "Explosion's Mutation Machine",
+  "authors": "Vyvojar",
+  "date": "Not specified",
+  "historical_context": "This article discusses a polymorphic virus, which was a significant development in malware during the early 1990s. Polymorphic viruses were designed to evade detection by antivirus software by changing their code each time they infected a new file.",
+  "target_audience": "Malware developers, security researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The article presents a polymorphic virus that employs stealth techniques, including a two-phase decrypting routine and the ability to disable antivirus utilities. It also discusses compatibility issues with certain hardware.",
+  "summary": "In this article, Vyvojar introduces a polymorphic virus that showcases advanced stealth techniques. The virus operates by becoming memory-resident upon execution of an infected file and targets .com and .exe files during their execution or creation. The core of the virus's stealth lies in its polymorphic engine, which generates a two-phase decrypting routine. The first phase consists of various instructions, including a decryption phase, while the second phase is a cyclical decryptor. By modifying the second phase, users can potentially evade detection from antivirus scanners, making this virus particularly insidious.\n\nVyvojar also notes a compatibility issue with 486 processors, where the virus fails to execute correctly due to differences in the prefetch queue length compared to his home machine. He provides instructions for correcting this issue in the source code. The article includes detailed assembly code for the virus, demonstrating the technical complexity involved in its creation. This piece serves as both a technical guide and a historical artifact, reflecting the evolving landscape of malware and the ongoing cat-and-mouse game between virus developers and antivirus solutions."
+}

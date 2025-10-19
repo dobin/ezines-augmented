@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Zhengxi.7313 - The Most Complex Virus Ever",
+  "authors": "Unknown",
+  "date": "1995",
+  "historical_context": "This article discusses the Zhengxi virus, a complex DOS virus that was notable for its polymorphic and stealth capabilities. It was published in the context of the growing concern over computer viruses in the mid-1990s.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article presents the original source code of the Zhengxi virus, detailing its complex structure and infection methods. It provides insights into the virus's stealth techniques and its ability to evade detection by antivirus software.",
+  "summary": "The Zhengxi virus, considered one of the most complex DOS viruses, is dissected in this article, which includes its original source code. The author emphasizes the intricate nature of the virus, which employs polymorphic techniques to alter its appearance and evade detection. The source code is presented in its original form, allowing readers to see the author's comments and coding style, including some in Russian. The article explains how the virus infects various file types, including EXE, OBJ, and LIB files, and how it uses stealth techniques to manipulate system calls and hide its presence in memory. The author also discusses the virus's installation routine, which involves hooking into DOS interrupts to monitor file operations and ensure its survival against antivirus measures. Overall, this article serves as a detailed case study of a sophisticated piece of malware from the early days of computer viruses."
+}

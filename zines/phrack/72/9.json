@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Mapping IOKit Methods Exposed to User Space on macOS",
+  "authors": "Karol Mazurek (@karmaz95) of AFINE",
+  "date": "Not specified",
+  "historical_context": "This article is relevant in the context of macOS security research, particularly regarding the IOKit framework, which has been a frequent source of vulnerabilities despite ongoing hardening efforts.",
+  "target_audience": "Security researchers, macOS developers, and anyone interested in kernel-level programming and vulnerability research.",
+  "short_summary": "The article presents a structured methodology for mapping IOKit external methods accessible from user space on macOS. It combines static analysis and runtime enumeration to identify potential attack vectors and enhance fuzz testing precision.",
+  "summary": "This article outlines a comprehensive approach to mapping IOKit external methods that are exposed to user space on macOS. It begins with an introduction to IOKit, explaining its role as a communication framework between user space and the kernel, and highlights the importance of identifying accessible methods for vulnerability research. The author details a structured methodology that includes both static analysis of kernel extensions (KEXTs) and runtime enumeration of services, which together provide a complete picture of the attack surface. The article emphasizes the need for accurate enumeration during fuzz testing to ensure thorough coverage of potential vulnerabilities.\n\nThe guide is divided into sections that cover IOKit fundamentals, reconnaissance techniques, and practical tools for mapping external methods. It discusses the significance of user clients, the dispatch mechanism for method calls, and the importance of understanding argument sizes for successful method invocation. The author also provides insights into using tools like DTrace and LLDB for monitoring kernel interactions and gathering data for fuzzing. By the end of the article, readers are equipped with the knowledge to effectively map IOKit methods and improve their vulnerability research efforts on macOS."
+}

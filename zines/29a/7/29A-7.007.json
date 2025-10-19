@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Lost in XLAT-ion",
+  "authors": "roy g biv / defjam",
+  "date": "December 2002",
+  "historical_context": "This article reflects the evolution of virus writing techniques and the increasing complexity of malware during the early 2000s.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in virus development.",
+  "short_summary": "The article delves into xlat encryption, a method used in malware to obscure code by replacing byte values. It explains both 1-to-1 and many-to-1 mappings, providing insights into how to detect and potentially decrypt such encoded malware.",
+  "summary": "In 'Lost in XLAT-ion', author roy g biv explores the intricacies of xlat encryption, a technique that allows malware authors to obscure their code by mapping byte values to different representations. The article begins by explaining the fundamental concept of xlat encryption, where each byte is replaced by another value through a lookup table, creating a 1-to-1 mapping. This method can be detected by analyzing the relative positions of bytes in the encrypted code, allowing researchers to infer the original code structure despite the encryption. The author provides a practical example, demonstrating how to identify the original byte values based on their consistent offsets in the encrypted output.\n\nThe article further elaborates on the many-to-1 mapping aspect of xlat encryption, where not all byte values are utilized, allowing for additional mappings that complicate detection efforts. By introducing unused byte values into the xlat table, malware can create deceptive patterns that hinder analysis. The author concludes with a discussion on how to locate the xlat table itself, emphasizing the importance of understanding these techniques for both malware analysis and countermeasures. This article serves as a valuable resource for those looking to deepen their understanding of malware obfuscation methods and the ongoing cat-and-mouse game between malware authors and security researchers."
+}

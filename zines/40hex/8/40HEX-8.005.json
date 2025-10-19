@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 4, Phile #5 of 11",
+  "title": "STARSHIP - interesting file-boot virus.",
+  "authors": "Muttik I.G.",
+  "date": "January 1991",
+  "historical_context": "This article discusses the STARSHIP virus, a notable example of early computer viruses that infect both executable files and boot sectors, reflecting the evolving landscape of malware in the early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of computer history.",
+  "short_summary": "The STARSHIP virus infects both executable files and the master boot record on DOS systems. It is notable for its encrypted code and non-destructive behavior, using visual and audio effects when active.",
+  "summary": "The STARSHIP virus, discovered in Moscow in January 1991, is a multi-partite virus that infects both the master boot record (MBR) and executable files on DOS systems. It operates by modifying the MBR upon the execution of an infected file, allowing it to remain resident in memory and infect subsequent executable files created on floppy disks. The virus employs encryption techniques to obscure its code, making detection challenging. Notably, it does not exhibit destructive behavior; instead, it creates visual and audio effects during its active phase, which can disrupt normal operations without causing data loss. The article provides a detailed analysis of the virus's structure, infection strategies, and methods for detection, emphasizing the complexity and sophistication of early malware development. The author also discusses the implications of such viruses for system security and the need for effective antivirus measures."
+}

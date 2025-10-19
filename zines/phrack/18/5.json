@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 18, Phile #5 of 11",
+  "title": "Hacking Control Data Corporation's Cyber",
+  "authors": "Phrozen Ghost",
+  "date": "April 23, 1988",
+  "historical_context": "This article reflects the early days of hacking, focusing on accessing outdated systems used primarily in academic environments. It showcases the techniques and mindset of hackers during the late 1980s.",
+  "target_audience": "Hackers, security researchers, and those interested in historical hacking techniques.",
+  "short_summary": "The article provides a detailed guide on accessing and utilizing the Networking Operating System (NOS) on a Cyber 730 computer, including methods for obtaining user accounts and executing commands.",
+  "summary": "In this article, Phrozen Ghost delves into the intricacies of hacking into the Networking Operating System (NOS) version 2.5.2 on the Cyber 730 computer, a system primarily used in educational institutions. The author outlines the process of identifying the system, understanding its user account structure, and the various privileges associated with different account types. Notably, the article emphasizes the ease of acquiring access through social engineering techniques, such as auditing classes to obtain user accounts, and offers practical advice on navigating the system's command structure effectively.\n\nThe article also discusses the creation of procedure files, akin to batch files in modern operating systems, which can automate tasks and enhance user experience on the Cyber system. Phrozen Ghost shares several useful commands and procedures that can be employed to manipulate files, manage user privileges, and even set up chat systems. The insights provided in this piece not only serve as a historical account of hacking practices but also highlight the resourcefulness and creativity of hackers in exploiting outdated technology for communication and information exchange."
+}

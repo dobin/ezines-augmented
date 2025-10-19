@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x06 of 0x11",
+  "title": "Yet another free() exploitation technique",
+  "authors": "huku",
+  "date": "",
+  "historical_context": "This article builds on previous works regarding heap exploitation techniques, particularly focusing on the glibc malloc() implementation and its vulnerabilities.",
+  "target_audience": "Security researchers, exploit developers, and those interested in heap exploitation techniques.",
+  "short_summary": "This article presents a novel technique for exploiting vulnerabilities in the free() function of glibc's malloc() implementation, demonstrating how to achieve arbitrary memory writes through careful manipulation of heap structures.",
+  "summary": "In this article, the author introduces a new technique for exploiting vulnerabilities in the glibc malloc() implementation, specifically targeting the free() function. The technique relies on controlling multiple chunks of memory to achieve a '4 bytes anywhere' condition, allowing an attacker to overwrite critical memory locations. The article begins with a brief history of heap exploitation, emphasizing the evolution of glibc and the introduction of various security measures that complicate exploitation efforts. The author then delves into the internals of malloc(), explaining how chunk flags, heap structures, and the FIFO nature of the malloc() algorithm can be leveraged for exploitation.\n\nThe core of the article focuses on the analysis of free()'s vulnerable paths, detailing how an attacker can manipulate the malloc() internals to bypass security checks and control the return value of unsorted_chunks(). The author provides a step-by-step guide on how to create fake heap and arena headers, which can be used to redirect execution flow to attacker-controlled memory. A real-world example involving the ClamAV application is presented, showcasing how the technique can be applied to exploit a known vulnerability. The article concludes with a discussion on the future of exploitation techniques, suggesting that kernelspace vulnerabilities may become the next frontier for attackers."
+}

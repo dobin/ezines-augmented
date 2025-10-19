@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Anti-ETA",
+  "authors": "GriYo/29A",
+  "date": "Not specified",
+  "historical_context": "The article discusses the context of terrorism in Spain, particularly the actions of the ETA group, and the societal response to their violence. It reflects on the kidnapping and murder of politicians, which sparked public outrage.",
+  "target_audience": "Hackers, security professionals, and those interested in the history of computer viruses and their socio-political implications.",
+  "short_summary": "This article details the creation and functionality of the Anti-ETA virus, which was developed as a response to the violent actions of the ETA terrorist group in Spain. It includes technical descriptions of the virus's behavior, including its polymorphic nature and infection methods.",
+  "summary": "The Anti-ETA virus, crafted by GriYo and the 29A group, serves as a digital homage to the victims of the ETA terrorist organization in Spain. The article begins with a historical overview of ETA's violent actions, including the kidnapping of politicians and the public's reaction to these events. The virus itself is designed to be polymorphic, allowing it to evade detection by antivirus software. It infects both EXE and COM files, employing a variety of techniques to ensure its persistence and stealth, such as deleting integrity checker files and using standard DOS calls to modify infected files. The virus activates on a specific date, displaying a graphic that symbolizes the call to end violence against innocent people, thus intertwining technology with a poignant social message."
+}

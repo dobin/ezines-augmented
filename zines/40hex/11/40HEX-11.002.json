@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 2, File 002",
+  "title": "ADVANCED POLYMORPHISM PRIMER PART THE FIRST",
+  "authors": "Dark Angel, Phalcon/Skism",
+  "date": "Not specified",
+  "historical_context": "This article reflects the growing sophistication of virus creation techniques in the early 1990s, particularly focusing on polymorphic viruses that evade detection by traditional antivirus methods.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in virus creation techniques.",
+  "short_summary": "This article introduces the concept of polymorphic encryption routines, detailing how they can be constructed to evade virus detection. It emphasizes the importance of understanding the 80x86 instruction set and provides examples of polymorphic routines.",
+  "summary": "The article further elaborates on the structure of polymorphic routines, detailing how to encode the decryption process using various registers and instructions. Dark Angel presents two sample encryption routines that illustrate the principles of polymorphism, highlighting the need for unpredictability in the generated code to avoid detection. He discusses the importance of modularity and flexibility in the design of these routines, allowing for easy adjustments and enhancements. The piece culminates in an introduction to DAME, Dark Angel's Multiple Encryptor, which exemplifies the advanced techniques discussed and serves as a foundation for future articles that will explore its components in detail."
+}

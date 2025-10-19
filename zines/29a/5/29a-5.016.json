@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Lord Julus' Metamorphism Demo",
+  "authors": "Lord Julus / 29A",
+  "date": "29A",
+  "historical_context": "This article is one of the early explorations into metamorphic code, a technique used to evade detection by antivirus software. It reflects the hacker culture's focus on stealth and evasion techniques during the late 20th century.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "This article presents a simple metamorphism demo that illustrates how to transform instructions in a way that evades detection. It provides a basic engine for metamorphizing assembly instructions, making it useful for beginners interested in malware development.",
+  "summary": "In 'Lord Julus' Metamorphism Demo', the author introduces a straightforward metamorphic engine designed for beginners in the field of malware development. The demo focuses on transforming assembly instructions, specifically the 'mov' instruction, into various forms to evade detection by security systems. The article provides a detailed explanation of how the metamorphizer works, including the necessity of spreading variables and addresses throughout the code to enhance its effectiveness. The author encourages readers to experiment with the code under a debugger to understand the metamorphosis process fully.\n\nThe demo showcases how to metamorphize instructions like 'mov [ebp+xxxxxxxx], eax' into different variations, allowing for a more dynamic execution of code. It emphasizes the importance of randomness in the metamorphization process, which is crucial for avoiding signature-based detection methods employed by antivirus software. By utilizing a random number generator and a series of jumps, the metamorphizer can create unique instruction sets that maintain the original functionality while altering their appearance. This article serves as a foundational piece for those interested in the technical aspects of malware development and the historical context of evasion techniques in the hacking community."
+}

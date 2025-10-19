@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Forty-Nine, File 06 of 16",
+  "title": "Project Loki",
+  "authors": "daemon9 AKA route, alhambra",
+  "date": "August 1996",
+  "historical_context": "This article was published during a time when network security was becoming increasingly important, and the use of ICMP traffic was often overlooked by security professionals.",
+  "target_audience": "Security professionals, hackers, network administrators",
+  "short_summary": "Project Loki explores the vulnerabilities associated with ICMP_ECHO traffic, demonstrating how it can be exploited to create covert channels for data transmission, potentially bypassing firewalls and security measures.",
+  "summary": "The Loki Project whitepaper delves into the security implications of ICMP_ECHO traffic, commonly used for network management and testing. The authors argue that many firewalls mistakenly consider this traffic benign, allowing it to pass through unfiltered. By exploiting this oversight, Loki enables the tunneling of arbitrary data within the payload of ICMP_ECHO packets, effectively creating a covert communication channel. This method can be utilized for various purposes, including clandestine data exfiltration and command execution on compromised systems.\n\nThe paper outlines the basic principles of firewall theory and the nature of covert channels, emphasizing that traditional security policies are insufficient to detect or prevent such exploits. The authors provide insights into detection and prevention strategies, ultimately recommending the complete disallowance of ICMP_ECHO traffic to mitigate the risks associated with this covert channel. The Loki Project serves as a critical reminder of the vulnerabilities inherent in widely accepted network protocols and the need for vigilant security practices."
+}

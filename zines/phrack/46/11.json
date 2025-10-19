@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Six, File 11 of 28",
+  "title": "Unix Hacking Tools of the Trade",
+  "authors": "The Shining/UPi (UK Division)",
+  "date": "Released 12/4/94",
+  "historical_context": "This article was published during a time when Unix systems were prevalent, and security practices were evolving. The techniques discussed reflect the state of Unix security in the mid-1990s.",
+  "target_audience": "Hackers, security professionals, Unix system administrators",
+  "short_summary": "This article introduces several Unix hacking tools, including a brute force password cracker for shadow password files, a login spoofing tool, and a user ID/password validator. It provides detailed instructions and code examples for each tool.",
+  "summary": "The article begins with a disclaimer emphasizing that the information is for educational purposes only. It then presents three main tools: a brute force shadow password cracker named 'shcrack', a login spoofing program, and a user ID/password validator. The 'shcrack' tool exploits the pwdauth() function to validate user credentials against shadow password files, which adds a layer of complexity to traditional brute force attacks. The author details the modes of operation for 'shcrack', including burst mode, mini-burst mode, and brute-force mode, each employing different strategies for password guessing. The login spoofing tool is designed to mimic the Unix login process while capturing valid credentials, incorporating features to avoid detection by system administrators. Lastly, the user ID/password validator allows users to check the validity of accounts without logging in, storing valid credentials for later use. The article is rich in technical detail and provides source code for each tool, making it a valuable resource for those interested in Unix security and hacking techniques."
+}

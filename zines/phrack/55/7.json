@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #7 of 19",
+  "title": "Perl CGI problems",
+  "authors": "rain.forest.puppy / [ADM/Wiretrip]",
+  "date": "09.09.99",
+  "historical_context": "This article was published in 1999, during a time when web applications were becoming increasingly popular, and security vulnerabilities in CGI scripts were a significant concern.",
+  "target_audience": "Web developers, security professionals, and anyone interested in Perl programming and web security.",
+  "short_summary": "The article discusses various security vulnerabilities associated with Perl CGI scripts, focusing on issues like NULL byte injection and improper escaping of shell metacharacters. It provides examples of insecure code and suggests best practices for securing CGI scripts.",
+  "summary": "In 'Perl CGI problems', rain.forest.puppy explores critical security flaws in Perl CGI scripts that can lead to severe vulnerabilities. The author introduces the concept of the 'Poison NULL byte', illustrating how Perl's handling of NULL characters can lead to unexpected behavior when interfacing with system calls written in C. This discrepancy allows attackers to bypass security checks, such as those preventing access to the root user, by exploiting how Perl and the underlying system interpret strings. The article emphasizes the importance of sanitizing user input to prevent such exploits, recommending the removal of NULL characters from input data as a straightforward solution.\n\nThe author also delves into the dangers of improperly escaping shell metacharacters, particularly the backslash, which can lead to command injection vulnerabilities. By providing real-world examples of insecure scripts, the article highlights common pitfalls in CGI programming, such as failing to validate or sanitize user input. The author concludes with a call to action for developers to adopt better coding practices, emphasizing that even small oversights can lead to significant security risks. This article serves as a valuable resource for anyone involved in web development, particularly those using Perl for CGI scripting."
+}

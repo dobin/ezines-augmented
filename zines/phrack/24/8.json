@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 24, File 8 of 13",
+  "title": "Special Area Codes",
+  "authors": ">Unknown User<",
+  "date": "January 3, 1989",
+  "historical_context": "This article discusses the telephone service landscape in the late 1980s, focusing on special area codes like 800, 900, and 700, which were emerging as significant components of telecommunications.",
+  "target_audience": "Hackers, phreakers, telecommunications professionals, and anyone interested in the history of telephone services.",
+  "short_summary": "The article provides an in-depth look at special area codes (SACs) such as 800, 900, and 700, explaining their functions, billing mechanisms, and the technical details of how calls are routed through these services.",
+  "summary": "In 'Special Area Codes', the author delves into the intricacies of 800, 900, and 700 services, which were pivotal in the telecommunications landscape of the late 1980s. The article outlines how 800 numbers allow users to make calls without incurring charges, while 900 numbers are associated with value-added services that require payment. The author explains the technical processes involved in routing calls through these services, including the role of inter-exchange carriers (IECs) and the significance of Automatic Number Identification (ANI) in billing. The article also touches on the future of call routing with the anticipated widespread adoption of Common Channel Interoffice Signaling (CCIS), which would enhance the efficiency of call management and routing based on complete number translations rather than just prefixes.\n\nFurthermore, the piece includes detailed tables that illustrate the translation of 800 and 900 NXX codes to long-distance carriers, providing valuable insights into the operational aspects of these services. The author emphasizes the complexity and labor involved in managing these codes, highlighting the evolving nature of telecommunications and the importance of understanding these systems for both users and service providers. Overall, this article serves as a historical snapshot of the telecommunications industry during a transformative period."
+}

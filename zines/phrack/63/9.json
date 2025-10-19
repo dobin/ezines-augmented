@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x09 of 0x14",
+  "title": "Embedded ELF Debugging : the middle head of Cerberus",
+  "authors": "The ELF shell crew <elfsh@devhell.org>",
+  "date": "July 31, 2005",
+  "historical_context": "This article is part of a series on ELF (Executable and Linkable Format) manipulation techniques, focusing on debugging in hardened environments where traditional methods like ptrace are restricted.",
+  "target_audience": "Security researchers, reverse engineers, and developers interested in advanced debugging techniques and ELF manipulation.",
+  "short_summary": "The article discusses advanced techniques for debugging ELF binaries in hardened environments, introducing a new framework that allows for in-process debugging without relying on ptrace. It covers various methods for injecting code and redirecting function calls across multiple architectures.",
+  "summary": "This article presents a comprehensive overview of the Embedded ELF Debugger (e2dbg), a tool designed to facilitate debugging of ELF binaries in environments where traditional debugging methods are restricted. The authors detail the limitations of existing tools and introduce a new framework that allows for in-process code injection and function redirection without the need for ptrace, which is often disabled in hardened systems. The framework supports multiple architectures, including IA32, SPARC, ALPHA, and MIPS, and provides techniques for both static and dynamic ELF manipulation.\n\nThe article elaborates on various techniques such as ET_REL injection, which allows for the modification of binaries without altering the disk image, and the EXTPLT technique, which enables the addition of new function definitions to existing binaries. The authors also discuss the implications of these techniques for security, particularly in penetration testing and reverse engineering contexts. By leveraging these methods, security professionals can effectively debug and manipulate ELF binaries in environments that prioritize security and stability."
+}

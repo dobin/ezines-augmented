@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x06 of 0x12",
+  "title": "Taranis",
+  "authors": "Jonathan Wilkins",
+  "date": "",
+  "historical_context": "This article discusses a method of traffic redirection on Ethernet switches, reflecting the evolution of network security techniques in the late 1990s.",
+  "target_audience": "Hackers, security professionals, network engineers.",
+  "short_summary": "Taranis is a tool that redirects traffic on switch hardware by sending spoofed Ethernet traffic, evading detection by IDS systems. It exploits the way switches manage their internal mapping of Ethernet addresses to ports.",
+  "summary": "Taranis is a sophisticated tool designed to manipulate Ethernet traffic by sending spoofed packets that mislead switches into updating their internal address tables. Unlike traditional ARP poisoning attacks, Taranis operates invisibly, as the packets it generates are not visible on other ports of the switch. This stealthy approach allows an attacker to redirect traffic without raising alarms, making it a potent weapon in a hacker's arsenal. The article provides a historical overview of Ethernet technologies, explaining the transition from shared mediums to switched networks, which are more efficient but also introduce new vulnerabilities that Taranis exploits.\n\nThe tool operates by sending packets with the source address of a target mail server and the attacker's real address as the destination. This causes the switch to associate the attacker's port with the mail server's address, allowing the attacker to intercept traffic intended for the server. Taranis logs authentication information from users connecting to the mail server, effectively enabling the attacker to capture usernames and passwords. The article also includes configuration instructions for various operating systems, emphasizing the need for kernel patches to allow Ethernet address spoofing. Overall, Taranis exemplifies the innovative and often disruptive techniques that emerged during the early days of network security research."
+}

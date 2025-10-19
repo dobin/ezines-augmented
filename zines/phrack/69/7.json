@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0f, Issue 0x45, Phile #0x07 of 0x10",
+  "title": "Revisiting Mac OS X Kernel Rootkits",
+  "authors": "fG! <phrack@put.as>",
+  "date": "Not specified",
+  "historical_context": "This article updates previous knowledge on OS X kernel rootkits, particularly in light of changes made in the OS since the release of Tiger.",
+  "target_audience": "Security researchers, malware analysts, and developers interested in kernel security and rootkit development.",
+  "short_summary": "The article provides an in-depth analysis of OS X kernel rootkits, discussing techniques for hiding processes, files, and kernel extensions, as well as methods for executing userland binaries from the kernel. It also addresses anti-forensics techniques and the challenges of detection.",
+  "summary": "In this comprehensive article, fG! revisits the landscape of Mac OS X kernel rootkits, particularly focusing on the advancements and changes introduced in the Mountain Lion version. The author discusses various techniques for rootkit development, including syscall table manipulation, hiding kernel extensions, and executing userland binaries from the kernel. The article emphasizes the importance of understanding the underlying OS architecture to effectively develop and defend against such threats. Additionally, it explores anti-forensics strategies to evade detection by tools like DTrace and Little Snitch, highlighting the ongoing cat-and-mouse game between attackers and defenders in the realm of computer security. The author encourages further research and development in both offensive and defensive tactics to enhance the security landscape of OS X."
+}

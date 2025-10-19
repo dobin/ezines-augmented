@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #7 of 11",
+  "title": "Hacking : OSL Systems",
+  "authors": "Evil Jay",
+  "date": "1987/88",
+  "historical_context": "This article was written during the early days of hacking culture, when PBX systems were common targets for hackers looking to exploit telecommunication systems.",
+  "target_audience": "Hackers, phreakers, and individuals interested in telecommunication systems.",
+  "short_summary": "This article provides a practical guide to accessing and navigating the OSL system, which is used for remote maintenance of ROLM PBX systems. It covers login procedures, command usage, and offers insights into system behavior.",
+  "summary": "In 'Hacking: OSL Systems', Evil Jay shares his experiences and knowledge about the OSL operating system, which is utilized for remote maintenance operations on ROLM PBX systems. The article begins with an overview of the system's peculiarities and the challenges faced by users trying to gain access. Jay emphasizes the importance of understanding the login process, including the need for uppercase input and the potential for unlimited password attempts. He also notes that the system may not provide clear feedback on password validity, adding to the challenge of accessing it.\n\nOnce inside the system, users are encouraged to utilize the HELP command to explore available functionalities. Jay details various commands such as LREP, ACD, and others that allow users to generate reports and manage commands within the system. The article serves as a foundational guide for those interested in hacking PBX systems, highlighting the need for persistence and creativity in navigating the often idiosyncratic nature of these systems. Jay concludes by inviting readers to contribute their own findings, fostering a collaborative spirit within the hacking community."
+}

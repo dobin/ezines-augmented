@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Self-crypting script files",
+  "authors": "roy g biv / 29A",
+  "date": "February 2003",
+  "historical_context": "This article discusses techniques for creating self-crypting scripts, particularly in the context of VBScript and JScript, during a time when malware was increasingly utilizing encryption to evade detection.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in scripting languages.",
+  "short_summary": "The article presents a method for creating self-crypting VBScript and JScript files using a variable skip-code encryption technique. It details how to implement this encryption and discusses the implications for script-based malware.",
+  "summary": "In 'Self-crypting script files', author roy g biv explores the relatively underutilized concept of self-crypting scripts, particularly in the realm of VBScript and JScript. The article introduces a simple engine for encrypting these scripts using a variable skip-code encryption method, which allows for the creation of obfuscated code that can evade detection by antivirus software. The author explains the mechanics of constant and variable skip-code encryption, providing examples of how to implement these techniques in both VBScript and JScript. This method involves manipulating the structure of the script to obscure its true functionality, making it more challenging for security tools to analyze and detect malicious behavior. \n\nThe article emphasizes that while encryption can enhance the stealth of a script, the decryptor remains a critical vulnerability. If the decryptor is too complex or unique, it may attract attention from security analysts. Therefore, the author advocates for a balance between complexity and simplicity in the design of the decryptor, suggesting that a straightforward approach can often be more effective in avoiding detection. This piece serves as a technical guide for those interested in the intersection of scripting and malware development, providing insights into the evolving tactics used by malicious actors."
+}

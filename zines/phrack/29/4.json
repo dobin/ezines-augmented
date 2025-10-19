@@ -1,0 +1,50 @@
+{
+  "reference": "Volume Three, Issue 29, File #4 of 12",
+  "title": "Network Miscellany II",
+  "authors": "Taran King",
+  "date": "November 17, 1989",
+  "historical_context": "This article was published during a time when networking was becoming more accessible to the general public, and various public access UNIX systems were emerging.",
+  "target_audience": "Hackers, phreakers, network enthusiasts, and security professionals interested in early networking practices.",
+  "short_summary": "This article provides a comprehensive list of public access UNIX systems, broadcasting networks, and details about MCI Mail and the Educational Computing Network, highlighting the growing accessibility of computer networks in 1989.",
+  "summary": "In 'Network Miscellany II', Taran King discusses various methods of communication through computer networks, including how to connect with broadcasting networks like PBS and several radio stations via UUCP and Fidonet. The article emphasizes the importance of these networks for information exchange and community building among users. It also provides contact details for various public access UNIX systems, showcasing the burgeoning landscape of accessible computing resources available to users at the time. The article serves as a valuable resource for those looking to navigate the early days of networked communication and access academic computing resources through the Educational Computing Network (ECN).",
+  "additional_info": {
+    "broadcasting_networks": {
+      "PBS": {
+        "UUCP_Node": "pbs",
+        "Contact": "pbs!postmaster",
+        "Phone": "(703) 739-5089"
+      },
+      "Radio_Stations": [
+        {
+          "Name": "KFCF",
+          "Location": "Fresno, CA",
+          "Contact": "Randy.Stover@f42.n205.z1.fidonet.org"
+        },
+        {
+          "Name": "KKSF",
+          "Location": "San Francisco, CA",
+          "Contact": "Tim.Pozar@fidogate.fidonet.org"
+        },
+        {
+          "Name": "KKDA",
+          "Location": "Dallas, TX",
+          "Contact": "Gerry.Dalton@f1213.n124.z1.fidonet.org"
+        }
+      ]
+    },
+    "public_access_unixes": [
+      {
+        "Name": "althea",
+        "Location": "New Brunswick, NJ",
+        "Contact": "rjd@althea.UUCP",
+        "Fee": "No fee"
+      },
+      {
+        "Name": "polari",
+        "Location": "Seattle, WA",
+        "Contact": "uunet!microsoft!happym!polari!bruceki",
+        "Fee": "$30/year"
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Three, File 14 of 27",
+  "title": "Playing Hide and Seek, Unix style",
+  "authors": "Phreak Accident",
+  "date": "1993",
+  "historical_context": "This article reflects the early 1990s hacker culture, focusing on techniques for maintaining anonymity and access in Unix systems, a time when hacking was often seen as a rebellious act against authority.",
+  "target_audience": "Hackers, security professionals, and those interested in Unix system security.",
+  "short_summary": "This article provides a detailed guide on how to hide unauthorized access in Unix systems by manipulating log files and system accounting records. It emphasizes the importance of stealth in hacking activities.",
+  "summary": "In 'Playing Hide and Seek, Unix style', Phreak Accident outlines essential techniques for hackers to effectively cover their tracks after unauthorized access to Unix systems. The article begins with a cautionary tale about the consequences of leaving traces, such as log entries, that can lead to detection by system administrators. It then delves into the intricacies of Unix logging mechanisms, particularly focusing on syslog, utmp, wtmp, and lastlog files, explaining how these logs record user activity and how they can be manipulated or deleted to erase evidence of unauthorized access.\n\nThe author provides practical examples of how to edit or remove entries from these logs, including sample code for creating tools that can automate the process. Additionally, the article discusses the potential pitfalls of careless hacking, urging readers to be meticulous in their methods to avoid detection. By understanding the logging systems and employing clever tactics, hackers can maintain their access and continue their activities without being caught. The article serves as both a technical guide and a philosophical reflection on the hacker ethos of the time, encouraging readers to stay one step ahead of system administrators."
+}

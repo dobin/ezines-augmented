@@ -1,0 +1,270 @@
+                                .oO Phrack 50 Oo.
+
+                            Volume Seven, Issue Fifty
+
+                                     9 of 16
+ 
+                                SS7 based diverter
+
+                      The MasterMiiND <miind@geocities.com>
+
+
+Brief Description:
+------------------
+
+Hey everyone, well I've spent some time now designing a Diverter, and finally 
+came up with a foolproof design.  After building every diverter plan I could
+find, and finding that they didn't work under the switching systems of our
+day (not surprising, seeing how all the plans are like ten years old) I 
+decided something needed to be done.  Well, I thought I'd share this new 
+diverter with everyone, so we can all have phun again, until they change the 
+system again.
+
+Also called a "Gold Box", a diverter allows somebody to call one predetermined
+telephone number, and then get a dial tone from another predetermined phone
+line.  It is like calling a direct in-dial (DID) line on a PBX and getting a
+dial tone.  The main difference is, that YOU actually built the device, and
+you don't have to enter authorization codes to get the dial tone.
+
+Uses:
+-----
+
+You can setup a diverter so that you can call pseudo-anonymously.  That is,
+you call the diverter, and then call out of the second line.  That way, if
+anybody checks their caller ID unit, the number of the second line, and not
+your own line will show up.  Also, if they decide to activate a trace, then
+the telco and the police will get the wrong number.
+
+Another reason for setting up a diverter of course, is to avoid paying for
+telephone calls.  Any, and all calls you make on a diverter, are billed to
+the owner of the second line.  This means, that if you call your Aunt Jemima
+in the Outer Hebrides for 10 minutes, then the owner of the line you used will
+get her number, and be able to call her up and ask who called her at the time
+and date stated on their bill.  Now, if she is your average Aunt Jemima, then 
+she will most likely say, 'Oh, that was my nephew, Michael.  His number is
+555-2357'.  But if she is cool, like MY Aunt Jemima, she would say something
+like 'Hmm, let me see...oh yes, that was a telemarketer from the USA, trying
+to sell me a used vacuum cleaner.'  Anyway, my point is, that every billable
+call you make, will show up on their bill.  For that reason, it is best suited
+to call stuff that you don't care too much about.  Setting up teleconferences,
+calling long distance BBS's, phone sex, and maybe even long distance scanning
+are all good uses for the diverter.
+
+Technical Description:
+----------------------
+
+Ok, so you want to make a diverter?  Well, before you set out designing a
+diverter, there are some basic properties of the Signaling System 7 (SS7)
+telephone system that you should be aware of.  Previous plans for diverters
+have been release in the past, but as those of you who tried to make one have
+realized, they do not work under SS7.  Generally, these plans are around ten
+years old, and were designed for older switching systems such as Step by Step
+(SxS) and CrossBar (xbar).  The diverter that I have come up with, has been
+tested under GTD-5 EAX, and DMS-100 switches.  Because the signaling used by
+these switches, and the #5ESS are the same, it is safe to assume the diverter
+would work under #5ESS, although I can't say for sure, as I haven't been able
+to test it out.  If someone gets one working under an AT&T switch, please
+drop me a line, because I would be really interested in how it worked, and
+what, if any, changes had to be made.  Ok, enough nonsense from me!
+
+When your telephone is in it's normal on-hook state, there is approximately
+48VDC across the ring and tip.  When you pick up your phone, the voltage
+drops down to about 6-10VDC.  This is because taking your phone off-hook
+causes a closed circuit across the ring and tip, through your telephone.
+Doing so, causes the CO's equipment to sense you have taken your telephone
+off-hook, and send you a dial tone to tell you it is ready to receive dialing
+instructions.  Ok, now, suppose your phone is on-hook.  Your Aunt Jemima calls
+you up.  How does the CO alert you to this?  Well, they send a ring signal to
+your line.  This is a 90-130VAC signal, that is approximately 20Hz in
+frequency.  This is pulsed on for 2 seconds, then off for 4 seconds.  This is
+then repeated for a predetermined amount of time, or until you pick up your
+phone.  The amount of time a phone will ring, if you don't pick up your phone
+depends on how your phriends at the CO programmed the switch.  The reason why
+it has a time limit for a ring out, is for two main reasons.  First of all,
+it takes a lot of equipment resources and power in the CO to ring a phone.
+And secondly, to put an end to phreaker's "Black Boxes" that would depend on
+the switches ability to ring a phone for ever, if it wasn't picked up...
+
+Ok, now you pick up your ringing phone.  This causes voltage to flow from the
+tip through your phone to the ring.  This causes the CO's switching equipment
+to stop sending the ringing signal, and then drops the voltage down to around
+6-10VDC.  An audio path is then opened between your Aunt Jemima and you.  Now, 
+after about 10 minutes of speaking with her, your Aunt Jemima shouts: 
+'Oh no...my pancakes are burning...gota go...' and hangs up on you.  But you,
+being the phreak that you are, stay on the line.  You listen carefully, but
+hear nothing but the silence of linenoise.  Then, after about 10 seconds,
+the CO sends a disconnect signal to your line.  This disconnect signal is
+simply a reversal of polarity between the ring and tip for about 1 second.
+When the polarity is first reversed, you hear a click in the earpiece of the
+phone.  Then, when the polarity is reversed again, you hear another click.
+The voltage is back at 6-10VDC, and the polarity is just as if you had just
+picked up your phone.  Now, if you stay on the line for about 30 seconds
+longer, the CO will send an off-hook signal, which is a very special signal.
+It is a MF signal that consists of 1400Hz & 2060Hz & 2450Hz & 2600Hz tone
+pulsed on 0.1 second on, and 0.1 second off.  That is the very loud and
+annoying sound you hear if you leave your phone off-hook.
+
+Ok, those are the basic properties of the SS7 telephone system you need to
+know, to understand how the diverter works.  I've spent a little of my time
+drawing a schematic in GIF format, and you will find it uuencoded at the end
+of this file, so please decode it first, and load it up in your favorite
+image viewer, while you read the next part.  It really helps to follow the
+schematic, while reading the white paper.  After all, anybody can follow
+simple instructions on how to make a diverter, but I would prefer you all
+understand how it works.  I wouldn't want to think I wasted my time on this
+little project ;-)
+
+Parts List:
+-----------
+
+(1) DPDT relay (5VDC Coil Rating)
+(1) 600 Ohm:600 Ohm transformer (Telecom Isolation Type)
+(1) 2N3904 transistor (NPN, Small Signal type)
+(1) Opto-Isolator pair (IR LED/Phototransistor Type)
+(1) 22K Ohm resistor (1/4W, 5%)
+(1) 470 Ohm resistor (1/4W, 5%)
+(4) 1N4003 diodes (200 PIV)
+(1) 7805 IC (5VDC, Positive Voltage Regulator)
+(1) 0.33uF capacitor (Mylar Type, microfarad)
+
+Parts Notes:
+------------
+
+The transformer is the type you would find in an answering machine, but can be
+picked up for around $7.00.  The opto-isolator is a slotted pair.  That is,
+they are housed in a plastic assembly, that has an IR LED facing onto a photo-
+transistor, with a slot in between them.  The slot is designed for a rotating
+wheel or something similar, but doesn't affect the design at all.  A true
+opto-isolator could be used instead, I guess, but the only ones I could find
+where photodarlington types, and I couldn't really be bothered with them.
+Besides, I happen to think the slotted pair look cooler! ;-)
+
+Anyhow, in my diverter, I replaced the 4 diodes with a full wave bridge
+rectifier in a 4 pin DIP.  It was smaller, and again, it looked cooler.
+The 7805 is a voltage regulator IC.  It has 3 pins, and can be found almost
+anywhere.  Lastly, the capacitor is just a regular mylar device.  If the value
+is higher than 0.4uF, then the diverter will activate with line noise on line
+#1, or if someone picks up line #1, or if the pulse dial!  If it is less than
+0.2uF, then line #1 will ring a couple of times before the diverter picks up.
+Best advice is to simply use a 0.33uF capacitor.  Other stuff you will need is
+hook up wire, plugs and connectors, some sort of protoboard, and a box.  This
+part is up to you, and is where you get to show your phriends at the next 2600
+meeting your creativity.  Using a Rubbermaid (tm) tub is pretty creative.  I
+just went with a plain project box from Hammond (tm).  Ah well...
+
+Schematic:
+----------
+
+NO ASCII SCHEMATICS FOR YOU!   DECODE THE GIF AT THE END OF THIS FILE INSTEAD!
+
+Theory of Operation:
+--------------------
+
+Ok, looking at the schematic, we see RED #1, GREEN #1, RED #2 and GREEN #2.
+Obviously, these are the two lines.  Now, line #1 is going to be the line
+that we initially call into to get the dial tone, and line #2 is going to be
+the line of the dial tone that we actually get.
+
+We see that in the normal state, the DPDT relay is not activated.  This
+presents an open circuit to line #2.  Current cannot flow from GREEN #2 to
+RED #2, because of the open relay.  Thus, line #2 is in the on-hook state.
+The same is the case for line #1.  Current cannot flow from GREEN #1 to RED #1
+because of the open relay contacts.  Also, because the voltage across the two
+wires is 48VDC, the direct current is blocked by the capacitor, C1.  Thus, 
+current from line #1 cannot enter the rectifier either.  In the normal state,
+both lines #1 and #2 are on-hook.
+
+Now, you dial up the number for line #1.  The 48VDC, becomes a ringing signal
+of 90-130VAC @ 20Hz.  This causes an alternating current to pass the capacitor
+C1, and into the full wave bridge rectifier.  This causes a DC voltage to
+appear on the output of the rectifier, which flows through the IR LED in the
+opto-isolator, lighting it up.  As the IR light hits the phototransistor,
+the phototransistor's collector current starts to flow.  This causes the
+second transistor's base current to flow.  This causes the transistor's
+collector current to flow, which turns on the DPDT relay.  Now, as the relay
+turns on, current can now flow from GREEN #1 through D1 in the full wave
+bridge rectifier, through the IR LED in the opto-isolator and it's current
+limiting resistor, through one half of the DPDT relay's contacts, through one
+winding of the transformer, and to the RED #1.  Also, at the same time, we now
+have current flowing from GREEN #2 through the second half of the DPDT relay's
+contacts, through the other winding of the transformer, and to RED #2.
+
+In effect, the diverter is picking up both lines.  Now, you would think that
+if the diverter picked up both lines, then the ringing signal would stop on
+line #1, and the IR LED would turn off, thus turning off the whole circuit.
+Well, this is partially correct.  However, notice that line #1 is now flowing
+THROUGH the IR LED, which keeps it on!  So, the ring signal initially turns on 
+the IR LED, and the off-hook current of about 6-10VDC keeps it on!
+
+So, now, you are connected to line #1.  Line #2 is off-hook as well, and both
+line #1 and line #2 are being bridged via the transformer.  Thus, any and all
+audio is passed between both lines.  What this means is that you get the dial
+tone from line #2, and you can send your DTMF's from line #1.
+
+Ok, now you make your call.  Now, you hang up on line #1.  Now, for about 10
+seconds, the diverter stays active.  But then, the CO sends a disconnect
+signal to line #1.  If you remember back, this is just a reversal of polarity
+between the ring and tip, that is the GREEN #1 and RED #1.  Doing so, the
+IR LED, being a polarity sensitive device, turns off.  This causes the
+phototransistor's collector current to goto zero. This causes the transistor's
+base current to goto zero as well, and as a result, the transistor's collector
+current goes to zero as well, thus turning off the relay, and putting both
+line #1 and line #2 on-hook again.  The diverter is now ready for another
+call.  There...simple huh?
+
+Special Notes:
+--------------
+
+The diverter can be installed anywhere you have access to 2 lines.  Obviously,
+green base's, can's, telephone pole's, network interface's etc... are all prime
+locations for the diverter.  Now, you need a lineman's handset or a "Beige Box"
+and access to an ANI read back circuit, in order to determine the numbers of
+the line's you are using.
+
+Once the device is installed, anyone and everyone calling line #1 will receive
+a dial tone.  This means that you cannot simply leave the device installed for
+a whole month.  That is, unless you manage to find a line that is unpublished
+and used for outgoing calls or something.  An example is a corporate data line
+used by a local (unnamed) fast food restaurant that sends payroll data at
+night, once a week.  You get your diverter on this line, and you could leave
+it there for a while.
+
+Also, it is a good idea, once you get the dial tone, to use calling cards, or
+third party calling to complete your call.  That way, your calls don't show up
+on line #2's bill right away.  Usually, it will show up on the next bill of
+the person you third party'd, and it will take another month or two to reach
+the bill of line #2.  However, line #2 will also get service charges for the
+third party, so their bill will be even higher than if you just used their
+line directly.
+
+Ok, as for the circuit...I've gotten into a habit of designing all my circuits
+to operate at 5VDC.  Although this isn't too necessary in this circuit, it
+makes it totally TTL and CMOS compatible, should you want add digital gating
+and other fancy stuff to the basic diverter.  Well, that's enough rambling from
+me for now...go and get yourself some parts!
+
+Shout Out's:
+------------
+
+Shout's to the Vancouver, BC hack community...you know who you are...
+Shout's to all the guys at Phrack...keep the legend going....
+Shout's to the Niagara Falls, ON hack community...(IS there one?)
+Hell, shout's to the whole damn community...we're still alive and kicking
+right!
+
+Oh yeah, I can't miss out our beloved BC Tel!  Keep those rates increasing,
+and keep installing those ultra fancy NorTel Millenium's in the high vandalism
+and high crime areas!
+
+That's all folks...
+
+=[MasterMiiND]=
+
+==============================BEGIN UUENCODED GIF=============================
+
+==============================END UUENCODED GIF===============================
+
+EOF
+
+
+

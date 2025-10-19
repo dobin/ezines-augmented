@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x0B of 0x11",
+  "title": "A Real SMM Rootkit: Reversing and Hooking BIOS SMI Handlers",
+  "authors": "Filip Wecherowski",
+  "date": "",
+  "short_summary": "This article details the reverse engineering of System Management Interrupt (SMI) handlers in BIOS firmware and the implementation of an SMM keystroke logger. It includes detection methods for such malware and provides proof of concept code.",
+  "summary": "The paper explores the intricacies of System Management Mode (SMM) and its potential vulnerabilities, particularly focusing on how malicious actors can exploit SMI handlers to inject rootkits. The author provides a comprehensive overview of BIOS firmware, the structure of SMI handlers, and the process of reverse engineering them. A significant portion of the article is dedicated to the implementation of a keystroke logger that operates within SMM, utilizing I/O Trap mechanisms to capture keystrokes without detection by the operating system. The author emphasizes the need for better understanding and detection methods for SMM malware, highlighting the challenges posed by the isolation of SMM from the OS and traditional security measures.",
+  "historical_context": "This article builds on previous research into SMM vulnerabilities, particularly the work presented at Black Hat USA 2008, where the concept of SMM rootkits was first introduced. It reflects ongoing concerns about BIOS security and the potential for low-level firmware exploits.",
+  "target_audience": "Security researchers, malware analysts, BIOS developers, and advanced hackers interested in low-level system security."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 4, Issue 1, Phile #008 of 11",
+  "title": "Jerusalem Virus",
+  "authors": "Dark Angel of Phalcon/Skism",
+  "date": "",
+  "historical_context": "The Jerusalem virus is one of the earliest known computer viruses, first appearing in the late 1980s. It is notable for its method of infection and its payload, which included a time-based trigger.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "This article provides a detailed disassembly of the Jerusalem virus, including its infection mechanism and payload. It serves as a historical reference for understanding early malware behavior.",
+  "summary": "The Jerusalem virus, dissected by Dark Angel, showcases a classic example of early malware. The virus is designed to infect COM and EXE files, utilizing a stealthy approach to embed itself within the host program. The disassembly reveals the intricate assembly code that manages the virus's operations, including its installation routine and the conditions under which it activates. Notably, the virus checks for a specific date—Friday the 13th—to trigger its payload, which can lead to system disruptions or data loss. This behavior exemplifies the psychological tactics employed by early virus authors to instill fear and chaos among users.\n\nThe article serves as both a technical guide and a historical document, illustrating the evolution of malware and the techniques used by hackers in the 1980s. By analyzing the code, readers gain insights into the methods of infection, the structure of the virus, and the implications of such malware on early computer systems. This disassembly not only aids in understanding the Jerusalem virus but also contributes to the broader narrative of computer security and the ongoing battle against malicious software."
+}

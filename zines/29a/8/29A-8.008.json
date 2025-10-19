@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Capture the desktop - scan .LNK files for victims",
+  "authors": "DiA/rrlf",
+  "date": "27.11.2004",
+  "historical_context": "This article was written during a time when malware and social engineering tactics were becoming increasingly sophisticated, particularly in the context of Windows operating systems.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article discusses how to exploit Windows shortcut files (.LNK) to identify potential victims by extracting linked file paths. It provides a theoretical overview of the .LNK file format, practical steps for scanning these files, and example code for implementation.",
+  "summary": "In 'Capture the desktop - scan .LNK files for victims', DiA/rrlf explores the potential of Windows shortcut files (.LNK) as vectors for malware infection. The article begins with an introduction to the .LNK file format, detailing its structure and the significance of various sections, such as the Shell Item ID List and Local Volume Table. By understanding the layout of these files, attackers can identify the paths to linked applications, which may lead to potential victims. The author emphasizes the prevalence of desktop shortcuts among users, making them an attractive target for exploitation.\n\nThe article progresses into a practical guide, outlining a step-by-step approach to scanning .LNK files on a user's desktop. This includes reading the desktop path from the registry, validating the path, and iterating through .LNK files to extract the linked file paths. The provided assembly code serves as a concrete example of how to implement this scanning process. The author concludes with a note on the potential for further exploration of .LNK files, such as extracting network share names, and encourages readers to experiment with the concepts presented. Overall, this article serves as both a technical guide and a cautionary tale about the risks associated with seemingly innocuous desktop shortcuts."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Five, File 22 of 28",
+  "title": "BOX.EXE",
+  "authors": "The Fixer / 604",
+  "date": "",
+  "historical_context": "This article is from the mid-1990s, a time when personal computing was becoming more widespread, and the hacking community was exploring various forms of software manipulation and sound generation.",
+  "target_audience": "Hackers, programmers, audio enthusiasts, and those interested in retro computing.",
+  "short_summary": "BOX.EXE is a minimalist program that demonstrates various box tones using an IBM PC and an Adlib Music Card. It emphasizes simplicity and direct interaction without unnecessary features.",
+  "summary": "In this article, The Fixer introduces BOX.EXE, a straightforward program designed to generate several types of box tones. The program is intentionally minimalist, requiring no command line parameters or configuration files. Users simply need to type 'BOX' to start the program, which is compatible with any IBM PC or compatible machine equipped with an Adlib Music Card or similar sound hardware. The author notes that users may need to adjust their volume settings, as the pure sinewaves produced by the program can be quieter than other sound outputs from the Adlib card.\n\nThe program includes keystroke menus for user interaction, and the author humorously suggests that anyone needing more help than that should reconsider running the program. This article reflects the hacker ethos of creating functional tools with minimal overhead, appealing to those who appreciate directness and efficiency in software design. The simplicity of BOX.EXE serves as a reminder of the early days of personal computing, where creativity often thrived within constraints."
+}

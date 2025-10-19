@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 2, Issue 1, Phile #6 of 11",
+  "title": "PHALCON/SKISM Vengeance virus",
+  "authors": "DecimatoR /PHALCON/SKISM",
+  "date": "02/03/92",
+  "historical_context": "This article was published shortly after the confiscation of the Digital Warfare BBS, a significant event in the hacker community at the time.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in historical viruses.",
+  "short_summary": "The article introduces the Vengeance virus, a destructive non-resident .COM infector that activates on the 20th of each month. It warns against testing the virus on personal machines due to its destructive nature.",
+  "summary": "The PHALCON/SKISM Vengeance virus is a non-resident .COM infector that targets files larger than 1992 bytes, with a size of approximately 722 bytes. It is designed to activate on the 20th of each month, and the author humorously warns readers not to test it on their own machines, hinting at its destructive capabilities. The virus is based on the Violator virus, and as of the time of writing, it was not detected by the Scan 86 antivirus software, although other scanners might identify it. The article serves as both a technical overview and a cautionary tale about the potential dangers of running untested malware.",
+  "additional_notes": "The article reflects the hacker culture of the early 90s, where creating and sharing viruses was often seen as a form of digital rebellion or art. The dedication to the Digital Warfare BBS adds a layer of community sentiment to the piece."
+}

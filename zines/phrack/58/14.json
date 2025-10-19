@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x0e of 0x0e",
+  "title": "Phrack Extraction Utility",
+  "authors": "Phrack Staff and sirsyko",
+  "date": "2000",
+  "historical_context": "This article discusses a utility for extracting code from Phrack articles, reflecting the hacker culture's emphasis on sharing knowledge and tools.",
+  "target_audience": "Hackers, security researchers, and developers interested in code extraction techniques.",
+  "short_summary": "The Phrack Extraction Utility allows users to extract code from Phrack articles while maintaining readability and proper formatting. It includes detailed instructions on usage and examples of extraction tags.",
+  "summary": "The Phrack Extraction Utility is a tool designed to facilitate the extraction of source code from Phrack Magazine articles. It operates by identifying specially tagged sections within the text, denoted by '<++>' and '<-->', which indicate the beginning and end of code snippets. The utility ensures that the extracted code is stored in a hierarchical directory structure, preserving the original formatting and readability of the code. Users can compile the utility using GCC and execute it with various options to customize its behavior, such as performing CRC checks on the extracted files to ensure integrity.\n\nThe article provides a comprehensive overview of the extraction process, including examples of how to format the input files and the expected output. It also discusses the importance of maintaining the integrity of the extracted code, emphasizing the utility's ability to verify CRC values. This tool not only showcases the technical prowess of the authors but also highlights the collaborative spirit of the hacker community, where sharing tools and knowledge is paramount."
+}

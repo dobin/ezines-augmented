@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3d, Phile #0x0d of 0x0f",
+  "title": "Hacking the Linux Kernel Network Stack",
+  "authors": "bioforge <alkerr@yifan.net>",
+  "date": "March 2003",
+  "historical_context": "This article was written during a time when Linux was gaining popularity as a server operating system, and understanding its kernel was crucial for security researchers and developers.",
+  "target_audience": "Hackers, security professionals, kernel developers, and anyone interested in network security.",
+  "short_summary": "The article explores the Linux kernel's Netfilter subsystem, detailing how to utilize its hooks for packet filtering and even for creating hidden backdoors. It provides practical examples and code snippets for implementing these techniques.",
+  "summary": "This article serves as a comprehensive guide to the Linux kernel's Netfilter subsystem, which allows for advanced packet filtering and manipulation. It begins with an introduction to Netfilter hooks, explaining their purpose and how they can be registered and utilized. The author provides detailed examples of filtering packets based on various criteria, such as interface, IP address, and TCP port. Additionally, the article discusses the potential for malicious use of these hooks, including the creation of hidden backdoors and the ability to hide network traffic from packet sniffers like Libpcap. The author emphasizes the importance of understanding these techniques for both defensive and offensive security measures, making it a valuable resource for anyone interested in kernel-level programming and network security."
+}

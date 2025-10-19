@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Load and execute program, TbMem exploit",
+  "authors": "Darkman/29A",
+  "date": "",
+  "historical_context": "This article discusses a method to bypass the TbMem antivirus program, which was prevalent in the early 1990s. It reflects the ongoing cat-and-mouse game between virus creators and antivirus developers during that era.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article details a method to exploit the TbMem antivirus by manipulating the interrupt vector table, allowing malware to evade detection. It provides a code snippet for implementation and discusses the implications of the exploit.",
+  "summary": "In this article, Darkman outlines a technique to exploit the TbMem antivirus software by manipulating the interrupt vector table. The core of the exploit lies in the fact that when a program is executed, TbMem recreates its lookup table, which can be used to mask changes made by a virus to the interrupt vector table. By executing a specific DOS function (4B00h), a virus can ensure that TbMem fails to detect any alterations, thus allowing the malicious code to run undetected. The author provides a code snippet that demonstrates how to implement this exploit effectively.\n\nDarkman also notes that this technique can be combined with other exploits, such as the Server function call DOS exploit, to enhance its effectiveness. He references previous works that have documented similar exploits and emphasizes the longevity of the TbMem exploit, suggesting that it has been known within the hacker community for some time. This article serves as a technical guide for those interested in understanding and utilizing the vulnerabilities in antivirus software from that period."
+}

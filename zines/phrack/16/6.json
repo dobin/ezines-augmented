@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 12",
+  "title": "Tapping Telephone Lines",
+  "authors": "Agent Steal",
+  "date": "08/87",
+  "historical_context": "This article was written during a time when telephone systems were transitioning to digital, and many hackers were exploring ways to tap into these systems for data and voice interception.",
+  "target_audience": "Hackers, phreakers, security professionals, and those interested in telecommunications.",
+  "short_summary": "This article provides a detailed guide on how to tap telephone lines for recording voice or data, including necessary equipment, connection methods, and data retrieval techniques. It also shares personal anecdotes of successful exploits in accessing telecommunications nodes.",
+  "summary": "In 'Tapping Telephone Lines', Agent Steal outlines the equipment and methods required to intercept telephone communications, focusing on both voice and data. The author emphasizes the use of an audio tape recorder and a specific device from Radio Shack, the Telephone Recording Control (TRC), to facilitate the recording process. The article details how to connect the TRC to a telephone line and a tape recorder, allowing the user to capture conversations or data transmissions. The author also discusses the challenges of reading recorded data, particularly at 1200 baud, and suggests potential solutions for overcoming these issues. \n\nThe narrative is interspersed with personal experiences, including a successful attempt to gather sensitive information from a telecommunications company by impersonating a technician. Agent Steal recounts how he managed to obtain access codes and recorded various communications, including credit card transactions and logins, highlighting the vulnerabilities in the telecommunications infrastructure of the time. This article serves as both a technical guide and a cautionary tale about the legal ramifications of such activities, making it a fascinating read for those interested in the intersection of hacking and telecommunications."
+}

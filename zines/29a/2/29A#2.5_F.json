@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Animo Virus Description",
+  "authors": "Rajaat / 29A",
+  "date": "January 29th, 1999",
+  "historical_context": "This article provides insight into early virus development techniques during the late 1990s, a time when personal computing was becoming widespread and malware was evolving rapidly.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the Animo virus, a simple COM file infector written in Sphinx C--. It discusses its structure, infection mechanism, and anti-detection techniques against antivirus software.",
+  "summary": "In this article, Rajaat introduces the Animo virus, a compact 518-byte COM file infector created using the Sphinx C-- programming language. The virus operates by infecting executable files in the current directory upon execution, employing a series of clever antiheuristic techniques to evade detection by antivirus software like TBSCAN. The author describes the virus's behavior in detail, including how it calculates the entry point of the infected file and modifies file attributes to avoid detection. The Animo virus is notable for its simplicity and the author's experimentation with the Sphinx C-- language, which he praises for its flexibility and potential for more complex virus development.\n\nRajaat also reflects on the challenges and limitations of the Sphinx C-- language, expressing a desire for additional features that could enhance its usability for malware creation. He shares his journey of discovering the language and his motivations for writing the virus, emphasizing the educational aspect of his work. The article serves as both a technical overview of the Animo virus and a commentary on the evolving landscape of malware development during the late 1990s."
+}

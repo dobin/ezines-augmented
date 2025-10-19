@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Three, Phile 6 of 10",
+  "title": "Fortell Systems",
+  "authors": "Phantom Phreaker",
+  "date": "01/06/86",
+  "historical_context": "This article reflects the early days of phone phreaking, where individuals explored and exploited telephone systems for various purposes, including monitoring and testing lines.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts",
+  "short_summary": "The article provides a detailed overview of the Fortell system, a tool for monitoring telephone lines within a specific area. It outlines the commands and modes available to users for testing and monitoring purposes.",
+  "summary": "In this article, Phantom Phreaker introduces readers to the Fortell system, a telecommunications tool designed for monitoring lines within its own Numbering Plan Area (NPA). The author details the operational aspects of the system, including how to access it via DTMF (Dual-Tone Multi-Frequency) signaling. Users can enter an ID code and select from various modes to perform tasks such as fault location, monitoring, and testing of telephone lines. The article breaks down the commands available in each mode, providing a comprehensive guide for phreakers looking to utilize the Fortell system for their own purposes.\n\nThe article serves as both a technical manual and a glimpse into the culture of phone phreaking during the 1980s. It emphasizes the capabilities of the Fortell system, including its ability to monitor line status and perform tests on various line conditions. By detailing the specific commands and their functions, the author empowers readers to experiment with the system while highlighting the innovative spirit of early hackers who sought to understand and manipulate telecommunications technology."
+}

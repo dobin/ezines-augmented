@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Esperanto",
+  "authors": "Mister Sandman/29A",
+  "date": "November 1997",
+  "historical_context": "This article discusses the Esperanto virus, which was notable for being the first multiprocessor and multiplatform virus, capable of infecting both PC and Macintosh systems.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The Esperanto virus is a groundbreaking multiprocessor and multiplatform virus that infects various executable formats across Intel and Macintosh systems. It showcases unique infection techniques and a payload that activates annually.",
+  "summary": "The Esperanto virus, crafted by Mister Sandman of the 29A group, is heralded as the world's first multiprocessor and multiplatform virus, capable of infecting systems across Intel 80x86, Motorola 680x0, and PowerPC architectures. It operates under multiple operating systems, including DOS, Windows 3.1x, Windows 95, Windows NT, and Mac OS, demonstrating a sophisticated internal structure that allows it to seamlessly transition between platforms. The virus employs a modular design, with specific infection routines tailored for each platform, ensuring a high infection rate while maintaining compatibility across different systems. Notably, it can infect executable files such as COM, EXE, NewEXE, and PE files, as well as Mac OS applications and system files, making it a versatile threat in the malware landscape of the late 1990s.\n\nThe payload of the Esperanto virus activates on July 26th, commemorating the anniversary of the Esperanto language's first publication. When triggered, it displays a message box with a poetic text that emphasizes the virus's ability to transcend cultural and technological barriers. The article provides an in-depth technical analysis of the virus's structure, infection mechanisms, and the rationale behind its design choices, reflecting the author's intent to challenge conventional malware development while also serving as a commentary on the evolving nature of computer viruses."
+}

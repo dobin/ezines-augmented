@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #1 of 1",
+  "title": "SMEG: A Polymorphic Encryption Tool",
+  "authors": "Dark Angel, Phalcon/Skism",
+  "date": "1995",
+  "historical_context": "SMEG represents a period in the mid-90s when polymorphic encryption techniques were gaining traction among hackers and malware developers. This article provides insight into the development of such tools during that era.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in encryption techniques.",
+  "short_summary": "The article discusses SMEG, a polymorphic encryption tool developed by the Black Baron. It highlights its unique features, including the generation of large decryptors and the ability to create calls to garbage subroutines, making it a notable tool in the realm of encryption.",
+  "summary": "In this article, Dark Angel presents SMEG, a polymorphic encryption tool designed to obfuscate code through various encryption techniques. SMEG stands out due to its ability to generate large decryptors and its unique feature of creating calls to garbage subroutines. This method of encryption is likened to Whale, coupled with garbling, which adds an additional layer of complexity to the encrypted output. The article includes a detailed disassembly of a demonstration program that showcases how SMEG operates, providing readers with a practical understanding of its functionality.\n\nThe disassembly reveals the inner workings of SMEG, detailing how it manages data encryption and decryption processes. The author explains the structure of the work buffer and the various registers used during encryption. Additionally, the article discusses the generation of garbage data to further obfuscate the output, making it harder for reverse engineers to analyze the encrypted code. Overall, SMEG serves as a significant example of the evolution of encryption techniques in the hacker community during the 1990s, illustrating the ongoing arms race between code obfuscation and analysis."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 2, Phile #7 of 11",
+  "title": "The Kennedy Virus",
+  "authors": "Instigator",
+  "date": "April, 1990",
+  "historical_context": "The Kennedy virus emerged during a time when computer viruses were becoming more prevalent, marking a significant point in the evolution of malware.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in historical viruses.",
+  "short_summary": "This article discusses the Kennedy virus, a .COM file infector discovered in 1990. It details its symptoms, activation dates, and methods for detection and removal.",
+  "summary": "The Kennedy virus, discovered in April 1990, is a parasitic non-resident .COM infector that exhibits symptoms such as file growth, crosslinking, and FAT corruption. It activates on specific dates related to the Kennedy family, displaying a message referencing 'The Dead Kennedys' upon activation. The article provides a detailed breakdown of the virus's characteristics, including its origin in Denmark and its detection methods using various antivirus tools available at the time. It also outlines the removal process, emphasizing the use of specific antivirus software to eliminate the infection.\n\nThe author, Instigator, offers insights into the virus's code, providing hexadecimal representations and instructions for creating a working version of the virus. This serves as both an educational resource for understanding the mechanics of the virus and a cautionary tale about the vulnerabilities present in systems during that era. The article is a valuable read for those interested in the history of malware and the evolution of computer security practices."
+}

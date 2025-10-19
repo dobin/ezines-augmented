@@ -1,0 +1,1764 @@
+                             ==Phrack Inc.==
+
+               Volume 0x0c, Issue 0x41, Phile #0x0a of 0x0f
+
+|=-----------------------------------------------------------------------=|
+|=---------------------=[ phook - The PEB Hooker ]=----------------------=|
+|=-----------------------------------------------------------------------=|
+|=-----------------------------------------------------------------------=|
+|=----------------=[ [Shearer] - eunimedesAThotmail.com ]=---------------=|
+|=----------------=[ Dreg      - DregATfr33project.org  ]=---------------=|
+|=-----------------------------------------------------------------------=|
+|=--=[ http://www.fr33project.org / Mirror: http://www.disidents.com ]=--=|
+|=-----------------------------------------------------------------------=|
+|=-------------------------=[ October 15 2007 ]=-------------------------=|
+|=-----------------------------------------------------------------------=|
+
+------[  Index
+
+     0.- Foreword
+
+     1.- Introduction
+    
+     2.- Previous concepts
+        2.1 - Process Environment Block
+            2.1.1 - LoaderData
+        2.2 - Import Address Table
+            2.2.1 - Load of the Import Address Table
+        2.3 - Starting a process in suspended state
+        2.4 - Injection of a DLL in a process
+        2.5 - Hooks in ring3
+            2.5.1 - Problems
+                
+     3.- Design
+        3.1 - Fore steps to PEB HOOKING
+        3.2 - Exchange of data in LoaderData
+        3.3 - Dynamic load of modules
+        3.4 - Repairing the IAT
+        3.5 - Starting execution
+        3.6 - The APIs that work with modules
+        3.7 - A new concept: DLL MINIFILTER
+        3.8 - Frequent Problems
+    
+     4.- phook
+        4.1 - InjectorDLL
+        4.2 - Console Control
+        4.3 - CreateExp
+            4.3.1 - Forwarder DLL
+        4.4 - ph_ker32.dll
+            4.4.1 - Stack problems
+            4.4.2 - Registry problems
+            4.4.3 - The JMP macro
+            4.4.4 - Versions
+        4.5 - Using phook
+            4.5.1 - DLL MINIFILTER
+        4.6 - Frequent Problems
+    
+     5.- TODO
+    
+     6.- Testing
+    
+     7.- Advantages and possibilities
+     
+     8.- Conclusion
+    
+     9.- Acknowledgements
+    
+    10.- Related Works
+    
+    11.- References
+    
+    12.- Source Code
+
+
+------[ 0.- Foreword
+
+Nomenclatures:
+    .- [T.Index]: related works (section 10).
+    .- [R.Index]: references (section 11).
+Index is the identificator of the nomenclatures.
+
+To understand the document it is needed to have knowledge in win32 about:
+    - Types of executables:
+        - PE32 [R.3]: DLLs, EXE... 
+    - Programming:
+        - Use of APIs [R.20]: LoadLibrary, GetModuleHandle ...
+        - Hooks [R.10] [R.8] [...]
+    - Win32 ASM [R.21].
+
+Two terms will be used along all the document:
+    1.- DLL_FAKE: DLL that will supplant a legitim DLL (DLL_REAL).
+    2.- DLL_REAL: DLL that will be supplanted by DLL_FAKE.
+
+Unless stated otherwise, hook/s will always refer to hook/s in win32.
+
+
+------[ 1.- Introduction
+
+Hooks in win32 are commonly used to do reverse engineering, the most common
+motivations are the analisys of malware and packers, software protection
+systems. Hooks are also used to monitorize parts of a software: access to
+files, sockets, registry modification...
+
+The actual methods to realize hooks in ring3 (see section 2.5) has
+different problems (see section 2.5.1). The most important problem for us
+was that  some software can detect them. There are software protection
+systems that are able to alter the flow of execution when they detect some
+kind of unknown hook, even the most sophisticated are able to eliminate
+some types of hooks and continue the normal flow of execution.
+
+Another problem comes while atempting to realize a hook in the virus that
+tracks API's addresses in memory, disabling some types of hooks like IAT
+HOOKING (see section 2.5). There are software protection systems that use
+some technics of virus and viceversa.
+
+Due to these problems we have created phook, which uses a few documented
+method to realize hooks in ring3 and it even makes some virus techniques
+to use our hook.
+
+This document explains how phook works and the PEB HOOKING [T.1] method.
+phook is a tool that uses PEB HOOKING [T.1] to realize a hook of a DLL, it
+also allows to realize other tasks interactively:
+    - List loaded modules.
+    - Load a DLL.
+    - Download a DLL.
+    - ...
+
+The PEB HOOKING [T.1] method consists in supplanting a DLL_REAL in memory
+by a DLL_FAKE, so all modules of a process that use DLL_REAL now will use
+DLL_FAKE.
+
+
+------[ 2 - Previous concepts
+
+To understand the PEB HOOKING [T.1] method and how phook works, it is
+needed to have clear understanding of some concepts:
+
+
+------[ 2.1 - Process Environment Block
+
+Process Environment Block (PEB) is a structure [R.1] located in the
+user's space, that contains the process' enviroment data [R.2]:
+    - Enviroment variables.
+    - Loaded modules list.
+    - Addresses in memory of the Heap.
+    - If the process is being depurated.
+    - ...
+
+    ------[ CODE
+    
+    typedef struct _PEB
+    {   
+        BOOLEAN InheritedAddressSpace;
+        BOOLEAN ReadImageFileExecOptions;
+        BOOLEAN BeingDebugged;
+        BOOLEAN Spare;
+        HANDLE  Mutant;
+        PVOID ImageBaseAddress;
+        PPEB_LDR_DATA LoaderData;
+        PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+        PVOID SubSystemData;
+        PVOID ProcessHeap;
+        PVOID FastPebLock;
+        PPEBLOCKROUTINE FastPebLockRoutine;
+        PPEBLOCKROUTINE FastPebUnlockRoutine;
+        ...
+        
+    } PEB, *PPEB;
+    
+    ------[ END CODE
+
+To realize PEB HOOKING it is needed to use the field LoaderData [T.1].
+
+
+------[ 2.1.1 - LoaderData
+
+It is a structure [R.1] in which there are some data about the modules
+of a process. It is a doubly linked list and it can be sorted by three
+criteria [R.2]:
+    1.- Order of loading
+    2.- Order in memory
+    3.- Order of initialization
+
+    ------[ CODE
+
+    typedef struct _PEB_LDR_DATA
+    {
+        ULONG Length;
+        BOOLEAN Initialized;
+        PVOID SsHandle;
+        LIST_ENTRY InLoadOrderModuleList;
+        LIST_ENTRY InMemoryOrderModuleList;
+        LIST_ENTRY InInitializationOrderModuleList;
+	
+
+    } PEB_LDR_DATA, *PPEB_LDR_DATA;
+    
+    ------[ END CODE
+
+All flink and blink fields in LIST_ENTRY are in reality pointers
+to LDR_MODULE.
+    
+    ------[ CODE
+    
+    typedef struct _LIST_ENTRY {
+    	struct _LIST_ENTRY * Flink;
+    	struct _LIST_ENTRY * Blink;
+    	
+    } LIST_ENTRY,*PLIST_ENTRY;
+    
+    ------[ END CODE
+
+The data that we are going to manipulate from LDR_MODULE to realize
+PEB HOOKING are [T.1]:
+    - BaseAddress: The base of the module in memory.
+    - EntryPoint : Address where the module's first instruction to
+                   be executed can be found.
+    - SizeOfImage: Size of the module in memory.
+
+    ------[ CODE
+
+    typedef struct _LDR_MODULE
+    {
+        LIST_ENTRY InLoadOrderModuleList;
+        LIST_ENTRY InMemoryOrderModuleList;
+        LIST_ENTRY InInitializationOrderModuleList;
+        PVOID BaseAddress;
+        PVOID EntryPoint;
+        ULONG SizeOfImage;
+        UNICODE_STRING FullDllName;
+        UNICODE_STRING BaseDllName;
+        ULONG Flags;
+        SHORT LoadCount;
+        SHORT TlsIndex;
+        LIST_ENTRY HashTableEntry;
+        ULONG TimeDateStamp;
+
+    } LDR_MODULE, *PLDR_MODULE;
+    
+    ------[ END CODE
+
+
+------[ 2.2 - Import Address Table
+
+Import Address Table (IAT) is a table that the PE32 [R.3] have,
+which fills the win32 loader when a module [R.4] is loaded and also on 
+late loading using stub at IAT.
+
+External symbols that need a module are called importations, the symbols
+that a module provide to other modules are called exportations.
+
+In the IAT [R.3] of a module there are the addresses of its importations,
+that is, in the IAT [R.3] of a module there are the addresses of the
+exportations it uses from other modules.
+
+
+------[ 2.2.1 - Load of the Import Address Table
+
+For the win32 loader to be able to obtain the exportation it needs to
+know: the module where it is located, the name of the exportation and/or
+the ordinal [R.3].
+
+The PE32 has a structure called IMAGE_IMPORT_DESCRIPTOR [R.5] where we
+can highlight the fields:
+    - Name              : Name of the module where the exportations are
+                          located.
+    - OriginalFirstThunk: Address of the table where the names and/or
+                          the ordinals of the exportations that the
+                          module imports are located.
+    - FirstThunk        : Address of a table, identical to
+                          OriginalFirstThunk, where the win32 loader
+                          puts the addresses of the importations.
+			
+    ------[ CODE
+    
+    typedef struct _IMAGE_IMPORT_DESCRIPTOR {
+    	DWORD OriginalFirstThunk;
+    	DWORD TimeDateStamp;
+    	DWORD ForwarderChain;
+    	DWORD Name;
+    	DWORD FirstThunk;
+    	
+    } IMAGE_IMPORT_DESCRIPTOR,*PIMAGE_IMPORT_DESCRIPTOR;
+    
+    ------[ END CODE
+
+Each entry of the table of FirstThunk and OriginalFirstThunk has two
+fields [R.3]:
+    - Hint: if the first 31/63 bits are 0x80000000 it will import only
+            taking account the ordinal, otherwise the name will be used.
+            The bits 15-0 represent the ordinal.
+    - Name: Address where the name of the exportation is located.
+    
+    ------[ CODE
+    
+    typedef struct _IMAGE_IMPORT_BY_NAME {
+    	WORD Hint;
+    	BYTE Name[1];
+    	
+    } IMAGE_IMPORT_BY_NAME,*PIMAGE_IMPORT_BY_NAME;
+    
+    ------[ END CODE
+
+
+------[ 2.3 - Starting a process in suspended state
+
+When it is wanted to create a process in suspended state it is necessary to
+know which type it is [R.6]:
+    - Console
+    - GUI
+
+Console type processes can be created with the API CreateProcess and the
+flag CREATE_SUSPENDED.
+
+If GUI type processes are opened with the flag CREATE_SUSPENDED may not
+work correctly, so they must be created using the APIs:
+    1.- CreateProcess   : Process is created without the flag
+                          CREATE_SUSPENDED.
+    2.- WaitForInputIdle: Correct load of the process [R.6] is waited for.
+    3.- SuspendThread   : The main thread is suspended.
+
+
+------[ 2.4 - Injection of a DLL in a process
+
+To inject a DLL in a process there are many methods [R.7], the most
+simple is using the APIs:
+    1.- VirtualAllocEx    : To reserve memory in the process.
+    2.- WriteProcessMemory: To write in the reserved space a code that
+                            loads a DLL.
+    3.- CreateRemoteThread: A thread is created in the process that
+                            executes the written code.
+    4.- VirtualFreeEx     : Once the DLL is loaded reserved memory is
+                            freed.
+
+
+------[ 2.5 - Hooks in ring3
+
+There always has been many forms to realize "hooks" in win32, as much in
+ring3 as in ring0. The problem about working in ring0 lies in that if
+something fails the OS may become unstable. The most stable method for
+the OS is to realize the "hook" from ring3.
+
+The most known methods are:
+    - IAT HOOKING: Entries in the IAT [R.3] are modified, which puts the
+                   loader in win32, so it points to another zone [R.8].
+                   
+    - PUSH + RET: In a code area PUSH DIRECTION and RET are introduced to
+                  jump to the desired address.
+                  Generally it is needed to pass the control to the
+                  original area, having to restore it in a determined
+                  moment [R.9].
+    
+    - SetWindowHook...: With these APIs, a callback may be registered
+                        for different events of the system [R.10].
+
+
+------[ 2.5.1 - Problems
+
+Some problems in the methods to realize hooks in ring3:
+
++-------------------------------------------------------------------------+
+| Some Methods           | Some problems                                  |
++------------------------+------------------------------------------------+
+| IAT HOOKING [R.8]      | 1.- The IAT [R.3] of all the loaded modules    |
+|                        |     have to be changed.                        |
+|                        | 2.- A module does not need IAT [R.3] to use    |
+|                        |     symbols exported by others.                |
+|                        | 3.- It is very well known.                     |
+|                        | 4.- Easy to repair.                            |
+|                        | 5.- Can be detectable.                         |
+|                        | 6.- Does not allow full control from the start.|
+|------------------------+------------------------------------------------|
+| PUSH + RET [R.9]       | 1.- The method is not generic for all the areas|
+|                        |     of the code.                               |
+|                        | 2.- It is complicated to implement.            |
+|                        | 3.- Easy to repair.                            |
+|                        | 4.- Can be detectable.                         |
+|                        | 5.- Does not allow full control from the start.|
+|------------------------+------------------------------------------------|
+| Other "hooks":         | 1.- Does not allow full control.               |
+| SetWindowHook... [R.10]| 2.- Easy to repair.                            |
+|                        | 3.- Can be detectable.                         |
+|------------------------+------------------------------------------------|
+| PEB HOOKING [T.1]      | 1.- It is complicated to implement.            |
+|                        | 2.- The original DLL and the injected have to  |
+|                        |     export the same symbols in the same order  |
+|                        |     (at least).                                |
+|                        | 3.- Can be detectable.                         |
+|                        | 4.- Does not allow full control from the start.|
++------------------------+------------------------------------------------+
+
+Note: This table only represents the opinion of the authors.
+
+Calls from ring3 to ring0 using SYSENTER cannot be controlled by means of
+the previous methods only. A system call from ring3 can be realized with
+SYSENTER [R.11] without happening through any DLL, of such way that the
+previous methods are made unusable in this pretty rare situation.
+
+Due to the previous problems, we have decided to use PEB HOOKING [T.1] to
+create a engine that realizes more than "hooks": phook - The PEB Hooker.
+
+Note: The advantages and possibilities of PEB HOOKING [T.1] are explained
+in section 7.
+
+
+------[ 3.- Design
+
+In this section it will be spoken of the base design to realize PEB
+HOOKING [T.1] successfully. The implementation is not complicated when it
+is understood why each thing is done.
+
+The steps:
+    
+    1.- Load DLL_FAKE and DLL_REAL.
+    
+    2.- In the list that uses the loader in win32, in which all the
+        loaded modules in this moment are located, it has to exchange
+        many fields between DLL_FAKE and DLL_REAL.
+        
+    3.- It is necessary that the IATs [R.3] of all the loaded modules,
+        except DLL_REAL and maybe DLL_FAKE point to the functions that
+        the DLL_FAKE exports.
+        
+
+------[ 3.1 - Fore steps to PEB HOOKING
+
+It is necessary before anything to load a DLL_FAKE into the memory of the 
+process, to which it is wanted to realize PEB HOOKING [T.1]. The DLL_FAKE
+must have at least the same exportations and the same order of DLL_REAL.
+
+
+------[ 3.2 - Exchange of data in LoaderData
+
+It is necessary to search DLL_FAKE and DLL_REAL for some identificative
+fields of LDR_MODULE, once found the following data will be exchanged:
+    - EntryPoint
+    - BaseAddress
+    - SizeOfImage (almost always)
+
+The search using the field BaseDllName will obtain the data of LDR_MODULE
+pertaining to DLL_FAKE. Some virus, packers and APIs use this form of
+search to find the BaseAddress or EntryPoint of a module.
+
+It is necessary to change the field SizeOfImage in the case that DLL_FAKE
+and DLL_REAL do not have the same size in memory.
+
+Searching flow of BaseAddress of kernel32.dll in a process without
+PEB HOOKING [T.1]:
+
+                     0     +---------------------------------+
+   [ process ] ---------+  | Process Environment Block (PEB) |
+                        |  |---------------------------------|
+                        |  | InheritedAddressSpace           |
+                        |  | ReadImageFileExecOptions        |
+                        |  | BeingDebugged                   |
+                        |  | Spare                           |
+                        |  | Mutant                          |
+                        |  | ImageBaseAddress                |
+                        +->| LoaderData                      |--+
+                           | ...                             |  |
+                           +---------------------------------+  | 1
+                                                                |
+                                                                |
+ +--------------------------------------------------------------+
+ |  +----------------------------+     +----------------------------+
+ |  |          LoaderData        |     |         LDR_MODULE         |
+ |  +----------------------------+     |----------------------------| flink
+ |  | Length                     |     | InLoadOrderModList         |-----+
+ |  | Initialized                |     | InMemoryOrderModList       |     |
+ |  | SsHandle                   |     | InInitOrderModList         |     |
+ +->| InLoadOrderModList         |  2  | ...                        |     |
+    | InMemoryOrderModList       |---->| BaseDllName   "ntdll.dll"  |---+ |
+    | InInitOrderModList - Flink |     +----------------------------+   | |
+    +----------------------------+ +------------------------------------+ |
+                                   |   +----------------------------+     |
+                                   |   |   LDR_MODULE (DLL_REAL)    |     |
+                                   |   |----------------------------|     |
+                                   |   | InLoadOrderModList         |   6 |
+    +---------------------+     3  |   | InMemoryOrderModList       |     |
+    |   "kernel32.dll"    |<-------+   | InInitOrderModList         |     |
+    +---------------------+            | BaseAddress  7C801000      |     |
+        8 |     |4       ^        7    | ...                        |     |
+    Yes <-+     +-> No   +-------------| BaseDllName "kernel32.dll" |<----+
+     |               | 5               | ...                        |
+   9 |               v                 +----------------------------+
+     |            NextLdrModule();
+     v
+ kernel32.dll = 7C801000
+
+
+Searching flow of BaseAddress of kernel32.dll in the previous process with
+PEB HOOKING [T.1]:
+
+                     0     +---------------------------------+
+   [ process ] ---------+  | Process Environment Block (PEB) |
+                        |  |---------------------------------|
+                        |  | InheritedAddressSpace           |
+                        |  | ReadImageFileExecOptions        |
+                        |  | BeingDebugged                   |
+                        |  | Spare                           |
+                        |  | Mutant                          |
+                        |  | ImageBaseAddress                |
+                        +->| LoaderData                      |--+
+                           | ...                             |  |
+                           +---------------------------------+  | 1
+                                                                |
+                                                                |
+ +--------------------------------------------------------------+
+ |  +----------------------------+     +----------------------------+
+ |  |          LoaderData        |     |         LDR_MODULE         |
+ |  +----------------------------+     |----------------------------| flink
+ |  | Length                     |     | InLoadOrderModList         |-----+
+ |  | Initialized                |     | InMemoryOrderModList       |     |
+ |  | SsHandle                   |     | InInitOrderModList         |     |
+ +->| InLoadOrderModList         |  2  | ...                        |     |
+    | InMemoryOrderModList       |---->| BaseDllName   "ntdll.dll"  |---+ |
+    | InInitOrderModList - Flink |     +----------------------------+   | |
+    +----------------------------+ +------------------------------------+ |
+                                   |   +----------------------------+     |
+                                   |   |   LDR_MODULE (DLL_REAL)    |     |
+                                   |   |----------------------------|   6 |
+                                   |   | InLoadOrderModList         |     |
+    +---------------------+     3  |   | InMemoryOrderModList       |flink|
+    |   "kernel32.dll"    |<-------+   | InInitOrderModList         |--+  |
+    +---------------------+            | BaseAddress 7C801000       |  |  |
+       12 |     |4-8   ^ ^        7    | ...                        |  |  |
+    Yes <-+     +-> No | +-------------| BaseDllName "old_k32.dll"  |<-|--+
+     |           5-9 | +------------+  | ...                        |  |
+  13 |               v              |  +----------------------------+  |
+     |            NextLdrModule();  +-+                                |
+     v                                | +----------------------------+ |
+ kernel32.dll = 005C5000              | |   LDR_MODULE (DLL_FAKE)    | | 10
+                                      | |----------------------------| |
+                                  11  | | InLoadOrderModList         | |
+                                      | | InMemoryOrderModList       | |
+                                      | | InInitOrderModList         | |
+                                      | | BaseAddress 005C5000       | |
+                                      | | ...                        | |
+                                      +-| BaseDllName "kernel32.dll" |<+
+                                        | ...                        |
+                                        +----------------------------+
+                                        
+Results of the search in the process:
+    1.- BaseAddress without PEB HOOKING [T.1]: 7C801000 (DLL_REAL)
+    2.- BaseAddress with PEB HOOKING [T.1]: 005C5000 (DLL_FAKE)
+
+PD: Generally searching by InLoadOrderModList, the first field that shows
+    up is the LDR_MODULE corresponding to the main module. In the
+    example it has been omited for the sake of clarity.
+    
+
+------[ 3.3 - Dynamic load of modules
+
+When a process, in that PEB HOOKING [T.1] has been done, loads a module
+dynamically [R.12] that has importations from DLL_REAL, its IAT [R.3]
+will be loaded automatically with the necessary exportations of DLL_FAKE.
+
+
+------[ 3.4 - Repairing the IAT
+
+Except in the modules DLL_FAKE and DLL_REAL, all the IATs [R.3] that have
+exportations of the DLL_REAL shall be replaced by the corresponding ones
+from DLL_FAKE. The IAT [R.3] of DLL_FAKE is not due to change in case the
+exportations of DLL_REAL are needed to be used.
+
+If the IAT [R.3] of DLL_FAKE has been modified so the exportations of
+DLL_REAL are the same ones of DLL_FAKE, a call to a exportation of
+DLL_REAL from the same exportation of DLL_FAKE, will enter in an
+infinite recursive loop, causing stack overflow.
+    
+    +--------------------------+     +--------------------------------+
+    |      .text DLL_FAKE      |     |               IAT              |
+    |--------------------------|     |--------------------------------|
+    | ...                      |     | LocalAlloc  1 (Nr_LocalAlloc)  |
+    | PUSH EBP                 |  +->| LoadLibrary 2 (Nr_LoadLibrary) |--+
+    | MOV EBP, ESP             |  |  |  ....                          |  |
+    | ...                      |  |  +--------------------------------+  |
+    | LoadLibrary_FAKE:        |  |                                      |
+ +->| PUSH original_lib_name   |  | 0                                    |
+ |  | CALL IAT[Nr_LoadLibrary] |--+                                      |
+ |  | ...                      |                                         |
+ |  | POP EBP                  |                                         |
+ |  | RET                      |                                         |
+ |  | ...                      |                                         |
+ |  +--------------------------+                                         |
+ |                                          1                            |
+ +-----------------------------------------------------------------------+
+
+The real problem is that we are calling ourselves either directly or
+indirectly by one or various DLLs. It is not due to repair the IAT [R.3]
+of any module (DLL_ANY) when DLL_FAKE calls an exportation of DLL_ANY that
+at the same time calls an exportation of DLL_FAKE that implies to call
+again the same exportation direct or indirectly from DLL_ANY.
+
+Flow of a call to RtlHeapAlloc, when PEB HOOKING [T.1] has been done over
+NTDLL.DLL and the IAT of kernel32.dll has been changed:
+
+Example:
+
+[ process ]
+ |
+ | CALL RtlHeapAlloc                         CALL LoadLibrary
+ +-------------------> [DLL_FAKE ntdll.dll] ------------------+
+              0         ^                           1         |
+                        | CALL RtlInitUnicodeString           v
+                        +--------------------------- [DLL_ANY kernel32.dll]
+                                          2
+
+
+Flow of a call to RtlHeapAlloc, when PEB HOOKING [T.1] has been done over
+NTDLL.DLL and the IAT [R.3] of kernel32.dll has NOT been changed:
+
+[ process ]<----------------+
+ |                       4  |
+ | CALL RtlHeapAlloc        |                 CALL LoadLibrary
+ +-------------------> [ DLL_FAKE ntdll.dll] ------------------+
+    0                       ^                       1          |
+         +------------------+                                  |
+         |    3                                                |
+         |                CALL RtlInitUnicodeString            v
+[DLL_REAL old_nt.dll] <--------------------------- [DLL_ANY kernel32.dll]
+                                          2
+                                          
+Note: The scheme has been simplified, omiting the rest of calls of
+      DLL_FAKE.
+
+
+Flow of a normal call to LoadLibrary in a process (without PEB HOOKING
+[T.1]):
+
+            CALL IAT[Nr_LoadLibrary]  +--------------------------------+
+[process] -------------------------+  |                IAT             |
+   ^                0              |  |--------------------------------|
+   |                               |  | LocalAlloc  1 (Nr_LocalAlloc)  |
+   |    +-----------------------+  +->| LoadLibrary 2 (Nr_LoadLibrary) |-+
+   |    | DLL_REAL kernel32.dll |     |  ....                          | |
+   |    |-----------------------|     +--------------------------------+ |
+   |    | ...                   |                  1                     |
+   |    | LoadLibrary:          | <--------------------------------------+
+   | 2  | PUSH EBP              |
+   |    | MOV EBP, ESP          |
+   |    | ...                   |
+   |    | POP EBP               |
+   +----| RET                   |
+        | ...                   |
+        +-----------------------+
+
+The flow is normal and passes directly by DLL_REAL.
+
+    
+Flow of a call to LoadLibrary in a process with PEB HOOKING [T.1]:
+
+            CALL IAT[Nr_LoadLibrary]  +--------------------------------+
+[process] -------------------------+  |                IAT             |
+   ^                0              |  |--------------------------------|
+   |                               |  | LocalAlloc  1 (Nr_LocalAlloc)  |
+   |  +-------------------------+  +->| LoadLibrary 2 (Nr_LoadLibrary) |-+
+   |  | DLL_FAKE  kernel32.dll  |     |  ....                          | |
+   |  |-------------------------|     +--------------------------------+ |
+ 4 |  | ...                     |                     1                  |
+   |  | Own_LoadLibrary:        | <--------------------------------------+
+   |  | PUSH EBP                |
+   |  | MOV EBP, ESP            |       +-----------------------------+
+   |  | // Own functions...     |   2   | DLL_REAL  old_k32.dll       |
+   |  | CALL IAT[Nr_LoadLibrary]|----+  |-----------------------------|
+   |  | POP EBP                 |<-+ |  | ...                         |
+   +--| RET                     |  | +->| LoadLibrary:                |
+      |   ...                   |  |    | PUSH EBP                    |
+      +-------------------------+  |    | MOV EBP, ESP                |
+                                   |    | ...                         |
+                                 3 |    | POP EBP                     |
+                                   |    | RET                         |--+
+                                   |    | ...                         |  |
+                                   |    +-----------------------------+  |
+                                   +-------------------------------------+
+
+As it can be observed the flow passes first through DLL_FAKE. Then
+DLL_FAKE calls to the original LoadLibrary (DLL_REAL).
+
+
+------[ 3.5 - Starting execution
+
+Once all the previous steps are done it is the moment for beginning to
+execute the process and to see if everything works.
+
+
+------[ 3.6 - The APIs that work with modules
+
+The APIs LoadLibrary, GetModuleHandle, EnumProcessModules [R.12] ... use
+the field LoaderData from the PEB [T.1]. This means that everytime that
+they try something against DLL_REAL they will be interacting with
+DLL_FAKE, for example:
+
+PEB HOOKING [T.1] has been done to USER32.DLL:
+    - DLL_FAKE
+        - Name in memory:    USER32.DLL
+        - BaseAddress:       00435622
+    - DLL_REAL
+        - Name in memory:    OLD_U32.DLL
+        - BaseAddress:       77D10000
+
+The process tries to obtain the base of USER32.DLL:
+    - HMODULE user32 = GetModuleHandle( "user32.dll" );
+
+After executing GetModuleHandle [R.12] the variable user32 will contain:
+00435622 (BaseAddress of DLL_FAKE). If the process does later a
+GetProcAddress [R.12] on some function exported by USER32.DLL, it will
+obtain the function of DLL_FAKE.
+
+Thanks to PEB HOOKING [T.1] it is no longer necessary to change the
+behaviour of the APIs that work with modules so that they use DLL_FAKE.
+
+
+------[ 3.7 - A new concept: DLL MINIFILTER
+
+DLL MINIFILTER is the name that we have given to the capacity by which a
+call to an exportation can pass through several DLL_FAKE. One of the most
+importtant advantages of the method is to extend or to limit the
+functionalities modularly to the call of an exportation.
+
+When PEB HOOKING [T.1] is done over a DLL_FAKE, the term DLL_REAL for the
+new DLL_FAKE becomes the previous DLL_FAKE, creating
+While doing PEB HOOKING [T.1] over DLL_FAKE, the DLL_REAL term for the new 
+DLL_FAKE, became the before  DLL_FAKE value, creating therefore a stack of 
+DLL_FAKEs. The flow will go form the last DLL_FAKE, of which PEB HOOKING 
+[T.1] has taken control, to the DLL_REAL, in case that all the DLL_FAKEs 
+call to the original export.
+
+Flow of a call of a proceso, with PEB HOOKING [T.1], with just one
+DLL_FAKE:
+           0              1
+[process] --> [DLL_FAKE] --> [DLL_REAL]
+    ^                            |
+    |             2              |
+    +----------------------------+
+
+Flow of a call of a process, with PEB HOOKING [T.1], with three DLL_FAKEs:
+           0                1                2                3
+[process] --> [DLL_FAKE 3] --> [DLL_FAKE 2] --> [DLL_FAKE 1] --> [DLL_REAL]
+    ^                                                               |
+    |                               4                               |
+    +---------------------------------------------------------------+
+
+In the previous examples, all the DLL_FAKEs pass the control to the
+corresponding DLL_REAL.
+
+
+------[ 3.8 - Frequent problems
+
+
+At the time of realizing PEB HOOKING [T.1] certain problems may happen,
+next a table with the problems and the possible solutions is shown:
+
++-------------------------------------------------------------------------+
+| Problem                       | Possible/s Solution/s                   |
+|-------------------------------+-----------------------------------------|
+| - The PEB HOOKING [T.1] fails | - Check if the necessary fields of the  |
+|                               |   PEB [T.1] can be exchanged.           |
+|                               | - Check if the correct permissions to   |
+|                               |   change the needed IATs [R.3] are      |
+|                               |   present.                              |
+|-------------------------------+-----------------------------------------|
+| - The execution of a process  | - Check that the PEB [R.1] is browsed   |
+|   fails                       |   correctly.                            |
+|                               | - Check if the IATs [R.3] of all the    |
+|                               |   modules of the process have been      |
+|                               |   correctly browsed.                    |
+|                               | - check if the modified permissions in  |
+|                               |   memory in the PEB HOOKING [T.1] have  |
+|                               |   been restored.                        |
++-------------------------------------------------------------------------+
+
+
+------[ 4.- phook
+
+phook is capable of realizing PEB HOOKING [T.1] (and other things) in a
+simple manner. phook is a project of various modules:
+    
+    - InjectorDLL: Program that creates a suspended process and injects a
+                   DLL in it.
+    
+    - Console Control: DLL that is injected in the process where we want to
+                       do PEB HOOKING [T.1]. It allows to do PEB HOOKING
+                       [T.1] and other tasks interactively by means of a
+                       command console by sockets.
+    
+    - CreateExp: Program that generates from a DLL_REAL the source code
+                 needed to realize a DLL_FAKE.
+    
+    - ph_ker32.dll: DLL_FAKE of kernel32.dll. ph_ker32.dll monotorizes the
+                    access to the APIs: CreateFileA and CreateFileW [R.14].
+
+
+------[ 4.1 - InjectorDLL
+
+Program that creates a suspended process and injects a DLL into it. To 
+inject the DLL C:\console.dll in the corresponding process C:\poc.exe:
+    - To specify the type of process:
+        - CONSOLE:
+            - InjectorDLL.exe C:\console.dll -c C:\poc.exe
+        - GUI:
+            - InjectorDLL.exe C:\console.dll -g C:\poc.exe
+    - Not to specify the type of process
+        - InjectorDLL.exe C:\console.dll -u C:\poc.exe
+
+InjectorDLL, with the parameter -u, usually detects if a process is GUI or
+Console to know how to create it suspended (see section 2.3). The method
+that we have created consists in creating the process with the API
+CreateProcess and the flag CREATE_SUSPENDED [R.6]. Later WaitForInputIdle 
+is called, if the wait fails then it is a Console process, otherwise it 
+will be GUI.
+
+    ------[ CODE
+    
+    CreateProcess
+    (  
+        program_name                          ,
+        NULL                                  ,
+        NULL                                  ,
+        NULL                                  ,
+        FALSE                                 ,
+        CREATE_SUSPENDED | CREATE_NEW_CONSOLE ,
+        NULL                                  ,
+        NULL                                  ,
+        pstart_inf                            ,
+        ppro_inf
+    )
+    
+    // It is necessary to check the correct creation of the process
+    
+    if ( WaitForInputIdle( ppro_inf->hProcess, 0 ) == WAIT_FAILED )
+        // "Console process"
+    else
+        // "GUI process"
+    
+    ------[ END CODE
+
+Once the type of process is known, we already know how to create it
+suspended correctly (see section 2.3).
+
+Note: the method may not always work, in some ocassion a
+      "Console process" will be detected as "GUI process".
+
+The code that loads the DLL is put in a structure called LOADER_DLL_s
+(see section 2.3). LOADER_DLL_s is loaded with the instructions in
+assembler and the needed data. It is necessary to write in the created
+process the structure LOADER_DLL_s and to call to CreateRemoteThread, 
+giving it as entrypoint the start of the structure, so that the code of 
+LOADER_DLL_s is executed.
+
+Once the DLL is loaded, the thread is suspended from which LOADER_DLL_s is 
+being executed and increments a flag to indicate it.
+
+    ------[ CODE
+    
+    typedef struct LOADER_DLL_s
+    {
+        /* - CODE ------------------------------------------------------ */
+        PUSH_ASM_t      push_name_dll;           /* PUSH "DLL_INJECT.DLL"*/
+        CALL_ASM_t      call_load_library;       /* CALL  LoadLibraryA   */
+        
+        CALL_ASM_t      call_get_current_thread; /* CALL GetCurrentThread*/
+        INC_BYTE_MEM_t  inc_flag;                /* INC [FLAG]           */
+        char            PUSH_EAX;                /* PUSH EAX             */
+        CALL_ASM_t      call_suspendthread;      /* CALL SuspendThread   */
+        
+        /* - DATA ------------------------------------------------------ */
+        char            name_dll[MAX_PATH];      /* DLL_INJECT.DLL'\0'   */
+        char            flag;                    /* [FLAG]               */
+        
+    } LOADER_DLL_t;
+    
+    ------[ END CODE
+
+
+------[ 4.2 - Console Control
+
+Console Control is the DLL that is injected in the process in which it is
+wanted  to realize PEB HOOKING [T.1]. It allows to make PEB HOOKING [T.1]
+and other tasks interactively by means of a command console by sockets. The
+port that listens writes it in the file C:\ph_listen_ports.log, with the
+nomenclature PID - PORT. Example of a process with PID 2456,
+listening in the port 1234: 2456 - 1234.
+
+At the moment you have the following list of commands:
+    help                      - Shows this screen
+    exit                      - Closes and unloads the console
+    suspend                   - Pauses the execution of the program
+    resume                    - Resumes the execution of the program
+    showmodules               - Shows the list of modules
+    load [param1]             - Loads in memory the specified library
+                                in [param1]
+    unload [param1]           - Unloads a library specified in memory in
+                                [param1]
+    pebhook [param1] [param2] - Realizes PEB HOOKING [T.1] over a dll
+                                [param1]: Name of the original dll
+                                [param2]: Path to the DLL_FAKE
+
+It is easy to understand each of the commands that our console admits, so
+we will explain how "showmodules", "pebhook" and "suspend" work.
+
+The commando "showmodules" does a search in the PEB [R.1] of the loaded
+modules without using APIs.
+
+pebhook is the command that realizes all the process of PEB HOOKING  (see
+section 3).
+
+If PEB HOOKING [T.1] over kernel32.dll is wanted to be done, using as
+DLL_FAKE "C:\phook\bin\windows_xp_sp2\ph_ker32.dll", for the OS Windows
+XP SP2, only it is necessary to send the command:
+    - pebhook kernel32.dll c:\phook\bin\windows_xp_sp2\ph_ker32.dll
+
+The command suspend is capable of suspending the execution of the main
+thread of the process. The TID of the main thread is obtained browsing
+the THREADENTRY32 [R.13] of the system till it reaches the first of
+the process:
+    
+    ------[ CODE
+    
+    BOOL GetMainThreadId( DWORD * thread_id )
+    {
+        HANDLE        hThreadSnap;
+        THREADENTRY32 th32;
+        BOOL          return_function;
+        DWORD         process_id;
+        
+        process_id      = GetCurrentProcessId();
+        hThreadSnap     = INVALID_HANDLE_VALUE;
+        return_function = FALSE;
+    
+        hThreadSnap = \
+            CreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, process_id );
+        
+        if( hThreadSnap == INVALID_HANDLE_VALUE )
+        {
+            ShowGetLastErrorString
+                ( " GetMainThreadId() - CreateToolhelp32Snapshot()" );
+            return FALSE;
+        }
+        
+        th32.dwSize = sizeof( THREADENTRY32 );
+        if( !Thread32First( hThreadSnap, & th32 ) )
+            ShowGetLastErrorString( "GetMainThreadId() - Thread32First()");
+        
+        do
+        {
+            if ( th32.th32OwnerProcessID == process_id )
+            {
+                * thread_id     = th32.th32ThreadID;
+                return_function = TRUE;
+            }
+            
+        }
+        while
+        (
+            Thread32Next( hThreadSnap, & th32 ) && return_function != TRUE
+        );
+        
+        CloseHandle( hThreadSnap );
+        
+        return return_function;
+    }
+    
+    ------[ END CODE
+
+ 
+------[ 4.3 - CreateExp
+
+CreateExp is a program that generates the source code needed to realize a
+DLL_FAKE from a DLL_REAL. At the moment it creates the files .c and .def,
+to use with mingw.
+
+To create a DLL_FAKE of kernel32.dll it is needed to execute:
+    - CreateExp C:\WINDOWS\SYSTEM32\KERNEL32.DLL C:\ph_ker32
+
+If it has worked well the files C:\ph_ker32.c and C:\ph_ker32.def will
+be created.
+
+ph_ker32.c contains the definitions of the exportations of kernel32.dll
+and jumps automatically to the originals.
+
+ph_ker32.def contains the alias and the names of the exportations of
+kernel32.dll.
+
+By default the exportations of DLL_FAKE will jump to the corresponding
+exportation of DLL_REAL.
+
+
+------[ 4.3.1 - Forwarder DLL
+
+CreateExp tranforms the Forwarder DLL [R.3] into exportations, so
+PEB HOOKING of a function Forwarder can be done.
+
+Example: kernel32.dll has as Forwarder HeapAlloc that goes to the
+         exportation RtlAllocateHeap of NTDL.DLL. When a module imports
+         HeapAlloc from kernel32.dll, the Loader of win32 automatically
+         puts the address of the exportation of NTDLL.DLL and never
+         passes through kernel32.dll:
+
+                    CALL HeapAlloc
+        [process] ------------------> [NTDLL.DLL]
+            ^               0               |
+            +-------------------------------+
+                            1
+            
+If a DLL_FAKE of kernel32.dll is created with CreateExp, the flow will be:
+   
+            CALL HeapAlloc      (DLL_FAKE)
+[process] ------------------> [KERNEL32.DLL] --------> [NTDLL.DLL]
+    ^              0                            1         | 
+    +-----------------------------------------------------+
+                             2
+                             
+Of such form that we can implement a hook of HeapAlloc (kernel32.dll).
+
+
+------[ 4.4 - ph_ker32.dll
+
+ph_ker32.dll was created to do PEB HOOKING [T.1] to kernel32.dll;
+monotorizes the access to the APIs "CreateFileA" and "CreateFileW" [R.14],
+and when it is called to any other automatically it jumps to the original.
+
+In order to easen the jump to an API a JMP macro has been created, it has
+to pass the name of the DLL and the ordinal of the exportation (to see the
+JMP macro see section 4.4.2).
+
+ph_ker32.c created with CreateExp (JMP macro has been omitted):
+    
+    ------[ CODE
+    
+    #define FAKE_LIB "ph_ker32.dll"
+
+    DLLEXPORT void _ActivateActCtx ( void )
+    {
+        JMP( FAKE_LIB, 1 );
+    }
+    
+    DLLEXPORT void _AddAtomA ( void )
+    {
+        JMP( FAKE_LIB, 2 );
+    }
+    
+    DLLEXPORT void _AddAtomW ( void )
+    {
+        JMP( FAKE_LIB, 3 );
+    }
+    
+    DLLEXPORT void _AddConsoleAliasA ( void )
+    {
+        JMP( FAKE_LIB, 4 );
+    } 
+    ....
+    
+    ------[ END CODE
+    
+
+    It is necessary to remember that once PEB HOOKING [T.1] has been made,
+    kernel32.dll will now be named ph_ker32.dll, for that reason
+    ph_ker32.dll in the symbolic constant FAKE_LIB is indicated. 
+
+    ph_ker32.def created with CreateExp:
+
+    ------[ CODE
+    
+    LIBRARY    default
+    EXPORTS    
+    ActivateActCtx=_ActivateActCtx           @ 1
+    AddAtomA=_AddAtomA                       @ 2
+    AddAtomW=_AddAtomW                       @ 3
+    ...
+    
+    ------[ END CODE
+
+
+    By reasons of clarity the implementation of the APIs CreateFileA and
+    CreateFileW [R.14] have been put in the file owns.c. When a call is
+    made to CreateFileA and to CreateFileW [R.14] it is written the
+    parameter lpFileName in the file C:\CreateFile.log
+    
+    owns.c:
+            
+    ------[ CODE
+    
+    #define FILE_LOG C:\CreateFile.log
+    
+    DLLEXPORT
+    HANDLE _stdcall _CreateFileW
+    (
+        LPCWSTR lpFileName,
+        DWORD dwDesiredAccess,
+        DWORD dwShareMode,
+        LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+        DWORD dwCreationDistribution,
+        DWORD dwFlagsAndAttributes,
+        HANDLE hTemplateFile
+    )
+    {
+        char   asc_str[MAX_PATH];
+        
+        if ( UnicodeToANSI( (WCHAR *) lpFileName, asc_str ) == 0 )
+            CreateFileLogger( asc_str );
+        
+        return CreateFileW( 
+            lpFileName,
+            dwDesiredAccess,
+            dwShareMode,
+            lpSecurityAttributes,
+            dwCreationDistribution,
+            dwFlagsAndAttributes,
+            hTemplateFile );
+    }
+    
+    DLLEXPORT
+    HANDLE _stdcall _CreateFileA
+    (
+        LPCSTR lpFileName,
+        DWORD dwDesiredAccess,
+        DWORD dwShareMode,
+        LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+        DWORD dwCreationDistribution,
+        DWORD dwFlagsAndAttributes,
+        HANDLE hTemplateFile
+    )
+    {
+        char   asc_str[MAX_PATH];
+        
+        CreateFileLogger( lpFileName );
+        
+        return CreateFileA(
+            lpFileName,
+            dwDesiredAccess,
+            dwShareMode,
+            lpSecurityAttributes,
+            dwCreationDistribution,
+            dwFlagsAndAttributes,
+            hTemplateFile );
+    }
+    
+    static void
+    CreateFileLogger( const char * file_to_log )
+    {
+        HANDLE file;
+        DWORD  chars;
+        
+        file = \
+            CreateFileA
+            (
+                FILE_LOG                            ,
+                GENERIC_WRITE    | GENERIC_READ     ,
+                0                                   ,
+                NULL                                ,
+                OPEN_ALWAYS                         ,
+                0                                   ,
+                NULL
+            );
+            
+        if ( file != INVALID_HANDLE_VALUE )
+        {        
+            if ( SetFilePointer( file, 0, NULL, FILE_END ) != -1 )
+            {
+                WriteFile
+                (
+                    file, file_to_log, strlen( file_to_log ), &chars, NULL
+                );
+                WriteFile( file, "\x0D\x0A", 2, &chars, NULL );
+            }
+            CloseHandle( file );
+        }
+    }
+    
+    ------[ END CODE
+
+
+------[ 4.4.1 - Stack problems
+
+When it is wanted to directly pass the control to an API which prototype
+is not known a generic form, it is necessary to pass it the intact stack
+to the original API. This is gotten in mingw with the option of the
+compilator -fomit-frame-pointer [R.15] and a JMP (ASM) to the original
+API.
+
+The functions that have been implemented have to be put in the prototype
+and must be of the type _stdcall. The functions of type _stdcall have a
+different syntax in the file .def:
+    - Name_exportation=Alias@arguments * 4   @ Ordinal
+
+Example of file .def with the APIs of type _stdcall CreateFileA and
+CreateFileW [R.14] (both have seven arguments):
+    
+    ------[ CODE
+    
+    LIBRARY    ph_ker32
+    EXPORTS
+    
+    ; Name Exp | Alias      | No Args * 4    | Ordinal Windows XP SP2
+    CreateFileW=_CreateFileW@28              @ 83
+    CreateFileA=_CreateFileA@28              @ 80
+    
+    ------[ END CODE
+
+The functions of type _stdcall should not be compiled with
+-fomit-frame-pointer [R.15] option.
+
+
+------[ 4.4.2 - Registry problems
+
+Not only is necessary to pass the stack intact to an exportation, some
+times the exportations directly use the values of the registers. Before
+passing the control to the original exportation it is necessary to let the
+registers intact, this is accomplished inserting in the code the
+instructions PUSHAD and POPAD:
+    [PUSHAD] [ CODE NEEDED TO JUMP TO THE EXPORTATION ] [POPAD]
+
+An example of exportation that directly uses the registers is _chkstk of
+NTDLL.DLL:
+
+_chkstk in NTDLL.DLL (WINDOWS XP SP2):
+    
+    ------[ CODE
+    
+    7C911A09 >/$ 3D 00100000    CMP EAX,1000
+    7C911A0E  |. 73 0E          JNB SHORT ntdll.7C911A1E
+    7C911A10  |. F7D8           NEG EAX
+    7C911A12  |. 03C4           ADD EAX,ESP
+    7C911A14  |. 83C0 04        ADD EAX,4
+    7C911A17  |. 8500           TEST DWORD PTR DS:[EAX],EAX
+    7C911A19  |. 94             XCHG EAX,ESP
+    7C911A1A  |. 8B00           MOV EAX,DWORD PTR DS:[EAX]
+    7C911A1C  |. 50             PUSH EAX
+    7C911A1D  |. C3             RETN
+    7C911A1E  |> 51             PUSH ECX
+    7C911A1F  |. 8D4C24 08      LEA ECX,DWORD PTR SS:[ESP+8]
+    7C911A23  |> 81E9 00100000  /SUB ECX,1000
+    7C911A29  |. 2D 00100000    |SUB EAX,1000
+    7C911A2E  |. 8501           |TEST DWORD PTR DS:[ECX],EAX
+    7C911A30  |. 3D 00100000    |CMP EAX,1000
+    7C911A35  |.^73 EC          \JNB SHORT ntdll.7C911A23
+    7C911A37  |. 2BC8           SUB ECX,EAX
+    7C911A39  |. 8BC4           MOV EAX,ESP
+    7C911A3B  |. 8501           TEST DWORD PTR DS:[ECX],EAX
+    7C911A3D  |. 8BE1           MOV ESP,ECX
+    7C911A3F  |. 8B08           MOV ECX,DWORD PTR DS:[EAX]
+    7C911A41  |. 8B40 04        MOV EAX,DWORD PTR DS:[EAX+4]
+    7C911A44  |. 50             PUSH EAX
+    7C911A45  \. C3             RETN
+
+    ------[ END CODE
+
+
+------[ 4.4.3 - The JMP macro
+
+The JMP macro is necessary since not always all the DLL (file .h)
+declarations are had in its header. With the JMP macro the address of
+the exportation is obtained with GetProcAddress [R.12] in runtime.
+
+    ------[ CODE
+
+    unsigned long tmp;
+    
+    #define JMP( lib, func )        \
+       asm ( "pushad" );           \
+       asm                           \
+       (                             \
+           " push edx             \n"      \
+           " push %1              \n"      \
+           " call eax             \n"      \
+           " pop edx              \n"      \
+           " push %2              \n"      \
+           " push eax             \n"      \
+           " call edx             \n"      \
+           " mov %4, eax          \n"      \
+           " popad                \n"      \
+                                              \
+           : :                                \
+           "a" (GetModuleHandle) ,         \
+           "g" (lib)             ,         \
+           "g" (func)            ,         \
+           "d" (GetProcAddress)  ,         \
+           "g" (tmp)                       \
+        );                                   \
+       asm ( "jmp %0" : : "g" (tmp) );
+
+    ------[ END CODE
+
+The code is for mingw [R.16] with the compiler option -masm=intel.
+
+
+------[ 4.4.4 - Versions
+
+We have included in phook various versions of ph_ker32 for the systems:
+
+    - Windows XP SP2         v5.1.2600
+    - Windows Server 2003 R2 v5.2.3790
+    - Windows Vista          v6.0.6000
+
+Source code in ph_ker32/SO and binaries in bin/OS.
+
+
+------[ 4.5 - Using phook
+
+Lets imagine that we want to do PEB HOOKING [T.1] to kernel32.dll with
+ph_ker32.dll, the programa poc.exe has been chosen for the example (comes
+in the folder bin\ of phook).
+
+Steps to follow:
+
+1.- Execute InjectorDLL indicating a program to execute and the DLL of the
+    console that will be injected in the process:
+        - InjectorDLL.exe console.dll -u poc.exe
+    The process will be hold in suspended state and there will be a socket
+    listening in the port indicated in the file C:\ph_listen_ports.log
+    
+        C:\phook\bin>InjectorDll.exe console.dll -u poc.exe
+          ________________________________________________________________
+         |                       InjectorDLL v1.0                         |
+         |                                                                |
+         | [Shearer]   eunimedesAThotmail.com                             |
+         | Dreg        DregATfr33project.org                              |
+         | -------------------------------------------------------------- |
+         |                   http://www.fr33project.org                   |
+         |________________________________________________________________|
+        
+         Showing injection data .....
+             Program to inject : poc.exe
+             Library to inject: console.dll
+        
+         [OK]   - CONSOLE.
+         [OK]   - Create process:
+             [INFO] PID:       0x0960
+             [INFO] P. HANDLE: 0x000007B8
+             [INFO] TID:       0x0AE0
+             [INFO] T. HANDLE: 0x000007B0
+         [INFO] - Injecting DLL...
+             [OK]   - Allocate memory in the extern process.
+             [INFO] - Address reserved on the other process: 0x00240000
+             [INFO] - Space requested: 306
+             [OK]   - Creating structure for the dll load.
+             [OK]   - Writing structure for the dll load.
+             [OK]   - Creating remote thread.
+             [INFO] - Thread created with TID: 0x0B28
+             [INFO] - Attempt: 1
+             [INFO] - Thread has entered suspension mode.
+             [OK]   - Injection thread ended.
+             [OK]   - Memory in remote thread freed.
+         [OK]   -  DLL injected.
+        
+         [OK]   -  Injection ended.
+
+2.- It is necessary to connect with a client of type netcat to the open
+    port, in this case: 1234.
+    
+    C:\>nc 127.0.0.1 1234
+      ________________________________________________________________
+     |                        Phook Prompt v1.0                       |
+     | [Shearer]   eunimedesAThotmail.com                             |
+     | Dreg        DregATfr33project.org                              |
+     | -------------------------------------------------------------- |
+     |                   http://www.fr33project.org                   |
+     |________________________________________________________________|
+    
+    
+     ph > help
+      _________________________________________________________________
+     |                       Phook Prompt v1.0                         |
+     |                                                                 |
+     | Command list:                                                   |
+     | --------------------------------------------------------------- |
+     | help                      - Shows this screen                   |
+     | exit                      - Closes and unloads the console      |
+     | suspend                   - Pauses the programs execution       |
+     | resume                    - Resumes the programs execution      |
+     | showmodules               - Shows the modules list              |
+     | load [param1]             - Loads in memory the library         |
+     |                             especified in [param1]              |
+     | unload [param1]           - Unloads a librery in memory         |
+     |                             especified in [param1]              |
+     | pebhook [param1] [param2] - Performs PEB Hook over a dll        |
+     |                             [param1]: Name of the original dll  |
+     |                             [param2]: Path to the DLL hook      |
+     |_________________________________________________________________|
+
+3.- PEB HOOKING [T.1] to kernel32.dll is realized with the ph_ker32.dll:
+    ph > pebhook kernel32.dll C:\phook\bin\windows_xp_sp2\ph_ker32.dll
+
+4.- The command resume is sent so that the execution of the process
+    begins.
+    
+    ph > resume
+    ph > 
+    C:\phook\bin> 
+
+5.- poc.exe creates the files in C:\
+    - file
+    - file2
+    - file3
+
+6.- ph_ker32.dll registers the successful calls to the APIs CreateFileA
+    and CreateFileW [R.14] in the file C:\CreateFile.log
+
+7.-
+    C:\>more CreateFile.log
+    
+    C:\file1
+    C:\file2
+    C:\file3
+    
+    
+------[ 4.5.1 - DLL MINIFILTER
+
+phook allows to realize DLL MINIFILTER (see section 3.7) by a simple
+manner. It only has to realize PEB HOOKING [T.1], with the command
+pebhook, over the name of the DLL_FAKE, that is the one that had
+DLL_REAL.
+
+Supposing that we have two DLL_FAKEs:
+    - ph_ker32_1.dll: Monotorizes access to the APIs CreateFile [R.14].
+    - ph_ker32_2.dll: Monotorizes the access of the API ReadFile [R.17].
+
+To do DLL MINIFILTER it is as easy as:
+    
+    C:\>nc 127.0.0.1 1234
+      ________________________________________________________________
+     |                        Phook Prompt v1.0                       |
+     | [Shearer]   eunimedesAThotmail.com                             |
+     | Dreg        DregATfr33project.org                              |
+     | -------------------------------------------------------------- |
+     |                   http://www.fr33project.org                   |
+     |________________________________________________________________|
+    
+    
+     ph > pebhook kernel32.dll C:\phook\bin\windows_xp_sp2\ph_ker32_1.dll
+     ph > pebhook kernel32.dll C:\phook\bin\windows_xp_sp2\ph_ker32_2.dll
+
+Flow of a call of the process to kernel32.dll:
+               0                    1                   2
+    [process] --> [ph_ker32_2.dll] --> [ph_ker32_2.dll] -> [kernel32.dll]
+        ^                                                      |
+        |                          3                           |
+        +------------------------------------------------------+
+     
+
+------[ 4.6 - Frequent problems
+
+Besides of the problems in the section 3.8, there are others:
+
++-------------------------------------------------------------------------+
+| Problem                       | Possible/s Solution/s                   |
+|-------------------------------+-----------------------------------------|
+| - DLL_FAKE compilation fails  | - Check that the functions that go      |
+|                               |   directly to DLL_REAL are not repeated |
+|                               |   and are implemented.                  |
+|                               | - Check that the implemented functions  |
+|                               |   (that must be of _stdcall type) are   |
+|                               |   well defined in the .def file         |
+|                               |   (see section 4.4.1).                  |
+|-------------------------------+-----------------------------------------|
+| - The execution of the        | - Check that the functions that go      |
+|   process fails               |   directly to DLL_REAL have been        |
+|                               |   compiled with the option              |
+|                               |   -fomit-frame-pointer (see section     |
+|                               |    4.4.1).                              |
+|                               | - Check that the implemented functions  |
+|                               |   are of _stdcall type.                 |
+|                               | - Check that DLL_FAKE have been created |
+|                               |   from the DLL_REAL and not another.    |
+|                               | - Check if InjectorDLL has correctly    |
+|                               |   detected the real type of the process |
+|                               |   (GUI or CONSOLE).                     |
+|-------------------------------+-----------------------------------------|
+| - It is not possible to       | - Check that the port 1234 is open      |
+|   connect to the console      |   before doing PEB HOOKING [T.1].       |
+|                               | - Check firewall blockings...           |
+|                               | - Check that the full path of           |
+|                               |   console.dll has been indicated in     |
+|                               |   InjectorDLL.                          |
+|-------------------------------+-----------------------------------------|
+| - InjectorDLL does not work   | - Check that the privilegies to inject  |
+|                               |   a DLL were obtained                   |
+|                               |   (CreateRemoteThread..)                |
+|                               | - Check anti-virus blocking...          |
+|-------------------------------+-----------------------------------------|
+| - CreateExp does not work     | - Check that the path of DLL_REAL ia a  |
+|                               |   correct PE32 and that the EXPORT      |
+|                               |   DIRECTORY is not corrupted [R.3].     |
++-------------------------------------------------------------------------+
+
+Some other problems may exist due to programming and/or design failures.
+
+
+------[ 5.- TODO
+
+At the moment we are trying to:
+    - Realize PEB HOOKING [T.1] before the execution of:
+        - TLS Table and DLLMain [R.3].
+    - Create debug files and configuration for the console.
+        - Rules for the repair of IATs [R.4].
+        - customized list of listening ports.
+        - ...    
+    - Improve InjectorDLL:
+        - Automatic detection of "GUI process" and "Console process".
+      
+      
+------[ 6.- Testing
+
+Tests with phook in different versions of Windows and  other programs
+have been made.
+
+Windows:
+    - Windows XP SP2         v5.1.2600
+    - Windows Server 2003 R2 v5.2.3790
+    - Windows Vista          v6.0.6000
+
+And theoretically it would have to work in Windows 2000, but we have
+not verified it.
+
+Programs:
+    - Microsoft Word 10.0.2627.0
+    - Regedit        5.1.2600.2180
+    - Notepad        5.1.2600.2180
+    - Calc           5.1.2600.0
+    - CMD            5.1.2600.2180
+    - piathook       1.4
+    - pebtry         Beta 5
+    - pe32analyzer   Beta 2
+
+
+------[ 7.- Advantages and possibilities
+
+The biggest advantage of PEB HOOKING [T.1] over other hooking methods is
+that it only has to be applied once. At the moment that a hook to a DLL
+has been done, any module that is loaded will automatically have in his
+IAT [R.3] the exports that use DLL_FAKE. The rest of the modules have to
+apply the hook every time that the module is loaded.
+
+Other advantages of using PEB HOOKING [T.1]:
+    
+    - A search in the PEB (using the field BaseDllName) to find 
+      DLL_REAL, will arrive at DLL_FAKE.
+      
+    - PEB HOOKING is a more stable method for the OS than others in ring0.
+    
+    - Some packers do not detect PEB HOOKING [T.1] as it is not a well
+      documented method.
+    
+    - It is not necessary to change the behavior of the APIs that work
+      with modules. When a module tries to obtain the handler of the
+      DLL_REAL, will automatically obtain the handler DLL_FAKE.
+
+    - Possibility of creating DLL MINIFILTER (see section 3.7).
+    
+    - PEB HOOKING of a exportation Forwarder [R.3] can be done without
+      making PEB HOOKING to the Forwarder DLL.
+
+
+The spectrum of possibilities that the PEB HOOKING [T.1] method allows
+and phook is quite ample, next we raised some examples:
+    
+    - Monotorize/virtualize the access to the registry of a process.
+        - POC [R.18]:
+            1.- Use the tool CreateExp (see section 4.3) on
+                "advapi32.dll".
+            2.- Based on what is desired to do, it is necessary to
+                implement the monitorization/virtualization in the next
+                APIs:
+                - RegCloseKey
+                - RegCreateKeyA/RegCreateKeyW
+                - RegCreateKeyExA/RegCreateKeyExW
+                - RegDeleteKeyA/RegDeleteKeyW
+                - RegLoadKeyA/RegLoadKeyW
+                - RegOpenKeyA/RegOpenKeyW
+                - RegOpenKeyExA/RegOpenKeyExW
+                - RegQueryValueA/RegQueryValueW
+                - RegQueryValueExA/RegQueryValueExW
+                - RegReplaceKeyA/RegReplaceKeyW
+                - RegRestoreKeyA/RegRestoreKeyW
+                - RegSaveKeyA/RegSaveKeyW
+                - RegSaveKeyExA/RegSaveKeyExW
+                - RegSetValueA/RegSetValueW
+                - RegSetValueExA/RegSetValueExW
+                - RegUnLoadKeyA/RegUnLoadKeyW
+                ...
+    
+    - Monotorize/virtualize conections.
+        - POC [R.20]:
+            1.- Use the tool CreateExp (see section 4.3) on
+                "ws2_32.dll".
+            2.- Based on what is desired to do, it is necessary to
+                implement the monitorization/virtualization of the
+                following APIs:
+                - accept
+                - bind
+                - closesocket
+                - connect
+                - listen
+                - recv
+                - recvfrom
+                - send
+                - sendto
+                - socket
+                - WSAAccept
+                - WSAConnect
+                - WSARecv
+                - WSARecvFrom
+                - WSASend
+                - WSASendTo
+                - WSASocketA/W
+                ...
+    
+    - Syscall Proxy de ficheros:
+        - POC [R.19]:
+            1.- Use the tool CreateExp (see section 4.3) on
+                "kernel32.dll".
+            2.- Based on what is desired to do, it is necessary to
+                implement the redirection of the following APIs:
+                - CreateFileA/CreateFileW
+                - CreateFileExA/CreateFileExW
+                - ReadFile
+                - ReadFileEx
+                - WriteFile
+                - WriteFileEx
+                ...
+    
+    - ... and free your mind ;-)
+
+
+------[ 8.- Conclusion
+
+If it is necessary to do a hook to an API/exportation, any actual method
+may be used. But if it is necessary to monitorize or virtualize the access
+to various APIs/exportations with phook it is a lot simplier the
+implementation, as it is only necessary to program the functionality of the
+APIs/exportations.
+
+Besides, it is a method oriented to the reverse engineering of software and
+malware protection systems, as it difficults alternative methods of
+searching the exportations and elimination of hooks.
+      
+      
+------[ 9.- Acknowledgements
+
+Recommendations for the paper:
+    - phrack staff
+    - Tarako
+
+Translation to English of the chains of phook:
+    - Southern
+    - LogicMan
+    - XENMAX
+
+Translations of the paper to English:
+    - BETA  : Ana Hijosa
+    - BETA 2: delcoyote
+    - ACTUAL: LogicMan
+
+Virii scene:
+    - GriYo, zert, Slow, pluf, xezaw, sha0 ...
+
+Reversing scene:
+    - pOpE, JKD, ilo, Ripe, int27h, at4r, uri, numitor, vikt0ry, kania,
+      remains, S-P-A-R-K ...
+      
+Other scene:
+    - sync, ryden, xenmax, ozone/membrive, \^snake^\, topo, fixgrain, ia64,
+      overdrive, success, scorpionn, oyzzo, simkin, !dSR ...
+
+ALL vx.7a69ezine.org and 7a69ezine.org people ;-)
+
+And specially tahnks to YJesus - http://www.security-projects.com
+
+
+------[ 10.- Related Works
+
+[T.1] .- We are not aware of any work similar to phook, but there is an
+         article that talks about PEB HOOKING written by Deroko: "PEB DLL
+         Hooking Novel method to Hook DLLs". The article was published in
+         the ARTeam-Ezine number 2.
+
+         - http://www.arteam.accessroot.com/ezine/file_info/download1.php?
+           file=ARTeam.eZine.Number2.rar
+
+
+------[ 11.- References
+
+[R.1] .- Structures of the PEB:
+            - http://undocumented.ntinternals.net/
+
+[R.2] .- Gaining important datas from PEB under NT boxes:
+            - http://vx.netlux.org/29a/29a-6/29a-6.224
+
+[R.3] .- Visual Studio, Microsoft Portable Executable and Common Object
+         File Format Specification. Revision 8.0 - May 16, 2006:
+            - http://www.microsoft.com/whdc/system/platform/firmware/
+              PECOFF.mspx
+
+[R.4] .- What Goes On Inside Windows 2000: Solving the Mysteries of the
+         Loader:
+            - http://msdn.microsoft.com/msdnmag/issues/02/03/Loader/
+
+[R.5] .- winnt.h (DEV-CPP):
+            - http://www.bloodshed.net/devcpp.html
+
+[R.6] - CreateProcess:
+            - http://msdn2.microsoft.com/en-us/library/ms682425(vs.80).aspx
+
+[R.7] - Three Ways to Inject Your Code into Another Process:
+            - http://www.codeproject.com/threads/winspy.asp
+
+[R.8] - Import address table hooks:
+            - http://www.securityfocus.com/infocus/1850
+
+[R.9] - Code overwriting:
+            - http://www.codeproject.com/system/hooksys.asp
+
+[R.10] - Hooks:
+            - http://msdn2.microsoft.com/en-us/library/ms632589.aspx
+
+[R.11] - System Call Optimization with the SYSENTER Instruction:
+            - http://blog.donews.com/zwell/archive/2005/03/13/300440.aspx
+
+[R.12] - Run-Time Dynamic Linking
+            - http://msdn2.microsoft.com/en-us/library/ms685090.aspx
+
+[R.13] - Thread Walking
+            - http://msdn2.microsoft.com/en-us/library/ms686780.aspx
+
+[R.14] - CreateFile
+            - http://msdn2.microsoft.com/en-us/library/aa363858.aspx
+
+[R.15] - MAN GCC (-fomit-frame-pointer):
+            - http://www.astro.uni-bonn.de/~webstw/cm/gnu/gcc/gcc.1.html
+
+[R.16] - MINGW:
+            - http://www.mingw.org/
+
+[R.17] - ReadFile:
+            - http://msdn2.microsoft.com/en-us/library/aa365467.aspx
+
+[R.18] - Registry Functions:
+            - http://msdn2.microsoft.com/en-us/library/ms724875.aspx
+            
+[R.19] - File Management Functions:
+            - http://msdn2.microsoft.com/en-us/library/aa364232.aspx
+
+[R.20] - Winsock Functions:
+            - http://msdn2.microsoft.com/en-us/library/ms741394.aspx
+
+[R.20] - MSDN LIBRARY:
+            - http://msdn2.microsoft.com/en-us/library/
+
+[R.21] - Iczelion's Win32 Assembly Homepage:
+            - http://win32assembly.online.fr/
+
+
+------[ 12.- Source Code
+
+Message-ID: <wc2007101518005420031419875@localhost>
+MIME-Version: 1.0
+Content-Description: "UU encode of phookt~1.gz by Wincode 2.7.3"
+Content-Type: application/X-gzip; name="phookt~1.gz"
+Content-Transfer-Encoding: X-uuencode
+Content-Disposition: attachment; filename="phookt~1.gz"
+
+sum -r/size 33661/965395
+
+

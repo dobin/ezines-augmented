@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x0b of 0x12",
+  "title": "It cuts like a knife. SSHarp.",
+  "authors": "stealth <stealth@segfault.net>",
+  "date": "",
+  "historical_context": "This article discusses vulnerabilities in the SSH protocol, particularly focusing on SSH1/SSH2 interoperability issues that were prevalent in the early 2000s.",
+  "target_audience": "Security professionals, hackers, and anyone interested in SSH vulnerabilities and network security.",
+  "short_summary": "The article explores vulnerabilities in the SSH protocol, particularly how SSH clients can be tricked into accepting malicious connections through banner manipulation and key negotiation attacks. It introduces a tool called 'ssharp' that exploits these weaknesses.",
+  "summary": "In 'It cuts like a knife. SSHarp.', the author delves into the vulnerabilities of the SSH protocol, particularly focusing on the weak implementations of SSH1 and SSH2 interoperability. The article outlines how attackers can exploit the banner exchange process to trick SSH clients into accepting a malicious server's key, thereby facilitating man-in-the-middle (MiM) attacks. By manipulating the version banners presented during the SSH handshake, an attacker can prompt the client to accept a new key without issuing the usual warnings, effectively compromising the connection. The author emphasizes that this is not merely an upgrade attack but can also downgrade clients from SSH2 to SSH1, further exposing them to risks. \n\nThe article also discusses the implementation of a tool named 'ssharp', which automates these attacks by modifying an OpenSSH daemon to accept any login credentials and log into the real destination without user interaction. This tool can slip the SSH client through a session, allowing attackers to take control of existing connections. The author concludes with a call for better understanding and implementation of cryptographic protocols, warning against the dangers of complacency and misunderstanding in security practices."
+}

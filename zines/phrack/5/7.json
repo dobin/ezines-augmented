@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Five, Phile #7 of 12",
+  "title": "An Insight on Wide-Area Networks Part 1",
+  "authors": "Jester Sluggo",
+  "date": "1986",
+  "historical_context": "This article discusses the early development of wide-area networks, particularly ARPANET and CSNET, which laid the groundwork for modern internet infrastructure.",
+  "target_audience": "Researchers, network engineers, and computer science professionals interested in the history and evolution of networking technologies.",
+  "short_summary": "This article provides an overview of ARPANET and CSNET, detailing their development, functionalities, and impact on computer networking. It emphasizes the importance of information sharing and the evolution of networking protocols.",
+  "summary": "In this insightful article, Jester Sluggo delves into the foundational aspects of wide-area networks, focusing on ARPANET and CSNET. ARPANET, initiated in 1969, was a groundbreaking project that enabled high-bandwidth communication among major computational resources, ultimately leading to the development of the TCP-IP protocol suite. This protocol allowed for the interconnection of diverse networks, revolutionizing how computers communicated and shared information. The article highlights the dual nature of ARPANET's impact, showcasing both its role in fostering collaboration among researchers and the disparities it created between institutions with and without access to the network.\n\nThe discussion of CSNET further illustrates the evolution of networking for computer science research, emphasizing its establishment to support isolated researchers and facilitate collaboration. CSNET's integration of various networks and its financial self-sufficiency model provide key lessons for future networking initiatives. Overall, Sluggo's article serves as a historical account that underscores the significance of these early networks in shaping the landscape of modern computer communication and the ongoing quest for improved connectivity and collaboration in research."
+}

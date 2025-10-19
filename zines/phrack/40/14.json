@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty, File 14 of 14",
+  "title": "Bellcore Threatens 2600 Magazine With Legal Action",
+  "authors": "Compiled by Datastream Cowboy",
+  "date": "July 15, 1992",
+  "historical_context": "This article highlights the tension between telecommunications companies and hacker publications during the early 1990s, a time when the internet was becoming more accessible and the implications of security vulnerabilities were becoming apparent.",
+  "target_audience": "Hackers, security professionals, journalists, and those interested in the history of computer security.",
+  "short_summary": "This article discusses the legal threats made by Bellcore against 2600 Magazine for publishing sensitive information regarding vulnerabilities in the telephone network. The response from 2600's editor emphasizes the importance of journalistic freedom and public awareness of security issues.",
+  "summary": "The article further details the implications of the BLV vulnerability, which could potentially allow anyone with knowledge of the network's weaknesses to wiretap phone conversations. Goldstein's rebuttal to Bellcore highlighted the ethical responsibility of journalists to inform the public about security risks, especially when such risks could affect the privacy of individuals. The exchange sparked significant discussion within the hacker and legal communities about the balance between proprietary information and the public's right to know, illustrating the ongoing conflict between corporate interests and journalistic integrity in the realm of computer security."
+}

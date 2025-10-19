@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 5, Phile #9 of 11",
+  "title": "CATPHISH",
+  "authors": "FirstStrike",
+  "date": "",
+  "historical_context": "The Catphish virus represents an early example of a resident .EXE infector, showcasing techniques that were prevalent in the early 1990s malware development.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in historical malware analysis.",
+  "short_summary": "The Catphish virus is a resident .EXE infector that modifies executable files without user activation. It includes source code for educational purposes, demonstrating key techniques in virus development.",
+  "summary": "The Catphish virus, crafted by FirstStrike, is a resident .EXE infector that operates by modifying the headers of executable files. At a compact size of 701 bytes, it does not include an activation bomb, allowing it to infect files silently. The source code provided serves as a learning tool, emphasizing the importance of understanding malware mechanics rather than repurposing the code for malicious intent. The article outlines the assembly language routines used to infect .EXE files, including header manipulation and encryption techniques to obfuscate the virus's presence. Key functions include checking for existing infections and hooking into DOS interrupt vectors to ensure the virus remains resident in memory."
+}

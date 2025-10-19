@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Internal Overlay",
+  "authors": "Tcp/29A",
+  "date": "Not specified",
+  "historical_context": "This article discusses a virus created in the early 1990s, a time when computer viruses were becoming more prevalent and sophisticated.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article describes a virus that infects COM and EXE files without altering their headers, making it difficult for CRC checkers to detect. It details the virus's functionality and provides assembly code for its implementation.",
+  "summary": "In 'Internal Overlay', Tcp/29A introduces a unique virus that cleverly infects COM and EXE files by inserting an overlay loader at the entry point, appending the virus code at the end of the file. This method allows the virus to evade detection by many CRC checkers that only analyze the initial bytes and file length. The author explains the operational mechanics of the virus, including its infection triggers during file execution and opening, and its specific behavior regarding certain file types like COMMAND.COM and PkLited files. The article is rich in technical detail, providing assembly code that outlines the virus's structure and functionality, making it a valuable resource for understanding early malware techniques and their implications in computer security.",
+  "code_example": "The assembly code provided in the article showcases how the virus manipulates file headers and manages memory allocation, demonstrating the technical prowess of early virus authors."
+}

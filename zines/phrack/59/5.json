@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x05 of 0x12",
+  "title": "5 Short Stories about execve (Advances in Kernel Hacking II)",
+  "authors": "palmers <palmers@team-teso.net>",
+  "date": "",
+  "historical_context": "This article is part of the ongoing exploration of kernel hacking techniques, particularly focusing on execution redirection methods that can be used to manipulate binary execution in Linux systems.",
+  "target_audience": "Security researchers, kernel developers, hackers interested in low-level system manipulation.",
+  "short_summary": "The article presents five different techniques for redirecting binary execution in Linux, detailing how each method can be implemented and its implications for system security. It emphasizes the difficulty in detecting such backdoors and the need for better forensic tools.",
+  "summary": "In this article, palmers explores five distinct methods of execution redirection within the Linux kernel, each illustrating a unique approach to manipulating how binaries are executed. The techniques range from classic system call replacement to more sophisticated methods that exploit the dynamic linker and binary format handlers. Each method is accompanied by example code, providing practical insights into kernel hacking. The author stresses that while some methods are easier to detect than others, the overall challenge lies in the subtlety of execution redirection, which can often evade traditional tamper detection systems. Furthermore, the article argues for the necessity of developing more robust forensic tools that can analyze execution paths rather than relying solely on pattern matching, as many backdoors can operate entirely in kernel memory, making them invisible to conventional checks. Ultimately, the piece serves as a cautionary tale about the complexities of kernel security and the evolving landscape of hacking techniques."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Forty-Eight, File 10 of 18",
+  "title": "Electronic Telephone Cards: How to make your own!",
+  "authors": "Stephane Bausson",
+  "date": "10-07-1993 / 03-1994",
+  "historical_context": "This article reflects the early 1990s interest in hacking and understanding electronic payment systems, particularly in the context of telephone cards.",
+  "target_audience": "Hackers, electronics enthusiasts, security researchers.",
+  "short_summary": "This article provides a comprehensive guide on how to create and emulate electronic telephone cards, detailing the technical specifications and security measures of the systems used. It includes source code for a micro-controller program and circuit layouts.",
+  "summary": "In this article, Stephane Bausson delves into the workings of electronic telephone cards, particularly those developed by Schlumberger Technologies. He explains the architecture of these cards, which primarily consist of a 256-bit EPROM with serial output, and discusses the limitations imposed by their design, such as the write protection of certain memory areas. Bausson emphasizes the importance of understanding these systems for personal projects, such as creating door access keys or securing software applications. The article also includes a detailed schematic of the card reader and a program written in Pascal that allows users to read the memory of various telephone cards, providing insights into their remaining units and origin country. The author stresses that the use of this information is at the reader's own risk, highlighting the ethical considerations in hacking and electronics experimentation."
+}

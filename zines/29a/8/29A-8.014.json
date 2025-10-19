@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Server -> Client Communication for Preprocessor languages (PHP)",
+  "authors": "Second Part To Hell/[rRlf]",
+  "date": "November 2004",
+  "historical_context": "This article discusses the potential security vulnerabilities associated with PHP, a widely used server-side scripting language, and challenges the notion that PHP scripts cannot harm clients.",
+  "target_audience": "Hackers, security professionals, web developers",
+  "short_summary": "The article explores how PHP scripts can be manipulated to execute malicious JavaScript on the client side, contradicting the belief that server-side execution is inherently safe. It presents a method for creating a PHP-based virus that operates without user warnings.",
+  "summary": "In this provocative article, the author, Second Part To Hell, delves into the often-overlooked security implications of PHP as a server-side preprocessor language. While many believe that PHP scripts are safe because they execute on the server, the author demonstrates that it is indeed possible for PHP to affect the client. By cleverly embedding JavaScript within the HTML returned by a PHP script, the author reveals a method to execute potentially harmful code on the user's machine without triggering any security warnings. This technique exploits the way browsers handle script execution, allowing malicious actions to occur unnoticed by the user.\n\nThe article provides a detailed explanation of the underlying theory and presents a working code example that illustrates how a PHP script can create a file on the client's hard drive. This alarming capability raises significant concerns about the security of web applications using PHP, as it highlights a method for creating undetectable client-side viruses. The author concludes with a call to action for readers to consider the implications of this technique and to remain vigilant against such vulnerabilities in their own web applications."
+}

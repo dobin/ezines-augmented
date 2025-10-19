@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Infection Microsoft CAB archive",
+  "authors": "Prizzy/29A",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early days of virus development and the exploration of vulnerabilities in file formats, particularly during the late 1990s when malware was becoming more sophisticated.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article provides a technical overview of how to infect Microsoft CAB files, detailing the structure of CAB files and the methods used to modify them for malicious purposes. It highlights the limitations and challenges faced in this process.",
+  "summary": "In this article, Prizzy/29A delves into the technical intricacies of infecting Microsoft Cabinet (CAB) files, a compressed file format used by Microsoft. The author begins by outlining the structure of CAB files, which consist of headers, folders, and file entries, emphasizing the various compression methods supported. The core of the article focuses on the infection process, where the author describes how to manipulate the CAB file's header and file structures to insert a malicious payload without altering the original file's integrity. This involves checking the CAB's identification, version, and existing infection status, followed by modifying the file structure to accommodate the new malicious code. The author expresses frustration with the CAB format's design, labeling it as poorly constructed, which complicates the infection process. Despite these challenges, the article provides a clear guide for those interested in developing their own CAB infectors, including code snippets and assembly language instructions for compiling the dropper. Overall, the piece serves as both a technical manual and a commentary on the evolving landscape of malware development during the late 1990s."
+}

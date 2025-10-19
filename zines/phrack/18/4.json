@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 18, Phile #4 of 11",
+  "title": "PRIMOS: NETWORK COMMUNICATIONS",
+  "authors": "Magic Hasan",
+  "date": "June 1988",
+  "historical_context": "This article discusses the PRIMOS operating system and its networking capabilities during a time when distributed computing was becoming increasingly important.",
+  "target_audience": "Hackers, network engineers, security professionals, and those interested in legacy systems.",
+  "short_summary": "The article provides an in-depth overview of PRIMOS, focusing on its networking capabilities, including PRIMENET, Remote Job Entry (RJE), and Distributed Processing Terminal Executive (DPTX). It highlights how these features facilitate communication and resource sharing among PRIME systems and other compatible equipment.",
+  "summary": "In this article, Magic Hasan explores the PRIMOS operating system, emphasizing its robust networking features designed for distributed processing environments. The PRIMENET facility allows seamless communication between PRIME systems, enabling users to log in from any terminal without needing to understand the underlying protocols. This transparency is crucial for efficient resource sharing, as it simplifies access to files and printers across the network. The article details the architecture of the PRIMENET Node Controller, which supports high-speed communication and fault tolerance, ensuring continuous operation even if one node fails.\n\nAdditionally, the article discusses the Remote Job Entry (RJE) capabilities of PRIMOS, which allow multiple remote sites to submit jobs without dedicated terminals, thus enhancing operational efficiency. The Distributed Processing Terminal Executive (DPTX) is also covered, showcasing its compatibility with IBM systems and its ability to integrate seamlessly into existing networks. Overall, the article serves as a technical guide for users and developers interested in leveraging PRIMOS's networking capabilities, providing insights into its architecture and operational advantages."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x10, Issue 0x46, Phile #0x0d of 0x0f",
+  "title": "Exploiting a Format String Bug in Solaris CDE",
+  "authors": "Marco Ivaldi <raptor@0xdeadbeef.info>",
+  "date": "2021",
+  "historical_context": "This article discusses a format string vulnerability in the Common Desktop Environment (CDE) of Solaris, which is still relevant due to the continued use of Solaris 10 in critical environments.",
+  "target_audience": "Hackers, security researchers, and professionals interested in legacy systems and exploitation techniques.",
+  "short_summary": "The article details a format string vulnerability in the Solaris CDE's dtprintinfo binary, demonstrating how to exploit it for local root privilege escalation on unpatched Solaris 10 systems, particularly focusing on the SPARC architecture.",
+  "summary": "In this article, Marco Ivaldi explores a format string vulnerability found in the dtprintinfo binary of Solaris CDE, a software still in use in many critical environments. The author provides a thorough breakdown of the vulnerability, which allows local attackers to escalate privileges on unpatched Solaris 10 systems. The article is particularly focused on the SPARC architecture, detailing the unique challenges and techniques required for exploitation due to its stack layout. Ivaldi's approach involves manipulating environment variables to control the format string used in the vulnerable sprintf() function, leading to arbitrary memory writes and ultimately achieving local root access.\n\nIvaldi meticulously outlines the steps taken to craft the exploit, including setting up a fake printer to trigger the vulnerable code path, constructing the hostile format string, and utilizing the %hhn formatting directive for single-byte writes. The article serves as both a technical guide and a nostalgic reflection on the enduring nature of format string vulnerabilities, emphasizing the importance of vigilance in legacy systems. The author concludes with a nod to the ongoing relevance of such vulnerabilities, encouraging the reader to continue exploring and exploiting the depths of CDE's codebase."
+}

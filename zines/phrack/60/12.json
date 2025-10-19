@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3c, Phile #0x0c of 0x10",
+  "title": "Firewall spotting and networks analysis with a broken CRC",
+  "authors": "Ed3f",
+  "date": "",
+  "historical_context": "The article was written during a time when the understanding of network security was rapidly evolving, and the techniques discussed are foundational for modern network penetration testing and security assessments.",
+  "target_audience": "Hackers, security professionals, network analysts.",
+  "short_summary": "The article explores methods for detecting packet filters and firewalls by exploiting the behavior of TCP checksums and responses to invalid packets. It introduces techniques for distinguishing between firewall and host responses, and discusses implications for network security tools like Nmap.",
+  "summary": "In this article, Ed3f delves into the intricacies of packet filtering firewalls and their handling of TCP checksums. The author highlights that many firewalls do not check TCP checksums before analyzing flags or port numbers, which can be exploited to identify the presence of a firewall. By sending valid TCP packets to filtered ports and analyzing the responses, one can determine whether a packet filter is in place. The article details various techniques, including comparing Time-To-Live (TTL) values and utilizing tools like hping and Nmap to conduct stealth scans that can bypass traditional detection methods. The author also discusses the potential for creating covert channels using invalid checksums, which can evade intrusion detection systems (IDS) that do not log such traffic. This exploration of network security vulnerabilities remains relevant today as firewalls and IDS continue to evolve."
+}

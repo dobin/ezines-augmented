@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 3, Phile #3 of 11",
+  "title": "An Introduction to Nonoverwriting Virii",
+  "authors": "Dark Angel",
+  "date": "",
+  "historical_context": "This article is part of the early exploration of computer viruses, specifically focusing on nonoverwriting types, which were a significant evolution in virus design during the late 1980s.",
+  "target_audience": "Aspiring virus writers, security researchers, and those interested in malware development.",
+  "short_summary": "This article serves as a beginner's guide to writing nonoverwriting viruses, focusing on COM file infections. It explains the basic concepts and provides a simple example of a nonoverwriting virus in assembly language.",
+  "summary": "In 'An Introduction to Nonoverwriting Virii', Dark Angel introduces readers to the world of nonoverwriting viruses, emphasizing their advantages over traditional overwriting viruses. The article is aimed at those with a basic understanding of 80x86 assembly language and provides a step-by-step guide to creating a simple nonoverwriting virus that infects COM files. The author explains the mechanics of how COM files operate, detailing the structure of the Program Segment Prefix (PSP) and the importance of maintaining the integrity of the original program while still executing malicious code. \n\nThe article outlines the process of modifying the first few bytes of a COM file to redirect execution to the virus code, while preserving the original program's functionality. It includes a sample virus code, 'DumbVirus', which demonstrates the techniques discussed. The author encourages readers to experiment and learn more about nonresident viruses, suggesting further reading in subsequent issues for a deeper understanding of virus programming. This piece is a foundational text for those interested in the technical aspects of malware development and the historical context of computer security."
+}

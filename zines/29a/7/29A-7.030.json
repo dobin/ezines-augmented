@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virtual PC Has You",
+  "authors": "Unknown",
+  "date": "Not specified",
+  "historical_context": "This article discusses vulnerabilities in early versions of Virtual PC, a virtualization software that allows users to run multiple operating systems on a single machine. The context is significant as it highlights the evolution of virtualization security and the challenges posed by malware.",
+  "target_audience": "Hackers, security researchers, virtualization enthusiasts",
+  "short_summary": "The article explores vulnerabilities in early versions of Virtual PC, detailing how viruses can exploit these weaknesses to escape the virtual environment. It provides technical insights into the opcode interface and examples of potential exploits.",
+  "summary": "In 'Virtual PC Has You', the author delves into the intricacies of Connectix's Virtual PC, emphasizing its role as a 'prison' for code, particularly in the context of virus analysis and propagation. The article outlines how viruses can transcend the limitations of their virtual environment, with a focus on the opcode interface used for communication between the program and the emulated code. The author discusses various bugs that could be exploited, including incorrect handling of parameter values passed in registers, and provides example code snippets that demonstrate these vulnerabilities. Notably, the article mentions the development of a tool called VPCHAMMER, designed to assist in identifying buggy class/command/register values across different versions of Virtual PC. The author concludes with a reflection on the evolution of virtualization security, noting that Microsoft made significant improvements in Virtual PC 2004 to mitigate these vulnerabilities, ensuring that actions within a virtual machine do not adversely affect the host system.",
+  "additional_notes": "The article serves as a reminder of the importance of security in virtualization technologies and the ongoing cat-and-mouse game between malware developers and security researchers."
+}

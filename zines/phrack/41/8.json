@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-One, File 8 of 13",
+  "title": "TTY Spoofing",
+  "authors": "VaxBuster",
+  "date": "July 16, 1992",
+  "historical_context": "This article discusses a technique used in the early 1990s for gaining unauthorized access to UNIX systems, reflecting the hacking culture of that era.",
+  "target_audience": "Hackers, security researchers, and those interested in historical hacking techniques.",
+  "short_summary": "TTY Spoofing is a method for capturing usernames and passwords on UNIX systems by manipulating terminal inputs. The article provides a detailed explanation of the technique, including scripts and examples.",
+  "summary": "In 'TTY Spoofing', VaxBuster introduces a method for capturing user credentials on UNIX systems by exploiting terminal input. The technique involves creating a Trojan horse program that masquerades as the standard login prompt, allowing the attacker to collect usernames and passwords as users attempt to log in. The author emphasizes that this method can be executed even on systems with shadowed password files, making it a valuable technique for hackers seeking access to otherwise secure accounts. The article provides step-by-step instructions, including sample scripts in C and manual methods for executing the spoofing process.\n\nVaxBuster also shares practical advice for executing the technique effectively, such as monitoring terminals during peak usage times and ensuring that processes do not attract attention from system administrators. The article serves as both a tutorial for novice hackers and a reminder of the vulnerabilities present in UNIX systems during the early 90s. It highlights the importance of understanding system permissions and user behavior, making it a relevant read for those interested in the evolution of hacking techniques and security practices."
+}

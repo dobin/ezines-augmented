@@ -1,0 +1,822 @@
+---[  Phrack Magazine   Volume 7, Issue 51 September 01, 1997, article 12 of 17
+
+
+-------------------------[  The Eternity Service
+
+
+--------[  Adam Back <aba@dcs.exe.ac.uk>
+
+
+
+Information wants to be Free
+======================================================================
+
+Information wants to be free.  Censorship sucks.  Having your account yanked 
+because some censorious idiot doesn't like you discussing hacking tips and 
+tricks in USENET sucks.  Being tortured to death by some totalitarian 
+country's military police for speaking the truth about government corruption 
+sucks even more.  
+
+Have friends who have been hounded by the Feds, SPA software police, or 
+system admins who believe in security by obscurity?  Had nasty threats made by 
+censorious system admins for helpfully drawing their attention to flaws in their
+systems security?  Ever had a control freak try to get your web pages
+censored because they don't like its content, or simply because they get their 
+kicks harassing people?  Ever wanted to publish something on the 'Net but felt 
+intimidated by censors?
+
+Do you consider that free speech is your right as guaranteed by the first 
+amendment of the US constitution, and do you therefore also consider it your 
+right to speak anonymously?  There are lots of reasons to protect the ability 
+to speak anonymously.  Anonymous speech is required for truly free speech.  
+Strongly anonymous free speech is the freest speech of all. If you're going to 
+preserve your ability to speak anonymously, and protect your right to free 
+speech you might as well do it properly...
+
+Want to do something to help free speech?  Want to piss off the 'Net censors?  
+Want to piss off censorious Governments?  Read on...
+
+
+What is the Eternity Service?
+======================================================================
+
+The Eternity Service is a distributed data-haven, it takes a different
+approach to ensuring unpopular content can be published.  Traditionally 
+unpopular content has been surreptitiously exchanged via DCCs in IRC, or PGP 
+encrypted email, or FSP, or in funny named directories via FTP or via agreed 
+file names in incoming directories set drwx-wx-wx.  Other kinds of unpopular 
+content have been published on web pages for a short time until the censor 
+gets to work and threatens the ISP, the publisher's employee, and the publisher 
+with law suits.  Sometimes these web pages get mirrored, if there is someone
+interested, and spoiling for a fight, or if the content is only censored by 
+force of law in one jurisdiction.
+
+The Eternity Service deals with censorship more directly: it confronts the 
+problem in a more general way with the aim that anyone should be able to 
+publish anything anonymously in a convenient persistent, uncensorable 
+data-haven.
+
+So in a nut-shell that is the design goal of the eternity service, to allow 
+anyone to publish material which others would like to censor. For convenience 
+the publishing medium addressed is the World Wide Web.
+
+Systems for publishing anonymously in USENET news and email already exist: 
+cypherpunks type I and type II (mixmaster) remailers.
+
+
+Why the name `Eternity Service'?
+======================================================================
+
+There is a cryptographic paper by Ross Anderson called "The Eternity Service",
+which is where the idea for this implementation came from.  I rather liked 
+Ross's name for his conceptual service, and instead of thinking up some other 
+name I just "borrowed" his name.  Readers might find his paper interesting, 
+it's on the web in htmlized form at:
+
+    http://www.cl.cam.ac.uk/users/rja14/eternity/eternity.html
+
+Ross's design is quite ambitious, so I simplified his design in developing the 
+software included with this article.
+
+My implementation shares Ross's main design goal, which is to create a
+censorship-proof, long-term document store, but its design has been made much 
+simpler and less ambitious initially to make it easier to implement.  The main 
+simplification is that I built the design on top of an existing hard-to-censor 
+distributed distribution channel: `alt' USENET newsgroups.  This design is 
+described in the next sections.
+
+The motivation for providing a simplified version was to have something people 
+could use practically, today.  Another reason is that by releasing this 
+design, and it's implementation, it allows you, the reader, to play with it, 
+and to contribute to it, improve it in a piecewise fashion in the good 
+tradition of free software on the 'Net.  The design calls for many eternity 
+servers to be in existence to make it hard to censor.
+
+At time of writing a mailing list exists for discussion on using and improving 
+the eternity service.  Instructions on how to subscribe the eternity mailing 
+list are given at the bottom of this article.
+
+
+USENET and distributed systems
+======================================================================
+
+The Internet was built to survive nuclear attack.  It would survive such an
+attack because it is a distributed system.  Distributed systems are hard to 
+break, and therefore, hard to censor.  USENET, particularly the `alt` 
+newsgroups offer the most amazing chaotic discussion areas.  The articles 
+which are posted often contain materials which would be considered illegal in
+many jurisdictions.  And yet USENET lives, and `alt` USENET newsgroups thrive. 
+Extremely well funded attackers have tried to remove individual `alt` USENET 
+groups, and to censor posts in alt USENET groups.  They have all failed.
+
+The reason that USENET is hard to attack is because it is a distributed
+system.  The network of news feeds has some redundancy.  USENET articles enter 
+the news distribution network from anywhere in the network.  If a censor in 
+one country succeeds in persuading a news site to censor its feed and not
+carry particular alt groups, it doesn't affect the overall system that much.  
+There are lots of other nodes carrying the groups, disgruntled users will 
+switch ISPs, and disgruntled down-feed sites will switch feeds.  The system 
+routes *around* censorship.  There are just so many USENET admins with 
+individual opinions, and commercial interests in carrying groups users want to
+read, that USENET can not die.
+
+It occurred to me in trying to design a simplified eternity service, that it 
+would be useful to borrow some of Usenet's indestructible nature.  USENET is 
+part of the landscape; it's here to stay.  If we build a new distributed 
+distribution system from scratch, to start with there won't be many nodes.  
+The censor will have any easy time censoring a few nodes, he'll just go and 
+harass each of them in turn.
+
+With USENET on the other hand, it has been around for so long, and is carried 
+at so many sites that it would be a huge task for a censor to even have a 
+significant affect on USENET.
+
+So, the design of my eternity server aims to allow operators to point the 
+finger at USENET and say: "that's where the content is coming from, if you 
+want to censor anything go attack USENET".
+
+My eternity server design is a service designed to blur the differences 
+between USENET news and the Web.  It provides an interface which makes a 
+stream of encrypted USENET news articles look like WWW pages with a persistent 
+URL.  As the default disclaimer for eternity servers says:
+
+    Note to censors: Eternity servers are specialized search engines for
+    reading web documents from USENET news. The pages you request are
+    actually USENET news posts which the server is searching for,
+    reformatting and forwarding to you. The administrator of this server
+    has no control over the content of USENET news, and will not be held
+    responsible for any documents you instruct this server to forward
+    for you.
+
+
+Eternity Server design
+======================================================================
+
+Once you accept the idea that it would be nice to borrow, or build upon some 
+of USENET news's strength as a uncensorable distribution mechanism, the next 
+issue is achieving this, technically.  The main differences between USENET 
+news articles and WWW pages is that USENET is transient, the articles expire 
+in newsgroups, and that USENET articles have no persistent globally 
+addressable locator.  USENET is not as convenient as the Web; there are no 
+hypertext links between articles, and there are no inline images.
+
+Eternity service articles are WWW pages specially formatted and posted to 
+USENET news.  The eternity server reads news and translates Web page requests 
+into GROUP and ARTICLE commands to an NNTP news server (or file system 
+accesses to a local news spool).  (The default list of newsgroups to read 
+consists of one group: alt.anonymous.messages).
+
+Web pages are often updated, as one of the interesting aspects of the WWW as a 
+publishing medium is that it allows people to maintain up-to-date information. 
+This maintains interest and keeps people coming back to an interesting site to 
+see what else the author has collected, or what other related pages have been 
+added.  A sense of community can be built up with others submitting interesting
+links, corrections, and tips to the author.
+
+To provide the possibility of updating web pages with the eternity server, the 
+eternity formatting convention allows submitted web pages to be signed with 
+PGP.  This ensures that no one else can replace your pages with other pages.  
+Being able to replace your page with a blank page would allow a censor to 
+temporarily censor you.  (Only temporary because you could always replace the 
+blank page with the real document again).
+
+With a PGP signature this is prevented... and the system becomes such that 
+eternity virtual domains are very much first-come first-served.
+
+
+First-come first-served naming
+======================================================================
+
+Eternity URLs are all under the non-existent Top Level Domain (TLD) "eternity".
+(Other TLDs being .com, .org, .edu, .ai, etc) Eternity URLs are therefore of 
+the form:
+
+    http://*eternity/*
+
+Where * represents any string of characters.
+
+On the Internet domain names must be resolved to IP addresses via Domain Name 
+Servers (DNS).  The owner of the TLD you desire a domain name in charges you 
+for registering a domain.  Internic (who currently has a hotly contested 
+monopoly on TLDs .com, .org, and .net), charge $100 for the first 2 years, and 
+$50 for each year thereafter.
+
+Eternity domains don't exist in this sense.  There is no root domain server for 
+eternity.  You don't need to buy eternity URLs from anyone.  Nobody _can_ own 
+an eternity URL in the normal sense.
+
+The first person to submit a document with a URL:
+
+    http://bluebox.eternity/
+
+gets it.  If that person signed the submitted document with PGP, no one will 
+be able to take over that URL.  If that person signed the submitted page with 
+PGP and threw away the key, it would be uncensorable for all time.  They 
+couldn't even remove the document themselves if they wanted to.  Throwing away 
+the key might be a good idea if the publisher isn't publishing anonymously and 
+expects reprisals.
+
+The fact that one user has submitted a signed web page for 
+http://bluebox.eternity/ doesn't stop BlackBeard from putting up his design at:
+
+    http://bluebox.eternity/blackbeard/
+
+That is to say ownership of any given URL, even the top level URL of a virtual 
+domain, doesn't give any control over who could submit documents in that 
+virtual domain.  Of course you don't have to link to their pages.  But those 
+pages will show in a directory search of your virtual site.
+
+
+Directory searches
+======================================================================
+
+Submitted eternity news articles can set options controlling whether or not 
+the document is listed in the index.  The choice is either "exdirectory" (the 
+default) or "directory".  This is useful because if you created the URL for 
+http://bluebox.eternity/, you might like to include some inline images, or 
+diagrams, or a series of other pages hypertext linked from that page.  So you 
+would set option "directory" for the main page http://bluebox.eternity/, and 
+set all the inline images and smaller pages linked from it to "exdirectory", 
+as a convention to save the directory becoming cluttered up with junk.
+
+You can also use "exdirectory" if you don't want to generally advertise your 
+page.  Note this is not all that secure if you access your page via a public 
+access eternity server, as the server operator could modify the server to 
+record all exdirectory URLs.
+
+You can request a listing of all eternity pages at an eternity server by 
+filling in the form with virtual URL containing a wild-card:
+
+    http://*
+
+(Exdirectory documents will not be listed.)
+
+You can also include an option to give a small description (a maximum of 60
+characters) which will be listed beside your virtual URL when someone does 
+such a search.
+
+You can narrow the search to just list all root eternity documents with:
+
+    http://*/
+
+Which will find:
+
+    http://eternity/
+    http://bluebox.eternity/
+
+but not:
+
+    http://test.eternity/example1/
+
+
+You can also do:
+
+    http://bluebox.eternity/*
+
+which will find:
+
+    http://bluebox.eternity/
+    http://bluebox.eternity/blackbeard/
+
+
+You can combine *s to find what you want.  Advanced searches are possible:
+
+    http://*box*.eternity/*blue*
+
+and so on.
+
+Eternity materials are likely to be targets for censors, and it is possible 
+that they might try to censor the directory listing itself.  Even the URL 
+could suffer.  (Did you know that Internic turned down some guy who wanted to 
+register `fuck.com'?)  I'm sure someone creative could up with something to 
+upset a censor in the 60 characters allocated for URL descriptions too.
+
+For these reasons the eternity server operator has the option to disable 
+directory service.  With this option disabled looking up URLs with wild-cards 
+(*s) in them will get back a notice explaining that directory listings service 
+has not been turned on at this server.
+
+Servers with directory service turned off make less useful servers, so it is 
+hoped that most eternity server operators don't have to do this.  However, an 
+eternity server with directory service turned off still works normally for 
+accessing known URLs, and you could maintain the directory listing yourself, 
+or use a directory listing at another site.
+
+
+Formatting Eternity documents 
+======================================================================
+
+Eternity documents submitted as USENET news articles are formatted with PGP.  
+There are three of reasons to format messages in USENET to make them not 
+immediately readable.
+
+1) It prevents censors from working out which articles correspond to which 
+eternity web pages.  Depending on the options chosen this can degrade to just 
+obfuscation.  Obfuscation alone however can be useful as censors are often not 
+particularly clue-full.
+
+2) PGP includes compression, so the articles are much smaller.
+
+3) If used with highest security options amongst a group of people who follow 
+security guidelines it means that a censor will have no way to translate the 
+articles back into WWW pages, or even of obtaining the URL.
+
+To demonstrate the formatting requirements for eternity page submissions, we'll
+work with an example page, http://bluebox.eternity/.
+
+You'll need an implementation of SHA1 for this.  There is a C implementation, 
+and also a perl implementation in the eternity server distribution.  Some 
+systems may already have /usr/local/bin/sha1.
+
+(Note: below "echo -n" is used -- on Suns the built-in echo doesn't handle the 
+-n flag properly -- you'll have to use /usr/ucb/echo instead)
+
+0) Generate a Nom de Plume
+
+If you are planning to sign your document, you probably won't want to sign it 
+with your normal key, so you'll generate a new keypair for the purpose, this 
+will be your pseudonym, or Nom de Plume for the purposes of publishing this 
+document.  The "-u fred" tells pgp to use that user id.  See pgp documentation 
+for how to generate keys (use pgp -kg).
+
+Once you've generated your key, extract it to a file with:
+
+    % pgp -kxa fred fred
+
+where `fred` is your new user name.  It will save the key as "fred.asc".  
+We'll use this file below.
+
+
+1) Sign the document
+
+We create a normal web page such as you might put on your home page.  You can 
+view the page with Netscape (or other browser) by opening it as a file URL: 
+file:/home/fred/bluebox/index.html to check that it looks OK, and that any 
+inline images line up correctly etc.
+
+You can use relative, site relative, and absolute URLs normally in eternity 
+documents.  You can also use absolute URLs pointing at other sites in the 
+normal way.
+
+To submit index.html as http://bluebox.eternity/ we first use PGP to ASCII 
+armor the document.  If we want to sign it at the same time as ASCII armoring 
+it, so that we can update it later, we can do:
+
+    % pgp -sa index.html -u fred
+
+There is another option to encrypt as well as sign and armor, which will be 
+discussed more below, to do this do:
+
+    % pgp -csa index.html -u fred
+
+If we don't want to sign it, we do this instead:
+
+    % pgp -a index.html
+
+In either case after this operation PGP will create file "index.asc" for us.  
+Rename index.asc to something else, say "index" (Another legal combination 
+would be to encrypt and not sign with -ca).
+
+
+2) Set the options
+
+If you signed the document, you need to include the key.  Insert the keyfile 
+(fred.asc extracted in step 0 above) into the document "index".  Order is not 
+significant.  Then the ASCII armored document (pgp munged html or gif file 
+produced in stage 1), the keyfile "fred.asc", and the flags described below 
+can be jumbled up in order.
+
+You now have several flags you can include to control how your URL will be 
+cached, how it will be displayed in indexes etc.
+
+The flags are:
+
+    URL: http://bluebox.eternity/
+
+The flag URL: sets what the eternity virtual URL will be.  It must have 
+.eternity as the virtual TLD.
+
+    Cache: yes
+    Cache: encrypted
+    Cache: no
+
+Cache settings, choose one of those.  These cache settings override the used 
+eternity server's settings if doing so will increase security.  "yes" and "no"
+are obvious.  "encrypted" means that the document will be cached but it will 
+be encrypted in the cache in such a way that the URL is required to decrypt it.
+If the document is exdirectory this means that the server won't know the URL.
+
+    Options: directory
+    Options: exdirectory
+
+Choose one of those options.  This flag controls whether the URL will be listed
+in the URL index.  "directory" means it will be listed, "exdirectory" means it
+will not be listed.  If you give neither option the document defaults to 
+exdirectory.
+
+    Description: Freds blue box page
+
+This is the description that will appear in directory listings.  If the 
+document is exdirectory there is no point giving a description.
+
+So the file "index" is likely to look something like this once you've finished 
+editing it:
+
+    URL: http://bluebox.eternity/
+    Cache: yes
+    Options: directory
+    Description: Freds blue box page
+
+    -----BEGIN PGP PUBLIC KEY-----
+    ...
+    -----END PGP PUBLIC KEY-----
+
+    -----BEGIN PGP MESSAGE-----
+    ...
+    -----BEGIN PGP MESSAGE-----
+
+Where ... indicates the rest of the ASCII armored key or message will be 
+displayed.  Some of these parts can be omitted as shown above.  When you are 
+submitting an web page update you can omit anything you're not trying to 
+change.  (That can be everything, so your updated document has nothing but the 
+new message part).  However this is not necessarily a good idea because it 
+will not make sense to an eternity server that has not seen the first 
+document, for example if your first document doesn't make it via USENET to one
+site.
+
+3) Package the document "index" ready for posting
+
+You have a couple of choices here.  
+
+Method A (most common):
+
+Either you can encrypt with PGP -c:
+
+    % pgp -c -z"eternity" index
+
+Method B:
+
+Or you can encrypt with the SHA1 of the URL with 1 prefixed,
+
+    % echo -n 1http://bluebox.eternity/ | sha1
+    dab1a32aba30b4e3a9594da143c33d2ba9b00a38
+    % pgp -c -z"dab1a32aba30b4e3a9594da143c33d2ba9b00a38" index
+
+Most normal eternity URLs which you're expecting to be indexed on the 
+directory services of public access eternity servers should be encrypted with 
+the first simpler method.
+
+There's not that much point encrypting with the second method unless your 
+document is going to be exdirectory, because once the document gets in the URL 
+everyone will know the URL anyway.  It might take a censor a little longer to 
+figure out.
+
+If you were planning to only access the document via private, or local 
+eternity servers, you can reveal the URL only to those you wish to have access.
+However this might not be that secure because people may be able to guess your
+URL if it is something common as above.
+
+Method C:
+
+For this reason you have a third option, which is to encrypt at the same time 
+as signing and ASCII armoring as described in step 1.  You can combine that 
+option with above method B (pgp -c with sha1 of 1<URL>) to conceal the URL.  
+
+Or alternately you can expose the URL by using method 1 above (pgp -c 
+-z"eternity"), but have the document encrypted in step 1.  (This would allow 
+you to have a directory entry, but the page not accessible without knowing the 
+password chosen in step 1 when encrypting.
+
+The result of the last pgp -c operation for any of method A, B, or C will be 
+file "index.asc".
+
+4) Post the article anonymously
+
+The subject field of the article should always be the SHA1 hash of the URL:
+
+    % echo -n http://bluebox.eternity/ | sha1
+    2e730bcd62dbc63aaedde56c06625abeeb38dd92
+
+Now post the article to USENET news (by default eternity servers read only 
+newsgroup alt.anonymous.messages with release 0.10).
+
+You can test your eternity submissions work by installing an eternity server 
+on localhost.  If you get stuck you could ask for assistance on the eternity 
+mailing list (instructions on subscribing are at the bottom of this article).
+
+To post anonymously you'll need to post via anonymous remailers.  Some 
+remailers can post to USENET directly, for other remailers you have to post 
+via a mail2news gateway.
+
+Instructions on using remailers, and windows and Unix clients to automate the 
+process of using remailers can be found here:
+
+    http://www.stack.nl/~galactus/remailers/
+
+You can find a list of mail2news gateways here:
+
+    http://www.replay.com/mail2news/
+
+People are already working on a nice easy to use CGI interface to eternity 
+servers over on the eternity list while I'm typing, so perhaps when you read 
+this you won't need to know the above information in such detail.
+
+
+Caching
+======================================================================
+
+With WWW technology, caching is often used to speed up accesses.  There are a 
+number of caches in effect with a typical web browsing session.  The Netscape 
+browser for instance has both a memory cache, and a disk cache, which are 
+configurable in size.  In addition Netscape can be set up to use a proxy cache,
+which is a special caching service.  Users of a proxy cache send their web 
+requests through it.  The proxy cache checks each request to see if it has it
+in the cache, if it does, it can deliver it back if quickly.  If it doesn't it 
+will go and fetch whatever URL you are asking for and remember it for next 
+time.  A proxy cache would normally be used by a group of web users, perhaps a 
+university campus, or an ISPs customers, or a companies employees.
+
+Caches traditionally have some protection from censors -- it's an automated 
+process after all -- your average ISP hardly wants to be responsible for the 
+contents of the disk on its proxy cache machine.
+
+For performance reasons the eternity server also has a cache.  The cache 
+behavior is configurable.  The server operator can set his caching preferences 
+when he installs the server by editing eternity.conf.  Possible settings are 
+"on", "off" and "encrypted".  Setting cache to "off" is safest, then you have 
+no eternity documents on your disk.  The "encrypted" cache option means that 
+cached documents are encrypted with PGP -c and the SHA1 hash of a 1 prepended
+to the URL.  If the server also turns off directory service, and does no 
+logging this provides reasonable deniability of knowledge of contents of 
+documents in the cache.  Even with directory service on, it provides cache set 
+to "encrypted" provides protection in that the server operator will not know 
+the URLs of exdirectory web pages.
+
+
+Further work
+======================================================================
+
+There are a few unimplemented features that could use some work.  These 
+features are being discussed on the eternity mailing list (see instructions 
+for subscribing below).
+
+A first immediate problem is that the eternity server has no cache replacement 
+policy.  Your eternity cache will just keep growing.  This is great for 
+ensuring articles with caching turned on don't disappear due to expiring in 
+the news spool, but as eternity grows more popular it will become impossible 
+for each single eternity server to hold the full document store.
+
+The solution to this problem is quite complex, and is the subject of the next 
+implementation effort on the mailing list.  One interim solution is to use the 
+USENET searching facilities of services which archive USENET such as 
+www.dejanews.com and www.altavista.digital.com.
+
+There are several tweaks that would have to be done to be able to use USENET 
+archivers as sources of eternity documents.  Two main problems have to be 
+combated: 1) the archives make attempts not to archive 7-bit encoded binaries 
+to save space, 2) you can't search by 40 character hex numbers to find subject
+fields.  These are both easy to overcome, but the overall solution is not that 
+attractive because the archivers will be a single point of failure.  Censors 
+will attack them, and they may be hostile to eternity servers due to our 
+bypassing their 7-bit encoding filters and consuming space on their soon to be
+multiple TB raid file servers.
+
+A better solution is to build a distributed data store that allows eternity 
+servers to exchange documents with each other in such a way that the eternity 
+servers together form a virtual raid file-server where the documents are 
+spread randomly and redundantly over the nodes.
+
+A simple starting point to allow this is to create a second long-term cache 
+area, and to have a cache replacement policy for that area which selects a 
+random document for discarding.  This cache replacement policy will ensure 
+that statistically some servers will have a given document.  Next we have to 
+design a scalable method of forwarding requests to other servers to ask for 
+old USENET articles by URL hash (subject field).
+
+
+World-FS
+======================================================================
+
+Another approach to improving the eternity server is to actually use and 
+develop the full set of techniques described in Ross Anderson's paper to build 
+a distributed file system (DFS).  I dub this direction `world-FS' because the 
+aim is to build a worldwide distributed, redundant, uncensorable, and virtual 
+file system.  This file system would be designed to withstand a nuclear war, 
+and to easily withstand the best efforts of one government to censor material 
+in it.  A world-FS done well could easily replace the current pattern of web 
+page hosting.  
+
+The world-FS would have different interfaces, or drivers, to allow it to be 
+accessed as an NFS file system, or as a distributed web based eternity service.
+The eternity server described in this document would then be superseded, and 
+become the HTTP driver interface for world-FS.  An FTP, or NNTP (USENET news) 
+interface could also be built for the world-FS, or for parts of it's directory 
+tree.  People discussing this so far have thought that you would need to 
+include ability to pay for service with an anonymous payment system (or with
+multiple payment systems).
+
+The eternity mailing list is also for discussion of world-FS, as it all falls 
+under the umbrella of Ross Anderson's concept of an `eternity service'.
+
+
+Comments and collaboration requested
+======================================================================
+
+Your contribution matters.  Progress of the eternity service beyond this point 
+relies on a collaborative effort.
+
+You can collaborate by doing any of the following and reporting back to the 
+eternity mailing list how you got on (subscription instructions below):
+
+    - submitting documents to the eternity document store
+    - installing an public access eternity server in your account
+    - or persuading your ISP to install one
+    - or installing a private eternity server in your account
+    - finding and reporting bugs to the mailing list
+    - contributing code
+    - contributing ideas for more efficient distributed request protocols
+
+Adam Back
+
+
+More information
+======================================================================
+
+Eternity mailing list
+
+    send message "subscribe eternity" to majordomo@internexus.net
+
+The eternity mailing list is for eternity service users, eternity server
+operators, and eternity server developers to discuss issues to do with 
+eternity.  Issues include censorship attempts, operator liability, practical 
+attacks on the security, and discussion of new protocols, and discussion 
+amongst developers and users on the best way to design the next versions.
+
+
+Cypherpunks mailing list
+
+Cypherpunks write code.  Cypherpunks are the people who bought you type I and 
+type II remailers, remailer clients, plus many, many other crypto applications.
+Governments are scared of the implications of distributed systems and freedom 
+to use cryptographic code.  Cypherpunks are crypto-anarchists, and they shall 
+inherit the earth.  Information is power, and cypherpunks are applied 
+cryptographers with attitude.  They don't care if governments don't like their 
+code, in fact they probably view it as a compliment.  You'd be surprised at how
+many cryptographers, net journalists, cryptographic consultants, small ISP 
+owners, and Netizens are crypto-anarchists at heart.  Netizens never were very 
+keen on government intrusions into the 'Net.  Read Tim May's Cyphernomicon for 
+a mega-faq on cypherpunks, and crypto-anarchy.  See:
+
+    http://www.cc.oberlin.edu/~brchkind/cyphernomicon/
+
+To subscribe to cypherpunks:
+
+    send message "subscribe cypherpunks" to majordomo@cyberpass.net
+or  send message "subscribe cypherpunks" to majordomo@algebra.com
+or  send message "subscribe cypherpunks" to majordomo@ssz.com
+
+(Some time ago there was an attempt to impose moderation on the cypherpunks 
+list, and this is the reason for this rather curious situation of multiple 
+mailing lists, it is designed to be more resilient to censorship -- if someone 
+pulls the plug on one list -- the rest continue without glitch.)
+
+Cypherpunks is a high volume mailing list.  There is no moderator,
+
+Software
+
+    http://www.dcs.ex.ac.uk/~aba/eternity/
+
+Please set a server up a public access eternity serve in your account.  You 
+can also operate your own eternity server for your own use -- this is the more
+secure way to browse eternity.  If you have any kind of dial up or internet 
+connected Unix system you can do this.
+
+You'll need a web account with cgi capability, access to perl5, and read 
+access to an NNTP news server, or a local news spool.  Cron access is useful 
+but not essential.
+
+Current Public Access Eternity Servers
+
+    http://www.replay.com/aba/eternity/
+    http://moloko.insync.net/eternity/
+    http://eternity.internexus.net/
+    http://eternity.infinetways.net/
+
+Contacting the author
+
+    aba@dcs.ex.ac.uk
+or  A.Back@ex.ac.uk
+or  aba@replay.com
+
+PGP encrypted mail preferred, here's my key:
+
+Type Bits/KeyID    Date       User ID
+pub  2048/28B24551 1995/09/09 Adam Back <aba@dcs.ex.ac.uk> (High Security)
+           Key fingerprint = 01 8F 04 06 5C DD F3 33  D8 84 C4 63 85 BA 50 E8
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.6.3i
+
+mQENAzBRMbMAAAEIANoe/ABNaJv6/ETtDzlih4P3znc63CMP4ViFWStxyeWWjxd2
+L8WOsM0b1naV4YmeRrd34GUsnZFetItToVqsvT5tKcwJKHwEWeXEQMbCM3cbaAxB
++MGSx9PoLRc4ZLz79q/hMQXybNKmw5Rk7NwsyLiejZR+jt2Eoy/BHeFMunxfXD8j
+38927FZBxG3UgCbL75ImJhWVsn8IoDOJ5psTfJwRcAZlkxsrpDSx2OIb6G35+pwm
+mEv8O066wOij7eMTQ8VQ5+rbn2ql0Ubsz3qA2szP2KZYlmobjwj5M82dmLcPfG9C
+bExMBldd8poJyBCn0e04kAFiGBJJPnvKqCiyRVEABRG0LEFkYW0gQmFjayA8YWJh
+QGRjcy5leC5hYy51az4gKEhpZ2ggU2VjdXJpdHkpiQCVAgUQMli+7B98EdWB2LS9
+AQFF0gQAjiAOPPCs7s0VCHoFI2IWMEcAeQInmnl2p+6rpsvIxjX1v3wBqqstgBu5
+aCLY9Uns+iKjzcnt5DTj6NPhJ8EOlefwgHUssiBLTsw7tOvT9fQwcIXOE5ikGP7j
+RObTq3a2Vtz4/O/YgN0KQnWcqTDuadeP17cJ2bbaWJpZiGDyWGSJAJUDBRAyIN+r
+RlGJMStI9vUBAXJTA/4wzbGnP9X0luqRYcfj51bamX9WdTDG9A8AvKngTbMG87x2
+jV6vUicIP9XMERSl6fgT35Q2BYSCKGlhH5gGYkC+IfkyMZFHvZMdATurb4MuRivW
+pv30gTVstoF61CN3JKF1N/j1Ez2LOfFWFW+miceowAPrKr3e3zHCRXyewv75BIkB
+FQMFEDBW0M+xVzBJFqEkZQEBBQEH/AnpNhKJh1IPmii7X7xxmccMKFnq5R2DAP4Z
++OJQ/otoy6AXifI9Y5aDYnm7sbPZX9uBk93ubf4Zm/v9wOcOKL6hXcE4+tvGSQA+
+rAPgph1+t96iDTSTGwf5ZKVp+LfJXBz63wZHDJ+JlSTDRl9YeSxeRZgAo2XJtI/h
+v7fazds4CK0jFwDSWUtQUd7my9znsJ92W0UONe6iltnFUvywUICNGyXxCHV4RDPv
+/wTmDKarzHm44OfdzXhI+oTQvY3lG51gU6TMjR6Q/bjy9YEYpTcDRvOpMmkJ4aud
+tCxG/w82OG6lKnFw8Hv46VcpQVPt2YZMbgjUJBIQi6FedDjeky6JAJUDBRAwUUqY
+Kci4nVVqSmcBAaFJA/wJ0vcYZm8V7gqlk+nDzjIDvGNP1IaQtBFaXE/imyQaqyKe
+oIsyzhCWCNnsCvu8Cq2ZwmD63wBKzs+63ZgzJ7h1hC4lYKUB1mCsF0UnrZNJ7rtW
+DVMa0aLlvxIia7qsmbhaZ6ibs5+juqn3CKUvjCJKyOpuS0Lmrem5EXk9Byu5/IkB
+FQMFEDBRSjc+e8qoKLJFUQEBWjEH/3yb3JYhsjoqZdEjA1xSZJcjyoTnPG0vUhaD
+oi6OhTByqYShLe14RU9rYDzpOGmdwpZ6GSwF4X0uBAH1lCGnsi6QQXrnsp1fBq/6
++TQy1nBs2FZyj/YTXQIKhhXIH700ed0Nqg4okwtovyUqX0xbqlA2Sv1N+XC6hKuc
+bl9XWOQbKi8OM8VEKeLnrY9Glzrxk9piVb+eCT1RJnLovWdfPL7WFOwSbOQ/I9aB
+jBKBHYMGdLihf7PYeb3Eg3B8Kt3IDfipPUFfXjqes94hpqQl/DGpWSpDHHFQ5cTB
+iQIB4twFzz4bI1HMVEayKboPliJl3dI9vY0SQJ58b6OFYJTB4Jc=
+=E4rO
+-----END PGP PUBLIC KEY BLOCK-----
+
+
+Here are SHA1 hashes of the eternity service distribution
+
+<++> hashes.asc
+-----BEGIN PGP SIGNED MESSAGE-----
+
+eb32d19e992e4663df29141cedf6ec0aa3f92af3 pgp/config.txt
+7b1da1bd199b2dded10216a3d19e4b05bbb66c90 eternity.conf
+a44cec86d7d0f1cf1239f1c00bb21dc3476148b4 sha1.pl.dist
+1f9f7860c8c2d5b376c8bffa7417ffe54b8b1429 newsgroups
+926a9630fd214b756ecc18658d813017b288bf2c sha1/sha1.c
+58989aa6f40b06136d078a96ad958b482756fe8f sha1/endian.c
+2d46e74b805ee06d3960ff756a09407f0b3267fa sha1/sha1.h
+21e7e596a715c6ed247f9444393df675d7447f23 sha1/endian.h
+5f9c194f542960c8e7f9f6d81f84cd3b62dd4032 sha1/sha1file.c
+4544f194e381a3b64150f3761900993d28c5f465 sha1/sha1test.c
+ea58eec253cdb4af6d3958d94cebfbe39988da44 sha1/timer.c
+22a60ac9aa0242ad6ee00da8781500c5c1311837 sha1/timer.h
+67d37d81d0064c2a0a1a369cba2cfc2f9d878803 sha1/types.h
+f7691ef67ac7a111082c6730b045ea2dc00dd903 sha1/compiling
+01a7b85827ff35583bd11cecb7470c4917fdd0ea sha1/README
+efc53ecc93eb1105341f4e250ecf654a44a11394 sha1/Makefile
+5375b154bd0724dc0c6ee6fac59bbc5c93a6a209 adam-key.asc
+0b9849c2332e5d7aa7714adc67861465d99b34db mime.types
+b50a661ba69747c8969ebfb9c997eaf0f1b75893 README
+d498a12d0a795d3ae22bc059631293b0a0ab4cd1 ANNOUNCE
+ba8ccee1f86dc5872b5ce95c0e2e494924b927f8 configure
+6f9bcf72be9f836f5201bc430cc764828fda68ba news/alt/anonymous/messages/1
+ac26faf5df1e14eaefa6e0e05f5be2d2f1ee67db news/alt/anonymous/messages/2
+75ead2fb83bf3fa2c701b70741097f4956fb9043 news/alt/anonymous/messages/3
+4c892147c69fcfb60803587c5606427d1641d473 ecat
+fa3b13f3e8241936795d97f72fe647f0a4a26902 CHANGELOG
+31cc2c663972f536922f3603625804a42b40c367 UTILS
+08120e964cb8b61f2c95ac155a3f75ce8b27535b dcrypt
+0fded38fd70c8626551e7bb21657cd960c2b8f67 sitegrab.dist
+7121ab8cd3e54bc962524054c95316b28d8c76e4 dev/submit
+56a1cb622bf8df7f863e8449a97ef8746a0d2469 dev/submit.html
+f1b6720b0861b1d79fbedcfa4cc694b1172c81a1 SITEGRAB
+428d389aa228d9e96c678d4400179df1ab5db0a3 fred.asc
+3ed6458862762fa993a900ec1b5dc8e2c739f61c eternity.gif
+5ea784f32dc51d74ae98134adcd93126230d5a0f rsa.gif
+2c62082f57ca8c0019f741d04f5f14133976bb15 cypherpunks.gif
+3d7f09b91b04577dc4406eb9493753dc1e3ba7d2 datahaven.gif
+8016173f3db9fccd0b787c9682e7b7bec1ada3b8 index.html.dist
+108e0ef9d29387e3cf57b68614a4e8b2961c2d02 disclaimer.html
+7ca4684965a7b4d51ad032f85c20480f0cd175fe eternity.cgi.dist
+08b072350488abc3ac6337ce95d7cf881e1f547b directory.html.dist
+769d9620c85de07a3ce6703a39b56eafdd3cad9d host.html
+24f17a65a4a637d60c5cbaab485eda231adb62c6 dbmcat.dist
+584d76031069f89fef3288cdbb6bed6e89ec7fd6 ecrypt.dist
+122584c63267811628cc790ef898e9d651cdc728 LIST
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3i
+Charset: noconv
+
+iQEVAwUBM/L+RT57yqgoskVRAQHpdAgAjbGfqr4FaycrS/LOHq4TnAQIBoTYx+6k
+cG9DTnUMp/gQSXqwBzvSv1bmou/+nwvH/qC5UgXc7Ko98rT8+tAatfrZj3u1g36M
+a63oWtonLFJowOO8w1jBiPSpl44kT25hPYZ2qUscVC1qGzbSmutHhDyToY4y4i7L
+v2TARR4Jq3dJI67WT63dxr1/o+AnTtNZBTq5c9z5LzfQWVfP9HRaOgYXF6d4LrVZ
+7NF3YKImEe5914L45CUW+OjJcsabGufFVj4waR0kNhdmA7ZQT3cxkg5Ygv6jhtcn
+q7Ys67hMAYU0TGrxvyogEy23FyzXC5wi1JY2NBYnE+AuJXObDGB85w==
+=Xfz4
+-----END PGP SIGNATURE-----
+<-->
+
+<++> es.tgz.uue
+<-->
+
+
+----[  EOF
+

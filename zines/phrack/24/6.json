@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 24, File 6 of 13",
+  "title": "Glossary Terminology For Enhanced 911 Services",
+  "authors": "The Eavesdropper",
+  "date": "March, 1988",
+  "historical_context": "This article provides a comprehensive glossary of terms related to Enhanced 911 services, which were being implemented in the late 1980s to improve emergency response systems in the United States.",
+  "target_audience": "Telecommunications professionals, emergency services personnel, security researchers, and hackers interested in telecommunications systems.",
+  "short_summary": "The article serves as a glossary for Enhanced 911 (E911) services, detailing key terminology and concepts essential for understanding how emergency calls are processed and routed. It covers various technical aspects such as Automatic Number Identification (ANI), Automatic Location Identification (ALI), and the roles of different telephone offices in the E911 system.",
+  "summary": "In this article, The Eavesdropper presents a detailed glossary of terminology associated with Enhanced 911 (E911) services, which were becoming increasingly important in the late 1980s. The glossary includes definitions for critical terms such as End Office, Tandem Office, Public Safety Answering Point (PSAP), and various routing mechanisms like Selective Routing and Default Routing. Each term is explained in the context of how it contributes to the efficiency and reliability of emergency response systems, particularly in urban areas where timely assistance is crucial.\n\nThe article also highlights the technical intricacies involved in the E911 system, such as the importance of Automatic Number Identification (ANI) and Automatic Location Identification (ALI) in ensuring that emergency calls are directed to the appropriate services based on the caller's location. By elucidating these concepts, the article serves as a valuable resource for anyone involved in telecommunications, emergency services, or security research, providing insights into the operational framework that supports emergency response efforts."
+}

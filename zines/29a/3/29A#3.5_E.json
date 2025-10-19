@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "ClaudiaSchiffer Virus Disassembly",
+  "authors": "Darkman/29A & Mister Sandman/29A",
+  "date": "1996",
+  "historical_context": "This article discusses the disassembly of the Claudia Schiffer virus, which gained notoriety in the mid-1990s for its graphical payload featuring the model Claudia Schiffer.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The article presents a detailed disassembly of the Claudia Schiffer virus, highlighting its structure, functionality, and notable features, including its graphical payload and stealth techniques.",
+  "summary": "In this article, Darkman and Mister Sandman provide a comprehensive disassembly of the Claudia Schiffer virus, a non-threatening memory resident virus that became popular due to its unique graphical payload. The authors describe the virus's functionality, which includes stealth techniques such as hooking interrupt 21h and manipulating file attributes to avoid detection. They critique the virus's coding practices, noting its inefficiencies and poor modularization, while also appreciating its clever use of graphics and music to engage users. The disassembly includes labeled and commented source code, allowing readers to explore the virus's inner workings and understand its mechanisms in detail.\n\nThe Claudia Schiffer virus operates by infecting executable files, displaying an image of the model along with lyrics from an Iron Maiden song when triggered. The authors emphasize the importance of studying such malware not only for historical context but also for understanding the evolution of virus design and the techniques used by malware authors. This article serves as both an educational resource for those interested in malware analysis and a nostalgic look back at a notable piece of hacker culture from the 1990s."
+}

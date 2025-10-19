@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 54, Phile #7 of 12",
+  "title": "Scavenging Connections On Dynamic-IP Networks",
+  "authors": "Seth McGann <smm@wpi.edu>",
+  "date": "Dec 25th, 1998",
+  "historical_context": "This article discusses vulnerabilities in dynamic IP assignment systems, particularly relevant during the late 1990s when dial-up connections were prevalent.",
+  "target_audience": "Hackers, security professionals, network engineers",
+  "short_summary": "The article explores a vulnerability in dynamic IP networks that allows unauthorized users to hijack active connections. It details the mechanics of connection persistence and provides a method to exploit this flaw using a custom tool.",
+  "summary": "In this article, Seth McGann highlights a significant vulnerability in networks that utilize dynamic IP assignment, particularly in dial-up scenarios common in the late 1990s. The author explains how a user can take advantage of the lack of notification when a connection is abruptly lost, allowing them to hijack ongoing sessions such as telnet or FTP. The article details the mechanics of TCP and UDP connections, emphasizing how the absence of proper disconnection notifications can lead to unauthorized access to active sessions. McGann illustrates the process of 'scavenging' these connections, which involves manipulating network packets to maintain the connection state and prevent timeouts from occurring. \n\nThe implementation section provides a practical guide on how to use a tool called pshack.c to achieve this. The tool leverages raw socket programming and packet manipulation techniques to intercept and respond to packets, effectively allowing the user to take control of existing connections. The article concludes with a warning about the implications of such vulnerabilities, particularly for systems that drop ICMP unreachable packets, making them more susceptible to connection hijacking. This piece serves as both a technical exploration of network vulnerabilities and a call to action for improved security measures in dynamic IP environments."
+}

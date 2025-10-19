@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 2, Phile #1 of 3",
+  "title": "The Dark Avenger",
+  "authors": "Unknown",
+  "date": "February 1990",
+  "historical_context": "This article discusses the Dark Avenger virus, one of the earliest and most notorious viruses from Bulgaria, highlighting its development and impact on the early computing landscape.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article provides an in-depth look at the Dark Avenger virus, detailing its creation, various versions, and the author's commentary on its functionality and impact. It also discusses the author's interactions with antivirus researcher Vesselin Bontchev.",
+  "summary": "The Dark Avenger is a notorious Bulgarian virus writer known for creating several malicious viruses, including the Dark Avenger virus itself. The article outlines the evolution of the virus, starting from its inception in September 1988, through various versions that introduced new features and increased its virulence. The author, who refers to himself in the third person, describes the technical aspects of the virus, including its ability to infect both COM and EXE files and its destructive capabilities, which include overwriting sectors on the disk. The Dark Avenger virus is characterized by its unique messages and its ability to evade detection by antivirus software, making it a significant threat during its time.\n\nThe article also touches on the relationship between the virus writer and Vesselin Bontchev, a prominent antivirus researcher, highlighting the ongoing cat-and-mouse game between virus creators and those attempting to combat them. The Dark Avenger's legacy is marked by its influence on subsequent malware and the challenges it posed to early antivirus solutions. The author’s ironic commentary and heavy metal references add a unique cultural layer to the technical discussion, reflecting the hacker culture of the time."
+}

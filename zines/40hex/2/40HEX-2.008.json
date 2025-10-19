@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 2, Phile #6 of 11",
+  "title": "The Ontario Virus",
+  "authors": "Mike Shields",
+  "date": "July, 1990",
+  "historical_context": "The Ontario Virus is one of the early examples of a memory-resident virus that infected .COM and .EXE files, highlighting the growing concerns around computer security in the early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The Ontario Virus is a rare memory-resident virus that infects .COM and .EXE files, discovered in July 1990. It decreases system memory and can lead to hard disk errors in extreme cases.",
+  "summary": "The Ontario Virus, discovered in July 1990 by Mike Shields in Ontario, Canada, is a memory-resident virus that infects .COM and .EXE files. Once a program infected with the virus is executed, it installs itself into memory, reducing total system memory by 2,048 bytes and subsequently infecting COMMAND.COM. The virus increases the length of infected files by 512 bytes, with the potential for larger increases in .EXE and overlay files due to the way it appends itself to the end of these files. The Ontario Virus employs a complex encryption routine, making it difficult to identify through simple string matching.\n\nDetection methods include tools like ViruScan V66+, Pro-Scan 2.01+, and NAV, while removal can be achieved by scanning or deleting infected files. The article provides a technical overview of the virus's behavior, symptoms, and the potential for hard disk errors in cases of extreme infection, making it a valuable resource for understanding early malware and its implications for system security."
+}

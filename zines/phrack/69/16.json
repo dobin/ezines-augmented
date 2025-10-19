@@ -1,0 +1,14 @@
+{
+  "articles": [
+    {
+      "reference": "Volume 0x0f, Issue 0x45, Phile #0x03 of 0x10",
+      "title": "The Austin Lockpicking Scene",
+      "authors": "jgor",
+      "date": "2015",
+      "historical_context": "This article provides an overview of the lockpicking community in Austin, Texas, detailing its growth and organization over the years.",
+      "target_audience": "Lockpickers, hackers, and individuals interested in the intersection of lockpicking and hacker culture.",
+      "short_summary": "The article chronicles the development of the lockpicking scene in Austin, highlighting key organizations and events that have shaped its growth.",
+      "summary": "The Austin Lockpicking Scene article outlines the rise of lockpicking as a hobby and its organization within the hacker community in Austin, Texas. It details the founding of the Longhorn Lockpicking Club and its significant contributions to events like DEFCON, showcasing the club's growth and the establishment of lockpicking as a recognized skill within hacker culture. The article also discusses the collaboration with other organizations and the impact of local hackerspaces on the lockpicking community. Through personal anecdotes and historical context, the author illustrates the vibrant and dynamic nature of lockpicking as both a hobby and a means of promoting security awareness."
+    }
+  ]
+}

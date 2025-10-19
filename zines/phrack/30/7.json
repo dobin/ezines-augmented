@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 30, File #7 of 12",
+  "title": "VAX/VMS Fake Mail",
+  "authors": "Jack T. Tab",
+  "date": "August 1986",
+  "historical_context": "This article discusses a BASIC subroutine for VAX/VMS systems that allows users to send fake emails, a technique that was relevant during the early days of networked computing.",
+  "target_audience": "Hackers, security professionals, and those interested in early network security vulnerabilities.",
+  "short_summary": "The article presents a BASIC subroutine for VAX/VMS systems that enables users to send emails appearing to come from any sender. It details the workings of VMS Mail and how the subroutine can be utilized effectively.",
+  "summary": "In this article, Jack T. Tab introduces a BASIC subroutine designed for VAX/VMS systems that allows users to send emails with forged sender addresses. The subroutine leverages the VMS Mail system's capabilities, which can operate both interactively and as a network object. The author explains the structure of the mail message, including the FROM name, recipient list, and message body, emphasizing the simplicity of the implementation. The subroutine requires minimal privileges, specifically NETMBX, which raises concerns about security and user impersonation on these systems.\n\nThe article also touches on the implications of using such a subroutine in a networked environment, where the ability to impersonate another user could lead to various security issues. By providing a clear breakdown of the code and its functionality, Tab highlights the potential for misuse while also serving as a historical reference to the early days of network security vulnerabilities. This piece remains relevant for understanding the evolution of email security and the importance of authentication mechanisms in modern systems."
+}

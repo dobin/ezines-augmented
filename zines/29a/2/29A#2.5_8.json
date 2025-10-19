@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Android",
+  "authors": "Vecna/29A",
+  "date": "1997",
+  "historical_context": "This article was written during the rise of computer viruses and malware, particularly in the late 1990s when personal computing was becoming more widespread. The techniques discussed reflect the early days of virus development and the challenges faced by antivirus software.",
+  "target_audience": "Hackers, malware researchers, security professionals, and enthusiasts of computer virus history.",
+  "short_summary": "The article presents a polymorphic boot virus named 'Android' that infects the Master Boot Record (MBR) and employs stealth techniques to evade detection. It details the virus's functionality, including its ability to overwrite floppy boot sectors and the implications for antivirus software.",
+  "summary": "In this article, Vecna/29A introduces 'Android', a polymorphic boot virus designed to infect the Master Boot Record (MBR) of hard drives. The virus utilizes a stealth mechanism that hooks into the Int 13h interrupt, allowing it to conceal its presence when the hard drive is accessed. When a floppy disk is booted, the virus infects the MBR, ensuring that if a user inadvertently reboots with a floppy in the drive, they will not be alerted to the infection. The virus's design is straightforward yet effective, showcasing the author's skill in low-level programming and virus creation.\n\nThe article also discusses the polymorphic nature of the virus, which complicates detection by antivirus software. By altering its code with each infection, 'Android' forces antivirus programs to adapt their scanning techniques, as traditional methods would only check specific sectors for signatures. The technical details provided, including assembly code snippets and operational mechanics, serve as a valuable resource for those interested in the intricacies of virus development and the ongoing cat-and-mouse game between malware creators and security professionals."
+}

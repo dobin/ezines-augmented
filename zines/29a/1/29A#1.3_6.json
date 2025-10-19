@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Installation Check",
+  "authors": "The Slug",
+  "date": "29A",
+  "historical_context": "This article reflects the early days of virus development and the techniques used to evade detection, showcasing the mindset of hackers during the late 1980s.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "The article discusses techniques for creating resident viruses that can evade installation checks by using random values and custom interrupt services. It provides a detailed code example to illustrate these concepts.",
+  "summary": "In 'Installation Check', The Slug delves into the mechanics of resident viruses and the importance of installation checks in ensuring their stealth. The article outlines a method for a virus to check if it is already in memory by creating a custom interrupt service that returns a random value. This technique complicates the detection process for any lame programs attempting to trick the virus into revealing its presence. The Slug emphasizes the necessity of generating a random number within the virus code to thwart detection attempts effectively.\n\nThe article provides a detailed assembly code example that illustrates how the virus can manipulate interrupt services to maintain its residence undetected. By checking against a random value stored in memory, the virus can determine if it has been compromised or tricked by other programs. The Slug's writing captures the playful yet technical nature of hacker culture, showcasing a blend of creativity and technical prowess in the development of malware. This piece remains relevant for understanding the evolution of virus evasion techniques in the context of computer security."
+}

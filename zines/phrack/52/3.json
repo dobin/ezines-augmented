@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 8, Issue 52, Phile #3 of 20",
+  "title": "DNS ID Hacking",
+  "authors": "ADM Crew",
+  "date": "January 26, 1998",
+  "short_summary": "This article discusses DNS ID hacking, a method of exploiting vulnerabilities in the DNS protocol to spoof responses. It covers the mechanics of DNS requests and provides practical examples of how to perform DNS ID spoofing attacks.",
+  "summary": "The article begins by explaining the DNS protocol and how it handles requests for domain name resolution. It details the process of a DNS request, from the client sending a query to the authoritative name servers responding with the corresponding IP address. The authors highlight a significant vulnerability in the DNS protocol related to the predictability of DNS IDs, which can be exploited for spoofing attacks. They describe various methods to perform DNS ID hacking, including sniffing the network to capture DNS IDs and flooding the DNS server with spoofed responses to take advantage of this vulnerability.\n\nThe authors also provide code snippets and tools for executing these attacks, emphasizing the ease with which attackers can manipulate DNS responses. They discuss the implications of these vulnerabilities, particularly in the context of the Internet's infrastructure, and encourage readers to understand and mitigate these risks. The article serves as both a technical guide and a cautionary tale about the security weaknesses inherent in widely used protocols."
+}

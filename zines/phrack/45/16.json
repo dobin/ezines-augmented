@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Five, File 16 of 28",
+  "title": "DCL BBS Program",
+  "authors": "Raoul / SferraNet Inc.",
+  "date": "15/10/1993",
+  "historical_context": "This article provides a glimpse into the early days of Bulletin Board Systems (BBS) and the use of DCL (Digital Command Language) for programming on VAX/VMS systems, reflecting the hacker culture of the early 90s.",
+  "target_audience": "Hackers, BBS enthusiasts, security professionals, and programmers interested in legacy systems.",
+  "short_summary": "The article presents a basic BBS program written in DCL for VAX/VMS systems. It serves as a skeleton for further development, allowing users to customize and enhance its functionality.",
+  "summary": "The 'DCL BBS Program' article introduces a simple yet functional BBS program coded in DCL, intended for use on VAX/VMS systems. The author, Raoul, emphasizes that this program is a foundational skeleton, encouraging users to modify and expand upon it. Key features include an internal mailbox option, support for Kermit and Zmodem download protocols, and a basic user authentication system. The program also logs user activity, providing a way to track connections and interactions within the BBS environment.\n\nRaoul notes that the documentation is minimal, as the primary goal is to provide a starting point for developers interested in creating their own BBS systems. The article reflects the collaborative spirit of the hacker community, inviting feedback and cooperation from other programmers. This piece is a valuable resource for those looking to understand the technical underpinnings of early BBS systems and the programming practices of the time."
+}

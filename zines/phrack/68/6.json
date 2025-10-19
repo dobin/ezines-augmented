@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x44, Phile #0x06 of 0x13",
+  "title": "Android platform based linux kernel rootkit",
+  "authors": "dong-hoon you <x82@inetcop.org>",
+  "date": "April 04th 2011",
+  "historical_context": "This article discusses rootkit techniques specifically for the Android platform, which was gaining popularity at the time. It reflects the growing interest in mobile security and the vulnerabilities present in mobile operating systems.",
+  "target_audience": "Security researchers, malware analysts, and developers interested in kernel-level programming and Android security.",
+  "short_summary": "The article explores various techniques for creating a rootkit on the Android platform by manipulating the Linux kernel. It covers methods for hooking system calls and modifying kernel memory to achieve stealthy operations.",
+  "summary": "This paper presents a comprehensive overview of rootkit techniques applicable to the Linux kernel on Android devices, specifically targeting ARM architecture. The author details methods for hooking system calls through the sys_call_table and discusses the implications of accessing kernel memory via the /dev/kmem device. The techniques outlined include traditional hooking methods, as well as innovative approaches that minimize the footprint of modifications to the kernel, thereby enhancing stealth. The paper emphasizes the importance of understanding the structure and behavior of the kernel to effectively implement these techniques.\n\nThe author provides practical code examples and discusses the challenges associated with identifying the sys_call_table's address and size across different kernel versions. By leveraging the ARM architecture's unique characteristics, the paper illustrates how to manipulate the exception vector table and modify the vector_swi handler to redirect system calls to a custom implementation. This work not only serves as a technical guide for developing rootkits but also raises awareness about the security vulnerabilities inherent in mobile operating systems, particularly as they relate to the Android platform."
+}

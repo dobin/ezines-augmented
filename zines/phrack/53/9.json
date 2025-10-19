@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 53, article 09 of 15",
+  "title": "FORTH Hacking on Sparc Hardware",
+  "authors": "mudge <mudge@l0pht.com>",
+  "date": "July 8, 1998",
+  "historical_context": "This article was written during a time when Sun Microsystems hardware was being discarded in large quantities, providing opportunities for hackers to explore and exploit the OpenBoot firmware.",
+  "target_audience": "Hackers, security researchers, and enthusiasts interested in low-level programming and hardware exploitation.",
+  "short_summary": "The article explores the FORTH programming language as it applies to Sun Sparc hardware, detailing how to manipulate hardware and exploit vulnerabilities in the OpenBoot firmware. It includes practical examples such as controlling LED lights and decrypting Cisco passwords.",
+  "summary": "In 'FORTH Hacking on Sparc Hardware', mudge introduces readers to the FORTH programming language, emphasizing its relevance in the context of Sun Microsystems' OpenBoot firmware. The article begins with a light-hearted narrative about the author's experiences and transitions into a technical exploration of FORTH's stack-based operations. Mudge provides practical examples, such as turning an LED on and off using FORTH commands, demonstrating the language's simplicity and effectiveness for hardware manipulation. The author also discusses the availability of older Sun hardware, encouraging readers to experiment with it as a playground for hacking and learning.\n\nThe article further delves into more complex topics, including a Cisco type 7 password decryptor implemented in FORTH for the PalmPilot. Mudge explains how to access and modify the process credentials structure in Solaris, illustrating the potential for privilege escalation by manipulating memory directly through the OpenBoot prompt. This hands-on approach not only showcases the power of FORTH but also highlights the vulnerabilities present in systems that do not enforce strict user access controls, making it a valuable read for anyone interested in low-level system security and exploitation techniques."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 52, article 12 of 20",
+  "title": "Voice Response Systems",
+  "authors": "Voyager[TNO]",
+  "date": "January 26, 1998",
+  "historical_context": "This article discusses the technology behind Voice Response Systems (VRS) used in telecommunications, reflecting the state of telephony in the late 1990s.",
+  "target_audience": "Hackers, telecommunications professionals, and security researchers interested in legacy systems and their vulnerabilities.",
+  "short_summary": "The article provides an overview of Voice Response Systems (VRS) used in telecommunications, detailing three specific systems: DATU, SOLTS, and FAST. It explains their functionalities, features, and how they are utilized by field technicians.",
+  "summary": "This article delves into the workings of Voice Response Systems (VRS), which allow users to interact with computer systems via telephone using DTMF tones or voice commands. It highlights three systems: DATU, a loop conditioning system that enhances field testing capabilities; SOLTS, which enables technicians to test phone lines remotely; and FAST, a tool for managing telecommunications facilities. Each system is described in detail, including their features, operational modes, and the specific commands used by technicians to perform various tests and maintenance tasks.\n\nThe author emphasizes the importance of these systems in maintaining the Public Switched Telephone Network (PSTN) and how they can be accessed safely from public telephones. The article serves as both a technical guide and a historical snapshot of telecommunications technology, showcasing how these systems were integral to the operations of local loop carriers at the time. It also hints at the potential for hacking these systems, suggesting that they provide a unique avenue for exploration without the need for a computer."
+}

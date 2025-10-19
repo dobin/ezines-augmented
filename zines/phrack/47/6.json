@@ -1,0 +1,43 @@
+{
+  "reference": "Volume Six, Issue Forty-Seven, File 6 of 22",
+  "title": "What is an Internet Outdial?",
+  "authors": "Cavalier and DisordeR",
+  "date": "12/29/94",
+  "historical_context": "This article discusses the use of Internet outdials, a method popular in the early days of the Internet for connecting to long-distance BBS systems.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts.",
+  "short_summary": "The article explains what Internet outdials are, how they function, and provides a list of working outdials tested by the authors. It also categorizes some outdials as needing passwords or being non-functional.",
+  "summary": "In this article, Cavalier and DisordeR introduce the concept of Internet outdials, which are modems connected to the Internet that allow users to dial out to long-distance numbers, particularly useful for accessing Bulletin Board Systems (BBS). The authors provide a comprehensive list of Internet outdials, detailing their IP addresses and the necessary commands to connect. They categorize these outdials into working, needing passwords, and dead connections, ensuring that readers have a reliable resource for making long-distance calls via the Internet. The article emphasizes the importance of community contributions to maintain the accuracy of the list, inviting users to report any changes or dead connections they encounter.",
+  "additional_info": {
+    "working_outdials": [
+      {
+        "NPA": "215",
+        "IP Address": "isn.upenn.edu",
+        "Instructions": "modem"
+      },
+      {
+        "NPA": "217",
+        "IP Address": "dialout.cecer.army.mil",
+        "Instructions": "atdt x,xxxXXXXX"
+      },
+      {
+        "NPA": "218",
+        "IP Address": "modem.d.umn.edu",
+        "Instructions": "atdt9,xxxXXXX"
+      }
+    ],
+    "dead_outdials": [
+      {
+        "NPA": "201",
+        "IP Address": "idsnet"
+      },
+      {
+        "NPA": "202",
+        "IP Address": "modem.aidt.edu"
+      },
+      {
+        "NPA": "204",
+        "IP Address": "dial.cc.umanitoba.ca"
+      }
+    ]
+  }
+}

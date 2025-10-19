@@ -1,0 +1,27 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3d, Phile #0x07 of 0x0f",
+  "title": "Hijacking Linux Page Fault Handler",
+  "authors": "Angelo Dell'Aera 'buffer'",
+  "date": "May 23, 2003",
+  "historical_context": "This article discusses advanced techniques for stealthily modifying kernel behavior in Linux, particularly focusing on the page fault handler, which was a relevant topic in the context of kernel security and exploitation techniques prevalent in the early 2000s.",
+  "target_audience": "Security researchers, kernel developers, and hackers interested in Linux kernel exploitation techniques.",
+  "short_summary": "The article presents a method for hijacking the Linux page fault handler by modifying the exception table, allowing for stealthy execution of arbitrary code in kernel space. It details the implementation of a Linux Kernel Module (LKM) that exploits this vulnerability and provides a proof of concept.",
+  "summary": "In this article, the author explores a novel technique for hijacking the Linux page fault handler by manipulating the exception table. The method allows an attacker to execute arbitrary code in kernel space by exploiting a page fault caused by a user-space application. The author discusses the limitations of previous methods, such as modifying the syscall table or the Interrupt Descriptor Table, which are more easily detectable. By focusing on the page fault handler, the technique becomes stealthier, as it relies on a less common scenario where a user-space application passes an invalid address to a syscall, triggering a page fault that can be redirected to malicious code. The article includes a detailed implementation of a Linux Kernel Module (LKM) that demonstrates this technique, along with a user-space application that triggers the exploit. The author emphasizes the simplicity of modifying just a few bytes in the kernel memory to achieve significant control over the system, highlighting the stealthy nature of this approach and its implications for kernel security.",
+  "further_reading": [
+    {
+      "title": "Understanding the Linux Kernel",
+      "authors": "Daniel P. Bovet and Marco Cesati",
+      "publisher": "O'Reilly"
+    },
+    {
+      "title": "Linux Device Drivers",
+      "authors": "Alessandro Rubini and Jonathan Corbet",
+      "publisher": "O'Reilly"
+    },
+    {
+      "title": "Syscall Redirection Without Modifying the Syscall Table",
+      "authors": "Silvio Cesare",
+      "url": "http://www.big.net.au/~silvio/"
+    }
+  ]
+}

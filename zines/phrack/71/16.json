@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x10, Issue 0x47, Phile #0x10 of 0x11",
+  "title": "Long Live Format Strings",
+  "authors": "Mark Remarkable",
+  "date": "",
+  "historical_context": "Despite the introduction of protections like glibc's FORTIFY_SOURCE, format string vulnerabilities persist in modern software.",
+  "target_audience": "Hackers, security researchers, software developers",
+  "short_summary": "This article discusses the ongoing relevance of format string vulnerabilities in software, despite existing protections. It provides a script for detecting such vulnerabilities and shares examples of real-world exploits against Fortinet products.",
+  "summary": "In 'Long Live Format Strings', Mark Remarkable explores the surprising persistence of format string vulnerabilities in software development, even with robust protections like glibc's FORTIFY_SOURCE. The article begins with an overview of how format strings are typically hardcoded, making them susceptible to exploitation. Remarkable introduces a simple Binary Ninja script that can identify potential format string bugs by analyzing function calls to printf-family functions. This script serves as a practical tool for security researchers and developers, emphasizing that one doesn't need to be an expert to uncover these vulnerabilities in poorly designed software.\n\nThe article then delves into practical examples of exploiting format string vulnerabilities in Fortinet's software. Remarkable shares two 0-day vulnerabilities discovered during testing, demonstrating how to trigger segmentation faults by manipulating input fields in certificate and token imports. The detailed crash logs provide insight into the underlying issues, showcasing the ease with which attackers can exploit these flaws. The piece concludes with a reminder of the importance of vigilance in software security, as even established companies can overlook fundamental vulnerabilities."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Nine, Phile #6 of 10",
+  "title": "The Executioner - PhoneLine Phantoms!",
+  "authors": "The Executioner",
+  "date": "1986",
+  "historical_context": "This article was published during the early days of telecommunications hacking, a time when understanding the inner workings of phone systems was crucial for phreakers.",
+  "target_audience": "Hackers, phreakers, telecommunications professionals",
+  "short_summary": "This article introduces the concept of Plant Measurements used by telephone companies to assess hardware performance and customer service. It details various types of measurements and their significance in maintaining service quality.",
+  "summary": "In this first part of a three-part series, The Executioner delves into the Plant Measurement system utilized by telephone companies to gauge their operational efficiency and hardware performance. The article outlines the different types of measurements, including Customer Service Measurements, Hardware Performance Measurements, and Base Measurements, which collectively provide a comprehensive overview of system health and customer satisfaction. The author emphasizes the importance of these metrics in preemptively identifying issues before they escalate into service failures, thereby ensuring a smooth customer experience.\n\nThe article also provides a detailed breakdown of the daily PM01 output message, which includes various service-affecting data points such as the number of calls lost due to hardware malfunctions and the performance of system hardware. By dissecting these measurements, The Executioner illustrates how they can be leveraged by maintenance personnel to enhance service quality and operational reliability. This foundational knowledge is essential for anyone interested in the intricacies of telecommunications and the underlying systems that support them."
+}

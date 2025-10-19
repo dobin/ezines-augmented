@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "ELVIRA virus",
+  "authors": "Spanska",
+  "date": "September 1997",
+  "historical_context": "The ELVIRA virus is a notable example of early polymorphic viruses, showcasing the evolution of malware during the late 1990s when personal computing was becoming more widespread.",
+  "target_audience": "Malware researchers, security professionals, and enthusiasts of hacker culture.",
+  "short_summary": "The ELVIRA virus, created by Spanska, is a polymorphic virus designed to infect DOS programs. It features a simple mutation engine and a graphical payload that displays messages in multiple languages. The article provides technical details on its structure and infection methods.",
+  "summary": "The ELVIRA virus, crafted by Spanska, is a polymorphic virus that infects DOS programs by embedding itself within executable files. At the time of its release, it demonstrated a low detection rate by various antivirus programs, highlighting its stealth capabilities. The virus is characterized by its semi-stealth polymorphic nature, which allows it to alter its code structure to evade detection. The author humorously dedicates the virus to a girl, adding a personal touch to the technical content. The virus's payload includes graphical messages that appear when the infected program is executed, adding a layer of interaction for the user. \n\nThe article delves into the technical aspects of the virus, including its size, the mutation engine that generates different strains, and the methods it uses to infect files. The mutation engine is described as simple yet effective, allowing for a variety of infection techniques while maintaining a manageable code size. The author also discusses the challenges and limitations of the engine, such as the fixed mutation start offset and the need for additional code to fill gaps. Overall, the ELVIRA virus serves as a fascinating case study in the evolution of malware and the creativity of its creators."
+}

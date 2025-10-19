@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x10, Issue 0x47, Phile #0x0F of 0x11",
+  "title": "Evasion by De-optimization",
+  "authors": "Ege BALCI",
+  "date": "",
+  "historical_context": "This article addresses the evolving challenges in evading antivirus detection, particularly in the context of machine code obfuscation techniques.",
+  "target_audience": "Security researchers, malware analysts, and offensive security professionals.",
+  "short_summary": "The article presents a novel approach to evading antivirus detection through machine code de-optimization techniques. It discusses various mathematical methods for transforming machine code to avoid recognizable patterns, thereby enhancing the effectiveness of malware evasion strategies.",
+  "summary": "In 'Evasion by De-optimization', Ege Balci explores the limitations of traditional antivirus evasion techniques, particularly those relying on self-modifying code. The article introduces a new methodology that leverages mathematical transformations to obfuscate machine code without creating recognizable patterns that security products can detect. Balci outlines various techniques, including arithmetic partitioning, logical inverses, and offset mutations, which can be applied to x86 instructions to achieve this goal. The study emphasizes the importance of blending obfuscated code with benign code to evade detection effectively.\n\nThe article also discusses the implementation of a proof-of-concept de-optimizer tool that applies these techniques to existing malware samples, demonstrating a significant reduction in detection rates by pattern-based security solutions. Balci's work highlights the ongoing arms race between malware developers and security professionals, showcasing the need for continuous innovation in evasion techniques to stay ahead of detection mechanisms. The findings suggest that these de-optimization methods could represent a significant advancement in the field of offensive security."
+}

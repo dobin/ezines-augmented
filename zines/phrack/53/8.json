@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 8, Issue 53, Phile #8 of 15",
+  "title": "Linux Trusted Path Execution Redux",
+  "authors": "Krzysztof G. Baranowski",
+  "date": "July 8, 1998",
+  "short_summary": "This article discusses an improved implementation of Trusted Path Execution (TPE) for Linux, addressing limitations of a previous version and providing a detailed kernel patch and user-space program for managing access control.",
+  "summary": "The article presents an enhanced implementation of Trusted Path Execution (TPE) for Linux, which aims to restrict the execution of binaries to trusted directories. The author critiques the initial implementation found in Phrack 52-06, highlighting its inconvenience for users, particularly for those running scripts in directories owned by non-root users. The proposed solution introduces an access list mechanism that allows specific non-root users to execute binaries, thus improving usability while maintaining security. The implementation consists of a kernel patch and a user-space program called 'tpadm' for managing the access list via ioctl() system calls.\n\nThe kernel patch adds a character device driver that registers itself as 'tpe', with specific checks to determine whether a user can execute a program based on ownership and permissions of the directory. The article provides detailed instructions on how to apply the patch, create the necessary device file, and use the 'tpadm' program to add or remove users from the access list. The author emphasizes the importance of security in multi-user systems and encourages feedback from users who may encounter issues with the implementation."
+}

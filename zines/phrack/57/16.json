@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x10 of 0x12",
+  "title": "CUPASS AND THE NETUSERCHANGEPASSWORD PROBLEM",
+  "authors": "Doc Holiday / THC",
+  "date": "2001",
+  "historical_context": "This article discusses vulnerabilities in Microsoft's NetUserChangePassword function, which were relevant during the era of Windows NT and 2000, highlighting security flaws that could be exploited by attackers.",
+  "target_audience": "Security professionals, ethical hackers, and those interested in Windows security vulnerabilities.",
+  "short_summary": "The article details a vulnerability in Microsoft's NetUserChangePassword function, which allows attackers to change user passwords under certain conditions. It introduces CUPASS, a tool designed to exploit this vulnerability through dictionary attacks.",
+  "summary": "In this article, Doc Holiday explores a significant security flaw in Microsoft's NetUserChangePassword function, which affects Windows NT 4 and Windows 2000. The flaw allows an attacker to change any user's password if they know the current password, particularly when the 'User Must Log On in Order to Change Password' option is not enabled. The author provides a detailed examination of the various protocols available for changing passwords in a Windows environment, emphasizing the implications of the NUCP protocol's vulnerabilities. The article serves as both a technical overview and a practical guide for exploiting this weakness through a tool called CUPASS, which performs dictionary attacks against user accounts.\n\nThe article also discusses the required permissions for executing the NUCP function, the impact of different security settings, and the behavior of anonymous user connections. It highlights the importance of understanding these vulnerabilities for both attackers and defenders, providing insights into how to secure Windows environments against such exploits. The author concludes with a call to action for readers to test the CUPASS tool in their own environments, emphasizing the need for awareness and proactive security measures in the face of such vulnerabilities."
+}

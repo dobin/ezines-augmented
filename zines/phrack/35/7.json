@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-five, File 7 of 13",
+  "title": "Users Guide to VAX/VMS",
+  "authors": "Black Kat",
+  "date": "Not specified",
+  "historical_context": "The VAX architecture was developed in the 1970s and was widely used in academic and corporate environments for its advanced multiprogramming capabilities.",
+  "target_audience": "Hackers, system administrators, security professionals, and anyone interested in legacy systems and programming.",
+  "short_summary": "This article serves as a comprehensive guide to the VAX/VMS operating system, covering basic information, command language, file operations, and programming techniques. It is divided into two parts: basic information and programming.",
+  "summary": "The article begins with an introduction to the VAX architecture, highlighting its capabilities such as virtual memory addressing and efficient multiprogramming. It explains the Digital Command Language (DCL), which is the primary command language for interacting with the VAX/VMS system. The guide details essential commands for logging in, file operations, and error handling, making it a valuable resource for users navigating the system. Additionally, it covers terminal control keys, file security, and the EDT text editor, providing practical examples for users to follow.\n\nIn the second part, the article delves into programming within the VAX/VMS environment, discussing command procedures, symbols, and lexical functions. It explains how to create command procedures that automate tasks, handle errors, and utilize branching and looping constructs. The guide emphasizes the flexibility of DCL and its ability to perform complex operations, making it an essential read for anyone looking to harness the power of VAX/VMS for programming and system management."
+}

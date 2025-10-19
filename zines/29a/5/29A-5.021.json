@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "How to get AVP not detecting viruses in OLE2 files",
+  "authors": "Tcp/29A",
+  "date": "",
+  "historical_context": "This article reflects the early days of antivirus software and the methods used by hackers to bypass detection mechanisms, particularly in the context of macro viruses prevalent in Office applications.",
+  "target_audience": "Hackers, security researchers, antivirus developers",
+  "short_summary": "The article details a method to bypass the AVP antivirus detection for macro viruses in OLE2 files by manipulating specific bytes in the file structure. It explains how altering the file's perceived size can trick the antivirus into skipping the analysis.",
+  "summary": "In this article, Tcp/29A reveals a technique to evade detection by the AVP antivirus for macro viruses embedded in OLE2 files, which are commonly used by Microsoft Office applications. The method involves using a hex editor to modify specific bytes in the file's structure, particularly at the 0x48 position, which indicates the size of the file. By changing this value to a significantly higher number, the author demonstrates that AVP will mistakenly believe the file is corrupted and thus will not analyze it for viruses. This allows the macro virus to remain active while still being undetected by AVP, although other antivirus solutions may still identify the threat. \n\nThe article provides a technical breakdown of OLE2 files, likening their structure to a file system, and explains why this manipulation works specifically against AVP. It highlights the limitations of certain antivirus programs in their detection methodologies, particularly their reliance on file size checks. This insight into the inner workings of antivirus software serves as a cautionary tale for developers and security professionals, emphasizing the importance of robust detection mechanisms that cannot be easily circumvented by simple file manipulations."
+}

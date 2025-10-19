@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-Four, File #10 of 11",
+  "title": "Phrack World News",
+  "authors": "Compiled by Dispater",
+  "date": "October 1991",
+  "historical_context": "This article discusses significant communication failures in the early 1990s, particularly focusing on the reliance on AT&T's long-distance services and the implications of technological failures on critical infrastructure.",
+  "target_audience": "Hackers, security professionals, telecommunications engineers, and those interested in the history of communication technology.",
+  "short_summary": "The article compiles several reports on a major communication failure caused by AT&T, which led to significant disruptions in air traffic control and raised concerns about the reliability of telecommunications infrastructure.",
+  "summary": "In October 1991, a catastrophic failure in AT&T's long-distance communication system resulted in the grounding of flights at three major New York airports, highlighting the vulnerabilities in the telecommunications infrastructure. The failure was attributed to an internal power issue at a switching office, which left air traffic controllers unable to communicate with one another or with pilots. This incident sparked outrage over the lack of redundancy in communication systems and the reliance on a single provider for critical services. The article emphasizes the need for better contingency planning and the importance of understanding the technology that underpins modern communication systems.\n\nThe compilation also includes insights from various news sources discussing the aftermath of the failure, including the installation of microwave networks to supplement traditional phone lines and the identification of software flaws as potential causes of similar disruptions. Experts expressed concerns about the interconnectedness of telecommunications systems, suggesting that failures in one area could have cascading effects across networks. The discussions reflect a growing awareness of the need for robust and resilient communication systems in an increasingly technology-dependent society."
+}

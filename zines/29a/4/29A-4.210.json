@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Portable EXE",
+  "authors": "Weird",
+  "date": "",
+  "historical_context": "This article provides insights into the Portable Executable (PE) format used in Windows, which is crucial for understanding malware development and reverse engineering.",
+  "target_audience": "Hackers, security researchers, malware analysts, and anyone interested in Windows internals.",
+  "short_summary": "The article delves into the structure of Portable Executable (PE) files, explaining how they are organized and how code can be attached to them. It covers the PE format's significance in malware development and provides insights into manipulating PE files.",
+  "summary": "In 'Portable EXE', the author Weird explores the intricacies of the Portable Executable (PE) file format, which is fundamental to Windows applications. The article begins with a brief overview of the PE structure, detailing its components such as the MS-DOS header, PE header, and various sections that comprise the executable. The author emphasizes the importance of understanding the PE format for anyone looking to delve into Windows programming or malware development, as it reveals how executables are loaded and executed in memory. Key concepts like Relative Virtual Address (RVA) and section characteristics are introduced, providing a foundation for further exploration of PE manipulation techniques.\n\nThe article then transitions into practical applications, particularly focusing on how to attach code to existing PE files. This section is particularly relevant for malware developers, as it outlines methods to modify the entry point of an executable and add new sections without corrupting the original file structure. The author discusses the challenges of calling Windows API functions from attached code, offering solutions that involve leveraging existing imports from the host executable. This detailed examination not only serves as a guide for creating malware but also acts as a resource for security professionals seeking to understand and mitigate such threats."
+}

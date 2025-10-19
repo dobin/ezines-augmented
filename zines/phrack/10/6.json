@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Ten, Phile #6 of 9",
+  "title": "Hacking Primos Part I",
+  "authors": "Evil Jay",
+  "date": "1986-87",
+  "historical_context": "This article is part of the early hacking culture, focusing on the Primos operating system, which was prevalent in academic and research environments during the 1980s.",
+  "target_audience": "Hackers, security researchers, and enthusiasts interested in historical hacking techniques.",
+  "short_summary": "This article provides a detailed guide on how to gain unauthorized access to Primos systems, including common user IDs and passwords, as well as techniques for exploiting system vulnerabilities.",
+  "summary": "In 'Hacking Primos Part I', Evil Jay outlines methods for gaining entry into Primos systems, emphasizing the importance of default user IDs and passwords. The article begins with a brief introduction to the Primos operating system and its login procedures, detailing how to identify version numbers and common accounts that can be exploited. Jay encourages readers to experiment with various user IDs and passwords, including the possibility of logging in with a blank password, which some users have reportedly employed. The author also discusses the significance of understanding the system's structure and commands, suggesting that familiarity with commands like ATTACH and SLIST is beneficial for navigating the system effectively.\n\nThe article progresses to more advanced techniques for obtaining SYS1 privileged accounts. Jay provides a step-by-step approach for accessing utility directories and extracting passwords from system files. He emphasizes that while success rates may vary, persistence and creativity in trying different approaches can yield results. This piece serves as both a practical guide for aspiring hackers and a historical document reflecting the mindset and methodologies of the hacking community during the late 1980s."
+}

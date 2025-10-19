@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Seven, Issue Forty-Nine, Phile #13 of 16",
+  "title": "Telephone Company Customer Applications",
+  "authors": "Voyager[TNO]",
+  "date": "Not specified",
+  "historical_context": "This article provides insight into the software used by telephone companies, particularly focusing on customer applications, which were less documented compared to provisioning applications.",
+  "target_audience": "Hackers, security professionals, telecommunications enthusiasts",
+  "short_summary": "The article explores various customer applications used by telephone companies, detailing their functionalities and potential vulnerabilities. It highlights systems like BOSS and CARS, which manage billing and customer information, and discusses how these systems can be exploited for unauthorized access to sensitive data.",
+  "summary": "In this article, Voyager[TNO] delves into the world of telephone company customer applications, a less-explored area compared to provisioning applications. The author outlines several key systems, including BOSS (Billing and Order Support System) and CARS (Customer Access and Retrieval System), detailing their functionalities such as managing billing information, customer service records, and payment histories. The article emphasizes the potential for exploitation within these systems, revealing how hackers could access personal information, modify bills, and retrieve sensitive customer data through these applications. The detailed descriptions of the user interfaces and operational commands provide a technical insight into the inner workings of these systems, making it a valuable read for those interested in telecommunications security and hacking methodologies.",
+  "additional_notes": "The article serves as a reminder of the vulnerabilities present in legacy systems and the importance of securing customer data in telecommunications."
+}

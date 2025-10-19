@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0xa Issue 0x38",
+  "title": "Backdooring Binary Objects",
+  "authors": "klog <klog@promisc.org>",
+  "date": "05.01.2000",
+  "historical_context": "This article discusses techniques for backdooring binary files, a topic of significant relevance in the context of software security and malware development in the early 2000s.",
+  "target_audience": "Hackers, security researchers, malware analysts.",
+  "short_summary": "The article presents methods for backdooring binary files using the Binary File Descriptor library (libbfd), detailing the process of writing hostile code, inserting it into binaries, and hooking symbols for execution.",
+  "summary": "In 'Backdooring Binary Objects', klog explores the art of backdooring binaries through a systematic approach using the Binary File Descriptor library (libbfd). The article begins by outlining the need for a clean and portable method to backdoor binary files, emphasizing the limitations of traditional techniques. It introduces libbfd as a versatile tool for manipulating various binary formats, particularly ELF, and provides a step-by-step guide on writing hostile code, inserting it into target binaries, and hooking function calls to redirect execution to the malicious code. The author details the intricacies of symbol manipulation and the importance of understanding binary structures to achieve effective backdooring. The article culminates in the presentation of 'shoveit', a tool designed to automate the backdooring process, showcasing its practical application in modifying shared libraries and static objects. This work serves as a critical resource for understanding binary exploitation and the implications of compromised software integrity."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Antiheuristics",
+  "authors": "AVV",
+  "date": "",
+  "historical_context": "This article reflects the early concerns about antivirus software's reliance on heuristic detection methods, which were becoming more common in the late 1980s and early 1990s.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article discusses the limitations of heuristic detection in antivirus software and presents a method to evade detection by modifying virus code. It highlights the vulnerabilities in antivirus systems and the ease of bypassing them.",
+  "summary": "In 'Antiheuristics', AVV critiques the effectiveness of heuristic detection methods employed by antivirus software, arguing that they are not as foolproof as claimed. The author explains that while heuristics aim to identify common patterns in known viruses, they can be easily circumvented by modifying the virus code to obscure these patterns. The article provides a simple encryption routine that can be used to hide malicious code from antivirus scanners, demonstrating that even well-known viruses can go undetected if the right techniques are applied. \n\nAVV presents two code snippets that illustrate how to encrypt virus code in a way that avoids detection by popular antivirus programs. The first routine is straightforward but easily caught, while the second is subtly modified to evade heuristic scans. This serves as a warning to both antivirus developers and users about the limitations of current detection methods, emphasizing the need for more robust solutions in the ongoing battle against malware. The article is a valuable read for those interested in the intricacies of virus development and the vulnerabilities of antivirus systems."
+}

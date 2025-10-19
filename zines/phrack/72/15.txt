@@ -1,0 +1,1761 @@
+|=-----------------------------------------------------------------------=|
+|=-----------=[    E0: Selective Symbolic Instrumentation    ]=----------=|
+|=-----------=[ Powering Data-Flow Fuzzing and LLM Reasoning ]=----------=|
+|=-----------------------------------------------------------------------=|
+|=-----------------------------=[ Jex Amro ]=----------------------------=|
+|=--------------------=[ @jexamro <jx@squarelabs.ai> ]=------------------=|
+|=-----------------------------------------------------------------------=|
+
+-- Table of contents
+
+ 0 - Introduction
+ 1 - Fuzzing
+ 2 - Symbolic Execution
+ 3 - Large Language Models (LLMs)
+ 4 - Towards a Hybrid Approach
+     4.1 - Data-Flow vs Code-Coverage Guidance
+     4.2 - E0 Design Decisions
+ 5 - E0 Architecture
+ 6 - Selective Symbolic Instrumentation
+ 7 - Symbolic Definitions
+ 8 - Data-Flow Coverage Metrics
+ 9 - Fine-Grained Memory Instrumentation via Hardware Watchpoints
+10 - Validating E0: From Simple Benchmarks to Real-World Testing
+11 - Case Study: CVE-2024-44297 in ImageIO
+12 - LLM Integration & Symbolic-Guided Analysis
+     12.1 - Instruction-Following Models
+     12.2 - Guiding LLM Attention with Symbolic Expressions and Constraints
+     12.3 - Code Context Representation
+     12.4 - Context Expansion via MCP, A2A and On-Demand Decompilation
+     12.5 - Modular Reasoning vs Chain-of-Thought Prompts
+     12.6 - Reverse Prompt Engineering
+     12.7 - Ensemble Consensus Prompting
+     12.8 - Feedback Loop With Fuzzing and Symbolic Execution
+13 - Alpha Source Code Release
+14 - Acknowledgments
+15 - Conclusion
+16 - References
+17 - Source Code
+
+--[ 0 - Introduction
+
+Imagine a fuzzer driven by data-flow rather than code-coverage. One that 
+follows input def-use chains from source to sink, enforces constraints at 
+each step, and reasons only about the precise, ordered low-level operations
+that govern data propagation. Instead of blind randomness, it employs a 
+mutation engine guided by symbolic reasoning and high-level semantic 
+context.
+
+Initially, LLMs remain in deep sleep, awakened only when their broader
+insight is needed to analyze complex vulnerabilities requiring higher-
+level semantic or cross-function reasoning. You can query this engine to 
+inspect its findings, direct its focus, and steer exploration toward areas 
+of interest.
+
+We call this multi-layered binary analysis and instrumentation framework
+E0 (Explore from Ground Zero). E0 integrates fuzzing's speed, selective 
+symbolic instrumentation's precision, and LLM guidance's semantic 
+understanding, leveraging each technique's strengths and minimizing 
+their limitations.
+
+While a full open-source release of the framework is planned, this 
+Phrack issue includes an alpha snapshot of the most critical components 
+supporting the techniques discussed here, enabling security researchers 
+and engineers to directly experiment with and validate our novel methods. 
+In this paper, we outline the challenges encountered in building E0 and 
+introduce the solutions we developed.
+
+--[ 1 - Fuzzing
+
+It is mid-2025 and fuzzing remains the cornerstone of automated
+vulnerability discovery, thanks to its ability to generate massive numbers
+of diverse inputs at high speed, and to produce concrete, reproducible
+failures (crashes, hangs, and memory violations) that demand developer
+attention. By randomly mutating inputs guided by simple coverage
+heuristics, modern fuzzers can traverse thousands of execution paths per
+second with virtually no manual effort. However, fuzzing's randomized
+nature and its over-reliance on code-coverage metrics often leave deep,
+tightly guarded branches unexplored and miss subtle logic flaws or boundary
+conditions. Furthermore, without any semantic understanding of program
+state, fuzz campaigns can spend inordinate resources on redundant or
+low-value paths, making it difficult to target high-impact code regions
+without massive computational investment.
+
+--[ 2 - Symbolic Execution
+
+Symbolic execution fills fuzzing's blind spots by treating inputs as 
+symbolic variables that are transformed into logical formulas and
+systematically exploring program paths via constraint solving. Its strength
+lies in generating concrete test cases for specific branches, uncovering
+corner-case errors, assertion failures, and subtle boundary violations
+without relying on coverage heuristics. For example, in a nested
+buffer-copy loop it can derive an input that triggers an off-by-one
+overflow or calculate the exact values needed to cause an integer 
+overflow, or solve for a memory write that lands at a specific address.
+
+Yet symbolic execution operates only at the level of individual 
+instructions and their accumulated formulas; it has no built-in notion of 
+buffer sizes, object lifetimes, or business-logic rules. Without manually 
+supplied checks, such as boundary conditions, function summaries, loop 
+invariants, or custom heap models, many critical bugs go undetected. These 
+include out-of-bounds writes, use-after-free conditions, and missing 
+validations across multi-step transactions. Detecting a use-after-free, 
+for example, requires encoding both allocation and deallocation semantics 
+by hand, since the solver cannot distinguish freed memory from valid 
+regions.
+
+This instruction-centric view also leads to explosive path growth: each
+branch doubles the search space and quickly overwhelms time and memory 
+resources on complex binaries. SMT solvers may timeout on large complex 
+expressions, and external interactions such as network I/O, system calls, 
+or threading often require hand-written stubs or rough approximations that 
+can miss behaviors or introduce false negatives or positives. While 
+strategies such as search heuristics (depth-first versus breadth-first), 
+state merging, interpolation, constraint caching, and mixed concrete-
+symbolic (Concolic) runs can alleviate some of the limitations, the core 
+challenges of scalability, and broader contextual understanding remain.
+
+--[ 3 - Large Language Models (LLMs)
+
+By contrast, Large Language Models bring complementary strengths by
+naturally absorbing and manipulating broader semantic layers (functions,
+modules, design patterns), and synthesizing intent across thousands of
+lines of code. For example, given a snippet like:
+
+    .-----------------------------------.
+    |  char buf[16];                    |
+    |  write_user_data(buf, user_len);  |
+    '-----------------------------------'
+
+LLMs can warn: "Potential buffer overflow if 'user_len' > 16," without
+requiring any additional boundary specifications.
+
+In another snippet:
+
+    .-----------------------------------.
+    |  ptr = malloc(...);               |
+    |  free(ptr);                       |
+    |  ptr->field = x;                  |
+    '-----------------------------------'
+
+LLMs can flag a use-after-free issue: "You're writing to freed memory
+here; ensure you don't access 'ptr' after it's freed". They can also spot
+missing business invariants, such as failing to roll back a transaction on
+failure, or suggest protocol fixes that span multiple functions.
+
+Yet they still stumble over low-level assembly and raw binaries: they
+hallucinate flag conditions ("this jump tests zero" when it actually tests
+carry), cannot compute dynamic branch targets, and hit context-window
+limits on very large repositories (truncating critical paths in a
+20,000-line module). They struggle to pinpoint exact lines of code and
+visualize deeply nested jump chains, especially when registers are reused
+to hold different variables, which distracts their token-based attention.
+Time and computational cost further constrain them: longer contexts incur
+higher inference latency and significant compute expenses, making
+exhaustive analysis of massive code bases impractical. Despite these
+drawbacks, by leveraging prompt engineering, fine-tuning on domain-specific
+code, Model Context Protocol (MCP), and retrieval-augmented generation,
+researchers can still extract high-impact insights into memory-safety
+flaws, race conditions, and business-logic errors.
+
+However, LLMs frequently generate a high volume of false positives during
+vulnerability analysis when they lack precise data-flow and constraint
+information. In practice, an LLM may flag any external input as a potential
+attack surface, even when the input cannot reach or influence the 
+vulnerable code in question. This over-flagging forces researchers to 
+manually review numerous false findings or to invoke additional LLM 
+inference rounds, sometimes with narrower prompts or more compute-
+intensive techniques, to validate true positives. While LLMs can deliver 
+accurate results when a vulnerability is fully contained within a single 
+function or module, real-world vulnerabilities often span multiple 
+functions, modules, or processes. Reconstructing and supplying the full 
+cross-function context is both challenging and expensive, in terms of 
+engineering effort and inference latency, making validation and false-
+positive reduction the primary hurdles in applying LLMs to large-scale 
+binary vulnerability research.
+
+--[ 4 - Towards a Hybrid Approach
+
+The contrast between symbolic execution's instruction-by-instruction
+precision and LLMs' broad, high-level reasoning highlights how they can
+address each other's blind spots. Symbolic execution supplies exact
+data-flow semantics: accumulated path constraints; variable liveness;
+input reachability; solved constraint-variable ranges; and cross-thread
+flows directly into AI pipelines, sparing LLMs the heavy lifting of
+inferring low-level data-flow details across vast source-code or
+decompiled binaries and thus dramatically reducing the volume of false
+positives that undermine purely LLM-driven analyses. In addition, since
+compiler optimizations and decompilation can alter or obscure actual
+control-flow and binary behavior, relying solely on source or decompiled
+code risks missing hidden bugs, whereas symbolic slicing operates on the
+real binary, preserving true execution behavior.
+
+In contrast, LLMs inject domain context, established design patterns, and
+high-level business-logic checks that symbolic tools cannot model. 
+Combined in a dynamic feedback loop (fuzzing, on-demand symbolic slicing, 
+and LLM-guided review), you achieve a self-reinforcing pipeline: fuzzers 
+explore new paths informed by solved constraints; symbolic analysis 
+attaches precise data-flow invariants; and LLMs transform those invariants
+into actionable, human-readable insights, all validated through native
+binary execution.
+
+An ideal hybrid system harnesses the raw throughput of unmodified binaries;
+triggers symbolic emulation only on input-derived code regions for minimal
+overhead; and enriches each LLM prompt with concise slices scoped to one
+or more functions (including their constraint inputs: arguments,
+memory-load values, and call-return values), augmented by SMT-solved
+variable ranges to eliminate infeasible scenarios up front. This fusion
+arms LLMs with concrete, high-fidelity context; reduces wasted inference
+cycles on false positives; and closes the loop with end-to-end fuzzing,
+uniting discovery breadth, symbolic precision, and AI reasoning into one
+scalable, low-latency vulnerability-discovery engine.
+
+---[ 4.1 - Data-Flow vs Code-Coverage Guidance
+
+Data-Flow Guidance centers input exploration on the precise propagation of
+attacker-controlled data through program operations. By instrumenting and
+tracking def-use chains (capturing only those instructions that carry data
+derived from guarded inputs), E0 ensures that mutations and analyses focus
+exclusively on branches and operations aligned with data-flow. In contrast,
+Code-Coverage Guidance simply chases new basic blocks or branch targets 
+without regard to semantic relevance. It may exercise the same edges 
+thousands or even millions of times, wasting fuzz cycles on paths that 
+bear no relation to exploitable state. Its only advantage is raw 
+throughput: high volumes of test cases with minimal semantic insight.
+
+Data-Flow Guidance reduces noise, yields higher-quality test cases in 
+fewer iterations, and in our approach, supplies precise data-flow context 
+for downstream symbolic and AI layers to perform deeper reasoning, predict 
+and help discover vulnerabilities, and generate inputs that trigger them. 
+Moreover, unlike Code-Coverage Guidance (which requires its monitoring 
+scope to be tied to specific modules or regions), data-flow 
+instrumentation via (SSI) Selective Symbolic Instrumentation is applicable 
+across all modules and threads (with optional scope narrowing when 
+needed), enabling E0 to track untrusted-input data-flow throughout the 
+entire application without sacrificing performance.
+
+---[ 4.2 - E0 Design Decisions
+
+After extensive research and development, and multiple full rewrites, E0's 
+design has converged on several core principles:
+
+- Harness-Based Fuzzer Compatibility: E0 operates exactly like a modern
+  fuzzer by executing a user-supplied harness iteratively. Users provide 
+  a harness for the target functionality, along with a module name, a
+  relative virtual address, and a register to capture, mark, and guard
+  inputs. On each iteration, E0 takes the current sample and spawns new
+  samples for every newly solved path constraint. With the optional -x
+  flag, E0 will recursively execute each newly generated sample to 
+  further expand its exploration.
+
+- Crash-and-Hang Detection (in typical fuzzing fashion): the classic 
+  "definite outcome" mechanism, where E0 drives your harness and watches 
+  for native crashes, hangs, or illegal-memory accesses (even catching 
+  them early in emulation mode before they'd be swallowed by OS exception 
+  handlers).
+
+- Decoupled AI Analysis: To maximize selective symbolic instrumentation
+  performance, E0 separates the heavy lifting of data-flow tracking from
+  downstream AI processing. When run with the -log_symdefs flag, E0 writes 
+  collected symbolic definitions into a SQLite database, which AI
+  agents can consume asynchronously in a separate process.
+
+- AI-Driven Prediction: symbolic data is fed to LLMs that flag likely
+  vulnerabilities ahead of an actual trigger, and in the near future, will
+  loop back to the fuzzer to validate generated candidate inputs.
+
+- Selective Instrumentation: We combine hardware watchpoints with OS-level
+  page guards, then fall back exclusively on recursive, bitmap-driven
+  watchpoint allocation for minimal overhead and maximal precision.
+
+- On-Demand Emulation: By using Triton's ONLY_ON_SYMBOLIZED mode, symbolic
+  analysis is invoked only when a guarded memory access introduces a new
+  symbolic operand, then immediately reverts to native execution once all
+  symbolic state is concretized.
+
+- Layered Integration: Fuzzing provides breadth, the SMT solver refines
+  precise path constraints, and an LLM-driven AI layer supplies high-level
+  semantic reasoning. This synergy balances speed, accuracy, and contextual
+  insight.
+
+These decisions enable the framework to operate from ground zero on 
+closed-source binaries, scale across large, multithreaded codebases, and 
+supply rich low-level symbolic insights to the AI layer, paving the way 
+for high-confidence, low-overhead vulnerability discovery.
+
+--[ 5 - E0 Architecture
+
+E0 is architected as a multi-layered framework in which each component
+contributes to an integrated vulnerability discovery process.
+
+                             .-----------------------------------------.
+                             |                                         |
+ .-------------.      .------V-------.      .-----------------.        |
+ |   Samples   | ---> |    Fuzzer    | ---> |     Debugger    | <---.  |
+ '-------------'      '--------------'      '-----------------'     |  |
+       |                                              |             |  |
+ .-------------.      .--------------.      .---------V----------.  |  |
+ |   Mutation  | <--- |  SMT Solver  | <--- | Symbolic Execution |  |  |
+ '-------------'      '--------------'      '--------------------'  |  |
+                                                      |             |  |
+ .-------------.      .--------------.      .---------V----------.  |  |
+ |    Binja    | <--> |Python Binding| <--- |Symbolic Definitions|  |  |
+ '-------------'   .--'--------------'      '--------------------'  |  |
+        |          |                                                |  |
+ .------V------.   |  .--------------.      .--------------.        |  |
+ |    SQLite   | <-'  |      AI      |      |    MCP/A2A   |--------'  |
+ |      db     | <--> |    Agents    | <--> |    Servers   |-----------'
+ '-------------'      '--------------'      '--------------'
+
+
+[1] - Fuzzer 
+---------------------------------------------------------------------------
+- Role: Drives input generation and verifies vulnerabilities.
+- Function: Iteratively produces new inputs guided by solutions from the 
+  SMT solver, targeting unexplored or under-explored paths to increase 
+  overall path exploration and the likelihood of triggering 
+  vulnerabilities. In addition, the fuzzer plays a role in vulnerability 
+  verification by reproducing triggering conditions and validating 
+  observable failures such as crashes or hangs.
+
+[2] - Dynamic Instrumentation (Debugger - LiteTracer) 
+---------------------------------------------------------------------------
+- Role: Manages the seamless switching between native execution and 
+  symbolic emulation. 
+- Function: Monitors runtime execution using hardware watchpoints and
+  protected memory pages. It triggers Targeted Emulation when a memory
+  access on a traced guarded memory location is detected, ensuring that
+  symbolic analysis is focused on relevant code paths.
+
+[3] - Targeted Emulation (Selective Symbolic Execution) 
+---------------------------------------------------------------------------
+- Role: Performs symbolic analysis only when necessary and manages the
+  transition back to native execution.  
+- Function: Utilizes techniques such as Triton's ONLY_ON_SYMBOLIZED mode to
+  process only instructions involving symbolic operands. Importantly, the
+  term "Selective Symbolic Execution" here encompasses not only the
+  optimization provided by Triton's ONLY_ON_SYMBOLIZED mode but also the
+  overall targeted emulation strategy initiated by the dynamic selective
+  instrumentation layer (Section 6) when critical memory accesses are
+  detected. In addition, this component is responsible for switching back
+  to native execution once all symbolic registers are concretized, thereby
+  minimizing emulation overhead while capturing detailed symbolic
+  expressions that reflect critical program behavior.
+
+[4] - SMT Solver (Z3 - Bitwuzla)  
+---------------------------------------------------------------------------
+- Role: Solves accumulated symbolic constraints.  
+- Function: Computes precise variable ranges and refines symbolic
+  expressions before passing them to the AI analysis layer, ensuring 
+  that the symbolic data is both accurate and actionable.
+
+[5] - Binary IR and Decompiler (Binary Ninja)  
+---------------------------------------------------------------------------
+- Role: Provides detailed structural code context.  
+- Function: Disassembles and decompiles binaries to extract function 
+  boundaries, signatures, assembly code, pseudocode, and intermediate 
+  representations (such as LLIL, MLIL, HLIL and SSA forms). These insights 
+  help contextualize the symbolic expressions for subsequent LLM analysis.
+
+[6] - AI Layer (LLM Integration)  
+---------------------------------------------------------------------------
+- Role: Conducts vulnerability analysis.
+- Function: Leverages the well-structured symbolic expressions/definitions
+  generated in the Selective Symbolic Execution layer (Section 6) to
+  perform function-level or data-flow slices vulnerability assessments.
+
+[7] - Model Context Protocol (MCP) & Agent-to-Agent (A2A)
+---------------------------------------------------------------------------
+- Status: Early research and development. 
+- Role: Context retrieval and action invocation.  
+- Function: Provides AI agents with a unified interface to fetch analysis
+  data (function code, solved constraints, symbolic definitions) to enrich
+  LLM context on-demand, and to invoke E0 operations such as fuzzing,
+  debugging, sample generation, and verification.   
+
+--[ 6 - Selective Symbolic Instrumentation (SSI)
+
+Selective Symbolic Instrumentation tracks external inputs by installing 
+targeted memory monitors. These monitors trigger symbolic analysis only 
+when external inputs directly influence execution, minimizing unnecessary 
+emulation overhead. Each symbolic slice precisely captures data-flow and 
+control-flow semantics, producing structured constraints for downstream 
+SMT solving and AI analysis. This ensures deep, meaningful analysis 
+precisely where needed, while preserving native execution speed elsewhere.
+
+The process begins by placing an OS-level guard on the input buffer's page.
+Any load from this guarded page generates a fault, pinpointing the first
+instruction to consume external bytes and spawning a focused symbolic
+emulation slice seeded with a concrete program state. As symbolic values
+propagate into registers, heap objects, stack locals, or globals, each
+newly touched page is likewise guarded. Subsequent faults cascade, mapping
+out the data-flow graph one step at a time as accumulated symbolic 
+expressions, and ensuring that symbolic reasoning engages only when and
+where inputs actually affect control or state.
+
+ .-------------------------------------------------------------------.     
+ |   Example: Symbolic Emulation Session on a memmove Loop           |     
+ |-------------------------------------------------------------------|     
+ |   memmove 0x1804ab304: stp q0, q1, [x3]  <- Symbolized mem write  |     
+ |   memmove 0x1804ab308: add x3, x3, #0x20   // Not Symbolized      |     
+ |   memmove 0x1804ab30c: ldnp q0, q1, [x1] <- triggers emulation    |     
+ |   memmove 0x1804ab310: add x1, x1, #0x20   // Not Symbolized      |     
+ |   memmove 0x1804ab314: subs x2, x2, #0x20  // Not Symbolized      |     
+ |   memmove 0x1804ab318: b.hi #0x1804ab304   // Not Symbolized      |     
+ '-------------------------------------------------------------------'     
+
+In this example, emulation is triggered at the first 'ldnp' instruction 
+(0x1804ab30c) when the guarded source memory is accessed. Symbolic 
+execution starts using Triton's ONLY_ON_SYMBOLIZED mode. Emulating that 
+'ldnp' instruction results in q0 and q1 registers being symbolized. As the 
+loop continues, subsequent 'add' and 'subs' instructions will be emulated
+by Triton but remain unmarked for data-flow since they do not operate on 
+symbolized operands. At 0x1804ab304 'stp q0, q1, [x3]' Triton will 
+symbolize the destination memory because the source registers are 
+symbolized. A Triton memory-access callback, set by E0, is then triggered:
+E0 guards the destination page, creating a new symbolic memory region.
+Emulation proceeds until all symbolic registers have been concretized 
+(i.e., no further symbolic registers dependencies remain - only symbolic 
+memory), at which point emulation ends and all guards are lifted to allow 
+the debugger to natively step over the emulated code. Native execution then
+resumes until the next guarded memory access triggers another symbolic
+emulation session.
+
+The memmove example above represents a symbolic emulation session contained
+entirely within a single function and basic block, effectively capturing a
+concise slice of a selective symbolic emulation session. While the memmove 
+session is bounded within one function, other symbolic sessions may span 
+multiple functions. For instance, consider a more complex, cross-function 
+slice that begins in Mod1.Func_A, continues into Mod2.Func_B, and then 
+performs nested operations in Mod2.Func_C before returning to Mod2.Func_B:
+
+                                                            Triggers
+        Symbolic MEM load | Mod1.Func_A ldr w8, [x1] <----- Emulation
+.-------------------------------------------------------------------------.
+| # [LogMemSymbolicDef] MEM Symdef id: f4a70000c1fe                       |
+| ((((SymVar_46) << 8 | SymVar_47) << 8 | SymVar_48) << 8 | SymVar_49)    |
+'-------------------------------------------------------------------------'
+        Symbolic w9       | Mod1.Func_A rev w9, w8
+        Symbolic x0       | Mod1.Func_A mov x0, x9
+        Symbolic RET x0   | Mod1.Func_A ret
+.-------------------------------------------------------------------------.
+| # [LogRetSymbolicDef] RET Symdef id: c0ffee0012c4                       |
+| ((((SymVar_49) << 8 | SymVar_48) << 8 | SymVar_47) << 8 | SymVar_46)    |
+'-------------------------------------------------------------------------'
+        Symbolic x22      | Mod2.Func_B mov x22, x0
+        Not Symbolic      | Mod2.Func_B b #0x18c328000
+        Symbolic Branch   | Mod2.Func_B cbz w22, #0x18c328120
+        Symbolic x0       | Mod2.Func_B add x0, x22, #8
+        Symbolic Call     | Mod2.Func_B bl #0x18c2b000
+.-------------------------------------------------------------------------.
+| # [LogArgSymbolicDef] ARG Symdef id: 1360c0000ec814                     |
+| ((((((SymVar_49) << 8 | SymVar_48) << 8 | SymVar_47) << 8 | SymVar_46)  |
+|  + 0x8) & 0xffffffff)                                                   |
+'-------------------------------------------------------------------------'
+        Symbolic MEM load | Mod2.Func_C ldp x8, x9, [x0, #0x10]
+.-------------------------------------------------------------------------.
+| # [LogMemSymbolicDef] MEM Symdef id: ba5eba11dc0c                       |
+'-------------------------------------------------------------------------'
+        Symbolic x10      | Mod2.Func_C add x10, x9, #3
+        Symbolic cmp      | Mod2.Func_C cmp x10, x8
+        Symbolic Branch   | Mod2.Func_C b.hs #0x18c2b100
+        Not Symbolic      | Mod2.Func_C ldr x8, [x0, #8]
+        Symbolic MEM load | Mod2.Func_C ldr w8, [x8, x9]
+.-------------------------------------------------------------------------.
+| # [LogMemSymbolicDef] MEM Symdef id: 3a6e00ddeca8                       |
+'-------------------------------------------------------------------------'
+        Not Symbolic      | Mod2.Func_C ldrb w10, [x0, #0x44]
+        Symbolic w11      | Mod2.Func_C rev w11, w8
+        Not Symbolic      | Mod2.Func_C cmp w10, #0
+        Symbolic w8       | Mod2.Func_C csel w8, w8, w11, ne
+        Symbolic x9       | Mod2.Func_C add x9, x9, #4
+        Symbolic MEM Store| Mod2.Func_C str x9, [x0, #0x18]
+        Symbolic x0       | Mod2.Func_C mov x0, x8
+        Symbolic RET x0   | Mod2.Func_C ret
+.-------------------------------------------------------------------------.
+| # [LogRetSymbolicDef] RET Symdef id: 87adf00d13d4                       |
+'-------------------------------------------------------------------------'
+        Not Symbolic      | Mod2.Func_B ldr x8, [sp, #0x58]
+        Not Symbolic      | Mod2.Func_B sub x23, x8, #8
+        Symbolic w20      | Mod2.Func_B adds w20, w0, #8
+        Symbolic Branch   | Mod2.Func_B b.hs #0x18c329000
+        ... Emulation continues until no more symbolic registers
+
+In this multi-function session, emulation begins when Mod1.Func_A executes 
+the guarded load at 'ldr w8, [x1]', producing a symbolic definition 
+(MEM Symdef id: f4a70000c1fe). Emulation continues through symbolic rev, 
+mov, and ret instructions in Mod1.Func_A, then picks up in Mod2.Func_B 
+with the incoming symbolic return value x0: producing a return-boundary 
+definition (RET Symdef id: c0ffee0012c4). It branches conditionally, calls 
+into Mod2.Func_C: producing an argument-boundary definition (ARG Symdef 
+id: 1360c0000ec814) for the call, and then in Mod2.Func_C multiple memory 
+loads and arithmetic operations extend the slice before returning back to 
+Mod2.Func_B with a final symbolic return value (RET Symdef id: 
+87adf00d13d4) for post-call handling.
+
+Throughout this extended session, E0 logs symbolic definitions (Symdefs) 
+at memory loads, function returns, and argument passages to capture the 
+precise data-flow def-use chains across-function boundaries. Definitions 
+are captured exactly at the function-boundary events "ARG, MEM, and RET" 
+where their symbolic expression holds the full def-use data-flow 
+information accumulated from all previously emulated and fused symbolic 
+slices/sessions, tracing back to the root symbolic inputs.
+
+The next Abstract syntax trees (ASTs) samples "collected via Triton - in
+AST Python Representation format" treat each SymVar_n as a root symbolic 
+input corresponding to the n-th byte of a guarded input buffer, where E0 
+has already marked every byte of that buffer as symbolic. When a load 
+reads four consecutive bytes from memory, Triton simply retrieves those 
+preexisting SymVar_ nodes and concatenates them via nested shift/or 
+operations to form the AST. For instance:
+
+.-------------------------------------------------------------------------.
+| > ldr w8, [x1]                                                          |
+| > loads 4 bytes from memory, resulting in w8 AST:                       |
+|   ((((SymVar_46) << 8 | SymVar_47) << 8 | SymVar_48) << 8 | SymVar_49)  |
+|-------------------------------------------------------------------------|
+| > rev w9, w8                                                            |
+| > produces w9 AST:                                                      |
+|   ((((SymVar_49) << 8 | SymVar_48) << 8 | SymVar_47) << 8 | SymVar_46)  |
+|-------------------------------------------------------------------------|
+| > add x0, x22, #8                                                       |
+| > results in x0 AST:                                                    |
+|   (((((SymVar_49) << 8 | SymVar_48) << 8 | SymVar_47) << 8 | SymVar_46) |
+|    + 0x8) & 0xffffffff                                                  |
+'-------------------------------------------------------------------------'
+
+Emulation only ends once all live symbolic registers are concretized, 
+at which point the system reverts to native execution with "only" guarded 
+symbolic memory to catch the next guarded memory access and initiate the 
+next symbolic emulation session. Where multiple symbolic emulation 
+sessions separated by native execution gaps will all contribute in 
+building the input data-flow def-use chains.
+
+As another illustration, consider how a later session incorporates the 
+full upstream def-use chain. During this run, 379 symbolic emulation 
+sessions occurred (with native execution in between), and by session #371, 
+a single guarded load reflects the accumulated expressions along its 
+def-use chain from the previous 370 sessions. For example:
+
+---------------------------------------------------------------------------
+> ldr x8, [x0]
+---------------------------------------------------------------------------
+This instruction loads from a guarded address, producing an AST that 
+concatenates bytes defined (and shifted) across multiple earlier 
+operations in multiple earlier emulation sessions. The resulting AST is:
+---------------------------------------------------------------------------
+((((((((SymVar_30) << 8 | SymVar_29) << 8 | SymVar_28) << 8 | SymVar_27) 
+<< 8 | SymVar_26) << 8 | SymVar_25) << 8 | SymVar_24) << 8 | 
+  (((((SymVar_23 << (0x38 & 0x3f)) & 0xffffffffffffffff) |
+      (((SymVar_22 << (0x30 & 0x3f)) & 0xffffffffffffffff) |
+        (((SymVar_21 << (0x28 & 0x3f)) & 0xffffffffffffffff) |
+          (((SymVar_20 << (0x20 & 0x3f)) & 0xffffffffffffffff) |
+            (((SymVar_19 << (0x18 & 0x3f)) & 0xffffffffffffffff) |
+              (((SymVar_18 << (0x10 & 0x3f)) & 0xffffffffffffffff) |
+                (((SymVar_17 << (0x8 & 0x3f)) & 0xffffffffffffffff) |
+                  SymVar_16))))))) >> 56) & 0xff))
+---------------------------------------------------------------------------
+
+This mechanism enables efficient, guided symbolic sessions fused 
+seamlessly with native execution by using memory-access instrumentation as 
+both the trigger and steering signal for symbolic analysis, bounding each 
+slice to the scope of live symbolic dependencies. Unlike Concolic- 
+execution, Selective Symbolic Instrumentation (SSI) avoids needless 
+emulation of code unaffected by external inputs and preserves near-native 
+performance across uninstrumented paths.
+
+--[ 7 - Symbolic Definitions
+
+E0 distinguishes between two complementary types of symbolic definitions:
+
+(1) Root Symbolic Definitions anchor def-use chains at their origin, 
+usually an input buffer. Users explicitly define these through command-
+line parameters specifying the buffer location, size, and register details 
+for tracing:
+
+ -module     : Name of the module containing the input-handling code  
+ -bp         : Breakpoint RVA to intercept and guard the input buffer  
+ -reg        : Register holding the pointer to the input  
+ -reg-offset : Optional offset if the input resides inside a structure  
+ -i          : Start index of the guarded input region 
+ -n          : Length of the guarded region in bytes  
+
+For instance, the following command configures E0 to set a breakpoint at 
+RVA '0x3b40' in the harness module 'ImageIO_test', guarding 200 bytes of 
+input starting at byte 4 in the buffer pointed to by register 'x0':
+
+  ./e0 -i 4 -n 200 -module ImageIO_test -bp 0x3b40 -reg 0 ...
+
+(2) Function-Layer Symbolic Definitions (SymDefs) are automatically 
+captured at runtime as symbolic def-use chain values cross-function 
+boundaries. These include:
+
+ - ARG: symbolic function arguments
+ - MEM: symbolic memory loads
+ - RET: symbolic return values
+
+These SymDefs serve two main purposes:
+ - To support high-resolution data-flow coverage (see next section), and  
+ - To focus LLM analysis on function-level variables derived from 
+   untrusted inputs.
+
+The instrumentation engine logs and stores Function-Layer definitions 
+(SymDefs) in a local SQLite database, which enables downstream 
+deduplication, AI inspection, and coverage tracking.
+
+---------------------------------------------------------------------------
+SymDef IDs and Invocation IDs
+---------------------------------------------------------------------------
+Each SymDef ID is a 64-bit identifier encoding the symbolic event's
+location and type, allowing easy tracking and reference throughout E0's 
+analysis workflow. These SymDef IDs appear throughout the runtime logs and 
+database as ARG, MEM, and RET symbolic definitions. Their format varies 
+slightly depending on the definition type.
+
+---------------------------------------------------------------------------
+Each SymDef ID includes:
+---------------------------------------------------------------------------
+- Instruction RVA (high SymDef ID 32 bits)
+- Opcode fingerprint (MEM) or edge RVA 
+  (RET: callee->caller, ARG: caller->callee)
+- 8-bit argument mask (ARG only)
+
+---------------------------------------------------------------------------
+SymDef IDs are computed as follows:
+---------------------------------------------------------------------------
+// MEM (load) definitions
+uint64_t symdef_mem =
+    ((uint64_t)pc_rva << 32)
+  | *reinterpret_cast<const uint32_t*>(instruction.getOpcode());
+
+// RET (return) definitions
+uint64_t symdef_ret =
+    ((uint64_t)return_target_rva << 32)
+  | ret_instruction_rva;
+
+// ARG (call) definitions
+uint64_t base    = ((uint64_t)called_function_rva << 32)
+                 | call_site_rva;
+uint64_t cleared = base & 0x00FFFFFFFFFFFFFFULL; // clear bits 56-63
+uint64_t symdef_arg = ((uint64_t)sym_args_mask << 56) | cleared;
+
+---------------------------------------------------------------------------
+Invocation IDs then build on the SymDef ID by adding AST complexity:
+---------------------------------------------------------------------------
+uint64_t invocation = symdef /* _mem, _ret or _arg */
+                    + Ast->getLevel();
+
+E0 stores both each SymDef ID and its corresponding invocation IDs 
+(SymDef ID + AST level) in its local SQLite database for de-duplication 
+and coverage tracking. In the future, we may incorporate a module-name 
+hash into the RVA to guard against any potential collisions, but to date 
+this simple 64-bit packing scheme has produced no ID conflicts.
+
+--[ 8 - Data-Flow Coverage Metrics
+
+Building on the selective symbolic instrumentation framework and the 
+symbolic definitions described in previous sections, E0 replaces 
+traditional, bitmap-based code-coverage metrics with a suite of high-
+resolution data-flow coverage signals. Conventional coverage relies on a 
+bitmap, one bit per basic block or edge, to record whether a region has 
+been exercised, but this low-resolution mechanism ignores semantic 
+relevance. In practice, two inputs may mark the same basic blocks as 
+covered, yet one may carry no untrusted input into a critical function 
+argument while the other precisely steers untrusted bytes into a 
+vulnerable buffer. Data-Flow Coverage Guidance, by contrast, captures 
+exactly which instructions, and at which points in the def-use graph, are 
+influenced by symbolic ("guarded") inputs. Whenever a guarded memory load 
+produces a new symbolic operand, E0 invokes Triton to launch a targeted 
+emulation slice and logs a set of "Symbolic Definitions" (ARG, MEM, RET) 
+that record the precise ASTs showing how input bytes flow into registers 
+or memory. 
+
+Over the course of a single sample run, unlike code-coverage guidance 
+which typically instruments only one or few modules, our data-flow 
+approach fuses these definitions across all modules and threads to 
+construct a coherent, per-instruction map of data-flow. By tracking 
+symbolic dependencies at this level, E0 can distinguish execution paths 
+that visit identical basic blocks but differ in how untrusted bytes 
+influence computation. This finer granularity enables more efficient 
+sample mutation, reduces blind fuzzing on semantically irrelevant code 
+paths, and supplies downstream layers (SMT solver and LLM) with richer, 
+contextually precise information.
+
+This fine-grained, instruction-level data-flow mapping supports multiple 
+quantitative metrics, ranging from higher-level, less precise signals to 
+lower-level, more precise signals, that E0 collects to guide data-flow 
+coverage:
+
+---------------------------------------------------------------------------
+ 1 | Symbolic Emulation Session Count per Run
+---------------------------------------------------------------------------
+Each time a guarded memory load produces a new symbolic operand, E0 
+invokes Triton to launch a targeted emulation slice. The total number of 
+such emulation slices/sessions per sample indicates how many distinct 
+data-dependent "frontiers" the input has exercised. A higher session count 
+implies deeper penetration into the def-use graph, reflecting multiple 
+layers of data propagation. By tracking this count over time, the system
+deprioritizes further mutations of inputs that repeatedly trigger the same 
+sessions and instead focuses on samples that spawn novel emulation slices.
+---------------------------------------------------------------------------
+ 2 | Symbolic Definition Count per Run
+---------------------------------------------------------------------------
+Within each emulation session, E0 logs every new symbolic definition, 
+whether it arises from a guarded memory load (MEM), a function-call 
+argument boundary (ARG), or a return value (RET). Recording the total 
+number of definitions per sample run provides insight into (a) the depth 
+of def-use propagation (for example, whether untrusted bytes reached 
+multiple function boundaries) and (b) the exact points where input-derived 
+data influenced control flow or memory. By comparing this count against 
+previous runs, E0 identifies samples that expose new combinations of 
+data-flow events, even if they traverse identical basic blocks.
+---------------------------------------------------------------------------
+ 3 | Emulated Instructions Count per Run
+---------------------------------------------------------------------------
+Not all instructions in a targeted emulation slice involve symbolic 
+operands; nevertheless, E0 counts every instruction that Triton processes 
+under ONLY_ON_SYMBOLIZED mode from the moment a guarded load triggers 
+emulation until all live symbolic registers have been concretized. This 
+instruction count measures the symbolic-emulation workload per sample and 
+serves as a proxy for the slice's complexity. The more instructions 
+executed under symbolic semantics, the broader the data-flow fan-out 
+across registers and memory. By normalizing mutation priorities against 
+this metric, E0 favors inputs that exercise larger slices of 
+data-dependent code, increasing the chance of uncovering vulnerabilities 
+requiring complex arithmetic or multi-step memory manipulations.
+---------------------------------------------------------------------------
+ 4 | Hash of Unique Emulated Instruction Addresses per Run
+---------------------------------------------------------------------------
+To detect overlapping symbolic-emulation regions across samples, E0 
+maintains a running, order-insensitive hash over the set of all unique 
+instruction (RVA) relative virtual addresses emulated under symbolic mode 
+across all sessions, modules, and threads. Each time Triton symbolically 
+processes an instruction, E0 inserts its address into a global hash 
+accumulator. At the end of the run, this accumulator represents the 
+"symbolic footprint" of that sample. Comparing hash values between runs 
+reveals whether two samples touched the same set of data-dependent 
+instructions (regardless of execution order or frequency). Distinct hashes 
+indicate that a new sample has uncovered previously unexplored symbolic 
+paths; identical hashes suggest redundant coverage. This high-resolution 
+fingerprint far surpasses basic-block bitmaps by accounting for 
+instruction-level context, multi-module interactions, and multi-threaded 
+execution.
+---------------------------------------------------------------------------
+ 5 | Unique SymDef ID Count per Run
+---------------------------------------------------------------------------
+Each time E0 captures a symbolic definition (SymDef), it checks whether 
+that SymDef ID has been seen in previous runs. If not, the SymDef is 
+marked as unique for this sample. The total number of unique SymDef IDs 
+captured in a run reflects the number of new function-boundary propagation 
+points discovered during execution. A higher count indicates that symbolic 
+input has reached new regions of code and crossed additional def-use 
+boundaries, expanding the observed symbolic data-flow graph. This simple 
+metric helps identify samples that extend input influence into unexplored 
+functions or modules.
+---------------------------------------------------------------------------
+
+Because these metrics span from broad-level (session count) to fine-
+grained (instruction-address hash), E0 combines them into a unified 
+data-flow coverage score that prioritizes samples driving novel or deeper 
+symbolic activity; those that spawn new emulation sessions, introduce 
+additional symbolic definitions, exercise previously unseen emulated 
+instructions, or previously unseen symdefs. By focusing on inputs that 
+uncover fresh data-flow frontiers rather than merely toggling basic-block 
+bits, E0 rapidly directs exploration toward code regions where untrusted 
+input meaningfully influences computation.
+
+This data-flow orientation yields key benefits: precise tracking of how 
+untrusted bytes propagate; reduced redundancy through instruction-level 
+hashing and definition counts; and comprehensive cross-module, cross-
+thread coverage via a unified instruction-address footprint. In short, 
+Data-Flow Coverage Guidance transforms low-level symbolic events into 
+high-resolution signals, enabling E0 to probe untrusted data paths with 
+surgical accuracy and accelerate the discovery of deep, semantically 
+relevant vulnerabilities.
+
+--[ 9 - Fine-Grained Memory Instrumentation via Hardware Watchpoints
+
+Page-level guarding introduced severe performance penalties and didn't
+scale. To address this, E0 falls back on the CPU's built-in hardware
+watchpoints, which can monitor much smaller, power-of-two-aligned (address 
+and size) regions within a page. Because each core only provides four 
+debug registers, we employ a hierarchical bitmap and recursive splitting 
+algorithm to efficiently carve a 16 KB page into at most four minimally 
+sized watchpoint blocks, often using even fewer when possible.
+
+ .------------------------------------------------------------------.      
+ | Hardware Watchpoint Constraints                                  |      
+ |                                                                  |      
+ |  - Only four watchpoints per core                                |      
+ |  - Each WP must cover a 2^N-byte region, aligned to its size     |      
+ |  - Any untracked byte in that region still fires an exception    |      
+ |  - Scattered inputs force oversized regions -> spurious traps.   |      
+ '------------------------------------------------------------------'      
+
+Tracking an arbitrary set of bytes inside a 16KB page requires carving 
+that page into smaller power-of-two blocks. To do this efficiently, and 
+within the constraint of only four hardware watchpoint slots, we use a
+three-level bitmap hierarchy and a recursive splitting strategy:
+
+              rootBitmap -> pageSegments -> pageQwords                   
+
+[ Page (16KB) ]
+      |
+  .---v---.       Level 1: 32 segments (512B each)
+  |  seg  |   rootBitmap -> 1...0...1...0... (1 bit per 512B segment)
+  '-------'
+      |
+  .---v---.       Level 2: 64 qwords per segment (8B each)
+  | qword |   pageSegments[n] -> 0x... (1 bit per 8B qword)
+  '-------'
+      |
+  .---v---.       Level 3: byte mask per qword
+  |  byte |   pageQwords[i] -> 0b10110010 (1 bit per byte in the qword)
+  '-------'
+
+1. Level 1 (root): A 32-bit root bitmap marks which 512B segments contain 
+   any tracked byte.
+2. Level 2 (segments): For each set bit, a 64-bit segment mask identifies
+   which 8-byte "qwords" within the segment are active.
+3. Level 3 (bytes): For each active qword, an 8-bit mask specifies which
+   individual bytes are being tracked (byte-select mask).
+    
+Once you have that hierarchy, you compute the smallest 2^N block covering
+all active bits:
+
+                      [ Full page: 0...31 ] 
+                              |
+                     +--------+---------+
+                     |                  |
+                 [0...15]            [16...31]   
+                     |                  |
+                 used?->yes          used?->no  
+                     |                  |
+               select [0...15]      back to root
+                     |
+               repeat split on [0...15]
+
+If the optimal block still contains gaps or would occupy more than one
+hardware slot, we recursively split the range into two halves and test
+each for activity. This continues until we either:
+
+- Narrow to a single power-of-two block covering all active bytes, or  
+- Fill all four slots with disjoint blocks that together cover the entire
+  tracked region with minimal overhead.
+
+---------------------------------------------------------------------------
+Here are four concrete examples on a 16 KB page at base 0x16bd7c000
+---------------------------------------------------------------------------
+  Example 1: Aligned 8-Byte Range                              
+  Tracked bytes: 0x16bd7c0a0-0x16bd7c0a7                       
+  Offset range: 0xa0-0xa7, already 8 Bytes power-of-two block
+  Byte-select mask: 0b11111111
+  > single watchpoint: [0xa0-0xa7]    
+---------------------------------------------------------------------------
+  Example 2: Two-Byte Selection in an 8-Byte Block
+  Tracked bytes: 0x16bd7c0a0-0x16bd7c0a1
+  Aligned 8 Bytes block: 0xa0-0xa7
+  Byte-select mask: 0b00000011
+  > single watchpoint covering [0xa0-0xa7] with 2 byte-select
+---------------------------------------------------------------------------
+  Example 3: Unaligned 8-Byte Range
+  Tracked bytes: 0x16bd7c00b-0x16bd7c012
+  Offset span: 0x0b-0x12 (8 B) crosses two 8 B blocks
+  > minimal cover: 32 B block [0x00-0x1f]
+  > algorithm may choose:
+    - one 32 B watchpoint [0x00-0x1f]
+    - two 8 B watchpoints [0x08-0x0f] & [0x10-0x17]
+    based on available free watchpoint slots
+  Note: a single 16 B watchpoint [0x08-0x17] is invalid
+  because the CPU enforces power-of-two size and address alignment
+---------------------------------------------------------------------------
+  Example 4: Multiple Disjoint Ranges
+  Tracked bytes:
+    - 0x16bd7c0a0-0x16bd7c0a7 (8 B)
+    - 0x16bd7c200-0x16bd7c207 (8 B)
+    - 0x16bd7c500-0x16bd7c51f (32 B)
+  > Three Watchpoints assignments:
+    [1] 8 B @ 0xa0-0xa7, byte-select mask=0b11111111
+    [2] 8 B @ 0x200-0x207, byte-select mask=0b11111111
+    [3] 32 B @ 0x500-0x51f
+  Note: Gaps > power-of-two aligned sizes force separate blocks
+---------------------------------------------------------------------------
+
+Dynamic switching adds another layer of economy: on each page-fault or
+access trap, record the recently accessed address, then recompute the four
+watchpoints to favour that area (so the next few accesses fire the minimum
+number of context switches). In practice this means you only ever reprogram
+the debug registers when the exceptions "jumps" outside the current watched
+blocks, keeping overhead near zero during tight loops over the same region.
+
+.-----------.      on WP fault at address X 
+|  CPU Core |----> recompute up to 4 WPs covering X +/- delta
+'-----------'      reprogram DBGWCR0-3 with new ranges | resume execution
+
+By weaving bitmaps, recursive splitting, and fault-driven reconfiguration,
+you transform limited hardware watchpoints into a finely tuned tracking
+engine that precisely covers only the memory bytes and addresses you care
+about, while maximizing unwatched gaps to avoid irrelevant memory-access
+exceptions, eliminating floods of excessive page faults.
+
+To accomplish this, we designed and evaluated several watchpoint 
+allocation strategies, each targeting different trade-offs between 
+precision and performance. Early attempts included a naive uniform 
+splitter that divided the page into evenly sized regions, regardless of 
+access patterns. We then explored a greedy segment-based strategy that 
+prioritized denser areas of tracked memory, followed by a refinement-aware 
+approach that recursively split only when significant coverage reduction 
+was observed.
+
+Ultimately, we settled on a strategy that consistently outperformed the 
+others in practice: Strict Recent Access Bias. This strategy aggressively 
+favors regions near the most recently faulting address, allocating more of 
+the watchpoint budget toward areas that are likely to be accessed again 
+soon. Instead of passively observing the bitmap distribution, it actively 
+reshapes the coverage to follow the faulting instruction. This focus on 
+locality means that memory loops and bursty access patterns remain within 
+the same set of watchpoints for extended periods, minimizing debug 
+register reprogramming and avoiding unnecessary traps.
+
+Crucially, the Strict Recent Access Bias strategy is designed to use the 
+least number of watchpoints necessary to fully cover the guarded addresses 
+within the recently accessed page. In many cases, the result is one or 
+more spare watchpoints that can be reassigned when beneficial to reduce 
+the coverage footprint on other concurrently tracked pages. We limit such 
+reassignments to a single additional watchpoint per concurrent page, and 
+only when switching from OS-level page guarding to a single hardware 
+watchpoint results in a net reduction in page coverage size. This enables 
+isolated high-activity regions on multiple pages to benefit from tighter 
+watchpoint precision without increasing overall trap frequency. By 
+selectively refining coverage in this way, the system ensures that global 
+watchpoint resources are used efficiently to minimize unnecessary page 
+faults.
+
+To better illustrate how the Strict Recent Access Bias strategy operates 
+in practice, consider the following example where the rootBitmap contains 
+active segments in both halves of the page, and one side includes the 
+recently accessed segment. Instead of distributing the watchpoint budget 
+evenly, the algorithm allocates a larger share of the budget (up to three 
+watchpoints) to the side containing the recent access, and reserves only 
+one watchpoint for the opposite half. This does not mean all watchpoints 
+are immediately used, but rather that more refinement and splitting is 
+permitted on the recent side if needed. The diagram below visualizes this 
+biased allocation at the root level.
+
+                        [Root Level Split]
+                     Page RootBitmap (32 bits)
+                [31..............................0]             
+                  00000001000000000000000111100001
+                             ^
+           Where recently accessed segment is at bit 20
+    .----------------------------+----------------------------.   
+    |  High Half [bits 16..31]   |   Low Half [bits 0..15]    |
+    |----------------------------|----------------------------|
+    |      0000000100000000      |      0000000111100001      |
+    |----------------------------+----------------------------|
+    |          Recently          |        Not-Recently        |
+    |        accessed side       |          accessed          |
+    |----------------------------+----------------------------|
+    |      Segment 24 active     |    Segments 0, 5-8 active  |
+    |----------------------------+----------------------------|
+    |               Watchpoint Budget Assignment              |
+    |----------------------------+----------------------------|
+    |     Up to 3 Watchpoints    |     Only 1 Watchpoint      |
+    |----------------------------+----------------------------|
+    | Each half is refined recursively within its budget.     |
+    | Biasing ensures that the recently accessed side gets    |
+    | more splitting flexibility and tighter coverage, while  |
+    | the opposite half is restricted to a single watchpoint  |
+    | regardless of its internal density.                     |
+    '---------------------------------------------------------'
+
+The previous example demonstrated how the strategy distributes budget 
+between two active halves, favoring the side containing the recently 
+accessed segment. However, Strict Recent Access Bias also gracefully 
+handles imbalanced cases where one half of the page contains no active 
+segments at all. In such scenarios, the full watchpoint budget is 
+reassigned to the active side, allowing for even more aggressive 
+refinement when necessary. The next example illustrates this behavior by 
+showing how all guarded addresses reside in the recently accessed half, 
+while the opposite half is entirely skipped. It also walks through the 
+segment-level refinement process, where budgeted splits are recursively 
+applied to produce the tightest possible coverage at the segment and qword 
+level. In particular, segment 7 is refined down to a single active qword, 
+where a minimal 8-byte watchpoint is emitted. We terminate the refinement 
+process at the qword level because, at this granularity, the ARM CPU 
+supports a byte-select mask that allows us to monitor only the specific 
+bytes of interest within the aligned 8-byte region.
+
+
+                        [Root Level Split]
+                     Page RootBitmap (32 bits)
+                [31..............................0]
+                  00000000000000000000001010000000
+                                          ^
+            Where recently accessed segment is at bit 7        
+    .----------------------------+----------------------------.   
+    |  High Half [bits 16..31]   |   Low Half [bits 0..15]    |
+    |----------------------------|----------------------------|
+    |     0000000000000000       |      0000001010000000      |
+    |----------------------------+----------------------------|
+    |     No active segments     |  Segments 7 and 9 active   |
+    |----------------------------+----------------------------|
+    |     Skipped entirely       |   Recently accessed side   |
+    |----------------------------+----------------------------|
+    |              Watchpoint Budget Assignment               |
+    |----------------------------+----------------------------|
+    |       0 Watchpoints        |      Up to 4 Watchpoints   |
+    '----------------------------+--------------+-------------'
+                                                |
+                                 .--------------'
+                                 |
+    .----------------------------+----------------------------.   
+    |   High Half [bits 15..8]   |   Low Half [bits 0..7]     |
+    |----------------------------|----------------------------|
+    |          00000010          |          10000000          |
+    |----------------------------+----------------------------|
+    |  [not recently accessed]   |    [recently accessed]     |
+    |----------------------------+----------------------------|
+    |        Refine only         | Full recursive refinement  |
+    |        (1 WP max)          |        (3 WP max)          |
+    |----------------------------+----------------------------|
+    |        0000 | 0010         |         1000 | 0000        |
+    |----------------------------+----------------------------|
+    |               00 | 10      |      10 | 00               |
+    |----------------------------+----------------------------|
+    |                    1 | 0   |   1 | 0                    |
+    |----------------------------+----------------------------|
+    |      Segment 9 active      |     Segment 7 active       |
+    '------+---------------------+--------------------+-------'
+           |                                          |
+           |          [Segment Level Split]           |
+           |      Where recently accessed address     |
+           |      is at bit/qword 36 in segment 7     |      
+    .------V---------------------+--------------------V-------.   
+    |         Segment 9          |         Segment 7          |
+    |  [not recently accessed]   |    [recently accessed]     |
+    |----------------------------|----------------------------|
+    |   -> pageSegments[9]       |   -> pageSegments[7]       |
+    |      000000000000....      |      = 0x800000000000      |
+    |      0000111000000000      |      = bit 47 set          |
+    |----------------------------+----------------------------|
+    |        Refine only         | Full recursive refinement  |
+    |        (1 WP max)          |        (3 WP max)          |
+    |----------------------------+----------------------------|
+    |   -> Refined mask =        |   -> Refined to 1-bit      |
+    |      0000111100000000      |      region at bit 47      |
+    |----------------------------+----------------------------|
+    |  Emit 32B WP (qwords 8-11) |   Emit 8B WP @ qword 47    |
+    |----------------------------+----------------------------|
+    |                            |                            |
+    |  Covers 32 bytes starting  |   Bit 47 corresponds to    |
+    |  at qword 8, as required   |   qword 47 within segment  |
+    |  by power-of-two size and  |   7, covering 8 bytes      |
+    |  alignment constraints.    |   starting at that offset. |
+    |                            |                            |
+    |---------------------------------------------------------|
+    |                                                         |
+    |   Only two watchpoints are used, leaving two spares     |
+    |   available to reduce the coverage footprint on other   |
+    |   concurrently tracked pages, one per page.             |
+    |                                                         |
+    '---------------------------------------------------------'
+
+The Strict Recent Access Bias strategy and its supporting refinement logic 
+are implemented within the attached PageMap class, which encapsulates the 
+logic for bitmap refinement, recursive splitting, watchpoint allocation, 
+and dynamic reprogramming. It serves as the core engine behind E0's 
+fine-grained memory instrumentation, translating abstract bitmaps and 
+runtime traps into concrete hardware configurations with minimal overhead. 
+By integrating this mechanism directly into the execution pipeline, E0 
+maintains high precision across guarded regions while incurring virtually 
+no performance penalty during tight memory loops or localized access 
+patterns.
+
+--[ 10 - Validating E0: From Simple Benchmarks to Real-World Testing
+
+During the early development of Selective Symbolic Instrumentation in E0, 
+we first validated the framework on a suite of simple, intentionally 
+vulnerable programs. In these tests, E0 reliably discovered low-level
+flaws like "out-of-bounds accesses, integer overflows, null dereferences, 
+and the like" by mutating input samples along symbolically traced paths.
+However, it struggled to uncover vulnerabilities that require higher-level
+semantic reasoning, revealing a gap that ultimately motivated our AI-driven
+analysis layer (detailed in Section 12). This AI layer enhances E0's 
+ability to detect complex vulnerabilities by reasoning over symbolic 
+outputs and cross-function context, complementing the symbolic engine's 
+precision.
+
+To measure E0's true capabilities, we then turned to a real-world, large-
+scale target: Apple's ImageIO library. With virtually no prior experience 
+in image-format research, we chose ImageIO precisely because it has 
+undergone extensive fuzzing and security review, so finding anything new 
+would be a strong signal of E0's power. In a brief, multi-hour session, E0 
+became unresponsive because, at that stage, it lacked the ability to 
+handle process hangs in monitoring the test harness. Investigating that 
+behavior uncovered a previously unknown bug in ImageIO's WebP parser, 
+later filed as CVE-2024-44297.
+
+In the next section, we present a detailed case study of CVE-2024-44297,
+walking through how E0 detected, isolated, and ultimately helped us
+reproduce this real-world vulnerability.
+
+--[ 11 - Case Study: CVE-2024-44297 in ImageIO
+
+Apple's advisory accurately summarizes the impact: Processing a maliciously
+crafted message may lead to a denial-of-service. The root cause was in the
+IIO_Reader_WebP::validateWebP routine, which took an untrusted value from
+the image, loaded into register w0 and used it in an unchecked arithmetic
+operation, triggering an integer overflow. In the snippet below, an 
+immediate value is added to w0 without any prior validation:
+
+  .------------------------------------------------------------------.     
+  | add     w26, w0, #0x8          // w26 = chunkSizeWithPadding     |     
+  | ldr     x8, [sp, #0x68]        //                                |     
+  | sub     x27, x8, #0x8          //                                |     
+  | ldr     x8, [x20, #0x8]        // x8 = dataInfo->bufferSize.     |     
+  | cmp     x8, w26                // compare bufferSize against w26 |     
+  | b.ls    0x18b020ee8            // branch if bufferSize <= w26    |     
+  '------------------------------------------------------------------'     
+
+When E0 symbolically followed that branch, its SMT solver produced a value
+of w0 = 0xFFFFFFF8. Adding 8 makes w26 wrap to zero, so the check always
+passes. That crafted input was generated in the ninth round of mutations,
+after eight earlier samples had gradually solved header and chunk-length
+constraints to push parsing toward the final buffer boundary.
+
+After the integer overflow, the parser repeatedly processed the same chunk,
+hanging the decoding thread in an infinite loop. In real-world tests,
+sending the malformed WebP to Apple's Messages app caused a zero-click
+denial-of-service: the app would lock up on a blank screen, remain
+unresponsive through both app and device restarts, and rapidly drain the
+battery while causing the device to overheat.
+
+Although the IIO_Reader_WebP::validateWebP routine, its caller, and all
+downstream functions include multiple boundary checks to prevent out-of-
+bounds accesses, the integer overflow that wrapped w26 to zero was the 
+only way to bypass every guard and disrupt service availability. Because 
+that flaw was located on a path directly explored by E0's SMT-based 
+symbolic engine, E0 generated the triggering sample without any extra 
+bug-finding logic. In contrast, vulnerabilities that fall outside those 
+straightforward data-flow paths, requiring higher-level or cross-path 
+reasoning, would be missed by symbolic execution alone. Rather than 
+burdening the symbolic layer with ad hoc detection rules, we delegate 
+those more complex cases to the AI analysis component. As described next.
+
+--[ 12 - LLM Integration & Symbolic-Guided Analysis
+
+E0 integrates large language models (LLMs) not as speculative classifiers, 
+but as structured reasoning agents guided by symbolic context. Its 
+analysis pipeline constrains and informs the model using real data-flow 
+derived from symbolic definitions and SMT-solved constraints, expanding 
+context dynamically via the Model Context Protocol (MCP) only when 
+necessary. The result is an AI-assisted workflow that is grounded, 
+verifiable, and modular by design.
+
+---[ 12.1 - Instruction-Following Models
+
+While there is a clear difference in scale between open-source LLMs and 
+large frontier models, we found that this gap narrows significantly when 
+prompts and context are crafted to align with the model's understanding 
+and reasoning patterns. Performance improves substantially when prompts 
+are phrased in a way that matches the model's strengths, especially when 
+refined through reverse prompt engineering techniques discussed in Section 
+(12.6). In this setting, smaller open-source models that excel at 
+instruction following often outperform larger general-purpose models, 
+particularly in tasks like vulnerability analysis, provided they are 
+guided by accurate context and well-scoped prompts.
+
+Modern LLMs vary widely in their ability to follow explicit instructions. 
+For vulnerability analysis, instruction adherence is critical: imprecise 
+or overly general reasoning can result in hallucinations, false positives,
+or overlooked vulnerabilities.
+
+In our experience, smaller instruction-tuned models consistently 
+outperform larger general-purpose ones for tasks like symbolic def-use 
+analysis. As a result, E0 adopts a dual-model strategy:
+
+  - Phi-4 is used for function-level vulnerability analysis. Its 
+    instruction-following behavior, predictable output formatting, and 
+    minimal hallucination make it ideal for interpreting well-scoped 
+    symbolic expressions and constraints.
+
+  - Qwen3 is employed for tool-assisted reasoning and cross-function 
+    analysis. It supports structured tool-calling and larger context 
+    windows, making it well-suited for issuing get_function_code 
+    requests via the MCP and tracking data across multiple functions.
+
+This division of responsibilities helps balance precision and scalability 
+across different stages of E0's AI-driven analysis pipeline. 
+
+While Mixture-of-Experts (MoE) architectures promise efficiency by 
+activating only a subset of experts per token, they introduce subtle 
+non-determinism in routing that can alter outputs depending on batch 
+composition, scheduling, floating-point precision, or even low-level GPU 
+execution order and state changes. This unpredictability can occur even 
+when temperature is set to zero, since expert selection is sensitive to 
+tiny numerical differences in floating-point computations rather than 
+sampling randomness. For instance, MoE models such as Qwen3-Coder and 
+GPT-OSS variants may yield different continuations across identical runs. 
+Dense models, by contrast, are far less sensitive to these variables, 
+producing more predictable behavior under consistent prompting. The LLM 
+techniques discussed in the following sections are therefore applicable 
+only to dense instruction-tuned models in vulnerability analysis, while 
+we continue to experiment with alternative pipelines for MoE models.
+
+---[ 12.2 - Guiding LLM Attention with Symbolic Expressions and Constraints
+
+Effective vulnerability analysis using LLMs hinges on precisely directing 
+the model's attention to semantically meaningful elements within code. E0 
+achieves this by anchoring each prompt to symbolic expressions derived 
+from real data-flow paths. Extracted during guarded memory access and 
+symbolic emulation, these expressions originate from untrusted inputs and 
+are refined with SMT-solved value ranges. 
+
+Rather than issuing long, monolithic prompts that dilute model focus, E0 
+deploys a modular prompting strategy. Each prompt is scoped to a single 
+symbolic definition or a tightly related set of expressions. Each includes:
+
+  - One or more symbolic expressions (e.g., x0_18, *x1_2)
+  - Their SMT-solved value ranges
+  - Decompiled pseudocode or IR from the associated function(s)
+
+Prompts focus on what to analyze while deliberately omitting unnecessary 
+exclusions. Instead of relying on vague or negatively framed instructions, 
+each prompt directs the model's attention to the data-flow and security 
+implications of a specific set of symbolic expressions.
+
+This strategy eliminates the need to specify vulnerability classes 
+(e.g., use-after-free or integer overflow). The model evaluates how 
+untrusted data propagates through control flow, memory operations, and 
+return values, without presupposing any specific bug type.
+
+To demonstrate how E0 guides LLM attention using scoped symbolic inputs, 
+the following prompts show concrete examples of how symbolic expressions, 
+value ranges, and function context are packaged into focused vulnerability 
+analysis queries.
+
+.-------------------------------------------------------------------------.
+| Sample Prompt #1 | System + User Prompt (with few constraints)          |
+|-------------------------------------------------------------------------|
+| System Prompt:                                                          |
+|-------------------------------------------------------------------------|
+| You are an expert in vulnerability researching C++ code. The user will  |
+| provide:                                                                |
+|  1. A C++ function, which has been decompiled from ARM64 assembly.      |
+|  2. A list of one or more user controllable expression(s) in the        |
+|     function.                                                           |
+| The user only controls the result of the provided controllable          |
+| expression(s) and nothing else.                                         |
+|                                                                         |
+| Perform a security analysis of the usage of the output result of the    |
+| user provided controllable expression(s). All other uncontrolled inputs |
+| to the function are safe. Do not make assumptions about subsequent      |
+| operations that are not provided and/or do not exist in the provided    |
+| function. Bypassing error handling and controlling the function return  |
+| value is not a vulnerability.                                           |
+|                                                                         |
+| At the end of your response say Vulnerable or Not Vulnerable.           |
+|-------------------------------------------------------------------------|
+| User Prompt:                                                            |
+|-------------------------------------------------------------------------|
+| Controllable Expression(s):                                             |
+| - "get32Value()"   : result range is 0x0 to 0xffffffff                  |
+| - "int32_t x0_18"  : result range is 0x0 to 0xffffffff                  |
+| - "int32_t x0_26"  : result range is 0x0 to 0xffff                      |
+| - "int32_t x0_27"  : result range is 0x0 to 0xff                        |
+| - "uint32_t x8_12" : result range is 0x1 to 0x9                         |
+| - "uint32_t x9_3"  : result range is 0x8 to 0x20                        |
+| - "x0_24" : result range is 0x0 to 0xffffffff                           |
+|                                                                         |
+| Function:                                                               |
+| int64_t ABCPlugin::init(IIODictionary* arg1)                            |
+| {                                                                       |
+|     <function code ...>                                                 |
+| }                                                                       |
+'-------------------------------------------------------------------------'
+
+The first prompt uses a structured System-User format with moderate 
+constraints, including explicit negative instructions (e.g., what not to 
+consider a vulnerability). In contrast, the second prompt is minimal and 
+purely positive, containing no exclusions or negations. It leaves the 
+model free to reason within the provided symbolic context alone.
+
+.-------------------------------------------------------------------------.
+| Sample Prompt #2 | Minimal Positive Prompt (with no constraints)        |
+|-------------------------------------------------------------------------|
+| User Prompt:                                                            |
+|-------------------------------------------------------------------------|
+| Conduct a comprehensive security analysis of the following function,    |
+| when the output of the following controllable expression is fully       |
+| controlled by the attacker. The attacker only controls the result of    |
+| the provided controllable expression and nothing else.                  |
+| Structure your response.                                                |
+| At the end of your response say Vulnerable or Not Vulnerable:           |
+| VULNERABLE/NOT VULNERABLE                                               |
+|                                                                         |
+| Controllable Expression:                                                |
+| - "*(uint64_t*)((char*)arg6 + *(uint64_t*)(*(uint64_t*)arg6 - 0x138)) + |
+| 0x28" : result range is 0x0 to 0xffffffff                               |
+|                                                                         |
+| Function:                                                               |
+| int64_t sub_18be031d0(int32_t arg1, int32_t arg2, void** arg3,          |
+|                       uint32_t arg4, char* arg5, int64_t* arg6)         |
+| {                                                                       |
+|     <function code ...>                                                 |
+| }                                                                       |
+'-------------------------------------------------------------------------'
+
+These examples demonstrate how E0 grounds LLM reasoning in symbolic 
+inputs, ensuring that prompts reflect only untrusted-input influence and 
+feasible execution paths, driving both interpretability and a low 
+false-positive rate.
+
+---[ 12.3 - Code Context Representation
+
+Modern LLMs reason best when provided with higher-level code 
+representations. While E0's symbolic expressions originate from low-level 
+assembly, these expressions are often difficult for LLMs to interpret in 
+isolation due to register reuse, control-flow indirection, and a lack of 
+named variables.
+
+To improve interpretability and guide model focus, E0 translates each 
+low-level symbolic definition into its corresponding higher-level 
+representation, including the full function code and IR where the symbolic 
+expression is captured or defined. These include:
+
+  - Assembly
+  - LLIL, MLIL, HLIL
+  - MLIL SSA and HLIL SSA forms
+  - Decompiled C-like pseudocode
+
+  .--------------------------------------------------.
+  |  For example, consider a symbolic memory load    |
+  |--------------------------------------------------|
+  |  Assembly    : ldrb w8, [x1]                     |
+  |  MLIL SSA    : x8#1 = zx.d([arg2#0].b)           |
+  |  HLIL        : zx.d(*arg2)                       |
+  |  HLIL SSA    : zx.d(*arg2#0)                     |
+  |  Pseudocode  : (uint32_t)*(uint8_t*)arg2         |
+  '--------------------------------------------------'
+
+  | This single symbolic expression is represented across multiple 
+  | abstraction levels. SSA forms disambiguate variable lifetimes and 
+  | data-flow, while decompiled pseudocode offers a readable, semantically
+  | rich view suited for LLM interpretation. Each representation offers a 
+  | distinct view to help ground symbolic definitions in their surrounding 
+  | code context.
+
+Among these formats, decompiled pseudocode consistently yields the best 
+results during vulnerability analysis, as most LLMs are heavily trained on 
+C-like syntax. SSA-form IR representations, particularly MLIL SSA, also 
+prove valuable due to their static single assignment property, which helps 
+the model track symbolic variables without aliasing or ambiguity.
+
+To gather this context, E0 includes a Python bridge that queries symbolic
+definitions stored in its runtime database and augments them with 
+representation data fetched from Binary Ninja. This includes function
+signatures, code bodies, and intermediate representations.
+
+Although Binary Ninja was chosen for its Intermediate Representation (IR) 
+ecosystem and Python API integration, the retrieval pipeline is modular. 
+It can be adapted to other disassemblers and decompilers depending on user 
+preference or available tooling.
+
+By coupling symbolic expressions with high-level function context, E0
+ensures that LLMs operate on precise, structured inputs. This reduces
+confusion, improves reasoning accuracy, and more importantly, bridges
+the gap between dynamic symbolic execution and static code understanding.
+Each symbolic definition serves as an anchor point, enabling the model to
+expand its reasoning across entire functions and into adjacent functions
+in the call graph, while staying rooted in the concrete data-flow captured
+during (SSI) selective symbolic instrumentation.
+
+---[ 12.4 - Context Expansion via MCP, A2A and On-Demand Decompilation
+
+While E0 prompts are initially scoped to precise symbolic expressions 
+within individual functions, complex vulnerability analysis sometimes 
+requires a broader view. In such cases, the LLM may issue tool-calling 
+requests to retrieve additional context using the Model Context Protocol 
+(MCP).
+
+One example is the get_function_code tool call, where the LLM explicitly 
+requests the complete code of one or more functions it deems relevant to 
+the current analysis. The MCP server first checks the internal cache and 
+the symbolic definition database; if the data is missing, it triggers a 
+fallback to Binary Ninja backend to perform on-demand disassembly, IR 
+recovery, and decompilation of the requested function(s).
+
+This design keeps prompts minimal and focused, while still granting the 
+LLM access to full static context when needed. However, repeated MCP 
+requests can consume significant context window space and increase 
+inference latency, especially when retrieving large functions or 
+traversing cross-function logic.
+
+To address this, E0 is evolving toward a more efficient Agent-to-Agent 
+(A2A) architecture. In this model, the root LLM agent offloads specific 
+questions (such as "What does this callee return?" or "Does this check 
+ever fail?") to secondary agents with smaller, focused contexts. These 
+sub-agents operate independently to retrieve only the necessary facts, 
+summaries, or security inferences, which are then aggregated and returned 
+to the root agent for final vulnerability classification.
+
+Below is a typical A2A JSON request issued by the root agent to assess a 
+callee function's behavior.
+
+.-------------------------------------------------------------------------.
+| Sample A2A Query                                                        |
+|-------------------------------------------------------------------------|
+| {                                                                       |
+|   "sub_18c27aeb0": [                                                    |
+|      "What is the purpose of 'sub_18c27aeb0' and does it return a       |
+|      value that is bounded or validated before being used in memory     |
+|      operations?",                                                      |
+|      "Does this function handle error conditions and return a safe      |
+|      default or zero when the input is invalid?"                        |
+|   ]                                                                     |
+| }                                                                       |
+'-------------------------------------------------------------------------'
+
+This strategy allows E0 to expand context dynamically without overwhelming 
+the LLM or wasting token budget on irrelevant code. It also improves 
+modularity and parallelism, enabling scalable analysis through a set of 
+lightweight, focused AI agents, each focused on a narrow, verifiable 
+reasoning task.
+
+---[ 12.5 - Modular Reasoning vs Chain-of-Thought Prompts
+
+Although Chain-of-Thought (CoT) prompting is often promoted for complex
+reasoning tasks, we found that it introduces significant false positives
+and negatives in the context of vulnerability analysis. When multiple
+reasoning steps are embedded into a single prompt, LLMs often produce
+contradictions, overlook symbolic constraints, or fixate on irrelevant
+code paths, resulting in less reliable analysis.
+
+E0 avoids this by decomposing the reasoning process into modular, 
+independently controlled steps. Each step is executed within a separate 
+inference context, scoped to a narrow analysis goal. These include 
+evaluating a specific symbolic expression, analyzing a function-level 
+security pattern, or interpreting a solved constraint range. The results 
+are then aggregated externally, allowing the system to review, retry, or 
+refine intermediate steps as needed.
+
+This modular approach improves accuracy, interpretability, and debugging.
+It also allows the orchestration layer to selectively retry or expand any
+single reasoning step without discarding the entire analysis. Rather than
+embedding multi-stage logic into a single inference window, E0 treats each
+step as a query-and-response unit, giving the orchestration layer full
+control over the analysis flow.
+
+While future reasoning models may support more reliable structured CoT 
+prompting and larger context windows, external modular reasoning remains 
+more robust and transparent in our current pipeline. 
+
+---[ 12.6 - Reverse Prompt Engineering
+
+Reverse Prompt Engineering is a technique where the desired output is 
+provided to the model, which is then tasked with generating the most 
+accurate prompt to reproduce that output. In our workflow, this method 
+was adapted to address cases of false positives and negatives. We applied 
+the technique per model and per quantization level to improve prompt 
+clarity and effectiveness.
+
+A key mechanism is instructing the model to critique its own prior output 
+by asking questions like:
+
+    | Which word or phrase in the original request 
+    | led you to that incorrect assumption?
+
+    | Which word or phrase in the original request would
+    | you modify or remove to prevent this mistake?
+
+In one real case, the symbolic expression *(uint64_t*)x10_1 was used in 
+the function sub_221204180. When the prompt instructed the model to 
+analyze its "value range", the model reported:
+
+    - Out-of-Bounds Memory Access
+    - Use-after-Free
+    - Arbitrary Memory Access
+
+However, the value loaded from the dereferenced pointer was not used 
+in any memory access. Instead, it was treated as a plain operand in 
+arithmetic operations. The pointer itself was not attacker-controlled. 
+Only the value it pointed to was symbolized. When the prompt was revised 
+to ask about the "output range" rather than the "value range," the model 
+correctly responded:
+
+    | No direct vulnerabilities observed; expression 
+    | is only used in a bitwise operation and shift.
+
+This minor vocabulary change eliminated the false positive and produced a 
+more accurate analysis. Reverse Prompt Engineering revealed that the term 
+"value" had implicitly led the model to focus on pointer dereferencing 
+safety rather than the meaning of the loaded result.
+
+This insight directly informed the vocabulary and framing of prompts used 
+across E0's ensemble prompting system.
+
+---[ 12.7 - Ensemble Consensus Prompting
+
+Ensemble Consensus Prompting is a technique in which multiple 
+independently phrased prompts are issued to analyze the same symbolic 
+slice or untrusted input. Instead of embedding many rules or constraints 
+into a single complex prompt, E0 distributes them across a sequence of 
+prompt variants. Each prompt introduces a focused subset of constraints 
+or directives, which improves model focus and reduces confusion.
+
+A candidate vulnerability is elevated only when all prompt variants reach 
+the same conclusion, confirming the presence of a vulnerability. In 
+addition to strict consensus, E0 also tracks results of positive versus 
+negative findings across prompts to assist with manual debugging and 
+deeper analysis.
+
+The following example illustrates how this process works:
+
+- 1st Prompt @ PHI-4  :  25/110 Vulnerable | 85/110 Not Vulnerable |  23%
+- 2nd Prompt @ PHI-4  :  13/25  Vulnerable | 12/25  Not Vulnerable |  52%
+- 3rd Prompt @ PHI-4  :   8/13  Vulnerable |  5/13  Not Vulnerable |  61%
+- 4th Prompt @ QWEN3  :   3/8   Vulnerable |  5/8   Not Vulnerable |  37%
+- 5th Prompt @ QWEN3  :   2/3   Vulnerable |  1/3   Not Vulnerable |  67%
+- 6th Prompt @ QWEN3  :   2/2   Vulnerable |  0/2   Not Vulnerable | 100%
+
+| The 110 functions analyzed here are those intersected by symbolic 
+| data-flow at function boundaries (ARG, MEM, or RET SymDefs), based on 
+| thousands of dynamically instrumented samples that led to the discovery 
+| of CVE-2024-44297 (detailed in Section 11), rediscovered here using 
+| LLMs. While E0 encounters many more functions across modules and 
+| binaries, only those traversed by actual symbolic input propagation 
+| were selected for LLM evaluation.
+
+The two discovered vulnerabilities (2/2) shown in the last step are real. 
+One rediscovers CVE-2024-44297, as confirmed by the LLM responses shown in 
+the following summaries, while the second is valid but appears to be an 
+older vulnerability already mitigated in upstream patches. It involved 
+validating a sample-size variable that fell outside the scope of the 
+selective symbolic instrumentation trace. This missing upstream context 
+inspired the Model Context Protocol and A2A context expansion strategies 
+discussed in Section 12.4.
+
+.-------------------------------------------------------------------------.
+| PHI-4 [14B/Q8] Vulnerability Rediscovery                                |
+|-------------------------------------------------------------------------|
+| Denial of Service: By forcing the function into infinite loops or       |
+| causing crashes through invalid memory accesses, an attacker could      |
+| disrupt service.                                                        |
+|-------------------------------------------------------------------------|
+| Qwen3 [32B/Q8] Vulnerability Rediscovery                                |
+|-------------------------------------------------------------------------|
+| This vulnerability could be used as part of a denial-of-service attack, |
+| causing the WebP parser to enter an infinite loop when processing a     |
+| maliciously crafted file.                                               |
+'-------------------------------------------------------------------------'
+
+Ensemble consensus prompting incrementally applies constraints and filters 
+results based on full agreement across multiple prompts. These prompts are 
+intentionally selected to span a range of false positive tendencies, from 
+medium to high, so that while each may be noisy on its own, their 
+intersection amplifies signal over noise. Prompts are sequenced from 
+higher to lower expected false positive rates, while eliminating the use 
+of prompts prone to false negatives or over-constraint. This avoids 
+missing critical issues while refining away inaccurate findings.
+
+Each individual consensus prompt shown above results in a medium to high 
+detection rate ranging from 23% to 100%, while their combined detection 
+rate is less than 2 percent (2 out of 110).
+
+The consensus model significantly reduces false positives by filtering out 
+speculative or marginal findings that might arise under weaker LLM 
+instruction settings. It ensures that only the most robust, symbolically 
+grounded vulnerabilities, resilient to model variation, phrasing shifts, 
+and reasoning depth, are surfaced and tightly aligned with the captured 
+def-use chains.
+
+---[ 12.8 - Feedback Loop With Fuzzing and Symbolic Execution
+
+This component of E0 is experimental and still under active development.
+When all prompt variants in an ensemble consensus reach the same conclusion
+identifying a vulnerability, E0 issues a follow-up prompt requesting
+concrete values for the controllable symbolic expressions (SymDefs) needed
+to trigger the vulnerability.
+
+These values, together with their corresponding SymDefs and the sample in
+which the expressions were recorded, are fed back into E0's fuzzing and
+instrumentation layers. The symbolic execution engine then instruments the
+program to reach the same symbolic execution point, accumulates the path
+constraints that lead to that expression, and solves for the input that
+would produce the requested value.
+
+A new sample is then generated that satisfies these constraints and is
+executed in a controlled environment. If the predicted vulnerability is
+triggered (e.g., by causing a crash, hang, or invalid memory access) it is
+logged as a real vulnerability. If the condition is not triggered, the 
+result is returned back to the AI layer for further refinement.
+
+This feedback loop closes the gap between static LLM vulnerability 
+analysis insight and dynamic vulnerability validation. It allows E0 to 
+convert symbolically grounded LLM predictions into executable test cases 
+and determine which LLM-identified risks manifest as real-world 
+vulnerabilities.
+
+E0's LLM analysis pipeline is a symbolically grounded, prompt-guided, 
+context-expanding, and modular layer that precisely interprets untrusted 
+inputs. It is driven entirely by programmatically generated prompts 
+(SymDefs, SMT-solved ranges, and decompiler IR representations) rather 
+than by open-ended reasoning. Each analysis step is explicitly scoped and 
+isolated using structured phrasing, reverse-prompt engineering, and 
+ensemble-consensus prompting. By fusing symbolic execution, SMT solving, 
+decompiler IRs, targeted prompts, and external orchestration, E0 delivers 
+an LLM integration stack that offers higher accuracy and actionable 
+insights: bridging symbolic analysis with higher-level semantic reasoning.
+
+--[ 13 - Alpha Source Code Release
+
+This paper is accompanied by a partial source release of E0, a curated 
+alpha snapshot of its core instrumentation and symbolic analysis modules. 
+While not a complete codebase, the included components directly support 
+the techniques and workflows discussed throughout this paper.
+
+Included in this release:
+
+- LiteTracer
+   |  A selective symbolic tracer that integrates Triton with an extended
+   |  TinyInst debugger. It dynamically instruments only instructions that
+   |  access guarded untrusted input, using a combination of OS-level
+   |  page protection and AArch64 hardware watchpoints to trap memory
+   |  accesses and invoke symbolic emulation on demand.
+
+- MemoryGuard
+   |  A runtime protection module that configures page permissions 
+   |  and manages AArch64 hardware watchpoints to monitor access to 
+   |  untrusted input with efficient, fine-grained precision.
+
+- PageMap
+   |  A refinement-aware allocator for guarded memory tracking.  
+   |  Implements the Strict Recent Access Bias strategy through a 
+   |  recursive bitmask refinement algorithm and dynamic watchpoint 
+   |  reallocation. Translates runtime traps and access patterns into 
+   |  efficient hardware configurations using only 4 available CPU 
+   |  watchpoints per core.
+
+- E0_Sample_Runner_Functions
+   |  Constraint-driven sample generation logic. Captures SMT constraints 
+   |  during tracing and solves for new inputs that drive unexplored paths.
+
+- Patched TinyInst Debugger (macOS/debugger.cpp)
+   |  A modified version of TinyInst's macOS debugger module that adds 
+   |  support for ARM64 hardware breakpoints and watchpoints. Also extends 
+   |  exception handling to catch and recover from guarded memory access.
+
+This alpha release targets ARM64e macOS systems only, and is provided as 
+part of this Phrack issue. A full open-source release of the complete E0 
+framework, including the fuzzer layer, Python bindings, event pipeline, 
+multi-platform support, and LLM integration, is planned at a later date.
+
+All code is released under the terms of the Apache License, Version 2.0.
+
+--[ 14 - Acknowledgments
+
+E0 builds upon the efforts of several outstanding open-source projects 
+whose design and implementation significantly shaped this work.
+
+Special thanks to:
+
+  - Ivan Fratric and the TinyInst / Jackalope team 
+    E0 reuses core components from Jackalope's sample delivery, mutation 
+    logic, multithreading, and target monitoring. It also extends 
+    TinyInst's macOS debugger to support hardware breakpoints, 
+    watchpoints, and fine-grained memory access instrumentation.
+
+  - Jonathan Salwan and the Triton team  
+    Triton serves as the symbolic execution engine at the core of E0's 
+    tracing logic. Its efficient architecture and symbolic precision make 
+    it the ideal foundation for runtime analysis and constraint solving.
+
+We are also grateful to Richard Johnson for his invaluable guidance, 
+detailed feedback, and critical insights during the preparation of this 
+paper. His thoughtful reviews helped sharpen the structure and clarity of 
+our arguments.
+
+After exploring several architectural paths and full rewrites, we 
+ultimately chose to avoid redundancy and instead build on top of solid, 
+actively maintained projects. This included following Jackalope's 
+structural patterns, extending Triton's instruction semantics to support 
+ARM64e, and extending TinyInst debugger modules.
+
+We encourage others to adopt this integration model when combining 
+fuzzing, tracing, and symbolic execution in real-world workflows.
+
+--[ 15 - Conclusion
+
+We introduced a novel methodology that integrates selective symbolic
+instrumentation, data-flow-guided fuzzing, and structured LLM-driven
+analysis, realized in the implementation of E0. By precisely tracking
+external inputs and instrumenting only essential symbolic operations,
+E0 prioritizes native execution and engages symbolic emulation only when 
+necessary, achieving high performance without sacrificing symbolic depth.
+
+Structured symbolic definitions (ARG, MEM, RET) serve as precise anchors 
+for LLM-guided analysis, enhanced by reverse prompt engineering, ensemble 
+consensus prompting, and on-demand context expansion. This modular design 
+decomposes vulnerability analysis into verifiable stages, improving 
+detection accuracy and interpretability while reducing false positives 
+and test-time compute.
+
+Each component of E0 contributes to an integrated vulnerability discovery 
+process. This fusion arms LLMs with concrete, high-fidelity context, 
+reduces wasted inference cycles, and closes the loop with end-to-end 
+fuzzing. It unites discovery breadth, symbolic precision, and semantic 
+reasoning into one scalable, low-latency engine.
+
+Future work will refine AI-driven feedback loops, optimize symbolic 
+instrumentation triggers, and expand E0's evaluation across diverse 
+closed-source targets. Ultimately, E0 provides not just a technical 
+improvement but a practical, scalable framework for advancing binary 
+vulnerability research.
+
+--[ 16 - References
+
+[1]  Jonathan Salwan (2015). Triton: Dynamic Binary Analysis Framework. 
+     https://triton-library.github.io
+[2]  Ivan Fratric (2020). Jackalope Fuzzer.
+     https://github.com/jackalope-fuzzer/jackalope
+[3]  Jonathan Salwan (2022) - ttexplore.
+     https://github.com/JonathanSalwan/ttexplore
+[4]  Ivan Fratric (2020). TinyInst: A Lightweight Dynamic Instrumentation 
+     Framework. https://github.com/TinyInst/TinyInst
+[5]  De Moura, L. & Bjorner, N. (2008). Z3: An Efficient SMT Solver.
+[6]  Z3 Theorem Prover - https://github.com/Z3Prover/z3
+[7]  Stephens, N., Grosen, J., Salls, C., Dutcher, A., Wang, R., Corbetta,
+     J., Shoshitaishvili, Y., Kruegel, C., & Vigna, G. (2016). Driller:
+     Augmenting fuzzing through selective symbolic execution. In 23rd 
+     Annual Network and Distributed System Security Symposium (NDSS).
+[8]  Binary Ninja - https://binary.ninja
+[9]  Andriesse, D. (2017). Practical Binary Analysis - No Starch Press.
+[10] Brian S. Pak (2012). Hybrid fuzz testing: Discovering software bugs 
+     via fuzzing and symbolic execution (Master's thesis). 
+     School of Computer Science, Carnegie Mellon University.
+[11] Microsoft. (2024). Phi-4: A Large-Scale Language Model.
+[12] Alibaba Cloud. (2025). Qwen3: Large Language Models.
+     https://arxiv.org/abs/2505.09388
+[13] ARM Ltd. (2013). ARM Architecture Reference Manual: ARMv8-A edition.
+     https://developer.arm.com/documentation/ddi0487/latest
+[14] Samuel GroB (2020). Fuzzing ImageIO - Project Zero.
+     https://googleprojectzero.blogspot.com/2020/04/fuzzing-imageio.html
+[15] Alfredo Ortega, (2024). AI-Powered Bug Hunting: From Neural Networks  
+     to Practical Exploits. https://github.com/Neuroengine-vulns/
+     autokaker/blob/main/doc/AI-powered-bughunting-aortega-paper.pdf
+[16] Josh Watson (2018). Vulnerability Modeling with Binary Ninja 
+     - Trail of Bits Blog. https://blog.trailofbits.com/2018/04/04/
+     vulnerability-modeling-with-binary-ninja/
+[17] Reno Robert (2025) - Mindshare: Using Binary Ninja API to Detect 
+     Potential Use-After-Free Vulnerabilities - Zero Day Initiative Blog.
+     https://www.zerodayinitiative.com/blog/2025/3/20/
+[18] Sean Heelan (2025) - How I Used O3 to Find CVE-2025-37899: A Remote 
+     Zero-Day Vulnerability in the Linux Kernel's SMB Implementation.
+     https://sean.heelan.io/2025/05/22/
+[19] Michal Zalewski (2014) - American Fuzzy Lop (AFL).
+     https://lcamtuf.coredump.cx/afl/
+
+--[ 17 - Source Code
+
+|=[ EOF ]=---------------------------------------------------------------=|

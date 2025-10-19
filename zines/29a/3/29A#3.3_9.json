@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "JQENCODE.ASM - Supertiny/fast Compression/Encryption library - Compressor",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1998",
+  "historical_context": "This article is part of a series that explores lightweight compression and encryption techniques, relevant during the late 90s when resource constraints were a significant concern for software developers.",
+  "target_audience": "Security professionals, software developers, and hackers interested in compression and encryption techniques.",
+  "short_summary": "The article presents a compact assembly language implementation for a compression and encryption library, focusing on efficiency and minimal resource usage.",
+  "summary": "In 'JQENCODE.ASM', Jacky Qwerty introduces a highly efficient compression and encryption library designed for use in constrained environments. The implementation is written in assembly language, showcasing techniques that minimize memory usage while maximizing performance. The code defines the 'jq_encode' procedure, which takes an input stream and compresses it into an output stream, utilizing a small memory footprint of just 64KB. The author employs various assembly instructions to manipulate data efficiently, demonstrating a deep understanding of low-level programming and optimization strategies.\n\nThe article serves as a practical guide for developers looking to implement lightweight encryption and compression in their applications. It emphasizes the importance of speed and resource management, which were critical considerations in the software development landscape of the late 1990s. By providing both the source code and a detailed explanation of the underlying mechanisms, Qwerty empowers readers to adapt and extend the library for their own needs, making it a valuable resource for anyone interested in the intersection of security and performance."
+}

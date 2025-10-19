@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x01 of 0x12",
+  "title": "Introduction",
+  "authors": "Phrack Staff",
+  "date": "July 28, 2002",
+  "historical_context": "This issue discusses the impact of the DMCA on information access and the changes in Phrack's release policy.",
+  "target_audience": "Hackers, security researchers, and individuals interested in digital rights.",
+  "short_summary": "The introduction outlines the changes in Phrack's release policy and the implications of the DMCA on information freedom. It also highlights the upcoming Phrack 59 release and invites community engagement.",
+  "summary": "In this introduction to Phrack Volume 59, the staff reflects on the recent Summercon event and the ongoing challenges posed by the DMCA, which has led to increased censorship and restricted access to information. The authors express concern over the diminishing availability of free and unmodified information, warning that future generations may be unaware of the knowledge that has been lost due to such regulations. They emphasize the importance of maintaining free access to research and information in the face of these challenges.\n\nAdditionally, the introduction announces a shift in Phrack's release policy, which now allows contributing authors and reviewers early access to new issues. This change aims to ensure that the magazine remains a valuable resource for those who contribute to it while still being accessible to the broader public. The staff also encourages readers to engage with the Phrack community, inviting them to reach out for discussions and collaborations, and teases the release of Phrack T-shirts as a new initiative to foster community spirit."
+}

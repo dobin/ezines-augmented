@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 5, File 006",
+  "title": "Nina Virus",
+  "authors": "Dark Angel",
+  "date": "",
+  "historical_context": "The Nina virus is a notable example of early malware, specifically a COM infector, which reflects the growing complexity of viruses in the early 1990s. This article provides insight into the coding practices of the time and the evolving landscape of computer security threats.",
+  "target_audience": "Security professionals, malware researchers, and programmers interested in historical malware development.",
+  "short_summary": "The article presents the Nina virus, a 256-byte COM infector from Bulgaria, detailing its infection method and code structure. It includes assembly code for the virus and discusses its notable features.",
+  "summary": "In this article, Dark Angel dissects the Nina virus, a compact 256-byte COM infector that reportedly originated in Bulgaria. The author highlights the virus's infection method, which bears resemblance to the infamous Jerusalem virus, and provides a detailed assembly code implementation. The code is noted for its well-structured approach, despite some areas that could benefit from optimization. The article serves as both a technical analysis and a historical reference for those studying early malware development.\n\nThe assembly code included in the article outlines the virus's functionality, including its installation check and memory management routines. It demonstrates how the virus infects other COM files by modifying the interrupt vector and ensuring its own persistence in memory. The author emphasizes the importance of understanding such malware for security professionals and programmers, as it showcases the techniques used by early virus authors and the challenges faced in combating such threats. This article is a valuable resource for anyone looking to understand the evolution of malware and the coding practices of the time."
+}

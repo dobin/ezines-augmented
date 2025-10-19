@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "29A INC files",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1997",
+  "historical_context": "This article is part of the early hacking culture, focusing on the development of malware and understanding executable formats.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article provides a collection of include files necessary for writing Win32 PE infectors, detailing the structures and routines used in such viruses.",
+  "summary": "In this article, Jacky Qwerty presents a set of include files essential for anyone looking to write Win32 PE infectors. The files include MZ.INC, PE.INC, USEFUL.INC, and WIN32API.INC, each serving a specific purpose in the development of malware. The MZ.INC file contains constants and structures needed to work with the DOS EXE MZ executable format, while PE.INC focuses on the Portable Executable format. The author emphasizes the importance of these files for understanding the functioning of Win32 infectors, suggesting that they are almost necessary for anyone venturing into this field. The tone is casual yet informative, reflecting the hacker culture of the time, where sharing knowledge was paramount, albeit with a hint of mischief regarding the potential misuse of the provided information.",
+  "additional_notes": "The article is a reflection of the hacker ethos of the late 90s, where the lines between ethical hacking and malicious intent were often blurred. It serves as a historical document showcasing the technical knowledge and skills prevalent in the underground hacking community."
+}

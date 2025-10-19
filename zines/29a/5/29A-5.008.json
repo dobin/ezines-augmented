@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "How to make infected system to depend on the virus",
+  "authors": "Prizzy/29A",
+  "date": "25th-26th November 2000",
+  "historical_context": "This article was written during a time when viruses were becoming increasingly sophisticated, and antivirus software was beginning to evolve in response. The techniques discussed reflect the ongoing cat-and-mouse game between virus creators and antivirus developers.",
+  "target_audience": "vx authors, malware researchers, security professionals",
+  "short_summary": "This article provides detailed methods for creating viruses that can make infected systems dependent on them, thereby complicating the disinfection process. It covers file and disk encryption techniques, driver loading, and debugging methods.",
+  "summary": "In this comprehensive guide, Prizzy/29A outlines techniques for vx authors to ensure that infected systems become reliant on their viruses. The article begins by discussing the concept of system subjection through real-time encryption of files and disks, emphasizing that the virus must remain active to decrypt data. The author elaborates on file encryption methods, detailing how to hook API functions to control file access and encrypt DLLs, while also addressing the limitations of this approach. Disk encryption is presented as a more complex yet effective method, requiring the use of multiple drivers to monitor user operations across different operating systems.\n\nThe article further delves into the specifics of creating and loading drivers for various Windows versions, including Win95/98 and WinNT/2000. Prizzy provides practical code snippets and insights into debugging drivers, highlighting the importance of understanding the underlying system architecture. The conclusion emphasizes the effectiveness of these methods in rendering antivirus solutions ineffective, suggesting that the techniques discussed could lead to a significant advantage for vx authors in the ongoing battle against antivirus software."
+}

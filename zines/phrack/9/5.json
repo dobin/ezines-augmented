@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Nine, Phile #5 of 10",
+  "title": "Inside Dialog",
+  "authors": "Ctrl C",
+  "date": "September 28, 1986",
+  "historical_context": "This article provides insights into the DIALOG online database, which was one of the largest online information retrieval systems available at the time, highlighting the early days of online research and telecommunications.",
+  "target_audience": "Hackers, researchers, telecommunications enthusiasts, and security professionals.",
+  "short_summary": "The article introduces the DIALOG online database, detailing commands for searching and retrieving information from its vast collection of over 250 databases. It covers basic commands like BEGIN, EXPAND, SELECT, and DISPLAY, providing examples of their usage.",
+  "summary": "In 'Inside Dialog', Ctrl C offers a comprehensive guide to navigating the DIALOG online database, a significant resource in the late 1980s for accessing a wealth of information across various fields. The article outlines essential commands such as BEGIN, which initiates a search in a specified database, and EXPAND, which helps users identify keywords for effective searching. The author emphasizes the importance of understanding the database's structure to optimize search results, showcasing examples that illustrate how to transition between different databases and retrieve specific information efficiently.\n\nThe article also delves into the SELECT command, which allows users to specify search terms, and the SELECT STEP command, which lists found files separately. Ctrl C explains the differences between the TYPE and DISPLAY commands for viewing retrieved information, highlighting the various formats available for displaying records. This article serves as a valuable resource for anyone interested in the early days of online databases and the foundational skills needed for effective information retrieval in a pre-Google era."
+}

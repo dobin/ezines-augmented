@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Yet Even More Stupid Things to Do With Unix!",
+  "authors": "Shooting Shark",
+  "date": "August 26, 1987",
+  "historical_context": "This article reflects the hacker culture of the late 1980s, where Unix systems were prevalent among tech enthusiasts and educational institutions. It showcases the playful yet disruptive nature of early hackers.",
+  "target_audience": "Hackers, Unix users, security professionals, and those interested in hacker culture.",
+  "short_summary": "The article presents humorous and mischievous tricks to annoy other Unix users, including methods to log them off and impersonate them using the 'write' and 'talk' commands. It emphasizes the lack of security in Unix systems during that era.",
+  "summary": "In 'Yet Even More Stupid Things to Do With Unix!', Shooting Shark shares a collection of lighthearted yet disruptive tricks that Unix users can employ to annoy their peers. The first trick involves a program called 'block.c' that logs out a specified user whenever they attempt to log in, exploiting the brief window of vulnerability before the user can set their terminal to prevent messages. The program runs in a tight loop, consuming CPU resources, and can be quite humorous when executed on unsuspecting friends or enemies. However, the author warns users to be cautious, as running the program on oneself can lead to being locked out of the system.\n\nThe second trick involves impersonating other users through the 'write' and 'talk' commands. By crafting fake messages that appear to come from other users, one can create confusion and amusement among peers. The article illustrates how easy it is to manipulate terminal messages, leading to humorous exchanges between users who believe they are communicating with each other. Overall, the piece captures the playful spirit of the hacker community at the time, highlighting both the technical capabilities and the ethical considerations of such pranks."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "VIRUS: A 29A Research Code by The Slug",
+  "authors": "The Slug",
+  "date": "",
+  "historical_context": "This article is from the early days of computer viruses, specifically focusing on a COM infector virus, which was a common type of malware during the DOS era.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the design and functionality of 'TheBugger', a COM infector virus that employs advanced techniques to evade detection by resident antivirus programs. It includes a unique resident check and a tunneling routine to ensure its persistence and infection capabilities.",
+  "summary": "In this article, The Slug introduces 'TheBugger', a sophisticated COM infector virus that showcases several innovative techniques for evading detection. One of its key features is a clever resident check that prevents typical antivirus programs from recognizing its presence. Instead of relying on conventional methods, the virus performs an additional check on a random byte in memory, which, if failed, triggers a simulated hard disk formatting routine, adding a layer of obfuscation to its operations.\n\nThe tunneling routine is another notable aspect of TheBugger, allowing it to trace system calls from the Program Segment Prefix (PSP) rather than the standard interrupt vector. This method helps it bypass resident antivirus programs that monitor the usual interrupt calls. The article also describes the infection mechanism, where TheBugger modifies the execution flow of COM files by intercepting specific interrupt calls, ensuring that it can infect files without being detected. Overall, The Slug presents a detailed technical breakdown of the virus's architecture, making it a valuable read for those interested in the evolution of malware and its countermeasures."
+}

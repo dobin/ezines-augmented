@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x0f of 0x14",
+  "title": "NT shellcodes prevention demystified",
+  "authors": "Piotr Bania <bania.piotr@gmail.com>",
+  "date": "Not specified",
+  "historical_context": "This article discusses various techniques for preventing shellcode execution in Windows environments, reflecting the ongoing battle between exploit developers and security researchers.",
+  "target_audience": "Security professionals, malware analysts, and developers interested in exploit mitigation techniques.",
+  "short_summary": "The article provides an in-depth analysis of various methods to prevent shellcode execution in Windows, including API hooking, stack protection, and new prevention techniques. It emphasizes the importance of understanding shellcode behavior to enhance security measures.",
+  "summary": "In 'NT shellcodes prevention demystified', Piotr Bania explores the landscape of shellcode prevention mechanisms in Windows, detailing both established and novel techniques. The article begins with an introduction to known protections, such as API hooking and stack protection, which aim to detect and thwart buffer overflow attacks. Bania explains how these mechanisms work, including the use of security cookies and module rebasing to complicate the execution of malicious shellcode. He also delves into the intricacies of shellcode itself, outlining its essential functions and the methods attackers use to retrieve necessary addresses for execution. \n\nThe latter sections of the article introduce new prevention techniques developed by the author, including the Protty library, which aims to intercept shellcode execution at an early stage. Bania provides code snippets and detailed explanations of how these techniques can be implemented to enhance system security. He concludes with a reflection on the ongoing cat-and-mouse game between exploit developers and security researchers, emphasizing that while no system can be made entirely secure, understanding and implementing these techniques can significantly increase resilience against shellcode attacks."
+}

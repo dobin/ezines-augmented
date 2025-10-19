@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Super Tiny Reloc Compressor",
+  "authors": "Super/29A",
+  "date": "",
+  "historical_context": "This article is part of the early hacking culture, focusing on low-level programming techniques and compression methods that were relevant during the rise of software development and reverse engineering in the late 20th century.",
+  "target_audience": "Hackers, reverse engineers, and software developers interested in low-level programming and data compression techniques.",
+  "short_summary": "The article presents a method for compressing and decompressing relocation sections in binary files using assembly language. It details routines for maximizing compression efficiency and provides insights into the underlying mechanics of the process.",
+  "summary": "In 'Super Tiny Reloc Compressor', author Super/29A dives into the intricacies of compressing relocation sections within binary files. The article outlines two main routines: 'STRC_max_compress', which iteratively tests various compression methods to find the most efficient one, and 'STRC_compress', which implements the chosen method to compress the data. The use of assembly language allows for fine control over the compression process, making it suitable for low-level programming enthusiasts and hackers looking to optimize binary file sizes.\n\nThe article also includes a 'STRC_decompress' routine, which reverses the compression process, demonstrating the author's understanding of both compression and decompression techniques. By leveraging bit manipulation and efficient data handling, the routines provide a practical approach to managing relocation data, which is crucial for executable files. This work not only serves as a technical guide but also reflects the hacker ethos of optimizing and understanding the underlying mechanics of software systems."
+}

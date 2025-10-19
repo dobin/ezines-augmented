@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x0d of 0x14",
+  "title": "cryptexec: Next-generation runtime binary encryption",
+  "authors": "Zeljko Vrba <zvrba@globalnet.hr>",
+  "date": "2004",
+  "historical_context": "This article is part of the ongoing exploration of binary encryption techniques in the context of software security and reverse engineering, building on previous works in Phrack.",
+  "target_audience": "Security researchers, software developers, and hackers interested in binary encryption and runtime code protection.",
+  "short_summary": "The article presents a method for runtime binary encryption that allows for on-the-fly code decryption without relying on OS or hardware support. It details the implementation using x86-32 GNU AS and discusses its advantages and limitations.",
+  "summary": "In this article, Zeljko Vrba introduces a novel approach to runtime binary encryption, termed 'cryptexec'. The method enables the encryption of executable code segments, allowing them to be decrypted and executed in memory without requiring assistance from the operating system or hardware features. The implementation is done using x86-32 assembly language, specifically targeting the GNU assembler. The article outlines the architecture of the encryption system, including the use of a decryption function pointer and the management of execution contexts to facilitate seamless transitions between encrypted and plaintext code execution.\n\nThe author discusses the limitations of existing methods, such as ptrace, and highlights the advantages of his approach, including the ability to encrypt only specific portions of an executable and the flexibility to use different encryption keys for different segments. Additionally, the article covers potential improvements, such as enhancing the encryption scheme and addressing compatibility with newer instruction sets. The work is positioned within the broader context of software protection techniques, referencing related tools and methodologies, and concludes with a call for further exploration and development in the field of binary encryption."
+}

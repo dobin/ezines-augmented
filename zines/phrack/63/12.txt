@@ -1,0 +1,758 @@
+                           ==Phrack Inc.==
+
+              Volume 0x0b, Issue 0x3f, Phile #0x0c of 0x14
+
+|=--------------=[ Advances in remote-exec AntiForensics ]=--------------=|
+|=-----------------------------------------------------------------------=|
+|=--------------------------=[ by ilo-- ]=-------------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+ 1.0 - Abstract
+ 2.0 - Introduction
+ 3.0 - Principles
+ 4.0 - Background
+ 5.0 - Requirements
+ 6.0 - Design and Implementation
+     6.1- Get information of a process
+     6.2- Get binary data of that process from memory
+     6.3- Order/Clean and safe binary data in a file
+     6.4- Build an ELF header for that file to be loaded
+     6.5- Adjust binary information
+     6.6- Resume of process in steps.
+     6.7- pd, the program
+ 7.0 - Defeating pd, or defeating process dumping
+ 8.0 - Conclusion
+ 9.0 - Greets
+10.0 - References
+11.0 - SourceCode
+
+--[ 1.0 - Abstract
+
+    PD  is  a proof  of  concept  tool being  released  to  help rebuilding
+or recovering a binary file from  a running process, even if the file never
+existed in  the disk.  Computer Forensics,  reverse engineering, intruders,
+administrators, software protection, all share the same piece of the puzzle
+in a computer. Even if the  intentions are quite different, get or hide the
+real  (clean)  code,  everything  revolves  around it:  binary  code  files
+(executable) and running process.
+
+    Manipulation of  a  running application  using  code injection,  hiding
+using ciphers  or  binary packers are some of the  current ways to hide the
+code  being executed  from  inspectors,  as executed code is different than
+stored in disk. The  last days  a new  anti forensics method  published  in
+phrack  62  (Volume 0x0b,  Issue 0x3e,  phile  0x08  by  grugq)  showed  an
+"user landexec module". ulexec allows the execution of a binary sent by the
+network from another  host without  writing  the file  to  disk, hiding any
+clue  to forensics  analysts.  The  main  intention of  this  article is to
+show  a process to  success in the  recovering or rebuilding  a binary file
+from a running process, and PD is a sample implementation for that process.
+Tests includes  injected  code,  burneyed  file  and  the  most  exotic  of
+all, rebuilding a  file executed using  grugq's "userland remote exec" that
+was never saved in disk.
+
+
+--[ 2.0 - Introduction
+
+    An executable contains the data the system needs to run the application
+contained  in the  file.   Some of  the data  stored  in the  file is  just
+information the  system should consider before  launching, and requirements
+needed by the  application binary code.  Running an  executable is a kernel
+process that grabs that information from the file, sets up the needings for
+that program and launches it.
+
+However,  although  a binary file  contains  the data  needed to  launch  a
+process and the program itself, there's no reason to trust that program has
+not  been  modified  during execution.  One  common task  to avoid host IDS
+detecting binary manipulation  is  to modify  a running process  instead of
+binary stored files.  A process may be running some kind of troyan injected
+code until system restart, when original program will be executed again.
+
+In selfmodifing,  ciphered or compressed applications, program code in disk
+may differ from program code in memory due to  'by design' functionality of
+the file.  It's  a common task to avoid reverse engineering  and scope goes
+from virus to  commercial software.  Once the program is ran,  it deciphers
+itself remaining clean in memory content  of the process  until the end  of
+execution.  However,  any attempt to see the program contained in the file
+will require a great effort  due to complexity of the implemented cipher or
+obfuscation mechanism.
+
+In other hand,  there's no reason to keep the binary  file once the process
+is started (for  example a troyan installer).  Many  forensics methods rely
+their investigation in disk  MAC (modify, create, access) timeline analysis
+after  powering down  the system,  and that's  the main  reason  when grugq
+talked about user  land remote exec: there's no need to  write data in disk
+if you  can forge  the system to  run a  memory portion emulating  a kernel
+loader. This kind  of data contraception may drop any  attempt to create an
+activity timeline due to the missing information: the files an intruder may
+install in  the system.  Without  traces, any further  investigation would
+not reveal attacker information. That's the description of the "remote exec
+attack", defeated later in this paper. 
+
+All those scenarios presented are real, and in all of them memory system of
+the suspicious  process should be  analyzed, however there's  no mechanism
+allowing  this  operation. There  are  several  tools  to dump  the  memory
+content,   but,  in   a  "human   unreadable  -   system   unreadable"  raw
+format.  Analysis tools  may need  an executable formatted file,  and  also
+human analyst   may  need   a binary file   being launched  in  a  testing 
+environment (aka laboratory). Raw code,  or dumped  memory  code is  useful
+if  execution environment  is known,  but sometimes  untraceable.  Here  is
+where  pd  (as  concept)  may help  in the  analysis process,  rebuilding a
+working executable file from the  process, allowing researchers  to  launch
+when and where they need, and capable of being analyzed at any time in any 
+system. 
+
+Rebuilding a binary  file from a memory process allow us  to recover a file
+modified in run time or deciphered, and also recover if it's being executed
+but never  was saved in the  system (as the remote  executed using ulexec),
+preventing  from  data contraception  and  information  missing in  further
+analysis. 
+
+This paper  will describe  the process of  rebuilding an executable  from a
+process in  memory, showing each  involved data in  every step. One  of the
+main goals  of the article  is to realize  where the recovering  process is
+vulnerable  to manipulation.   Knowing our  limits  is our  best effort  to
+develop a better process. 
+
+There  are  several  posts  in  internet  related  to  code  injection  and
+obfuscation.   For  userland remote  execution  trick  refer  to phrack  62
+(Volume 0x0b, Issue 0x3e, phile 0x08 by grugq)
+
+
+--[ 3.0 - Principles
+
+    Until this  year the most hiding  method  used for code  (malicious  or
+not) hiding was  the  packing/cyphering one.  During  execution  time,  the
+original code/file   should  be   rebuilt  in   disk,  in memory, or  where
+the  unpacker/uncypher should need.  The disk file still  remains  ciphered
+hiding it's content. 
+
+To avoid disk  data written and Host IDS detection,  several ways are being
+used until now. Injecting binary code  right in a running process is one of
+them.  In a  forensics analysis some checks to  the original file signature
+(or   MD5,   or  whatever)   my   fail,   warning   about  binary   content
+manipulation. If this code only resides in memory, the disk scan will never
+show its presence. 
+
+"Userland Remote Exec" is  a new kind of attack, as a  way to execute files
+downloaded from a  remote host without write them to  disk.  The main idea
+goes  through an  implementation  of a  kernel  loader, and  a remote  file
+transfer core. When "ul_remote_exec" program receives a binary file it sets
+up as  much information and  estructures as needed  to fork or  replace the
+existing  code  with the  downloaded  one, and  give  control  to this  new
+process.   It  safes  new   program  memory  pages,  setting  up  execution
+environment, and loading code and  data into the correct sections, the same
+way the system kernel does. The main difference is that system loads a file
+from disk, and UserLand Remote  Exec (down)"loads" a file from the network,
+ensuring no data is written in the disk. 
+
+With all these methods we have a running process with different binary data
+than saved in the disk (if existing there).  Different scenarios that could
+be resolved  with one technique: an interface allowing us to dump a process
+and  rebuild a  binary  file that  when  executed will  recreate this  same
+process. 
+
+
+--[ 4.0 - Background
+
+    Under Windows architecture  there're a  lot of useful  tools  providing
+this functionality in   user space. "procdump"  is  the name of  a  generic
+process dumper for this  operating  system,  although  there're  many  more
+tools including application specific un-packers and dumpers. 
+
+Under linux (*nix for x86 systems, the scope of this paper) several studies
+attempt  to  help analyzing  the  memory  (ie:  Zalewski's memfetch)  of  a
+process.  Kernel/system memory may give other useful information about any
+of the process being executed  (Wietse's memfetch).  Also, gdb now includes
+dumping feature, allowing the dump of memory blocks to disk. 
+
+There's  an  interesting  tool  comparing  a  process  and  a  binary  file
+(www.hick.org's  elfcmp). Although  I  discovered later  in  the study,  it
+didn't work for me. Anyway, it's an interesting topic in this article. 
+Recover a binary from a core dump is an easy task due to the implementation
+of the  core functionality. Silvio Cesare  stated that in  a complete paper
+(see references). 
+
+There's also a kernel module for recover a burneyed binary from memory once
+it's deciphered,  but in any case  it cares about binary  analysis. It just
+dumps a memory  region where burneye engine writes  dechypered data before
+executing. 
+
+All these approximations will not finish the process of recovering a binary
+file,  but they  will give  valuable information  and ideas  about  how the
+process should/would/could be. 
+
+The  program   included  here  is   an  example  of  defeating   all  these
+anti-forensics  methods, attaching  to  a pid,  analyzing  it's memory  and
+rebuilding a binary image allowing us to recover the process data and code,
+and also  re-execute  it in  a testing environment.  It  summarizes all the
+above  functionality   in an  attempt  to  create  a  rebuilding   working 
+interface. 
+
+
+--[ 5.0 - Requirements
+
+    In  an initial  approach  I  fall into  a  lot of  presumptions  due to
+the technology involved in the testing  environment. Linux  and  x86 32bits
+intel architecture was the  selected platform with kernel 2.4*.   There was
+a lot of analysis performed  in that platform  assuming some  of the kernel
+constants and specifications  removed  or  modified later.   Also, GCC  was
+the selected  compiler for the  binaries tested,  so instead of a  generic 
+ELF format, the gcc elf implementation  has been the referral  most of the 
+time. 
+
+After some investigation it was realized that all these presumptions should
+be removed from the code for compatibility in other test systems. Also, GCC
+was left apart in some cases, analyzing files programmed in asm. 
+
+The /proc filesystem  was first removed from analysis,  returning bak after
+some  further investigation.  /proc  filesystem is  a useful  resource for
+information gathering  about a  process from user  space (indeed,  it's the
+user space kernel interface for process information queries). 
+
+The concept of process dumping (sample code also) is very system dependant,
+as  kernel  and  customs loaders  may leave  memory in  different  states, 
+so there's no  a generic program ready-to-use  that could rebuild  any kind
+of executable with total  guaranties of use.  A program may  evolve in  run
+time loading some  code from a inspected  source, or delete the  used  code
+while being executed. 
+
+Also,  it's very  important to  realize  that even  if a  binary format  is
+standardized,  every file  is built  under compiler  implementation, so the
+information included in it may help or difficult the restoring process. 
+
+In this paper  there are several user interfaces to access  the memory of a
+process,  but the cheapest  one has  been selected:  ptrace.  From  now on,
+ptrace should  be a requirement  in the implementation  of PD, as  no other
+method to read process memory space has been included in the POC. 
+
+In order to  reproduce the tests, a linux kernel  2.4 without any security
+patch  (like grsecurity,  pax, or  other  ptrace and  stack protection)  is
+recommended, as well as gcc compiled binaries. Ptrace should be enabled and
+/proc filesystem would be useful.  grugq remote exec and burneyed had been
+successfully compiled in this environment,  so all the toolset for the test
+will be working. 
+
+Files dynamically linked to system libraries become system dependant if the
+dynamic  information  is  not  restored  to it's  original  state.   PD  is
+programmed  to restore  the dynamic  subsystem  (plt) of  any gcc  compiled
+binary, so gcc+ldd dynamic linked files  would be restored to work in other
+host correctly. 
+
+
+--[ 6.0 - Design and Implementation
+
+    Some common tasks   had been  identified to  success in the   dump of a
+process in  a generic  way.  The   design should  heavily rely  in   system
+dependant interfaces  for each  one,  so an exhaustive analysis  should  be
+performed in them:
+
+ 1- Get information of a process
+ 2- Get binary data of that process from memory
+ 3- Order/clean and safe binary data in a file
+ 4- Build an ELF header for the file to be correctly loaded
+ 5- Adjust binary information
+
+Also, there's a  previous step to resolve before doing  any of the previous
+tasks, it's, to get communication  with that process.  We need an interface
+to read all  this information from the system memory  space and process it.
+In  this  platform  there  are  some  of them  available  as  shown  below:
+
+ - (per process) own process memory 
+ - /proc file system
+ - raw access to /dev/kmem /dev/mem
+ - ptrace (from user space)
+
+Raw memory  access turns hard the  process of information  locating, as run
+time information  may be paged  or swapped, and  some memory may  be shared
+between processes, so for the POC it's has been removed as an option. 
+
+Per  Process method, even  if it  may appear  to be  too exotic,  should be
+considered as an option. The use of this method consists in exploitation of
+the execution  of the  process selected for  dump, as for  buffer overflow,
+library  modifications before loading  and any  other sophisticated  way to
+execute  our  code into  process  context.  Anyway  for  the  scope of  the
+analysis it's been deprecated also. 
+
+/proc and PTRACE are the available  options for the POC.  Each one has it's
+own limits  based in implementation of the  system.  As a POC,  PD will use
+/proc when available, and ptrace  if there's no more options.  Consider the
+use of the other methods when ptrace is not available in the system. 
+
+By  default  ptrace will  not  attach any  process  if  it's already  being
+attached by another. Each process may  be only attached by one parent. This
+limit is assumed as a requirement for PD to work. 
+
+
+----[ 6.1- Get information of a process
+
+    To know  all  the  information   needed to  rebuild an executable  it's
+important to know  the way  a process  is being executed  by the  system. 
+
+As  a short description, the system  will create an  entry in  the process 
+list, copy all data needed  for the process  and for the  system to success
+executing the binary and  launches it.    Not all the  data in  the file is
+needed during execution, some parts are only used by the loader to  correct
+map the memory and perform environment setup. 
+
+Getting information about  a process involves all data  finding that could
+be useful when rebuilding the  executable file, or finding memory location
+of the process, it's:
+
+ - Dynamic linker auxiliary vector array
+ - ELF signatures in memory
+ - Program Headers in memory
+ - task_struct and related information about the process
+   (memory usage,  memory permissions, ...)
+ - In raw access and pre process: permission checks of memory maps (rwx) 
+ - Execution  subsystems  (as  runtime  linking,  ABI  register,
+   pre-execution conditions, ..)
+ 
+
+Apart from the loading information (not removed from memory by default), A
+process has three  main memory sections: code, where  binary resides; data,
+where internal  program data  is being  written and read;  and stack,  as a
+temporal memory  pool for process execution internal  memory requests. Code
+and Data segments are read from the file in the loading part by the kernel,
+and  stack   is  built   by  the  loader   to  ensure   correct  execution.
+
+
+----[ 6.2- Get binary data of that process from memory
+
+    Once  we have  located that  information,  we  need to get  it from the
+memory. 
+
+For  this  task  we will  use  the  interface  selected earlier:  /proc  or
+ptrace. The main information we should not forget is:
+
+ - Code and Data portions (maps) of the memory process.
+ - If exists (has not been deleted) the elf and/or program headers.
+ - Dynamic linking system (if it's being) used by the program.
+ - Also, "state" of the process: stack and registers*
+
+Stack and  registers (state) are useful  when you plan to  launch the same
+process  in another  moment,  or  in another  computer  but recovering  the
+execution point: Froze the program and  re-run in other computer could be a
+real scenario for this example. One  of the funniest results found using pd
+to froze processes was the possibility to save a game and restore the saved
+"state" as a way to add the "save game" feature to the XSoldier game. 
+
+Something interesting is also  another information the process is currently
+handling:  file  descriptors, signals,  and  so.   With  the signals,  file
+descriptors,  memory,  stack  and  registers  we could  "froze"  a  running
+application  and  restore  it's  execution  in  other  host,  or  in  other
+moment.  Due  to  the  design  of  the  process creation, it's possible to 
+recreate in great part the state  of the process  even if  it's interacting
+with  regular files.  In  a more  technical detail,  the re-create  process
+will inherit all the attributes of  the parent, including file descriptors.
+It's our task  if  we would   like  to  restore   a  "frozen state"  dumped
+process to read the position  of the  descriptors and  restore them for the
+"frozen process". 
+
+Please  notice that  any  other  interaction  using  sockets  or pipes  for
+example, require  an state analysis  of the  communicated messages so their
+value, or  streamed content  may be lost.   If you  dump  a program  in the
+middle  of a TCP  connection, TCP  session will  not be  established again,
+neither the  sent data and  acknowledge messages received  from  the remote
+system, so it's  not possible to re-run a process from  a "frozen state" in
+all cases. 
+
+
+----[ 6.3- Order/Clean and safe binary data in a file
+
+    Order/Clean  and  safe  task  is   the  simplest   one.  Get  all   the
+available information and remove the useless, sort  the useful, and save in
+a secure storage.  It  has been separated  from  the  whole  process due to
+limitations in the recovering conditions. If the reconstructed binary could
+be stored in the filesystem then simply keep the  information  saved  in  a
+file, but, it's interesting in some cases to  send the gathered information
+to another host for processing, not writing to  disk, and not modifying the
+filesystem  for  other  type   of  analysis.    This   will   avoid   data 
+contraception  in  a  compromised  system if  that's  the  purpose  of  pd 
+execution. 
+
+ 
+ 
+----[ 6.4- Build an ELF header for that file to be loaded
+
+    If finally we don't find it in memory, the best way  is  to rebuild it.
+Using the ELF documentation  would be easy  enough to  setup a basic header
+with the information  gathered.  It's  also necessary  to create  a program
+headers table if we could not find it in memory. 
+
+Even if the ELF header is  found in memory, a manipulation of the structure
+is needed as we could miss a lot of information not kept in memory, or not
+necessary for the  rebuild process: For example, all  the information about
+file  sections,  debug  information  or  any kind  of  informational  data.
+
+
+----[ 6.5- Adjust binary information
+
+    At this point, all the information has  been  gathered,  and the  basic
+skeleton of the executable should be ready to use. But before finishing the
+reconstruction process some final steps could be performed. 
+
+As some  binary data is  copied from memory  and glued into a  binary, some
+offset and  header information  (as number of  memory maps and  ELF related
+information) need to be adjusted. 
+
+Also, if it's  using some system feature (let's  say, runtime linking) some
+of the gathered information may be referred to this  host  linking  system,
+and need to be rebuilt in order to work in another environments. 
+
+As  the result  of reconstruction  we have  two great  caveats  to resolve:
+
+ - Elf header 
+ - Dynamic linking system
+
+ The  elf header is  only used  in the  load time,  so we  need to  setup a
+ compatible header to load correctly all the information we have got. 
+
+ The dynamic system relies in host library scheme, so we need to regenerate
+ a  new layout  or restore  the previous  one to  a generic  usable dynamic
+ system, it's:  GOT recovering.  PD resolves  this issue in  an elegant and
+ easy way explained later. 
+ 
+
+----[ 6.6 - Resume of process in steps
+
+    Now let's resume  with more granularity the steps  performed until now,
+and what could be   do with all the gathered information.   As  a  generic 
+approach let's resume a "process saving" procedure:
+
+ - Froze the process  (avoid any malicious reaction of the program..).
+ - Stop current execution and attach to it (or inject code.. or..).
+ - Save "state": registers, stack and all information from the system.
+ - Recover file descriptors state and all system data used by the process.
+ - Copy process "base": files needed (opened file descriptors, libraries,
+   ... ).
+ - Copy data from memory: copy code segments, data segments, stack,
+   libraries..
+
+With all this information we can now do two things:
+ 
+    - Rebuild the  single executable: reconstruct a binary  file that could
+    be launched  in any host (with  the same architecture,  of course), or
+    executable  only in  the same  host, but  allowing complete  execution 
+    from the start of the code. 
+ 
+    - Prepare a package allowing to re-execute the process in another host,
+    or in any other moment, that's, a "frozen" application that will resume
+    it's state  once launched.   This will allow  us to save  a suspicious
+    process and relaunch in other host preserving it's state. 
+
+
+If it's  our intention to  recover the state  in other moment, even  if its
+recovery is not  totally guaranteed (internal system workflow  may avoid 
+its correct execution) the loading process will be:
+
+ - Set all files used by the application in the correct location
+ - Open the files  used by the program  and move handlers to  the same
+   position (file handlers will be inherited by child process)
+ - Create a new process.
+ - Set "base" (code and data) in the correct segments of memory.
+ - set stack and registers.
+ - launch execution.
+ 
+
+But for the purpose  of this paper, the final stage is  to rebuild a binary
+file, a single  executable presumed to be reconstructed  from the image of
+the process  being executed  in the  memory. These are  the final  steps we
+could see later, labeled as pd implementation:
+ 
+ - Create an ELF header in a file: if it could not be found.
+ - Attach "base" to the file (code and data memory copies)
+ - Readjust GOT (dynamic linking).
+
+
+----[ 6.7 - pd (process dumper) Proof of concept.
+
+    At the time of writing this paper, a simple process dumper is included 
+for  testing  purposes.  Although it  contains  basic  working code, it's 
+recommended to download  the latest version  of  the   program   from   the
+http://www.reversing.org  web site.  The  version included  here is  a very
+basic stripped version  developed two years ago. This PD is  just a POC for
+testing the process described in this article supporting dynamically linked
+binaries.  This is the description  of the different tasks it will perform:
+
+   - Ptrace attach to a pid: to access memory (mainly read memory) process.
+
+   - Information  gathering: Everytime  a program  is executed,  the system
+ will create  an special  struct in  the memory for  the dynamic  linker to
+ success  bind  functions of  that  process.   That  struct, the  "Auxiliar
+ Vector" holds  some elf  related information of  the original file,  as an
+ offset  to the  program  headers  location in  memory,  number of  program
+ headers  and so  (there  is some  doc  about this  special  struct in  the
+ included source package). 
+
+ With the program headers information recovered, a loop  for  memory  maps 
+ being  saved to  a file  is  started.   Program header  holds  the loaded 
+ program segments.  We'll  care in  the  LOAD  flag  of the  mapped  memory
+ segment in  order to save it. Memory  segments not marked as  LOAD are not
+ loaded from  that file for  execution. This version  of PD does  not use 
+ /proc filesystem at any time. 
+
+ If the  program  can't find the  information, some of  the arguments  from
+ command line may  help to finish the process. For  example, with "-p addr"
+ it's possible  to force  the address of  the program headers  in memory. 
+ This  value for  gcc+ldd built  binaries is  0x8048034.  This argument may
+ be used  when the program outputs  the message "search failed" when trying
+ to locate  PAGESZ. If PAGESZ  is not  in the stack  it indicates  that the
+ "auxiliar vector  array" could not  be located, so program  headers offset
+ would neither  be found (often  when the file  is not launched  from the
+ shell  or  is   loaded  by   other   program  instead   of  the  kernel). 
+	 
+   - File dumping:  If the information is  located the data is  dumped to a
+ file,  including the  elf  header if  it's  found in  memory (rarely  it's
+ deleted  by any  application).   This version  of  pd will NOT create  any
+ header for the file (it's done in the lastest version). 
+
+ This dump should work for the  local host,  as dynamic information  is not
+ being rebuilt.  There's a simple method  to recover  this information with
+ files built with gcc+ldd as shown below. 
+   
+   - GOT rebuilding
+
+   The runtime  linker should had modified  some of the GOT  entries if the
+ functions had  been called during execution.  The way pd  rebuilds the GOT
+ is  based in GCC  compiling method.   Any binary  file is  very compiler
+ dependant (not  only system), and a fast analysis about  how GCC+LDD build
+ the GOT of  the compiled binary, shows the way  to reconstruct  it  called
+ "Aggressive GOT reconstruction".  Another compilers/linkers  may need more
+ in depth  study.  A  txt is  included  in the  source about Aggressive GOT
+ reconstruction. 
+   
+ The option -l tagged as "local  execution only" in the command line will
+ avoid GOT reconstruction. 
+ 
+   In this  version of PD,  PLT/GOT reconstruction is only  functional with
+ GCC  compiled binaries.  To  make that  reconstruction,  the .plt  section
+ should be  located (done by the program usually).  If the location  is not
+ found by the PD, the argument -g addr in the command line  may help.  Even
+ if it has been tested against several files, this so simple implementation
+ may fail  with  files  using hard  dynamic  linking in  the system.
+
+ Once  again I  remember this  is a test  code.  For better results please 
+ download latest version of PD. 
+
+   -- Aggressive reconstruction of GOT --
+   
+   GCC in  the process  of compiling a  source code  makes a table  for the
+ relocation entries  to link with ldd. This table grows as  source file  is
+ being analyzed.  Each  relocatable object  is then pushed  in  a table for
+ internal manipulation. Each  table entry  has a size  of 0x10 bytes,  each
+ entry is located 0x10 bytes from  the last, so there are 16 bytes  between
+ each   object.    Take   a   look    at   this   output    of   readelf. 
+   
+  Relocation section '.rel.plt' at offset 0x308 contains 8 entries:
+  Offset    Info    Type            Sym.Value  Sym. Name
+  080496b8 00000107 R_386_JUMP_SLOT 08048380   getchar
+  080496bc 00000207 R_386_JUMP_SLOT 08048390   __register_frame_info
+  080496c0 00000307 R_386_JUMP_SLOT 080483a0   __deregister_frame_inf
+  080496c4 00000407 R_386_JUMP_SLOT 080483b0   __libc_start_main
+  080496c8 00000507 R_386_JUMP_SLOT 080483c0   printf
+  080496cc 00000607 R_386_JUMP_SLOT 080483d0   fclose
+  080496d0 00000707 R_386_JUMP_SLOT 080483e0   strtoul
+  080496d4 00000807 R_386_JUMP_SLOT 080483f0   fopen
+                                          ^
+                                          ^
+  As shown  below, each of  the entries from  the table is just  0x10 bytes
+  below than  the next  in memory  . When one of this  objects is linked in
+  runtime, it's  value will show a library space memory address out  of the
+  original segment.   Rebuilding this  table is done  locating at  least an
+  unresolved  value from this  list (it's  symbol value must be inside it's
+  program  section memory space). Original address  could then  be obtained
+  from It's position. 
+
+  The  next  step  is  to  perform  a replace  in  all  entries  marked  as
+  R_386_JUMP_SLOT with the calculated address for each modified entry. 
+  Note: Other  compilers may  act very different, so the  first step  is to
+  fingerprint the compiler before doing any un-relocation task. 
+
+  Some options  are manipulable in  command line to pd. See readme for more
+  information.  Also,  some demos are included  in  the src package, and a 
+  simple todo  with help to launch each them: simple process  dump, packed 
+  dump (upx or burneye), injected code dump and grugq's ulexec dump. 
+
+  Here is, for your information a simple dump of a netcat process connected
+  to a host:
+
+---------------------------------------------------------------------------
+[ilo@reversing src]$ ps aux |grep localhost
+ilopez   5114  0.0  0.2  1568  564 pts/2   S+   02:25  0:00 nc localhost 80
+[ilo@reversing src]$ ./pd -vo nc.dumped 5114
+pd V1.0 POF <ilo@reversing.org>
+source distribution for testing purposes..
+[v]Attached.
+performing search..
+only PAGESZ method implemented in this version
+[v]dump: 0xbffff000 to 0xc0000000: 0x1000 bytes
+AT_PAGESZ located at: 0xbffffb24
+[v]Now checking for boundaries..
+[v]Hitting top at: 0xbffffb94
+[v]Hitting bottom at: 0xbffffb1c
+[v]AT_PHDR: 0x8048034  AT_PHNUM: 0x7
+[v]dump: 0x8048034 to 0x8048114: 0xe0 bytes
+[v]program header( 0-7 ) table info..
+[v]TYPE Offset     VirtAddr   PhysAddr   FileSiz MemSiz  FLG   Align
+[v]PHDR 0x00000034 0x08048034 0x08048034 0x000e0 0x000e0 0x005 0x4
+[v]INTE 0x00000114 0x08048114 0x08048114 0x00013 0x00013 0x004 0x1
+[v]LOAD 0x00000000 0x08048000 0x08048000 0x03f10 0x03f10 0x005 0x1000
+[v]LOAD 0x00004000 0x0804c000 0x0804c000 0x005d8 0x005d8 0x006 0x1000
+[v]DYNA 0x00004014 0x0804c014 0x0804c014 0x000c8 0x000c8 0x006 0x4
+[v]NOTE 0x00000128 0x08048128 0x08048128 0x00020 0x00020 0x004 0x4
+..
+gather process information and rebuild:
+-loadable program segments, elf header and minimal size..
+[v]dump: 0x8048000 to 0x804bf10: 0x3f10 bytes
+[v]realloc to 0x3f10 bytes
+[v]dump: 0x804c000 to 0x804c5d8: 0x5d8 bytes
+[v]realloc to 0x45d8 bytes
+[v]max file size 0x45d8 bytes
+[v]dumped .text section
+[v]dumped .data section
+[v]segment section based completed
+analyzing dynamic segment..
+[v]HASH
+[v]STRTAB
+[v]SYMTAB
+[v]symtable located at: 0x80482d8 , offset: 0x2d8
+[v]st_name 0x208 st_value 0x0 st_size 0x167
+[v]st_info 0x12 st_other 0x0 st_shndx 0x0
+[v]STRSZ
+[v]SYMENT
+Agressive fixing Global Object Table..
+ vaddr: 0x804c0e0 daddr: 0x8048000 foffset: 0x40e0
+* plt unresolved!!!
+section headers rebuild
+this distribution does not rebuild section headers
+saving file: nc.dumped
+[v]saved: 0x45d8 bytes
+Finished.
+[v]Dettached.
+---------------------------------------------------------------------------
+
+In this  example the  program netcat with  pid 5114  is dumped to  the file
+nc.dumped. The  reconstructed binary is only  part of the  original file as
+show in these lists:
+
+---------------------------------------------------------------------------
+[ilo@reversing src]$ ls -la nc.dumped
+-rwxr-xr-x  1 ilo ilo 17880 Jul 10 02:26 nc.dumped
+[ilo@reserving src]$ ls -la `whereis nc`
+ls: nc:: No such file or directory
+-rwxr-xr-x  1 root root 20632 Sep 21  2004 /usr/bin/nc
+---------------------------------------------------------------------------
+
+This version of  pd does all the  tasks of rebuilding a binary  file from a
+process. The pd concept was  re-developed to a more useful tool performing
+two  steps. The first  should help  recovering all  the information  from a
+process in a single package. With all this information a second stage allow
+to rebuild  the executable  in more relaxed  environment, as other  host or
+another moment. The option to save  and restore state of a process has been
+added thus  allowing to re-lauch an  application in other host  in the same
+state as it was when the  information was gathered. Go to reversing.org web
+site to get the last version of the program. 
+
+
+
+--[ 7.0 - Defeating PD, or defeating process dumping.
+
+    The  process   presented   in  this  article  suffers   from  lots  of 
+presumptions: tested  with gcc compiled  binaries, under  specified  system
+models,  its workflow simply  depends  on  several  system  conditions and 
+information that could be forged by the program.   However  following  the
+method would be easy to defeat further antidump research. 
+
+In each recovering  process task, some of the  information is presumed, and
+other is obtained  but never evaluated before. Although  the process may be
+reviewed for  error and  consistency checking a  generic flow will not work
+against  an specific  developed program.   For example,  it's very  easy to
+remove  all  data information  from  memory to  avoid  pd  reading all  the
+needings in the rebuild process. Elf header could be deleted in runtime, or
+modified, as the auxiliar vector in the stack, or the program headers. 
+
+There are  other methods to get  the binary information:  asking the kernel
+about  a  process or  accessing  in raw  format  to  memory locating  known
+structures and so,  but not only it's a very hard  approach, the system may
+be forged by an intruder. Never forget that.. 
+
+Current issues known in PD are:
+
+ - If the program is being ptraced, this condition will prevent pd
+ attaching process to work, so program ends here (for now).
+ 
+   Solution: enable a kernel process to dump binary information even if
+   ptrace is disabled.
+ 
+ - If a forged ELF header is found in the system, probably it will be used
+ instead of the real one.
+ 
+   Solution: manually inspect ELF header or program headers found in the
+   system before accepting them.
+ 
+ - If no information about program headers or elf is found, and if /proc is
+ not available in that user space, and aux_vt is not found the program will
+ not work, and..
+ 
+   Solution: perform a better approach in pd.c.  PD is just a POC code to
+   show the process of rebuild a binary file.  In a real
+   
+ - Some kernel patches remove memory contents and modify binary file prior
+ to execution: Unspected behavior.
+
+
+Anyway, PD  will not  work well  with programs where  the data  segment has
+variables  modified  in runtime,  as  execution  of  the recovered  program
+depends in  the state of these  variables. There's no  history about memory
+modified by a process, so return to a previous state of the data segment is
+impossible, again, for now. 
+
+
+--[ 8.0 - Conclusion
+
+    "Reversing" term reveals a funny feature:  every time a  new  technique
+appears, another one defeat it,  in both sides.  As in the virus  scene, a
+new patch will  follow to  a new  development. Everytime  a new  forensics
+method is released, a  new anti-forensics  one appears.   There's  a  crack
+for almost every protected application, and a new version of  that  program
+will protect from that crack. 
+
+In  this  paper,  some of  the  methods  hiding  code  (even if  it's  not
+malicious)  were defeated  with simply  reversing how  a process  is built.
+Further investigation may leave this  method inefficient due to load design
+of the kernel in the studied system.  In fact, once a method is known, it's
+easy to defeat, and the one  presented in this article is not an exception 
+
+
+--[ 9.0 - Greets & contact
+
+Metalslug,  Uri, Laura,  Mammon (still  more  ptrace stuff.. you know  ;)),
+Mayhem, Silvio, Zalewski, grugq, !dSR and 514-77, "ncn" and "fist" staff.
+Ripe deserves  special thanks  for help  in demo codes,  and pushing  me to
+improve the recovering process. 
+
+Contact:   ilo[at]reversing.org  http://www.reversing.org
+
+
+--[ 10 - References
+- grugq 2002 - The Art of Defiling: Defeating Forensic Analysis on Unix
+  https://phrack.org/issues/59/6#article
+- grugq 2004 - The Design and Implementation of ul_exec 
+  http://www.hcunix.net/papers/grugq_ul_exec.txt
+- 7a69 - Ghost In The System Project
+  http://www.7a69ezine.org/gits
+- Silvio - Elf executable reconstruction from a core image
+  http://www.uebi.net/silvio/core-reconstruction.txt
+- Mayhem - Some shoots related to linux reversing.
+  http://www.devhell.org/
+- ilo-- - Process dumping for binary reconstruction: pd 
+  http://www.reversing.org/
+ 
+ 
+  
+--[ 11 - Source Code
+  This is  not the  last version  of PD.   For further  information about
+  this project please refer to http://www.reversing.org
+  
+|=[ EOF ]=---------------------------------------------------------------=|

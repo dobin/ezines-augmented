@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Three, Issue 25, File 11 of 11",
+  "title": "Phrack World News",
+  "authors": "Knight Lightning",
+  "date": "March 29, 1989",
+  "historical_context": "This article reflects the ongoing tensions between telecommunications companies and bulletin board operators during the late 1980s, a period marked by the rise of online communities and the early internet.",
+  "target_audience": "Hackers, bulletin board operators, telecommunications enthusiasts, and security professionals.",
+  "short_summary": "The article discusses the conflict between Southwestern Bell and bulletin board operators in Oklahoma City, where the company attempts to impose higher charges on BBS lines, claiming they are akin to business lines. The BBS community rallies against this move, highlighting issues of free access and corporate greed.",
+  "summary": "In March 1989, a significant conflict arose between Southwestern Bell Telephone Company and bulletin board operators in Oklahoma City, as the company sought to impose higher charges on phone lines used for BBS operations. Southwestern Bell argued that running a bulletin board constituted a business, thus justifying increased rates. However, many sysops (system operators) countered that most BBSs operate on a non-profit basis, primarily serving the community rather than generating income. The situation escalated as Southwestern Bell employed war-dialing tactics to identify BBS numbers, leading to the shutdown of several boards. In response, the BBS community organized protests, threatening to disconnect secondary lines if the rates were raised, which put pressure on the company to reconsider its position. The article captures the essence of the struggle for free access to information and the fight against corporate overreach in the telecommunications sector during the early days of online communication.",
+  "additional_notes": "This article serves as a historical snapshot of the early internet culture and the challenges faced by online communities in their fight for equitable access to telecommunications services."
+}

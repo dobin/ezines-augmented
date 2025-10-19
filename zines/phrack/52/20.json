@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 52, article 20 of 20",
+  "title": "Phrack Magazine Extraction Utility",
+  "authors": "Phrack Staff",
+  "date": "January 26, 1998",
+  "historical_context": "This article is part of the Phrack Magazine, a well-known hacking zine that has been influential in hacker culture since its inception. The extraction utility discussed allows users to extract source code from Phrack articles, showcasing the blend of technical knowledge and hacker ethos prevalent in the community.",
+  "target_audience": "Hackers, security professionals, and developers interested in code extraction techniques.",
+  "short_summary": "The article introduces a set of extraction utilities written in C, AWK, and shell script, designed to extract text files from specially tagged flatfiles into a hierarchical directory structure. This utility is particularly useful for extracting source code from Phrack articles.",
+  "summary": "The 'Phrack Magazine Extraction Utility' article presents a collection of scripts that facilitate the extraction of source code from Phrack articles. The primary utility, written in C, has been enhanced to accept file name globs, allowing for more flexible input. The utility identifies specially tagged sections within flatfiles, extracting the content into a structured directory format. This is particularly useful for readers who wish to compile and utilize the source code shared in Phrack articles, reflecting the zine's commitment to sharing knowledge within the hacker community.\n\nIn addition to the C version, the article includes extraction scripts written in AWK and shell script, demonstrating the versatility of the extraction process across different programming environments. Each script is designed to handle the extraction process in a slightly different manner, showcasing the creativity and technical prowess of the contributors. The article serves as a practical guide for those looking to engage with the content of Phrack in a more hands-on way, embodying the spirit of collaboration and knowledge sharing that is central to hacker culture."
+}

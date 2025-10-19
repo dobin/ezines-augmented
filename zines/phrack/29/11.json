@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 29, File #11 of 12",
+  "title": "Phrack World News",
+  "authors": "Knight Lightning",
+  "date": "November 17, 1989",
+  "historical_context": "This article provides a snapshot of computer security issues and hacker culture in late 1989, highlighting the emergence of computer worms and the ethical dilemmas surrounding anti-virus software.",
+  "target_audience": "Hackers, security professionals, computer enthusiasts",
+  "short_summary": "This issue of Phrack World News discusses various incidents involving computer worms, including the WANK worm on the SPAN network and a rogue program that attacked NASA's network. It also covers the ethical debates surrounding the creation of anti-virus programs.",
+  "summary": "In this edition of Phrack World News, Knight Lightning covers significant events in the realm of computer security, particularly focusing on the emergence of malicious software. The WANK worm, which targeted DEC VMS systems, exploited poor password management and left serious security vulnerabilities in its wake. The article emphasizes the worm's propagation method via DECnet protocols and the potential for future attacks on similar networks. Security experts warn of the need for robust password policies and thorough system checks to mitigate risks posed by such threats.\n\nAdditionally, the article highlights a rogue program that infiltrated NASA's network, causing officials to sever connections with sensitive military systems. This program, designed to spread itself and display misleading messages, underscores the vulnerabilities present in widely accessible networks. The discussion extends to the ethical implications of creating anti-virus software, with experts cautioning against the potential for such programs to cause more harm than good. The piece serves as a crucial reminder of the ongoing battle between malicious actors and those seeking to protect computer systems."
+}

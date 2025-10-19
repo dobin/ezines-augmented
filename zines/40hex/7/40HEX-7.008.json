@@ -1,0 +1,14 @@
+{
+  "articles": [
+    {
+      "reference": "Volume 2, Issue 3, Phile #3 of 3",
+      "title": "A Stooge's View",
+      "authors": "Yacco",
+      "date": "June 1992",
+      "historical_context": "This article reflects the cultural tensions between virus creators and antivirus advocates during the early 90s, particularly in the wake of the Michaelangelo virus scare.",
+      "target_audience": "Hackers, virus writers, security professionals, cultural critics",
+      "short_summary": "The article critiques the motivations behind virus creation, contrasting the perspectives of virus writers and antivirus advocates, particularly in the context of the Michaelangelo virus.",
+      "summary": "In this provocative piece extracted from 'Gui Guts' in June 1992, Yacco discusses the aftermath of the Michaelangelo virus scare, questioning the motivations of virus writers. He likens their actions to a form of electronic rape, suggesting that the intent is to control and terrorize users rather than engage in intellectual challenges. Yacco's commentary reflects a broader cultural conflict, as he criticizes the antivirus community for exploiting the fear surrounding viruses for profit. The article captures the tension between those who create viruses and those who seek to protect against them, highlighting the complexities of hacker culture."
+    }
+  ]
+}

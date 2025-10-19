@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 32, File #3 of 12",
+  "title": "Concerning Hackers Who Break into Computer Systems",
+  "authors": "Dorothy E. Denning",
+  "date": "1990",
+  "historical_context": "This article was written during a time when hacking was increasingly viewed as a criminal activity, and public perception was heavily influenced by media portrayals of hackers as dangerous criminals.",
+  "target_audience": "Security professionals, hackers, and those interested in the ethics of hacking.",
+  "short_summary": "Dorothy E. Denning explores the motivations and ethics of hackers, arguing that they are often misunderstood as malicious when many are simply learners and explorers. The article discusses the hacker ethic of information sharing and the conflicts between privacy, security, and freedom of information.",
+  "summary": "In 'Concerning Hackers Who Break into Computer Systems,' Dorothy E. Denning presents a nuanced view of hackers, challenging the prevailing narrative that paints them as unethical and dangerous. Through interviews and research, she reveals that many hackers are motivated by curiosity and a desire to learn, rather than malicious intent. Denning categorizes hackers' concerns into five domains, including access to information for learning, the thrill of challenge, ethics, public image, and privacy rights. She emphasizes the importance of understanding hackers' perspectives to create effective security policies and suggests that collaboration between hackers and security professionals could lead to better outcomes for both parties.\n\nDenning argues that the hacker ethic, which promotes the free sharing of information, is at odds with traditional security practices that prioritize ownership and control. She highlights the need for a dialogue between hackers and system managers, advocating for a shift in perception that views hackers as potential allies rather than adversaries. The article concludes with a call for a reevaluation of how society approaches information sharing, privacy, and security, suggesting that the conflicts surrounding these issues reflect deeper societal tensions in the information age."
+}

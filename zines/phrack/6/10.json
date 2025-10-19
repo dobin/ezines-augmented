@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Six, Phile 10 of 13",
+  "title": "Phrack World News - Issue Five/Part 2",
+  "authors": "Knight Lightning",
+  "date": "May 12, 1986",
+  "historical_context": "This article discusses the infamous Captain Midnight incident, where a satellite transmission was hijacked to protest cable fees, highlighting early instances of hacking and media disruption.",
+  "target_audience": "Hackers, security professionals, media analysts, and those interested in the history of hacking culture.",
+  "short_summary": "The article covers the daring actions of Captain Midnight, who interrupted an HBO broadcast to protest new fees for satellite dish owners. This incident sparked a significant discussion about satellite signal security and the rights of consumers.",
+  "summary": "The aftermath of Captain Midnight's stunt led to an extensive investigation by federal authorities, who believed the perpetrator was located in North Texas. The article details the efforts of the FBI and FCC to track down the prankster, emphasizing the serious implications of such actions on satellite communications. HBO executives expressed concern over the potential for similar disruptions to sensitive data transmissions, highlighting the broader risks associated with satellite technology. The incident served as a wake-up call for the industry, revealing that unauthorized access to satellite signals was not only possible but could have far-reaching consequences. As the investigation unfolded, it became clear that Captain Midnight's actions had sparked a significant debate about consumer rights and the future of satellite broadcasting."
+}

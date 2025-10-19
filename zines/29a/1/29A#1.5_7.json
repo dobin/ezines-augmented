@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "AntiCARO",
+  "authors": "Mister Sandman/29A",
+  "date": "",
+  "historical_context": "This article reflects the hacker culture of the early 1990s, particularly the disdain for antivirus companies and their practices. The author creates a virus as a form of protest against CARO, a virus naming organization.",
+  "target_audience": "Hackers, virus developers, security researchers.",
+  "short_summary": "In 'AntiCARO', Mister Sandman creates a virus to protest against CARO's naming conventions for viruses, particularly targeting the misnaming of VLAD's Bizatch. The article details the virus's functionality and its method of modifying antivirus software.",
+  "summary": "Mister Sandman's 'AntiCARO' is a provocative piece that showcases the author's discontent with the CARO organization, particularly its leader Vesselin Bonchev, whom he accuses of misusing his authority in naming viruses. The article describes the creation of a simple TSR COM virus that modifies the AVP antivirus software to misidentify a specific virus, Bizatch, as 'Bizatch_:P'. This act of defiance is not just a technical endeavor but a statement against what Sandman perceives as the arbitrary and authoritarian practices of CARO in the virus naming domain.\n\nThe virus itself is described as a basic file infector that operates by searching for the AVP.SET file in the current directory. If found, it inserts a new viral database that allows the AVP software to detect Bizatch under a different name. The article includes technical details about the virus's assembly code, its infection routines, and how it manipulates the antivirus software's detection capabilities. Sandman's work serves as a historical artifact reflecting the hacker ethos of the time, where creating and sharing such viruses was seen as a form of rebellion against perceived injustices in the tech community."
+}

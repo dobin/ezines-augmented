@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Thread Local Storage: The hidden entry point",
+  "authors": "roy g biv / 29A",
+  "date": "June 2004",
+  "historical_context": "This article discusses the innovative use of Thread Local Storage (TLS) in malware development, showcasing techniques that were novel at the time of writing.",
+  "target_audience": "Malware developers, security researchers, and those interested in advanced virus techniques.",
+  "short_summary": "The article explores the concept of Thread Local Storage (TLS) and its application in creating stealthy malware. It details how TLS can be leveraged to execute code before the main entry point of an application, providing a unique method for virus replication and evasion.",
+  "summary": "In this article, the author delves into the intricacies of Thread Local Storage (TLS), a feature introduced by Microsoft for managing thread-specific data. The author explains how TLS allows for the execution of callback functions before the main execution of an application begins, presenting a novel opportunity for malware to operate undetected. By manipulating the TLS directory and callback pointers, malware authors can create viruses that execute at critical points during process and thread initialization, thus evading traditional detection methods employed by antivirus software.\n\nThe author provides a detailed technical breakdown of the TLS structure within the PE header, including how to access and modify TLS fields to insert malicious code. Techniques such as hijacking the TLS template and altering callback pointers are discussed, emphasizing the potential for creating sophisticated viruses that can execute in memory without standard allocation calls. The article concludes with an encouragement for readers to experiment with the provided techniques, highlighting the creative possibilities in malware development using TLS."
+}

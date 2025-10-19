@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 5, Phile #5 of 11",
+  "title": "Virus Spotlite on: 4096",
+  "authors": "Dark Angel",
+  "date": "January, 1990",
+  "historical_context": "The 4096 virus, also known as FroDo, was one of the first stealth viruses discovered, marking a significant point in the evolution of computer malware.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of computer history.",
+  "short_summary": "This article provides a detailed analysis of the 4096 virus, its infection methods, symptoms, and the challenges it poses for detection and removal. It includes technical instructions for replicating the virus and insights into its stealth capabilities.",
+  "summary": "The 4096 virus, discovered in January 1990, is a parasitic resident virus that infects .COM and .EXE files, increasing their size by 4096 bytes without detection. Its stealth capabilities allow it to hide its presence in system memory, making it nearly invisible to users and many antivirus programs. The article outlines the virus's behavior, including its method of infecting files and the slow corruption it causes to data files through cross-linking. Notably, the virus manipulates the File Allocation Tables (FATs) to obscure its activity, leading to potential data loss and system instability.\n\nThe author provides practical instructions for creating a working copy of the virus using the DEBUG command, showcasing the technical intricacies involved in its operation. Additionally, the article discusses various variants of the 4096 virus, each with modifications to avoid detection. The 4096 virus serves as a historical example of early malware, highlighting the ongoing challenges in computer security and the need for effective detection and removal strategies."
+}

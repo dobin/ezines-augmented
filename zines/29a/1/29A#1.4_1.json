@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virus Index",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article provides a comprehensive overview of various computer viruses that were prevalent during the early 1990s, showcasing the evolution of malware and the techniques used by virus authors.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in the history of computer viruses.",
+  "short_summary": "The Virus Index details various computer viruses, their behaviors, and infection methods. It highlights the stealth capabilities, polymorphism, and unique features of each virus, providing insights into the malware landscape of the early 1990s.",
+  "summary": "The Virus Index serves as a catalog of notable computer viruses, detailing their origins, objectives, and behaviors. Each entry describes the virus's infection methods, including how they hook into system interrupts and their stealth capabilities. For instance, the 'Mister Sandman' virus is noted for its full stealth and highly polymorphic nature, while 'V.6000' demonstrates multipartite infection techniques that allow it to remain memory resident and manipulate CMOS settings. The article also discusses various innovative infection strategies, such as the 'Internal Overlay' method that bypasses traditional security checks by not modifying file headers.\n\nThe article is a valuable resource for understanding the technical intricacies of early malware, illustrating how virus authors employed clever tactics to evade detection and maximize their impact. It reflects the hacker culture of the time, where creativity in coding and a deep understanding of system internals were essential for both creating and combating malware. This index not only serves as a historical document but also provides insights that remain relevant for modern security professionals studying the evolution of malware and its ongoing implications in cybersecurity."
+}

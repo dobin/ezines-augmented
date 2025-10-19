@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Polymorphism",
+  "authors": "Anbal Lecter",
+  "date": "",
+  "historical_context": "This article discusses polymorphic routines in the context of virus development, reflecting the early 1990s hacker culture's focus on evading detection by antivirus software.",
+  "target_audience": "Hackers, malware developers, security researchers.",
+  "short_summary": "The article introduces polymorphic routines, focusing on how to design and construct them to evade virus detection. It covers various methods of mutation and provides examples of implementation.",
+  "summary": "In 'Polymorphism', Anbal Lecter delves into the advanced topic of polymorphic routines, aimed at those with a solid understanding of encryption and virus development. The article outlines the concept of Polymorphic Encryption Routines (PERs), which are designed to obscure the detection of viruses by maintaining a stable core while varying their external appearance. Lecter categorizes the methods of achieving polymorphism into four main approaches: lexical, syntactical, morphological, and a combination of these techniques. Each method is explained with examples, emphasizing the importance of varying the code to avoid detection by antivirus systems that rely on static byte patterns.\n\nThe article further explores the practical aspects of implementing these techniques, using a decryption routine from a known virus as a case study. Lecter illustrates how to manipulate the structure of code to create variations that maintain functionality while complicating detection efforts. He also introduces the concept of grammar in programming, using Conway notation to explain how different expressions can convey the same meaning, paralleling the idea of polymorphism in code. This piece serves as both a technical guide and a philosophical exploration of the hacker mindset, encouraging readers to think creatively about code mutation and evasion strategies."
+}

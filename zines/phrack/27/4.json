@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 27, File 4 of 12",
+  "title": "NUA-List For Datex-P And X.25 Networks",
+  "authors": "Oberdaemon",
+  "date": "April 9, 1989",
+  "historical_context": "This article was published during the early days of networking and telecommunications, when X.25 networks were widely used for data communication. It provides insights into the structure and usage of Network User Addresses (NUAs) in these networks.",
+  "target_audience": "Network engineers, telecommunications professionals, hackers interested in legacy systems, and security researchers.",
+  "short_summary": "The article presents a comprehensive list of Network User Addresses (NUAs) for Datex-P and X.25 networks, detailing their formats and usage. It serves as a reference for connecting to various services across different countries.",
+  "summary": "In this article, Oberdaemon provides an extensive list of Network User Addresses (NUAs) used in Datex-P and X.25 networks, which were prevalent in the late 1980s. The NUA format consists of a country prefix, followed by a series of digits that specify the network and service. The author includes a key to indicate the status of each NUA, such as whether it is successfully connected, out of order, or illegal. This information is crucial for network engineers and hackers who wish to connect to various services across different countries, as it provides a roadmap for navigating the complex landscape of international telecommunications.\n\nThe article also emphasizes the importance of understanding the syntax and structure of NUAs, as incorrect formatting can lead to connection failures. By compiling this list, Oberdaemon not only aids in practical connectivity but also preserves a snapshot of the telecommunications landscape of the time, highlighting the evolution of network addressing and the ongoing relevance of legacy systems in today's digital world."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Nine, Phile #3 of 10",
+  "title": "Fun With the Centagram VMS Network",
+  "authors": "Oryan Quest",
+  "date": "10/13/86",
+  "historical_context": "This article was written during the early days of hacking culture, when VMS (Virtual Memory System) networks were prevalent and security measures were minimal. It reflects the mindset and techniques of hackers in the mid-1980s.",
+  "target_audience": "Hackers, phreakers, and individuals interested in early network security vulnerabilities.",
+  "short_summary": "The article outlines methods to exploit vulnerabilities in Centagram VMS networks, including how to find idle systems, hack passcodes, and gain superuser access. It provides a step-by-step guide to manipulating the system for unauthorized access.",
+  "summary": "In 'Fun With the Centagram VMS Network', Oryan Quest provides a detailed exploration of how to exploit Centagram VMS networks, which were common in the 1980s. The article begins by instructing readers on how to identify idle VMS systems by recognizing specific synthesized voice messages. Once an idle system is located, the author describes how to gain access by entering common default passcodes, emphasizing the simplicity of the process. The tone is casual and irreverent, reflecting the hacker culture of the time, with a clear warning about the potential consequences of misuse.\n\nThe article progresses to more advanced techniques, such as hopping between mailboxes and ultimately achieving superuser status. Quest shares insights on how to navigate the system to read messages and take control of other users' mailboxes. He also hints at the ease with which one can manipulate the system, noting that many users employed weak passcodes. This piece serves as both a tutorial and a commentary on the lax security practices of the era, making it a fascinating read for those interested in the evolution of hacking and network security."
+}

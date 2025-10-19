@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #12 of 19",
+  "title": "Building Into The Linux Network Layer",
+  "authors": "kossak <kossak@hackers-pt.org>, lifeline <arai@hackers-pt.org>",
+  "date": "09.09.99",
+  "historical_context": "This article discusses the use of loadable kernel modules in Linux, particularly in the context of networking, during a time when Linux was gaining popularity as a server operating system.",
+  "target_audience": "Hackers, security researchers, Linux developers, and network engineers.",
+  "short_summary": "The article explores the use of loadable kernel modules (LKMs) in the Linux networking layer, demonstrating how to create custom packet handlers for various purposes, including evading intrusion detection systems (IDS) and implementing a kernel-based packet sniffer.",
+  "summary": "In 'Building Into The Linux Network Layer', the authors delve into the architecture of the Linux kernel, particularly focusing on the networking stack and the use of loadable kernel modules (LKMs). They explain how LKMs allow for dynamic addition of functionality without the need to rebuild the kernel, which is crucial for adapting to new hardware and protocols. The article provides a detailed overview of socket kernel buffers (sk_buff) and how they facilitate communication between different protocol layers. \n\nThe authors present several practical examples, including an 'Obscure Transport Protocol' (OTP) that modifies TCP packet flags to evade detection by firewalls and IDS, a kernel-level packet bouncer that redirects packets based on predefined rules, and a kernel-based sniffer that logs network traffic. Each example is accompanied by code snippets and explanations, showcasing the potential for both legitimate and malicious uses of kernel modules. The article concludes with a discussion on securing the kernel against unauthorized module loading, emphasizing the importance of maintaining kernel integrity in a security-conscious environment."
+}

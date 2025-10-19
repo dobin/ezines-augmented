@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-Three, File 8 of 13",
+  "title": "A TCP/IP Tutorial : Behind The Internet Part One of Two",
+  "authors": "The Not",
+  "date": "September 12, 1991",
+  "historical_context": "This article was written during the early days of the Internet, when TCP/IP was becoming the standard for networking. It provides foundational knowledge that is still relevant for understanding modern networking.",
+  "target_audience": "Network professionals, systems administrators, and anyone interested in the fundamentals of TCP/IP technology.",
+  "short_summary": "This tutorial offers a concise overview of TCP/IP technology, focusing on its basic structure, terminology, and the flow of data through the protocol stack. It serves as an essential guide for professionals working in TCP/IP environments.",
+  "summary": "In this article, 'A TCP/IP Tutorial: Behind The Internet', the author presents a streamlined introduction to TCP/IP technology, aimed at professionals who need to grasp the essentials without delving into excessive detail. The tutorial outlines the basic structure of TCP/IP, emphasizing the layered protocols and their interactions, which include TCP, UDP, IP, ARP, and Ethernet. It highlights the importance of understanding how data flows through these layers, using clear diagrams to illustrate the concepts. The author notes that while the tutorial uses UNIX examples, the principles apply universally across TCP/IP implementations.\n\nThe article further explains critical concepts such as multiplexing and de-multiplexing in data transmission, the role of the IP module in creating a logical network from multiple physical networks, and the significance of ARP in translating IP addresses to Ethernet addresses. By providing a foundational understanding of these components, the tutorial equips readers with the knowledge necessary to navigate and manage TCP/IP environments effectively. This resource remains relevant today, as the principles of TCP/IP continue to underpin modern networking."
+}

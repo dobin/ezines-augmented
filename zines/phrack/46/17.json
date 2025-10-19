@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Six, File 17 of 28",
+  "title": "GETTiN' D0wN 'N D1RTy wiT Da GS/1",
+  "authors": "[)elam0 Labz, Inc. and ChURcH oF ThE Non-CoNForMisT]",
+  "date": "1994",
+  "historical_context": "This article reflects the hacking culture of the early 1990s, focusing on exploiting network systems like the GS/1, which were prevalent at the time.",
+  "target_audience": "Hackers, security researchers, and enthusiasts of vintage computing.",
+  "short_summary": "This article provides a detailed guide on hacking a GS/1 server, covering identification, privilege escalation, and accessing sensitive files. It includes technical commands and methods relevant to the era's network systems.",
+  "summary": "In this article, the authors delve into the intricacies of hacking a GS/1 server, a type of network server used in the early 1990s. The piece begins by explaining how to identify a GS/1 and the rationale behind targeting such systems. It then outlines a series of steps for gaining access, starting from finding the server to escalating privileges to global access. The authors emphasize the importance of understanding the command structure and the potential for accessing various network resources for free. They provide practical examples of commands and the expected outputs, making it a hands-on guide for aspiring hackers of the time.\n\nThe article also discusses the underlying operating system, Xenix, and how to navigate its directory structure to retrieve sensitive files, including the password file. The authors share techniques for converting I-numbers to ASCII, showcasing their technical prowess and the creative problem-solving required in hacking. They conclude with a brief mention of other avenues for exploration within the network, hinting at the vast potential for further exploits. Overall, this piece serves as both a technical manual and a cultural artifact from the hacker community of the 1990s."
+}

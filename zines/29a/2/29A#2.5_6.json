@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "WordMacro.CAP",
+  "authors": "Jacky Qwerty/29A",
+  "date": "December 1996",
+  "historical_context": "The article discusses the CAP macro virus, which gained notoriety in the late 1990s for its ability to create variants and infect multiple platforms. It reflects the hacker culture's response to political corruption in Venezuela.",
+  "target_audience": "Hackers, security researchers, and malware analysts.",
+  "short_summary": "This article presents the source code for the CAP macro virus, detailing its features and capabilities. It highlights the virus's ability to infect various Word formats and its stealth mechanisms, while also providing a critique of the political figure it is named after.",
+  "summary": "In 'WordMacro.CAP', Jacky Qwerty introduces the CAP macro virus, which has been recognized as one of the most prevalent viruses of its time. The article provides the full source code of the virus, emphasizing its unique features such as compatibility across different Word platforms, stealth capabilities, and the ability to generate variants autonomously. The author notes that the virus does not have a destructive payload, instead serving as a statement against political corruption in Venezuela, specifically targeting Carlos Andrés Pérez, a controversial figure in the country's history. The article encourages readers to refer to previous works for a deeper understanding of macro virus techniques, while also providing a detailed overview of the virus's operational mechanics and its implications in the realm of digital security.",
+  "additional_notes": "The article serves as both a technical guide and a socio-political commentary, reflecting the intersection of technology and activism within hacker culture."
+}

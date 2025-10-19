@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Next Step",
+  "authors": "Quantum / VLAD",
+  "date": "",
+  "historical_context": "This article reflects the early days of Windows 95 security vulnerabilities and the exploration of virus development techniques. It showcases the mindset of hackers during the 1990s, particularly in relation to operating system weaknesses.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "Quantum / VLAD presents a Windows 95 virus that improves upon previous designs by utilizing heap allocation for stability. The article discusses the technical aspects of the virus, including its ability to manipulate system calls and the implications of such vulnerabilities in Windows operating systems.",
+  "summary": "In 'Next Step', Quantum / VLAD details the creation of a Windows 95 PE infector virus, building on concepts from a previous work titled 'Fuck Harry'. The author emphasizes improvements made in stability by leveraging the heap allocation function of IFSMgr, contrasting it with earlier methods that used zero space in the VMM device driver. The article highlights the surprising vulnerabilities in Windows 95, particularly the ability for a ring-3 application to write to ring-0 VXD space, which raises significant security concerns. The author expresses skepticism about the competence of Microsoft in addressing these issues, particularly as they may carry over into Windows NT.\n\nThe technical depth of the article is notable, as it delves into the assembly code of the virus, explaining how it hooks system calls like Get_System_Time to execute its payload. The virus is designed to infect executable files by modifying their headers and increasing their size, demonstrating a sophisticated understanding of the PE file format. Quantum / VLAD's work serves as a historical artifact, illustrating the hacker culture's exploration of operating system vulnerabilities and the ongoing battle between security and exploitation."
+}

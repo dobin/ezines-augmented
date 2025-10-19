@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Eleven, Phile #3 of 12",
+  "title": "PACT: Prefix Access Code Translator",
+  "authors": "The Executioner",
+  "date": "",
+  "historical_context": "This article is part of the early exploration of telecommunication systems and their vulnerabilities, particularly in the context of phreaking.",
+  "target_audience": "Hackers, phreakers, telecommunications professionals",
+  "short_summary": "The article introduces the PACT feature, which translates access codes used in telecommunication systems. It explains how these codes function and their significance in enabling communication with central offices.",
+  "summary": "The PACT (Prefix Access Code Translator) is a crucial feature in telecommunication systems that allows users to access various services by dialing specific prefix codes followed by a two-digit access code. This article outlines the operational mechanics of PACT, detailing how it interprets these codes to execute specific actions, such as call forwarding or speed dialing. The PACT system is designed to enhance user interaction with telecommunication services, providing a structured way to access features that would otherwise be cumbersome to navigate. \n\nThe article further elaborates on the structure of the PACT, including the head table and subtranslator, which work together to process the dialed codes. It highlights the importance of PACT in facilitating Local Area Signalling Services (LASS) and emphasizes that without it, communication with the central office would be severely limited. This foundational understanding of access codes and their functions is essential for anyone interested in the intricacies of telecommunication systems and the art of phreaking."
+}

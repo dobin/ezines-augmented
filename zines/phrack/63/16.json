@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x10 of 0x14",
+  "title": "Reverse engineering - PowerPC Cracking on OSX with GDB",
+  "authors": "curious",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early 2000s era of software cracking and reverse engineering, particularly focusing on OSX applications and PowerPC architecture.",
+  "target_audience": "Hackers, reverse engineers, security researchers, and those interested in software cracking techniques.",
+  "short_summary": "This article serves as a tutorial for reverse engineering OSX applications using GDB, specifically targeting a shareware program. It covers the process of analyzing the program's behavior, identifying key functions, and ultimately crafting a patch to bypass trial limitations.",
+  "summary": "In this detailed guide, the author 'curious' walks readers through the process of reverse engineering a shareware application on OSX using GDB. The article begins with an introduction to the necessary tools and knowledge, including PowerPC assembly language and the Cocoa framework. The author emphasizes the importance of hands-on experimentation, encouraging readers to apply the techniques discussed rather than merely following instructions. The target application, a shareware client for SFTP and FTP, is analyzed step-by-step, revealing how to manipulate its behavior to bypass trial restrictions. Key functions are identified, and the author provides a thorough disassembly of the relevant code, explaining the assembly instructions and their implications for the software's functionality.\n\nThe article culminates in a proposed method for patching the application, allowing users to reset the trial period by manipulating internal date variables. The author also discusses the challenges of modifying Mach-O binaries, including memory protection and the limitations of GDB in writing changes to executable files. This comprehensive exploration not only serves as a practical guide for aspiring reverse engineers but also highlights the broader implications of software exploration and the legal challenges faced by researchers in the field."
+}

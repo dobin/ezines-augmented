@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win95.Z0MBiE",
+  "authors": "Z0MBiE, Igor Daniloff",
+  "date": "1997",
+  "historical_context": "This article discusses one of the early encrypted viruses targeting Windows 95, showcasing the evolution of malware during a time when personal computing was becoming mainstream.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "Win95.Z0MBiE is an encrypted virus that infects Portable Executable (PE) files on Windows 95 systems. It employs a sophisticated method for locating and infecting files, demonstrating early techniques in malware development.",
+  "summary": "The article introduces Win95.Z0MBiE, an encrypted runtime PE infector created by the Russian virus writer Z0MBiE. This virus operates by decrypting its body upon execution, locating the KERNEL32.DLL, and utilizing its export table to find necessary API functions for file infection. The virus scans the Windows directory and other drives for executable files, and if a suitable target is found, it appends a new section (.Z0MBiE) to the PE header, effectively infecting the file. Additionally, it creates a dropper file named ZSetUp.EXE in the root directory, which contains another virus, Z0MBiE.1922, showcasing a multi-layered approach to infection and persistence in the system.\n\nThe technical details provided in the article include the assembly code for the virus, illustrating the methods used for file infection, such as manipulating the PE header and utilizing system calls for file operations. The author emphasizes the non-destructive nature of the virus, which does not harm the host files but instead replicates itself. This article serves as a historical reference for understanding the complexities of early malware and the techniques that would evolve in the cybersecurity landscape."
+}

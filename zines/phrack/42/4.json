@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Four, Issue Forty-Two, File 4 of 14",
+  "title": "Prelude to a Kiss",
+  "authors": "Chris Goggans",
+  "date": "January 13, 1992",
+  "historical_context": "This article reflects the tensions between mainstream security publications and the hacker community in the early 1990s, highlighting the challenges of discussing security vulnerabilities openly.",
+  "target_audience": "Hackers, security professionals, and those interested in the history of computer security.",
+  "short_summary": "The article discusses the author's experience with an unpublished piece on packet-switched network security, which faced scrutiny from an editorial board due to its hacker perspective. It outlines the importance of proper configuration in network security and shares insights on vulnerabilities in major networks like Sprintnet and BT-Tymnet.",
+  "summary": "In 'Prelude to a Kiss', Chris Goggans recounts his experience with an article he wrote for ISPNews that was subjected to intense scrutiny due to his hacker background. The article, which focused on packet-switched network security, was deemed too controversial for publication, leading to a series of reactions from various members of an editorial advisory board. Goggans highlights the irony of being labeled both a thief and a liar by a corporate security executive while asserting the importance of transparency in discussing security vulnerabilities. The article serves as a prelude to a series on packet-switched networks, emphasizing that security begins with proper configuration and detailing specific vulnerabilities in networks like Sprintnet and BT-Tymnet. Goggans provides practical advice on securing these networks, including restricting access and using non-obvious usernames, while also sharing cautionary tales from the hacker community about past exploits and security breaches.",
+  "additional_notes": "This article is significant for understanding the early hacker culture's relationship with mainstream security practices and the ongoing challenges of addressing security vulnerabilities in a corporate context."
+}

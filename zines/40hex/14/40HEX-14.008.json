@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #008 of 11",
+  "title": "Corporate Life",
+  "authors": "Stormbringer, Phalcon/Skism",
+  "date": "1995",
+  "historical_context": "This article reflects the hacker culture of the mid-1990s, particularly the fascination with computer viruses and the ethical dilemmas surrounding their creation and distribution.",
+  "target_audience": "Hackers, security researchers, and those interested in virus development.",
+  "short_summary": "The author discusses their experience with writing computer viruses, particularly a semi-polymorphic virus named 'Corporate Life'. They express regret over the impact of viruses on the public and provide insights into the technical aspects of virus creation.",
+  "summary": "In 'Corporate Life', Stormbringer candidly shares their journey into the world of virus creation, admitting to having written viruses while under the influence of alcohol. The author reflects on a specific incident where a user in Singapore was infected with their virus, leading to a moment of introspection about the ethical implications of such actions. Despite their decision to stop writing destructive viruses, Stormbringer maintains a fascination with the technical intricacies of virus development, emphasizing the importance of sharing knowledge rather than censoring it. The article includes a detailed look at the code of a semi-polymorphic virus, showcasing its features such as directory and memory stealth, and its method of infecting .EXE files using FCB calls. The author encourages readers to explore the code and understand the mechanics behind virus behavior, while also expressing a disdain for the corporate world that stifles creativity and individuality."
+}

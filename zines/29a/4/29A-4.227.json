@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Retrieving API's Addresses",
+  "authors": "LethalMind/29A",
+  "date": "",
+  "historical_context": "This article is part of the early hacking culture, focusing on virus development in a Win32 environment, a significant topic during the rise of personal computing and malware.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in low-level programming.",
+  "short_summary": "This tutorial provides a detailed guide on retrieving API addresses in a Win32 environment, focusing on methods that avoid hardcoding and enhance compatibility. It includes practical code snippets and explanations of the underlying concepts.",
+  "summary": "In 'Retrieving API's Addresses', LethalMind shares insights gained from personal experience in developing Win32 viruses. The article emphasizes the importance of retrieving API addresses dynamically rather than relying on hardcoded values, which can lead to compatibility issues. The author outlines a two-step process: first, obtaining the address of the Kernel in memory, and second, scanning the export table to locate the desired API addresses. This method is presented as both efficient and reliable, making it suitable for virus development. The author encourages feedback and discussion on alternative methods, fostering a collaborative learning environment within the hacking community.\n\nThe tutorial includes practical code snippets that illustrate the techniques discussed, such as scanning the stack for the Kernel address and utilizing checksums to identify API names without storing long strings. The approach is described as straightforward and powerful, appealing to those interested in low-level programming and malware development. By sharing this knowledge, LethalMind contributes to the hacker culture, emphasizing the importance of understanding system internals and the potential for creative problem-solving in programming."
+}

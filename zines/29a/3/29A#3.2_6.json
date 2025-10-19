@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "How to get the Windoze directory from a dos virus",
+  "authors": "Reptile/29A",
+  "date": "",
+  "historical_context": "This article reflects the early days of Windows and DOS virus development, showcasing techniques that were relevant during the rise of personal computing and malware.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in virus development and reverse engineering.",
+  "short_summary": "The article provides a method for extracting the Windows directory from a DOS virus using low-level system calls and manipulation of the MSDOS.SYS file. It includes sample code and alternative methods for achieving the same goal.",
+  "summary": "In this article, Reptile/29A outlines a straightforward approach to retrieve the Windows directory from a DOS virus, particularly useful in scenarios involving VxD droppers or cross-platform viruses. The author begins by examining the MSDOS.SYS file, which contains critical paths such as 'WinDir' and 'WinBootDir', and provides assembly code snippets that demonstrate how to access these values using DOS interrupts. The code is designed to read the necessary attributes and open the MSDOS.SYS file, ultimately extracting the Windows directory path for further use in malware development or analysis.\n\nAdditionally, the article discusses alternative techniques for obtaining the Windows directory, such as manipulating the Interrupt Descriptor Table (IDT) to gain ring0 access, which allows for deeper system-level interactions. The author also hints at other potential methods, including scanning kernel32 or utilizing the registry through the DOS stub of regedit.exe. This piece serves as a technical guide for those interested in the intricacies of DOS and Windows virus creation, providing valuable insights into the low-level operations of the operating system."
+}

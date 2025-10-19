@@ -1,0 +1,13 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #10 of 19",
+  "title": "Building Bastion Routers Using Cisco IOS",
+  "authors": "brett <beldridg@best.com> / variable k <variablek@home.com>",
+  "date": "09.09.99",
+  "historical_context": "This article was published during a time when network security was becoming increasingly critical, especially with the rise of internet usage and associated threats. Cisco routers were widely used in enterprise environments, making their security a significant concern.",
+  "target_audience": "Network security professionals, system administrators, and hackers interested in router security.",
+  "short_summary": "This article provides a comprehensive guide on securing Cisco routers by implementing a bastion router configuration. It covers methodologies for disabling unnecessary services, limiting access, and protecting against various attacks, making it a valuable resource for network security.",
+  "summary": "In 'Building Bastion Routers Using Cisco IOS', the authors delve into the critical task of securing Cisco routers, which are often high-value targets in network infrastructures. The article outlines a straightforward methodology that emphasizes disabling unused features and services, thereby minimizing potential attack vectors. Key steps include implementing password protection, limiting remote and local access, and configuring logging and SNMP settings to enhance security. The authors also discuss the importance of anti-spoofing measures and mitigating Denial of Service attacks, providing practical examples and configurations for IOS versions 11.2 and 11.3. The article serves as a practical guide for network administrators looking to bolster the security of their Cisco routers, ensuring that they are configured to withstand various threats while maintaining operational integrity.",
+  "appendix": {
+    "configuration_examples": "The article includes a complete router configuration in Appendix A, demonstrating the application of the discussed security measures."
+  }
+}

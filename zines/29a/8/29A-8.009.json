@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Things They Didn't Tell You About MS Link and the PE Header",
+  "authors": "lifewire",
+  "date": "7 July 2004",
+  "historical_context": "This article explores the intricacies of the Microsoft linker and the PE header, a topic of interest during the rise of Windows software development and reverse engineering.",
+  "target_audience": "Security researchers, software developers, reverse engineers, and hackers interested in executable file structures.",
+  "short_summary": "The article delves into the 'Rich' structure embedded in Microsoft executable files, detailing how compiler information is stored and the potential implications for software security and reverse engineering.",
+  "summary": "In this article, lifewire investigates the 'Rich' structure found in Microsoft executables, which contains information about the compilers used to create the files. This structure is located immediately after the DOS stub and is encrypted using checksums, raising questions about its purpose and efficiency. The author notes that while this information could be relevant in legal contexts, its practical utility is limited, as the stored compiler versions are common among many developers. The article provides a detailed breakdown of the structure's format, including how checksums are calculated and the significance of the hardcoded value '0x536e6144'.\n\nThe author concludes by suggesting that developers may want to remove or alter this information for privacy or security reasons. A simple tool can be created to zero out the 'Rich' structure, and the article encourages readers to explore the Microsoft Visual C++ Toolkit for further investigation. Lifewire acknowledges contributions from the hacking community, highlighting the collaborative nature of knowledge sharing in the field of reverse engineering and security research."
+}

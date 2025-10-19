@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x0a of 0x12",
+  "title": "Execution path analysis: finding kernel based rootkits",
+  "authors": "Jan K. Rutkowski <jkrutkowski@elka.pw.edu.pl>",
+  "date": "2002",
+  "historical_context": "This article discusses techniques for detecting kernel rootkits, particularly relevant during the early 2000s when Linux kernel vulnerabilities were increasingly exploited.",
+  "target_audience": "Security professionals, kernel developers, and hackers interested in rootkit detection and kernel security.",
+  "short_summary": "The article presents a method for detecting kernel rootkits by analyzing the execution path of system calls. It introduces a proof-of-concept tool called PatchFinder, which measures the number of instructions executed during system calls to identify anomalies indicative of rootkit presence.",
+  "summary": "In this article, Jan K. Rutkowski explores the challenges of detecting kernel rootkits, which often modify kernel structures to conceal their presence. The author introduces a novel technique that leverages execution path analysis, specifically counting the number of instructions executed during system calls, to detect anomalies that may indicate the presence of a rootkit. The focus is on the Linux kernel 2.4 running on Intel 32-bit processors, and the article includes a detailed explanation of how malicious code can alter kernel behavior without being detected by conventional methods.\n\nThe article culminates in the introduction of PatchFinder, a proof-of-concept tool that implements the described detection technique. PatchFinder consists of a kernel module that modifies the system call handler to count instructions and a userland program that performs tests to identify discrepancies in execution counts. The author emphasizes the importance of careful testing and the potential for false positives, while also discussing various methods that rootkits might employ to evade detection. Overall, this work provides valuable insights into kernel security and the ongoing battle against rootkit threats."
+}

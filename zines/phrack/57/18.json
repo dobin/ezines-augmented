@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x12 of 0x12",
+  "title": "Phrack Extraction Utility",
+  "authors": "Phrack Staff and sirsyko",
+  "date": "2000",
+  "short_summary": "The Phrack Extraction Utility is a tool designed to extract code from Phrack Magazine articles, preserving readability and structure. It uses specific tags to identify content for extraction and supports various platforms.",
+  "summary": "The Phrack Extraction Utility, first introduced in Phrack 50, serves as a practical tool for extracting embedded code from Phrack Magazine articles. The utility identifies sections of text marked with specific tags, namely '<++>' to begin extraction and '<-->' to end it. This allows users to easily retrieve source code while maintaining a clean ASCII format. The utility is designed to work seamlessly as long as the articles adhere to the expected tagging format, making it a reliable resource for developers and hackers interested in the code shared within the magazine.\n\nThe utility is implemented in C and includes a detailed explanation of its functionality, including how to compile and run it. It also provides examples of how to use the extraction tags effectively. Additionally, the article includes various scripts in different programming languages (Perl, AWK, Shell, Python, and Windows C) that achieve similar extraction goals, showcasing the versatility and community-driven nature of the hacking culture surrounding Phrack Magazine. This article remains relevant for those interested in the history of hacking tools and the evolution of code sharing practices."
+}

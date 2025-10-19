@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 1, Issue 2, Phile #6 of 11",
+  "title": "The 1260 Virus",
+  "authors": "Mark Washburn",
+  "date": "January, 1990",
+  "historical_context": "The 1260 virus is a notable example of early virus research, showcasing the evolution of malware and the challenges faced by antivirus technologies in the early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The 1260 virus is an encrypting virus that infects .COM files, increasing their size by 1,260 bytes. Developed as a research tool, it highlights the limitations of identification string scanners in antivirus software.",
+  "summary": "The 1260 virus, discovered in January 1990, is a parasitic encrypting virus that specifically targets .COM files. Unlike traditional viruses, it does not install itself in memory but is highly effective at infecting executable files. Each infected file grows by 1,260 bytes and is encrypted with a changing key, making it difficult for traditional antivirus software to detect. This virus serves as a modified derivative of the original Vienna Virus, showcasing the advancements in malware design during this period. Mark Washburn, the author, created this virus to illustrate the shortcomings of existing antivirus detection methods, particularly the reliance on static identification strings. The 1260 virus is a significant case study for understanding the evolution of malware and the ongoing cat-and-mouse game between virus creators and antivirus developers.",
+  "code_snippet": "e 0100  E9 1D 00 6E 66 65 63 74 65 64 20 50 72 6F 67 72"
+}

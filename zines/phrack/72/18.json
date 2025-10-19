@@ -1,0 +1,14 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Feed Is Ours: A Case for Custom Clients",
+  "authors": "tgr <tgr@tgrcode.com>",
+  "date": "2023",
+  "historical_context": "This article reflects on the evolution of the internet and the shift from decentralized information sharing to a more monetized and controlled environment, drawing parallels to Neal Stephenson's 'The Diamond Age'.",
+  "target_audience": "hackers, security researchers, game developers, and enthusiasts of custom software solutions.",
+  "short_summary": "The article discusses the decline of open access to online services and the rise of custom clients as a means to reclaim user control over data. It details the author's journey in creating a custom client for 'Super Mario Maker 2', highlighting the technical challenges and community impact.",
+  "summary": "In 'The Feed Is Ours: A Case for Custom Clients', tgr explores the troubling trend of increasing monetization and control over online platforms, particularly in the context of social media and gaming. The author reflects on the early days of the internet, where independent blogs and forums thrived, contrasting it with the current landscape dominated by corporate interests. The article serves as a rallying cry for hackers and developers to reclaim the internet through custom clients, which allow users to interact with services in ways that official clients do not permit. The author shares their experience developing a custom client for 'Super Mario Maker 2', detailing the technical hurdles faced, such as navigating Nintendo's authentication protocols and the challenges of scraping data from the game's servers. Through this journey, the author emphasizes the importance of community collaboration and the potential for custom clients to enhance user experience and preserve the spirit of open access in gaming.",
+  "meta": {
+    "id": "level",
+    "endian": "le"
+  }
+}

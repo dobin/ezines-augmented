@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Nutcracker",
+  "authors": "Lord Nutcracker",
+  "date": "1995-7",
+  "historical_context": "This article discusses a sophisticated virus creation method that was relevant during the rise of personal computing and the proliferation of malware in the mid-1990s.",
+  "target_audience": "Malware developers, security researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article outlines a complex method for creating a polymorphic virus that can infect various file types and evade detection by antivirus software. It details the virus's stealth techniques and its ability to encrypt directory entries on-the-fly.",
+  "summary": "In 'Nutcracker', Lord Nutcracker presents a detailed guide on creating a polymorphic virus capable of infecting various executable formats, including .exe, .com, .sys, and .bin files. The virus employs advanced techniques such as on-the-fly encryption of directory entries using BIOS interrupts, making it difficult to detect and remove. It features two attack modes: one targeting the Master Boot Record (MBR) and another that infects files across all drives. The article also discusses stealth mechanisms that allow the virus to remain undetected in memory and evade antivirus software by manipulating DOS kernel functions. This technical exploration serves as both a historical artifact and a cautionary tale about the evolving landscape of malware development."
+}

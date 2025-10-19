@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 4, Phile #1 of 1",
+  "title": "Whats New",
+  "authors": "Unknown",
+  "date": "December 1991",
+  "historical_context": "This article reflects the early 1990s hacker culture, particularly the rise of computer viruses and the community's response to them. It highlights the tension between virus collectors and responsible users.",
+  "target_audience": "Hackers, virus researchers, computer security enthusiasts",
+  "short_summary": "The article discusses the author's frustrations with virus collectors and shares anecdotes about the impact of viruses on systems, including a humorous story about a school that destroyed hard drives due to a virus outbreak.",
+  "summary": "In this candid piece, the author expresses disdain for individuals who hoard computer viruses without understanding their implications, labeling them as 'Micro-Wares Puppies.' The article critiques the behavior of these collectors, particularly in light of the Red Cross virus incident, where misinformation led to the spread of a non-genuine virus. The author emphasizes the importance of responsible virus handling and the need for users to educate themselves rather than simply accumulating malware for the sake of it.\n\nAdditionally, the author recounts a humorous yet tragic story about a school that, in an attempt to rid itself of persistent viruses, removed all hard drives only to have them turned into a statue by the art department. This anecdote serves as a cautionary tale about the consequences of panic-driven decisions in the face of computer security threats. The article also briefly mentions the release of SCAN 85, a virus scanning tool, and the incident involving Novell distributing infected software, underscoring the ongoing challenges in managing computer viruses during this era."
+}

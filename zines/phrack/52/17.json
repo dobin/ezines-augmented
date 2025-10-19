@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 8, Issue 52, Phile #17 of 20",
+  "title": "Protected mode programming and O/S development",
+  "authors": "Mythrandir <jwthomp@cu-online.com>",
+  "date": "January 26, 1998",
+  "short_summary": "This article outlines the initial steps in developing an operating system from scratch, focusing on protected mode programming and the creation of a minimal kernel. It serves as a guide for those interested in OS development, detailing the author's learning process and design goals.",
+  "summary": "In this article, Mythrandir shares his journey of developing an operating system from the ground up, emphasizing the importance of understanding protected mode programming. The author discusses the challenges faced while creating a minimal kernel, which serves as the foundation for future enhancements such as security and memory management subsystems. The article is structured to provide insights into the boot process, kernel initialization, and the setup of essential components like the Global Descriptor Table (GDT) and page tables, which are crucial for memory management and task switching.\n\nThe author also highlights the significance of documenting the development process, not only for personal clarity but also to inspire and educate others interested in operating system design. By sharing his experiences, including the tools and resources used, Mythrandir aims to foster a community of aspiring OS developers. This article is particularly relevant for those with a background in C and assembly language programming, as it delves into the technical intricacies of OS development, making it a valuable resource for both novice and experienced programmers."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Invisibility",
+  "authors": "yoda",
+  "date": "6th July 2k2",
+  "historical_context": "This article was written during a time when Windows operating systems were becoming increasingly popular, and the need for stealthy processes was a growing concern among hackers and security researchers.",
+  "target_audience": "Hackers, security professionals, and those interested in process manipulation techniques.",
+  "short_summary": "The article presents techniques to hide processes on Windows operating systems from task viewers like ProcDump and ProcessExplorer. It details methods for both Windows 9x and NT-based systems, focusing on API hooking and kernel-mode manipulation.",
+  "summary": "In 'Invisibility', author yoda explores methods to conceal processes on Windows systems from various task viewers. For Windows 9x, the technique involves hooking the Toolhelp32 APIs, specifically Process32First and Process32Next, to prevent the caller from seeing the target process. Additionally, the undocumented RegisterServiceProcess API is employed to remove the process from the CTRL+ALT+DEL task manager interface. This approach effectively tricks tools like ProcDump and ProcessExplorer, although some limitations remain with certain monitoring tools.\n\nFor NT-based systems, the article delves into more complex techniques involving kernel-mode drivers. The author describes how to hook the NtQuerySystemInformation API to manipulate the returned process information, effectively hiding the target process from user-level tools. The process involves modifying the ServiceDescriptorTable to redirect API calls to the hook routine. Furthermore, the article explains how to intercept calls to the EnumWindows API to prevent the target process from appearing in the Task Manager's window tab. Overall, yoda provides a comprehensive guide for those looking to implement stealth techniques on Windows systems, emphasizing the intricacies of API hooking and kernel manipulation."
+}

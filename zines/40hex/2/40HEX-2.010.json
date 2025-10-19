@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 2, Phile #1 of 11",
+  "title": "The 808 Virus",
+  "authors": "Smart Kids Into Sick Methods",
+  "date": "1991",
+  "historical_context": "This article is from the early 1990s, a time when computer viruses were becoming more prevalent and the hacker culture was exploring the implications of malware.",
+  "target_audience": "Hackers, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article presents the source code for the 808 Virus, a simple overwriting virus that can infect .COM files. It provides insights into the virus's structure and functionality, allowing readers to understand and modify it for educational purposes.",
+  "summary": "In 'The 808 Virus', the authors introduce a basic overwriting virus designed to infect .COM files. The article includes the complete assembly code for the virus, detailing its operations such as file encryption, infection routines, and directory scanning. The virus is structured to search for executable files and overwrite them, demonstrating fundamental techniques used in early malware development. The authors encourage readers to use the provided source code to create their own variations, reflecting the hacker ethos of experimentation and knowledge sharing prevalent in the community at the time.\n\nThe code itself is a straightforward implementation, showcasing how the virus utilizes DOS interrupts to interact with the file system and manipulate file attributes. It includes mechanisms for encryption to evade detection and a looping structure to ensure it continues to search for new targets. This article serves as both a historical artifact and a technical guide, illustrating the mindset of early virus creators and the technical challenges they faced in crafting malware."
+}

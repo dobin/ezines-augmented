@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Eight, File 7 of 15",
+  "title": "Users Guide to VAX/VMS Part III of III",
+  "authors": "Black Kat",
+  "date": "",
+  "historical_context": "This article is part of a comprehensive guide to the VAX/VMS operating system, which was widely used in the 1980s and 1990s, particularly in academic and research environments.",
+  "target_audience": "System administrators, security professionals, and enthusiasts of legacy systems.",
+  "short_summary": "This article provides a detailed reference for DCL commands and lexical functions used in the VAX/VMS operating system, essential for managing and scripting tasks within the environment.",
+  "summary": "The article is divided into two main parts: Part E, which covers the DCL (Digital Command Language) Command Reference, and Part F, which details the Lexical Function Reference. In Part E, various DCL commands are explained, such as ACCOUNTING, ALLOCATE, and BACKUP, each accompanied by qualifiers that enhance their functionality. This section serves as a practical guide for users to execute commands effectively, manage files, and utilize system utilities. The commands are crucial for system administration tasks, allowing users to manipulate files, manage processes, and control system resources efficiently.\n\nPart F introduces lexical functions that extend the capabilities of DCL, enabling users to perform complex string manipulations, time conversions, and system inquiries. Functions like F$CVSI and F$CFTIME allow for data extraction and formatting, which are vital for scripting and automation within the VAX/VMS environment. Overall, this article is an invaluable resource for anyone looking to deepen their understanding of VAX/VMS and enhance their command-line proficiency."
+}

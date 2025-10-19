@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 19, Phile #4 of 8",
+  "title": "Social Security Number Formatting",
+  "authors": "Shooting Shark",
+  "date": "21 June 88",
+  "historical_context": "This article was written during a time when computer-related fraud was becoming more prevalent, and the need for understanding Social Security Number (SSN) formatting was critical for those engaging in illicit activities.",
+  "target_audience": "Hackers, phreakers, and individuals interested in computer fraud techniques.",
+  "short_summary": "The article provides insights into creating legitimate-looking Social Security Numbers (SSNs) to evade detection by verification programs. It outlines specific formatting rules and examples for generating plausible SSNs.",
+  "summary": "In 'Social Security Number Formatting', Shooting Shark delves into the intricacies of crafting false Social Security Numbers (SSNs) that can bypass employer verification systems. The article begins with essential rules for constructing SSNs, emphasizing that the middle two digits can vary based on the issuance date. It highlights the significance of understanding the first digit's limitations and the rarity of certain number ranges, particularly those above 595. This knowledge is crucial for anyone attempting to create a believable SSN, especially in the context of fraudulent activities like payroll manipulation.\n\nThe author further elaborates on the geographical significance of the first three digits of an SSN, providing a detailed table that correlates specific number ranges with U.S. states. This information is particularly useful for those who need to ensure that the SSN aligns with a plausible place of issuance. By providing a concrete example, the article illustrates how to construct an SSN that appears legitimate, thereby equipping readers with the knowledge to navigate the complexities of SSN formatting for nefarious purposes. Overall, this piece serves as a guide for individuals looking to exploit vulnerabilities in verification systems through a detailed understanding of SSN structure."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x04 of 0x0e",
+  "title": "The advanced return-into-lib(c) exploits: PaX case study",
+  "authors": "Nergal <nergal@owl.openwall.com>",
+  "date": "May 2000",
+  "historical_context": "This article discusses advanced techniques for exploiting buffer overflows, particularly in the context of the PaX patch for the Linux kernel, which aimed to enhance security by making certain memory areas non-executable.",
+  "target_audience": "Security researchers, exploit developers, and those interested in advanced exploitation techniques.",
+  "short_summary": "The article presents advanced return-into-libc techniques for exploiting buffer overflows, focusing on methods to bypass the PaX security features. It discusses classical return-into-libc methods, chaining calls, and the use of the dynamic linker's dl-resolve() function to facilitate exploitation.",
+  "summary": "This article is divided into two main parts: the first part details advanced return-into-libc techniques, which are essential for exploiting vulnerabilities in applications that utilize non-executable stack protections. The author discusses classical methods and introduces innovative techniques such as 'esp lifting' and 'frame faking' to overcome limitations in traditional approaches. The second part focuses on the PaX security features, which introduce challenges for exploit developers due to address randomization and non-executable memory areas. The author presents a novel technique that leverages the dynamic linker's dl-resolve() function to dynamically resolve function addresses, allowing for successful exploitation even in the presence of these protections. The article is rich with technical details and sample code, making it a valuable resource for those looking to understand and navigate the complexities of modern exploitation techniques."
+}

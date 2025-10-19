@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "WM.CAP Virus Description",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1997",
+  "historical_context": "The article discusses the WM.CAP macro virus, which gained notoriety in the late 1990s as one of the most common macro viruses affecting Microsoft Word documents.",
+  "target_audience": "Hackers, security professionals, and those interested in virus development and macro viruses.",
+  "short_summary": "This article provides a detailed description of the WM.CAP macro virus, including its functionality, infection methods, and the author's personal experience with its creation. It also critiques the media hype surrounding macro viruses.",
+  "summary": "In this article, Jacky Qwerty delves into the intricacies of the WM.CAP macro virus, which he created during a holiday break. He discusses how macro viruses, particularly WM.CAP, have become prevalent due to their ease of creation and the media's exaggerated portrayal of their danger. The article outlines the virus's ability to infect Microsoft Word documents by manipulating macros, stealthily removing menu items, and ensuring its survival against other macro viruses. Qwerty emphasizes that while the CAP virus has some interesting features, it is not as complex as antivirus vendors claim, and he provides insights into its operational mechanics, including how it manages to delete existing macros and replicate itself across different language versions of Word. The article serves as both a technical guide and a commentary on the state of macro viruses during the late 1990s."
+}

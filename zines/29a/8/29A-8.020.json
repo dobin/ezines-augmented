@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Making Compact Win32 Compatible Executables from C Source Code",
+  "authors": "DoxtorL.",
+  "date": "December 2004",
+  "historical_context": "This article reflects the practices of optimizing executable sizes in the early 2000s, a time when software efficiency was critical due to limited resources in computing environments.",
+  "target_audience": "Developers, security professionals, and hackers interested in executable optimization and low-level programming.",
+  "short_summary": "The article provides a detailed guide on creating compact Win32 executables from C source code, focusing on techniques such as suppressing unused code, merging PE sections, and utilizing DOS stubs to minimize binary size.",
+  "summary": "In this article, DoxtorL. outlines a series of steps to create compact Win32 executables from C source code, emphasizing the importance of using an efficient linker, specifically the 'polink' from the Pelles-C compiler package. The author begins by demonstrating the default compilation process, which results in a relatively large executable size. He then introduces several optimization stages, starting with suppressing unused code and changing the C runtime library to reduce the binary size significantly. The article progresses to merging PE sections, which further condenses the executable by combining multiple sections into one, showcasing the command-line options necessary for these transformations.\n\nThe final stages involve advanced techniques such as using a DOS stub to store initialized data and importing DLL functions by ordinal to save space. The author provides practical examples and source code snippets to illustrate these methods, making the article a valuable resource for developers looking to optimize their applications. By the end, readers are encouraged to explore additional strategies for minimizing executable size, reinforcing the article's relevance to those interested in low-level programming and executable optimization."
+}

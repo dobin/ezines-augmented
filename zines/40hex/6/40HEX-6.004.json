@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 2, Issue 2, Phile #4 of 11",
+  "title": "NOLITE v1.0",
+  "authors": "DecimatoR of PHALCON/SKISM",
+  "date": "",
+  "historical_context": "This article is from the early 1990s, a time when software compression and virus scanning were becoming increasingly common in the computing landscape. The techniques discussed reflect the hacker culture's ongoing battle against software protection and security measures.",
+  "target_audience": "Hackers, malware researchers, and security professionals.",
+  "short_summary": "NOLITE v1.0 is a utility designed to remove the PKLITE header from executable files, making them un-decompressable and unscannable by virus scanners. The article provides a brief overview of the program's functionality and includes assembly code for implementation.",
+  "summary": "In this article, DecimatoR introduces NOLITE v1.0, a program aimed at removing the PKLITE header from .EXE and .COM files. The primary motivations for this tool are twofold: to prevent the files from being decompressed and, more critically, to evade detection by virus scanners like McAfee's Virus Scan. The program achieves this by overwriting the PKLITE header with random data from memory, effectively rendering the file unscannable. The author notes that this utility is a response to limitations found in an earlier tool, PKSMASH, which had bugs that caused it to lock up. As a result, NOLITE serves as a more reliable alternative for users looking to obscure their files from security measures.",
+  "code_snippet": "The article includes a detailed assembly code snippet that users can input into a debugger to create the NOLITE program, demonstrating the hands-on nature of hacker culture at the time."
+}

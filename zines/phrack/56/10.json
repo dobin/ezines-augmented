@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0xa Issue 0x38, Phile #1 of 1",
+  "title": "THINGS TO DO IN CISCOLAND WHEN YOU'RE DEAD",
+  "authors": "gaius <gaius@hert.org>",
+  "date": "05.01.2000",
+  "historical_context": "This article was published in the early 2000s, during a time when Cisco routers were becoming increasingly prevalent in corporate networks, and security vulnerabilities in these devices were a growing concern.",
+  "target_audience": "Hackers, security researchers, network engineers.",
+  "short_summary": "The article discusses a proof-of-concept tool called Tunnelx, which allows for rerouting and capturing traffic on Cisco routers. It provides a detailed technical overview of how to configure Cisco devices for traffic manipulation and the coding behind Tunnelx.",
+  "summary": "In 'THINGS TO DO IN CISCOLAND WHEN YOU'RE DEAD', the author introduces Tunnelx, a tool developed by the Hacker Emergency Response Team (HERT) aimed at demonstrating the vulnerabilities in Cisco routers. The article begins with a critique of the security assumptions surrounding these devices, emphasizing the need for skepticism in trusting network security. The author outlines the steps to reroute traffic through a Cisco router using Generic Routing Encapsulation (GRE), showcasing the ease with which one can manipulate network traffic if proper security measures are not in place. The article includes detailed configurations and command-line examples that illustrate how to set up a tunnel on a Cisco device and capture packets using libpcap and libnet libraries. \n\nThe author also warns about the potential pitfalls of misconfiguring Cisco devices, such as creating endless loops in packet routing. The piece concludes with a nod to future developments in the tool, hinting at capabilities for spoofing and monitoring traffic. Overall, this article serves as both a technical guide and a cautionary tale about the inherent risks in trusting network devices without proper scrutiny."
+}

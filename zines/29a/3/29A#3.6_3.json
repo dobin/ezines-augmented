@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The M1 Virus",
+  "authors": "Z0MBiE",
+  "date": "1998",
+  "historical_context": "This article discusses the M1 virus, a notable example of early malware that targeted DOS systems. It reflects the growing concerns about computer viruses in the late 1990s.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The article provides an in-depth analysis of the M1 virus, detailing its structure, infection methods, and the techniques it employs to evade detection. It serves as a case study of early malware behavior.",
+  "summary": "In 'The M1 Virus', Z0MBiE delves into the architecture and functionality of the M1 virus, a significant piece of malware from the late 1990s. The article outlines the virus's ability to infect COM and EXE files, detailing the specific assembly language routines used for file manipulation and infection. The author explains how the virus checks for existing infections and its methods for avoiding detection by antivirus software, including the use of stealth techniques and file size checks. The M1 virus is presented not just as a technical challenge but as a cultural artifact of the hacker community, reflecting the mindset and skills of its creator.\n\nThe article also touches on the broader implications of such malware, emphasizing the need for robust security measures in an increasingly digital world. Z0MBiE's writing combines technical precision with a narrative that captures the urgency of addressing malware threats, making it a valuable read for anyone interested in the evolution of computer security and the hacker ethos. The M1 virus serves as a reminder of the ongoing battle between malware authors and security professionals, a theme that remains relevant today."
+}

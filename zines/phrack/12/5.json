@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #5 of 11",
+  "title": "THE TOTAL NETWORK DATA SYSTEM",
+  "authors": "DOOM PROPHET",
+  "date": "",
+  "historical_context": "This article provides insight into the network monitoring and analysis systems used by telecommunications companies in the early 1980s, a period marked by the transition from electromechanical to digital switching systems.",
+  "target_audience": "Telecommunications engineers, network administrators, security professionals, and those interested in the history of telecommunications infrastructure.",
+  "short_summary": "The article details the Total Network Data System (TNDS), a monitoring and analysis network utilized by telecommunications offices to assess switching systems for maintenance and performance. It outlines various data collection methods and systems involved in traffic analysis, including EADAS, TDAS, and ICAN.",
+  "summary": "In 'THE TOTAL NETWORK DATA SYSTEM', DOOM PROPHET elaborates on the architecture and functionality of the TNDS, which plays a crucial role in monitoring and analyzing telecommunications networks. The TNDS collects traffic data from various switching entities, categorizing it into peg counts, overflow, and usage metrics. This data is essential for network maintenance, performance evaluation, and future planning. The article describes how different systems like EADAS and TDAS process this data to generate reports that inform network administrators about traffic loads and potential congestion issues.\n\nThe article also discusses the operational centers involved in managing network performance, including the Network Administration Center (NAC) and Network Management Centers (NMC). These centers utilize various systems to ensure optimal loading and utilization of switching equipment, while also preparing for peak traffic scenarios. The detailed explanation of the TNDS's components and their interrelations provides valuable insights into the complexities of telecommunications network management during a pivotal time in the industry, making it a relevant read for those interested in the evolution of network technologies."
+}

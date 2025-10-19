@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x03 of 0x00",
+  "title": "Writing UTF-8 compatible shellcodes",
+  "authors": "Thomas Wana aka. greuff <greuff@void.at>",
+  "date": "",
+  "historical_context": "This article addresses the need for shellcodes that are compatible with UTF-8 encoding, which became increasingly relevant as applications began using UTF-8 for user input and data processing.",
+  "target_audience": "Hackers, security researchers, and developers interested in exploit development and shellcode creation.",
+  "short_summary": "The article discusses the creation of shellcodes that are valid UTF-8 sequences, detailing the structure of UTF-8 encoding and providing techniques for crafting such shellcodes. It includes practical examples and considerations for exploiting vulnerabilities in applications that utilize UTF-8.",
+  "summary": "In this article, Thomas Wana explores the intricacies of writing shellcodes that conform to UTF-8 encoding standards. He begins with an overview of UTF-8, explaining its advantages and the necessity for shellcodes to be compatible with this encoding due to the increasing prevalence of UTF-8 in applications and protocols, particularly XML. The author outlines the structure of valid UTF-8 sequences and the challenges posed by the requirement for the shortest form of encoding, which can complicate the creation of executable shellcodes. \n\nWana provides practical guidance on crafting UTF-8 compatible shellcodes, including techniques for inserting no-operation (nop) instructions and using undocumented opcodes to mask continuation bytes. He illustrates these concepts with a working example of a shellcode that spawns a shell, demonstrating how to manipulate the byte sequences to ensure they remain valid UTF-8. The article concludes with considerations for automated shellcode transformation and the implications of using UTF-8 in XML files, making it a valuable resource for those interested in exploit development and security research."
+}

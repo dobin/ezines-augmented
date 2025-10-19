@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3c, Phile #0x06 of 0x10",
+  "title": "Smashing The Kernel Stack For Fun And Profit",
+  "authors": "Sinan \"noir\" Eren <noir@olympos.org>",
+  "date": "2002",
+  "historical_context": "This article discusses kernel vulnerabilities in OpenBSD, particularly focusing on the select() syscall buffer overflow, which was a significant issue at the time and remains relevant for understanding kernel security.",
+  "target_audience": "Hackers, security researchers, and professionals interested in kernel exploitation techniques.",
+  "short_summary": "The article explores kernel-level vulnerabilities in OpenBSD, particularly a buffer overflow in the select() syscall. It details the exploitation process, including overcoming obstacles, crafting payloads, and techniques for gaining elevated privileges.",
+  "summary": "In 'Smashing The Kernel Stack For Fun And Profit', Sinan 'noir' Eren delves into the exploitation of kernel vulnerabilities in OpenBSD, specifically focusing on a buffer overflow in the select() syscall. The article begins with an introduction to the vulnerability, explaining how the inadequate checks on the 'nd' argument can lead to a stack overflow. Eren outlines the obstacles faced during exploitation, such as the challenges of controlling the size argument for the copyin operation and the need for effective payload storage. The author provides detailed methodologies for crafting exploits, including calculating offsets, symbol addresses, and creating shellcode to manipulate kernel structures for privilege escalation.\n\nThe article emphasizes the importance of understanding kernel internals and presents various techniques for overcoming the challenges of kernel exploitation. Eren's work serves as both a tutorial and a case study, demonstrating the potential for exploiting kernel vulnerabilities to gain unauthorized access and control over a system. The insights provided are valuable for anyone interested in the intricacies of kernel security and exploitation techniques, making it a significant contribution to the hacker community."
+}

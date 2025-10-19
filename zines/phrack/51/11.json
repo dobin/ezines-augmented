@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 7, Issue 51, Phile #11 of 17",
+  "title": "The Art of Port Scanning",
+  "authors": "Fyodor <fyodor@dhp.com>",
+  "date": "September 01, 1997",
+  "historical_context": "This article is significant as it introduces nmap, a powerful network scanning tool that has become a staple in the security community. It reflects the growing importance of network security and reconnaissance in the late 1990s.",
+  "target_audience": "Hackers, security professionals, network administrators, and anyone interested in network security.",
+  "short_summary": "This article discusses various techniques for port scanning, detailing the development of nmap, a robust port scanning tool. It covers multiple scanning methods, their advantages, and limitations, providing insights into network exploration and security assessment.",
+  "summary": "In 'The Art of Port Scanning', Fyodor elaborates on the fundamental techniques used to identify listening ports on a host, which are crucial for establishing communication channels. The article emphasizes that the Internet is not solely about HTTP traffic on port 80, and encourages readers to explore the broader landscape of network services. Fyodor introduces nmap, a comprehensive port scanning tool designed to address the limitations of existing scanners, offering features like TCP SYN scanning, UDP scanning, and FTP bounce attacks. Each technique is explained with its respective advantages and potential pitfalls, highlighting the importance of stealth and efficiency in scanning practices.\n\nThe article serves as both a tutorial and a technical reference, detailing the inner workings of nmap and its innovative features such as dynamic delay calculations, retransmission strategies, and flexible port specifications. Fyodor's insights into the evolution of scanning techniques and the practical applications of nmap provide valuable knowledge for security professionals and hackers alike, illustrating the ongoing battle between network defenders and attackers. The source code for nmap is included, inviting readers to engage with the tool directly and contribute to its development."
+}

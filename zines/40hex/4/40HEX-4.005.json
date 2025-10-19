@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Survey Deflates Computer-Virus Dangers",
+  "authors": "Unknown",
+  "date": "December 1991",
+  "historical_context": "This article reflects the early 1990s concerns about computer viruses, particularly following the infamous Morris Worm incident in 1988, which raised alarms about the potential for widespread damage from such threats.",
+  "target_audience": "Security professionals, IT administrators, hackers, and anyone interested in the evolution of computer security threats.",
+  "short_summary": "The article discusses a survey revealing that while computer viruses are proliferating, they are not as damaging as previously feared. Despite a high incidence of virus encounters, many organizations have not adopted basic antivirus measures.",
+  "summary": "The article highlights the disconnect between the rising number of computer viruses and the lack of adequate preventative measures taken by organizations. Dataquest's survey of 600 organizations indicated that 63% had experienced at least one virus encounter, with a notable percentage reporting productivity losses. However, the majority of viruses were found to be relatively harmless, akin to a cold rather than a severe illness. The piece concludes with a cautionary note from Andrew Seybold, stressing the importance of adopting antivirus solutions and enforcing security policies to mitigate the risks posed by computer viruses, which, if left unchecked, could worsen over time."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #4 of 11",
+  "title": "Assassin (Bug Fix version)",
+  "authors": "Dark Slayer",
+  "date": "Not specified",
+  "historical_context": "This article is part of the early hacking culture, showcasing programming techniques used in the development of software for DOS systems. It reflects the mindset of hackers during the 1990s, focusing on low-level programming and system manipulation.",
+  "target_audience": "Hackers, reverse engineers, and security professionals interested in low-level programming and DOS vulnerabilities.",
+  "short_summary": "This article presents a bug fix for a program called 'Assassin', detailing low-level assembly code that manipulates memory and interrupts in DOS. It provides insights into the techniques used for system-level programming and debugging.",
+  "summary": "In 'Assassin (Bug Fix version)', Dark Slayer dives into the intricacies of low-level programming with a focus on assembly language for DOS. The article outlines a bug fix for the 'Assassin' program, showcasing how to manipulate memory and handle interrupts effectively. The assembly code provided is a practical example of how to interact with the DOS operating system, utilizing various interrupts to perform operations such as reading from and writing to memory, managing program control blocks, and handling system calls. The author emphasizes the importance of understanding the underlying architecture to effectively debug and enhance software functionality.\n\nThe article serves as a valuable resource for those interested in reverse engineering and low-level programming. It not only provides a bug fix but also educates readers on the methods used to achieve such fixes, including memory calculations and interrupt handling. By dissecting the code, readers can gain a deeper appreciation for the complexities of DOS programming and the skills required to navigate and manipulate system-level operations. This piece is a testament to the hacker ethos of sharing knowledge and techniques within the community."
+}

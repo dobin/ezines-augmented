@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x10, Issue 0x46, Phile #0x06 of 0x0f",
+  "title": ".NET Instrumentation via MSIL bytecode injection",
+  "authors": "Antonio \"s4tan\" Parata <aparata@gmail.com>",
+  "date": "",
+  "short_summary": "This article explores the internals of the .NET framework, providing a method for runtime instrumentation of .NET applications through MSIL bytecode injection, without modifying the original assembly.",
+  "summary": "In this article, Antonio 's4tan' Parata delves into the intricacies of the .NET framework to present a novel approach for instrumenting .NET applications at runtime. The technique leverages MSIL bytecode injection, allowing developers to add functionality to existing methods without altering the original assembly. The author outlines the CLR environment, the role of the JIT compiler, and the process of hooking into the compileMethod to inject custom MSIL code dynamically. This method is particularly useful for monitoring method calls and can be applied in various scenarios, including malware inspection and web application security testing.\n\nThe article provides detailed explanations of key concepts such as metadata tables, metadata tokens, and the execution environment of the CLR. It also includes practical examples, demonstrating how to implement a password stealer for a web application and how to inspect malware by logging method calls. The author emphasizes the importance of understanding the internal workings of the CLR to successfully implement this technique, making it a valuable read for security researchers and developers interested in .NET instrumentation."
+}

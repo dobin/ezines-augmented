@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Heuristics for antivirus / archiving detection",
+  "authors": "Rajaat 29A",
+  "date": "November '98",
+  "historical_context": "This article was written during a time when computer viruses were becoming increasingly sophisticated, and antivirus software was struggling to keep up. The focus on heuristics reflects a shift towards more intelligent detection methods.",
+  "target_audience": "Hackers, virus developers, security researchers",
+  "short_summary": "The article discusses the development of heuristics for detecting antivirus tools and archivers, allowing viruses to adapt their behavior based on the environment they are executed in. It outlines the common behaviors of these programs and suggests methods for identifying them.",
+  "summary": "In 'Heuristics for antivirus / archiving detection', Rajaat 29A explores the concept of using heuristics to identify antivirus software and archiving tools, thereby enabling viruses to modify their behavior accordingly. The article begins by explaining the generic operation of antivirus toolkits and viruses, emphasizing the advantages of heuristic detection over traditional filename-based methods. By monitoring specific interrupts and analyzing program behavior, the author proposes a framework for distinguishing between antivirus scanners and archivers, which can be exploited by viruses to enhance their stealth and infectivity.\n\nThe article details the typical flow of antivirus scanning and archiving processes, highlighting key differences that can be leveraged for detection. Rajaat provides practical insights into the tools and techniques necessary for monitoring program behavior, such as using INTRSPY and CMDSPY for interrupt monitoring. The author also suggests incorporating a form of artificial intelligence into viruses, allowing them to learn and adapt to the behavior of antivirus programs over time. This innovative approach not only showcases the technical creativity of the hacker community but also raises ethical questions about the implications of such advancements in malware development."
+}

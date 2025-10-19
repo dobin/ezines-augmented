@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 52, Phile #18 of 20",
+  "title": "Weakening the Linux Kernel",
+  "authors": "plaguez",
+  "date": "January 26, 1998",
+  "historical_context": "This article was written during a time when Linux was gaining popularity, and security vulnerabilities in the kernel were becoming a concern for system administrators and developers.",
+  "target_audience": "Hackers, security researchers, Linux developers",
+  "short_summary": "The article discusses methods to exploit the Linux 2.0.x kernel, focusing on system calls and loadable kernel modules (LKMs) to manipulate kernel behavior and create backdoors.",
+  "summary": "In 'Weakening the Linux Kernel', the author plaguez explores the intricacies of the Linux 2.0.x kernel, particularly how user space and kernel space interact. The article explains how system calls are implemented and how they can be exploited to gain unauthorized access or manipulate kernel behavior. It provides a detailed examination of the system call multiplexor and the sys_call_table, which maps system call numbers to their respective functions. The author emphasizes the ease of creating loadable kernel modules (LKMs) to modify system calls, allowing for the introduction of backdoors and other malicious functionalities without the need to recompile the kernel.\n\nThe article also presents practical examples of how to write LKMs that can hide processes, files, and network activity, effectively allowing an attacker to maintain control over a compromised system. Techniques such as modifying the sys_call_table to redirect system calls to custom implementations are discussed, showcasing the potential for stealthy exploitation. Overall, this piece serves as both a technical guide and a cautionary tale about the vulnerabilities inherent in the Linux kernel, urging the need for robust security measures to protect against such exploits."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Nutmeg2 Turbo Pascal Multipartite EXE/MBR infector",
+  "authors": "Vecna",
+  "date": "1998",
+  "historical_context": "This article discusses one of the first known multipartite viruses, which infects both the Master Boot Record (MBR) and executable files. It represents a significant evolution in malware development during the late 1990s.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The Nutmeg2 virus is notable for being one of the first high-level language (HLL) viruses that infects both the MBR and executable files. It employs stealth techniques to avoid detection and can replicate itself effectively.",
+  "summary": "The Nutmeg2 virus, crafted by Vecna in 1998, is a pioneering multipartite virus that infects both the Master Boot Record (MBR) and executable files. Written in Turbo Pascal, it utilizes advanced techniques for stealth and replication, making it a significant development in the history of malware. The virus prepends itself to infected files, increasing their size by 4096 bytes while maintaining the original file name to evade detection by memory-resident programs. It employs a stealth mechanism that allows it to infect files with self-checks, ensuring its persistence and effectiveness in spreading across systems.\n\nThe article delves into the technical intricacies of the virus, including its use of assembly routines for MBR manipulation and file handling. It describes how the virus hooks into DOS interrupts to execute its payload, which includes modifying the AUTOEXEC.BAT file to ensure its execution upon system startup. The detailed code snippets provide insight into the virus's structure and functionality, making it a valuable resource for understanding early malware development and the techniques employed by virus authors to evade detection and ensure replication."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 30, File #3 of 12",
+  "title": "Hacking & Tymnet",
+  "authors": "Synthecide",
+  "date": "Not specified",
+  "historical_context": "This article discusses the hacking techniques relevant to Tymnet, a major network in the late 1980s, providing insights into the early days of network hacking.",
+  "target_audience": "Hackers, security professionals, and those interested in the history of network hacking.",
+  "short_summary": "The article provides a guide on how to navigate and access systems on the Tymnet network, detailing the structure of network user addresses and offering tips for secure connections.",
+  "summary": "In 'Hacking & Tymnet', Synthecide explores the intricacies of accessing systems on the Tymnet network, which was a significant player in the early days of computer networking. The article emphasizes the simplicity of navigating these networks, often aided by comprehensive online documentation. It introduces the concept of Network User Addresses (NUAs), which are crucial for connecting to various systems within the network. Each NUA consists of three fields: the NETWORK ADDRESS, AREA PREFIX, and DNIC, with specific examples provided for Tymnet and Telenet. This structure not only facilitates access but also adds a layer of security by obscuring direct connections to systems. \n\nThe article further elaborates on the importance of using outdials to enhance security when connecting to remote systems. It includes a detailed table of access numbers for various nodes across different states, showcasing the extensive reach of Tymnet. Additionally, it references other resources, such as 'A Novice's Guide to Hacking', to encourage readers to deepen their understanding of network hacking. The piece serves as both a practical guide and a historical document, reflecting the hacker culture of the late 1980s and the burgeoning interest in network security."
+}

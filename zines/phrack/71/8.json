@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x10, Issue 0x47, Phile #0x08 of 0x11",
+  "title": "World of SELECT-only PostgreSQL Injections: (Ab)using the filesystem",
+  "authors": "Maksym Vatsyk",
+  "date": "Not specified",
+  "historical_context": "This article discusses SQL injection techniques specifically targeting PostgreSQL databases, highlighting the evolution of exploitation methods in the context of modern web applications.",
+  "target_audience": "Security researchers, penetration testers, database administrators, and anyone interested in SQL injection vulnerabilities.",
+  "short_summary": "The article explores advanced SQL injection techniques against PostgreSQL databases, particularly in environments where only SELECT queries are allowed. It details methods to escalate privileges and execute remote code by manipulating database files directly.",
+  "summary": "In this article, Maksym Vatsyk recounts a journey from a simple SQL injection attempt to discovering advanced techniques for exploiting PostgreSQL databases. The author begins by analyzing a vulnerable web application that uses the PGX driver, which restricts the use of stacked queries. Despite this limitation, the author finds ways to leverage PostgreSQL's built-in functions to read and manipulate server files, ultimately leading to privilege escalation. The article provides a detailed examination of PostgreSQL's storage concepts, including filenodes and table metadata, which are crucial for understanding how to exploit the database effectively.\n\nThe author demonstrates how to bypass restrictions by directly modifying the database's physical files, allowing for the execution of arbitrary code. By overwriting critical configuration files and using a custom-built library, the author successfully executes a reverse shell, showcasing the potential severity of SQL injection vulnerabilities in seemingly secure environments. This article serves as a valuable resource for security professionals looking to deepen their understanding of SQL injection techniques and the intricacies of PostgreSQL security."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Five, File 3 of 28",
+  "title": "Phrack Loopback Part II",
+  "authors": "Unknown",
+  "date": "1993",
+  "historical_context": "This article reflects the hacker culture of the early 1990s, highlighting the lax security measures in corporate environments and the attitudes of hackers towards learning and sharing knowledge.",
+  "target_audience": "Hackers, security professionals, and those interested in hacker culture.",
+  "short_summary": "The article discusses the poor state of security in corporate environments, illustrated by a humorous anecdote about a credit union's security practices. It emphasizes the importance of teaching and learning within the hacking community.",
+  "summary": "In 'Phrack Loopback Part II', the author laments the lack of security awareness in corporate settings, using a personal anecdote about a credit union where employees were visibly unprepared and relied on taped instructions for accessing their systems. This story serves as a critique of the negligence often found in organizations that handle sensitive information. The author suggests that such laxity is not only a risk to the institutions involved but also to the customers who trust them with their financial data.\n\nThe piece also touches on the broader hacker culture, advocating for a community that prioritizes education and mentorship over harassment and abuse of knowledge. The author calls for experienced hackers to guide novices, fostering an environment where learning is encouraged. This sentiment resonates with the ethos of the hacker community during the early '90s, where sharing knowledge was seen as a way to empower individuals against the growing corporate and governmental oversight of technology."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x05 of 0x11",
+  "title": "Netscreen of the Dead: Developing a Trojaned Firmware for Juniper ScreenOS Platforms",
+  "authors": "graeme@lolux.net",
+  "date": "",
+  "historical_context": "This article discusses vulnerabilities in Juniper's ScreenOS, particularly around firmware modification, which remains relevant in the context of embedded systems security.",
+  "target_audience": "Security researchers, penetration testers, firmware developers, and those interested in embedded systems security.",
+  "short_summary": "The article details the process of creating a trojaned firmware for Juniper's ScreenOS, exploring methods of firmware modification, remote access, and stealthy backdoor creation. It covers both live debugging and static analysis techniques to achieve these goals.",
+  "summary": "In this comprehensive exploration, the author outlines the vulnerabilities present in Juniper's ScreenOS, particularly focusing on how an attacker could exploit these weaknesses to install a modified firmware version. The article is structured around two primary attack vectors: live debugging using GDB and static binary analysis. The author provides detailed steps on how to obtain, modify, and install a trojaned firmware that allows for hidden operations on the device. Key techniques include manipulating the firmware's checksum to bypass validation checks and injecting custom code into the firmware to create backdoors for remote access. The article also discusses the implications of these vulnerabilities, emphasizing the ease with which an attacker could gain unauthorized control over a device, especially if they have physical access or can conduct a man-in-the-middle attack during firmware updates. Overall, this piece serves as both a technical guide and a cautionary tale about the security of embedded systems."
+}

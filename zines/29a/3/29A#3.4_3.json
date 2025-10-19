@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "VIRUS WIN95.K32",
+  "authors": "nIgr0",
+  "date": "Not specified",
+  "historical_context": "This article discusses a virus targeting Windows 95, a significant operating system in the late 1990s. The techniques described reflect the early days of malware development.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the creation of a Windows 95 virus, WIN95.K32, which infects executable files by modifying the CreateProcessA API. It provides a technical breakdown of the virus's functionality and its methods for evading detection.",
+  "summary": "In 'VIRUS WIN95.K32', author nIgr0 presents a detailed technical guide on creating a virus for Windows 95. The virus operates by exploiting the free space left by the kernel32 header, patching the CreateProcessA API to inject its code. The author describes how the virus modifies permissions of memory pages to execute its payload while remaining undetected. It also outlines the process of locating API addresses through the export table of kernel32.dll, demonstrating a deep understanding of Windows internals and assembly language programming.\n\nThe article serves as both a tutorial and a historical document, showcasing the techniques used in early malware development. It highlights the importance of understanding system architecture and API interactions for both malware creation and defense. By providing insights into the virus's structure and behavior, nIgr0 contributes to the broader discourse on computer security and the evolution of hacking culture, making it a relevant read for those studying the history of computer viruses and security measures."
+}

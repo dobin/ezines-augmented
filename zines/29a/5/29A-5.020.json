@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Encrypted ZIP File Construction for E-Mail Viruses",
+  "authors": "Unknown",
+  "date": "1996",
+  "historical_context": "This article reflects the early days of e-mail viruses and the methods used to evade detection by security systems. It showcases the creativity and technical skills of hackers during the 1990s.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article presents a method for constructing an encrypted ZIP file that can be used in e-mail viruses to bypass e-mail gateway scanners. It includes assembly code for creating the ZIP file and encrypting its contents.",
+  "summary": "This article details a technique for creating an encrypted ZIP file from an input file, specifically designed for use in e-mail viruses. The method exploits the fact that e-mail gateway scanners typically cannot decrypt files, allowing the virus to evade detection. The assembly code provided demonstrates how to encapsulate an input file within an encrypted ZIP archive, with the decryption password cleverly embedded in the e-mail body or filename. This approach not only obscures the malicious payload but also showcases the ingenuity of early malware developers in circumventing security measures.\n\nThe code outlines the process of opening an input file, reading its contents, and writing them into a newly created ZIP file while applying encryption. Key technical concepts include file handling, memory allocation, and the use of CRC for data integrity checks. The article serves as a historical reference to the evolution of malware techniques and the ongoing cat-and-mouse game between hackers and security professionals, highlighting the importance of understanding these methods for developing effective countermeasures."
+}

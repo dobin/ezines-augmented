@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 27, File 2 of 12",
+  "title": "Operating the IBM VM/SP CP",
+  "authors": "Taran King",
+  "date": "May 18, 1989",
+  "historical_context": "This article provides insights into the IBM VM/SP Control Program, a critical component of IBM's virtual machine architecture during the late 1980s.",
+  "target_audience": "System administrators, programmers, and security professionals interested in IBM VM/SP systems.",
+  "short_summary": "This article explains the Control Program (CP) of IBM's VM/SP, detailing its commands, user classes, and functionalities essential for managing virtual resources.",
+  "summary": "The article serves as a comprehensive guide to the Control Program (CP) of IBM's VM/SP, which is crucial for managing real resources in a virtual machine environment. Taran King outlines the various user classes defined by IBM, such as Operations (Class A), Resource (Class B), and Programmer (Class C), each with specific privileges and command capabilities. The article emphasizes the importance of understanding these classes for effective system administration and resource management within the VM/SP framework.\n\nKing provides a detailed list of commands available in CP, explaining their functions and the privilege classes required to execute them. Commands like ACNT for accounting, ADSTOP for halting execution, and DISPLAY for showing virtual machine components are discussed. The article encourages users to utilize the built-in HELP files for further clarification on commands, highlighting the robust support system available for users navigating the complexities of VM/CMS. Overall, this article is a valuable resource for anyone looking to deepen their understanding of IBM's virtual machine systems and their operational commands."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Hacking the Global Telecommunications Network",
+  "authors": "The Kurgan",
+  "date": "10/5/87",
+  "historical_context": "This article was written during a time when telecommunications networks were becoming increasingly complex and accessible, providing a unique insight into the early days of hacking into corporate networks.",
+  "target_audience": "Hackers, phreakers, security professionals, and those interested in telecommunications.",
+  "short_summary": "The article details the sign-on procedures and commands for accessing Citibank's Global Telecommunications Network (GTN), highlighting two distinct types of user commands and troubleshooting tips for potential issues.",
+  "summary": "The Kurgan also shares practical advice for users encountering difficulties, suggesting that pretending to be a Citibank employee can yield helpful responses from customer support. This article serves as a historical document, reflecting the hacker ethos of the time, where knowledge of network systems was a powerful tool for exploration and exploitation. The inclusion of dial-up numbers and service addresses further illustrates the accessibility of such networks, making it a valuable resource for aspiring hackers and security professionals interested in the evolution of telecommunications hacking."
+}

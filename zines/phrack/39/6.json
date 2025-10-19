@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Nine, File 6 of 13",
+  "title": "Centigram Voice Mail System Consoles",
+  "authors": ">Unknown User<",
+  "date": "",
+  "short_summary": "This article explores security vulnerabilities in the Centigram Voice Mail System, detailing methods to bypass authentication and access system functions. It provides insights into command usage, system structure, and potential exploits.",
+  "summary": "The article delves into the Centigram Voice Mail System, highlighting significant design flaws and security bugs that allow unauthorized access. It describes a method to bypass the login process by exploiting the escape key (^Z), which can drop the user into a shell, effectively circumventing the passcode requirement. The author provides detailed instructions on how to manipulate terminal settings and navigate the system's directory structure, emphasizing the importance of understanding command usage and system commands like 'evmon' for monitoring activities and capturing passcodes.",
+  "historical_context": "This article reflects the hacker culture of the early 1990s, where security vulnerabilities in telecommunication systems were actively explored and documented. It serves as a historical reference for understanding the evolution of security practices in voice mail systems.",
+  "target_audience": "Hackers, security researchers, and telecommunications professionals."
+}

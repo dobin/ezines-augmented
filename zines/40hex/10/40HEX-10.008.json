@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 10 Volume 3 Number 1 File 008",
+  "title": "Ontario III Virus",
+  "authors": "Death Angel",
+  "date": "Not specified",
+  "historical_context": "This article discusses the Ontario III virus, a notable example of early virus development in the DOS environment, showcasing the techniques used in virus creation during the late 1980s.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The Ontario III virus, created by Death Angel, infects COM and EXE files and employs a simple polymorphic routine. It has notable bugs and limitations, particularly in its interaction with command interpreters.",
+  "summary": "The Ontario III virus, crafted by Death Angel, is a DOS-based virus that targets COM and EXE files, with a peculiar behavior of attaching to SYS files without truly infecting them. Upon execution, it takes control and attempts to infect the COMSPEC environment variable, although it is limited by its assumptions regarding command interpreters, particularly COMMAND.COM. The virus employs a basic polymorphic routine, but its effectiveness is questionable due to a fixed-length decryptor and several bugs that hinder its overall functionality. Notably, the virus does not alter interrupt vectors, which means it occupies memory without fully integrating into the system's operations.\n\nThe article provides a detailed disassembly of the virus code, illustrating the methods used for infection and stealth. It highlights the virus's attempts to evade detection and its mechanisms for infecting files, including a stealth routine that modifies file sizes to conceal its presence. Despite its innovative approach for the time, the Ontario III virus is marred by its design flaws, making it a fascinating study for those interested in the evolution of malware and the techniques employed by early virus authors."
+}

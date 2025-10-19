@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x10 of 0x11",
+  "title": "Developing Mac OSX kernel rootkits",
+  "authors": "wowie <wowie@hack.se> & ghalen@hack.se",
+  "date": "Not specified",
+  "short_summary": "This article serves as a comprehensive guide on developing kernel rootkits for Mac OS X, covering the basics of rootkits, syscall manipulation, and techniques for hiding processes and files.",
+  "summary": "The article begins by introducing the concept of rootkits, explaining their purpose to conceal the presence of intruders and their tools by modifying standard system calls. It provides a detailed overview of the XNU kernel architecture, including the syscall entry table and the I/O Kit framework, which can be exploited for rootkit development. The authors present a step-by-step tutorial on creating a simple Mac OS X kernel rootkit, focusing on syscall replacement, process and file hiding, and runtime kernel patching using Mach APIs. They also discuss detection methods for rootkits, emphasizing the ongoing cat-and-mouse game between rootkit developers and security professionals. The article concludes by highlighting the importance of understanding kernel programming and the potential for misuse of these techniques in malicious activities."
+}

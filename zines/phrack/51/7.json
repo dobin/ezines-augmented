@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 7, Issue 51, Phile #07 of 17",
+  "title": "Juggernaut 1.2 update",
+  "authors": "route <route@infonexus.com>",
+  "date": "September 01, 1997",
+  "historical_context": "Juggernaut was a popular network tool for Linux during the late 1990s, used primarily for network monitoring and packet manipulation.",
+  "target_audience": "Hackers, network security professionals, and Linux enthusiasts.",
+  "short_summary": "This article provides an update to the Juggernaut network tool, detailing bug fixes and enhancements in version 1.2, including improvements in connection spying and the handling of promiscuous mode.",
+  "summary": "The article discusses the updates made to Juggernaut, a robust network tool for Linux, as it transitions from version 1.0 to 1.2. Key improvements include the proper handling of the IFF_PROMISC flag, ensuring that the network interface does not remain in promiscuous mode after the program exits. Additionally, the article highlights enhancements in connection spying and automated connection RSTing, which are crucial for users engaged in network monitoring and analysis. The author encourages users to continue submitting bug reports to further refine the tool.\n\nThe update also includes cosmetic changes and clarifications in error messages, enhancing user experience. The article serves as a practical guide for users looking to implement the patch and provides instructions on how to apply it effectively. Overall, this update reflects the ongoing development and community involvement surrounding Juggernaut, showcasing its relevance in the hacker and security communities of the time."
+}

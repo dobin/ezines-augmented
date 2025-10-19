@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 24, File 3 of 13",
+  "title": "Limbo To Infinity",
+  "authors": "Knight Lightning",
+  "date": "February 11, 1989",
+  "historical_context": "This article is part of a series exploring network communications in the late 1980s, specifically focusing on Bitnet and its gateways to other networks.",
+  "target_audience": "Hackers, network engineers, and anyone interested in early computer networking.",
+  "short_summary": "This article provides an in-depth look at gateway communications between Bitnet and other networks, detailing how to format addresses and send messages across different systems. It also introduces the Intermail system for accessing non-standard networks.",
+  "summary": "In 'Limbo To Infinity', Knight Lightning delves into the complexities of gateway communications, particularly how Bitnet connects to various other networks. The article explains the necessity of understanding network addresses and gateways, emphasizing that while Bitnet is a robust network, it is not isolated. The author illustrates how to format messages for different networks, using examples to clarify the sometimes convoluted addressing schemes that arise when communicating across different systems. This includes the use of special characters to denote gateways and the importance of knowing the correct routing for messages to ensure successful delivery.\n\nThe article also introduces the Intermail system, which allows users to send messages between Bitnet and several non-standard networks like MCI-Mail and GTE Telemail. Knight Lightning provides detailed instructions on how to format messages for both sending and receiving, highlighting the importance of including forwarding information at the beginning of each message. This exploration of early networking practices not only serves as a technical guide but also reflects the evolving landscape of computer communications during the late 1980s, making it a valuable read for those interested in the history of networking."
+}

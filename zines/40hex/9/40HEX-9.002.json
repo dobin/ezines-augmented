@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 5, Phile #2 of 11",
+  "title": "An Introduction to Nonoverwriting Viruses Part III: SYS Infectors",
+  "authors": "Dark Angel",
+  "date": "",
+  "historical_context": "This article is part of a series exploring nonoverwriting viruses, specifically focusing on SYS file infectors in DOS, a topic relevant during the rise of computer viruses in the late 1980s and early 1990s.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in virus development and DOS architecture.",
+  "short_summary": "The article provides a detailed examination of SYS file infectors in DOS, explaining how these viruses can be constructed and the technical intricacies involved in infecting SYS files. It includes a sample code for a SYS infector, highlighting the simplicity and effectiveness of this method.",
+  "summary": "In this article, Dark Angel delves into the often-overlooked SYS file structure in DOS, detailing how viruses can exploit this file type for infection. The SYS file, which is loaded at offset 0, consists of a header followed by executable code. The author explains the header structure, including pointers to the next device driver and the attributes that define whether the driver is a block or character device. The article emphasizes the ease of infecting SYS files by chaining them together, requiring only a simple modification to the header and the addition of the virus code. \n\nThe author provides a sample SYS infector code, illustrating how to manipulate the request header and the strategy and interrupt routines to successfully install the virus in memory. The article concludes by discussing the advantages of using SYS files for virus infection, such as their ability to load before TSR virus checkers and the minimal space required for implementation. This makes SYS file infectors a potent tool in the arsenal of virus creators, particularly when combined with other infection methods for COM and EXE files."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Carriers (polymorphic engine)",
+  "authors": "Darkman/29A",
+  "date": "",
+  "historical_context": "This article discusses a parasitic virus that was relevant during the early days of personal computing, showcasing the evolution of malware techniques.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The article presents 'Carriers', a 1332-byte parasitic resident virus with a polymorphic engine capable of infecting COM/EXE/Overlay files. It details the virus's functionality, including stealth techniques and its method of infection.",
+  "summary": "In this article, Darkman/29A introduces 'Carriers', a sophisticated 1332-byte virus that employs a polymorphic engine to evade detection. The virus infects executable files upon closure, utilizing a variety of techniques such as stealth against file size checks and retro structures to maintain its presence in memory. The author provides a detailed breakdown of the virus's assembly code, explaining how it manipulates system calls to achieve its goals, including file deletion, attribute modification, and program execution. The article also outlines the compilation process using Turbo Assembler, making it accessible for readers interested in replicating or studying the virus's behavior.\n\nThe technical depth of the article serves as both a tutorial and a warning, illustrating the capabilities of early malware and the importance of understanding such threats in the context of computer security. The use of a polymorphic engine highlights the evolving nature of viruses, emphasizing the need for robust security measures to combat increasingly sophisticated malware. Overall, 'Carriers' is a significant piece in the history of computer viruses, reflecting the hacker culture's creativity and the ongoing battle between malware developers and security professionals."
+}

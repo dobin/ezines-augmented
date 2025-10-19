@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "ANTIVIRUS PATHETISM",
+  "authors": "Wintermute/29A",
+  "date": "January 1999",
+  "historical_context": "This article reflects the state of antivirus technology and customer support in the late 1990s, a time when viruses were becoming increasingly complex and antivirus companies were struggling to keep up.",
+  "target_audience": "Security professionals, antivirus developers, hackers, and those interested in the history of malware.",
+  "short_summary": "The article critiques the technical support services of various antivirus companies based on a test involving the Ithaqua virus. It highlights the inadequacies in response times and effectiveness in detecting and cleaning the virus, revealing a troubling state of antivirus support in 1999.",
+  "summary": "The article delves into the technical intricacies of the Ithaqua virus, a multipartite virus known for its complex infection methods and stealth capabilities. Wintermute explains how the virus infects .COM and .EXE files, as well as the Master Boot Record, making it particularly challenging for antivirus software to detect and clean. The author shares anecdotes from the testing process, illustrating the varying levels of service and expertise among antivirus companies. The piece serves as both a historical document and a cautionary tale about the importance of effective antivirus support, emphasizing that even in the late 90s, many companies were ill-equipped to handle sophisticated threats."
+}

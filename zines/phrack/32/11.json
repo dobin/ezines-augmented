@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Keeping The PBX Secure",
+  "authors": "Bruce Caldwell",
+  "date": "10/15/90",
+  "short_summary": "This article discusses the vulnerabilities of corporate PBX systems to toll fraud and offers practical security measures to mitigate risks. It emphasizes the importance of using longer authorization codes and regular audits.",
+  "summary": "In the realm of corporate telecommunications, PBX systems are often left vulnerable to toll fraud due to weak security measures. Bruce Caldwell highlights the alarming ease with which hackers can exploit these systems, particularly when companies rely on short, four-digit authorization codes. He cites the experience of US Sprint Communications, which saw a significant drop in fraud incidents after transitioning to 14-digit codes and implementing strict prosecution policies against offenders. Caldwell stresses that many organizations remain complacent about their PBX security, often overlooking the potential for substantial financial losses due to unauthorized usage.\n\nTo combat these threats, Caldwell provides actionable recommendations for businesses. He advises regular audits of PBX systems to identify unusual usage patterns and suggests that companies should avoid using steady tones as prompts for code entry, as these can be easily targeted by hacker programs. Instead, he recommends employing voice recordings or no prompts at all. Furthermore, he encourages organizations to consult with their PBX vendors to explore built-in safeguards that can enhance security. By taking these proactive measures, companies can significantly reduce their vulnerability to PBX-related fraud and protect their telecommunications infrastructure."
+}

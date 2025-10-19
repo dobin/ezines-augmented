@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x10, Issue 0x47, Phile #0x03 of 0x11",
+  "title": "Practical tips and thoughts to improve your malware stealthiness and increase campaign dwell time",
+  "authors": "SWaNk",
+  "date": "2024",
+  "short_summary": "This article provides a collection of practical techniques and insights aimed at enhancing the stealthiness of malware and increasing its dwell time within targeted environments. It covers various tactics, including evasion strategies, the importance of avoiding detection patterns, and the use of specific Windows features.",
+  "summary": "In this article, SWaNk shares valuable insights into the evolving malware landscape and offers practical tips for malware developers looking to enhance their stealth capabilities. The author emphasizes the importance of understanding the defensive mechanisms employed by security solutions and adapting tactics accordingly. Key concepts such as 'dwell time'—the duration an attacker remains undetected within a target environment—and 'FUDness' (Fully UnDetectable) are introduced, highlighting the need for continuous adaptation to evade detection algorithms.\n\nThe article delves into various techniques, including the use of Windows messaging systems for persistence, port knocking for stealthy communication, and the significance of avoiding recognizable patterns in malware code. SWaNk encourages malware developers to innovate and reinvent their approaches, stressing that meticulous attention to detail can significantly impact the success of offensive operations. By sharing these insights, the author aims to contribute to the knowledge pool of the malware community and inspire new generations of malware developers to think creatively about evasion tactics."
+}

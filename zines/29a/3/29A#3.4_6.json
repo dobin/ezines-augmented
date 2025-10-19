@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Hantavirus Pulmonary Syndrome (HPS) Virus BioCoded by GriYo / 29A",
+  "authors": "GriYo / 29A",
+  "date": "June 22, 1998",
+  "historical_context": "This article discusses the HPS virus, which was notable for being the first virus specifically written for Windows 98, released just before the operating system itself.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the Hantavirus Pulmonary Syndrome (HPS) virus, a polymorphic Windows 95/98 virus that activates on Saturdays to flip bitmap images. It describes its infection mechanism, stealth capabilities, and the author's insights into its design and functionality.",
+  "summary": "The Hantavirus Pulmonary Syndrome (HPS) virus, coded by GriYo of the 29A group, is a polymorphic Windows virus that infects executable files and activates its payload on Saturdays. Upon activation, it flips bitmap images, creating a mirror effect that can disrupt the visual output of the operating system. The virus employs advanced techniques such as kernel scanning, memory residency, and stealth operations to evade detection and ensure its persistence. It hooks into the Windows kernel, manipulating file access functions to infect new files while deleting antivirus checksum databases to hinder detection efforts.\n\nThe article provides a deep dive into the technical aspects of the virus, including its polymorphic encryption engine, which allows it to change its code structure with each infection, making it difficult for antivirus software to recognize. The author emphasizes the importance of understanding such malware not only for historical context but also for developing better defenses against future threats. The HPS virus serves as a case study in the evolution of malware targeting Windows operating systems, showcasing the creativity and technical prowess of its creators."
+}

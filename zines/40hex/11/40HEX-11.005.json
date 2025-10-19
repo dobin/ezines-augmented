@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 11 Volume 3 Number 2 File 005",
+  "title": "Virus Spotlight on: Leech",
+  "authors": "Dark Angel, Phalcon/Skism",
+  "date": "April 1991",
+  "historical_context": "This article discusses the Leech virus, a notable example of early malware that showcases polymorphic behavior. It reflects the growing complexity of viruses during the early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The article provides an in-depth analysis of the Leech virus, detailing its polymorphic nature and infection methods. It includes disassembly code and highlights the virus's ability to manipulate system file tables.",
+  "summary": "In this article, Dark Angel presents a detailed examination of the Leech virus, a Bulgarian creation that exemplifies early polymorphic malware. The virus employs a simple code swapping algorithm, allowing it to evade detection by altering its appearance with each infection. Notably, it infects files upon execution and closure, with the latter being particularly interesting due to its manipulation of the system file table. The article includes disassembly code, providing a technical breakdown of the virus's operations, which is essential for understanding its behavior and impact on infected systems.\n\nThe Leech virus is characterized by its ability to hide file length increases, although it does trigger a CHKDSK error, revealing its presence. The author emphasizes the importance of understanding such malware for security professionals and researchers, as it showcases the evolving tactics used by malicious software. The article serves as both a technical guide and a historical reference, illustrating the challenges faced by early computer security in combating increasingly sophisticated threats."
+}

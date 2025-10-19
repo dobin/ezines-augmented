@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x44, Phile #0x0e of 0x13",
+  "title": "Secure Function Evaluation vs. Deniability",
+  "authors": "greg <greg@so36.net>",
+  "date": "",
+  "historical_context": "This article discusses the implications of deniability in cryptographic protocols, particularly focusing on the Off-the-Record (OTR) messaging protocol, which was popular among privacy-conscious users.",
+  "target_audience": "Hackers, cryptographers, security professionals, and anyone interested in secure communication protocols.",
+  "short_summary": "The article explores the concept of deniability in cryptographic protocols, specifically analyzing the OTR protocol. It highlights the limitations of deniability and presents an attack that can compromise it using secure function evaluation.",
+  "summary": "In this article, the author delves into the intricacies of deniability in cryptographic communication, using the Off-the-Record (OTR) protocol as a case study. OTR claims to provide deniability, allowing participants to deny the authenticity of messages after the fact. However, the author constructs a scenario where an observing party can collaborate with one of the conversation partners to undermine this deniability. By sharing Diffie-Hellman keys and using secure function evaluation (SFE), the observing party can validate messages and prove their authenticity, effectively breaking the deniability that OTR aims to provide.\n\nThe article outlines the technical details of the attack, including the necessary cryptographic primitives like Diffie-Hellman, RSA, and oblivious transfer. It emphasizes that while OTR offers weak deniability, the proposed attack can extend to undermine both weak and strong deniability. The author concludes by discussing the implications of these findings for secure communication protocols and suggests that the deniability of messaging systems is a complex issue that requires careful consideration in their design."
+}

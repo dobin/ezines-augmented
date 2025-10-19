@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virus LA DIOSA (version 1.0)",
+  "authors": "Nigromante",
+  "date": "1998",
+  "historical_context": "This article presents a polymorphic virus written in assembly language, showcasing techniques that were prevalent in the late 1990s. It reflects the hacker culture's interest in virus creation and the technical challenges associated with evading detection.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in virus development and polymorphism.",
+  "short_summary": "The article details the creation of a polymorphic virus that infects executable files by modifying their headers. It describes the virus's structure, including its encryption methods and self-replication techniques.",
+  "summary": "In 'Virus LA DIOSA', Nigromante outlines the construction of a polymorphic virus capable of infecting executable files. The virus employs a traditional infection method by appending its code to the end of the target executable and altering the code segment and instruction pointer (cs:ip) in the header. The polymorphic engine generates variable code encrypted using one of three functions: addition, subtraction, or XOR, with a random key. This design allows the virus to change its appearance with each infection, making it harder for antivirus software to detect it.\n\nThe article goes into detail about the virus's structure, including its initialization routines, memory access, and the use of various assembly instructions to obscure its functionality. The author emphasizes the importance of randomness in the encryption process and the use of 'garbage' instructions to confuse static analysis tools. This technical exploration serves as both a demonstration of programming skill and a commentary on the hacker ethos of the time, where creating and sharing malware was seen as a form of digital art and rebellion."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Soulfly v1.00",
+  "authors": "T-2000 / [Immortal Riot]",
+  "date": "December 1998 - January 1999",
+  "historical_context": "This article discusses a DOS-based virus, reflecting the hacking culture of the late 1990s when malware was often shared among underground communities.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "Soulfly v1.00 is a stealthy DOS virus capable of infecting .COM and .EXE files with a highly destructive payload. It employs various anti-debugging techniques and can disable itself during execution to avoid detection.",
+  "summary": "Soulfly v1.00 is a full-stealth variable encrypting virus designed for DOS systems, specifically targeting .COM and .EXE files. With a size of just 2000 bytes, it utilizes a complex encryption method to conceal its presence, making it difficult for traditional antivirus solutions to detect. The virus is engineered to disable its stealth mode during execution of archivers or disk tools, ensuring that it can infect files pointed to by the COMSPEC and WINDIR environment variables. This capability allows it to spread rapidly across systems without raising alarms.\n\nThe payload of Soulfly is particularly malicious, as it is designed to 'disk trash'—a term used to describe the destruction of data on the infected system. The author, T-2000, incorporates various anti-debugging and anti-tracing techniques to thwart analysis, making it a sophisticated piece of malware for its time. The article serves as both a technical guide and a cautionary tale about the potential dangers of such viruses, highlighting the ongoing cat-and-mouse game between malware developers and security professionals."
+}

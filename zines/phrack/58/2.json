@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x02 of 0x0e",
+  "title": "Loopback",
+  "authors": "phrackstaff",
+  "date": "",
+  "historical_context": "This article reflects the ongoing interactions and communications within the hacker community during the early 2000s, showcasing the culture and mindset of hackers at that time.",
+  "target_audience": "Hackers, security professionals, and those interested in hacker culture.",
+  "short_summary": "The article presents a collection of humorous and insightful logs from hack attempts on the Phrack server, along with various communications from readers, illustrating the mindset and antics of the hacker community.",
+  "summary": "In this edition of Phrack, the staff shares a compilation of logs detailing various hack attempts on their server, highlighting the often humorous and naive tactics employed by less experienced hackers. The logs are presented in a chronological format, showcasing repeated scans from the same IP address and the amusing responses from the Phrack staff. One notable entry features a backdoor server message that bluntly tells a persistent hacker to 'FUCK OFF!!', encapsulating the irreverent tone of the publication. \n\nAdditionally, the article includes snippets of correspondence from readers, ranging from nostalgic remarks about Phrack's legacy to inquiries about hacker culture and techniques. This blend of technical logs and community interaction not only serves as entertainment but also provides a glimpse into the camaraderie and shared experiences of hackers during this era. The article is a testament to the vibrant and often chaotic nature of the hacker community, making it a relevant read for those interested in the history and culture of hacking."
+}

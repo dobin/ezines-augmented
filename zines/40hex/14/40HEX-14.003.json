@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, File 003",
+  "title": "Boot Infectors",
+  "authors": "Dark Angel of Phalcon/Skism",
+  "date": "",
+  "historical_context": "This article discusses boot infectors, a type of virus that infects the boot sector of disks, which was a significant concern during the rise of personal computing and the proliferation of viruses in the late 1980s and early 1990s.",
+  "target_audience": "Hackers, security professionals, and those interested in computer virus development.",
+  "short_summary": "The article provides a comprehensive overview of boot infectors, detailing how they operate at the disk level, their infection methods, and the technical structures involved in the boot process. It emphasizes the stealth techniques used by these viruses to evade detection.",
+  "summary": "In 'Boot Infectors', Dark Angel delves into the mechanics of boot sector viruses, which differ from file-based viruses by infecting the disk's boot sector and partition table. The article explains the disk's structure, including sectors, cylinders, and heads, and how the BIOS interacts with these components during the boot process. The author highlights the critical role of the partition table and boot record, detailing how these elements can be manipulated by a boot infector to gain control over the system before the operating system loads. This early control allows the virus to execute its payload and potentially infect other disks connected to the system.\n\nThe article also discusses various strategies for stealth and persistence, such as preserving the partition table structure to avoid detection by operating systems. Dark Angel provides insights into the technical considerations for writing a boot infector, including how to store the original boot sector code and redirect access requests to maintain the appearance of a functional disk. While the article refrains from providing specific code, it equips readers with the foundational knowledge necessary to understand and potentially create their own boot infectors, making it a valuable resource for those interested in the intricacies of virus development."
+}

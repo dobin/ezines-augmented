@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0f, Issue 0x45, Phile #0x0c of 0x10",
+  "title": "Attacking Ruby on Rails Applications",
+  "authors": "joernchen of Phenoelit",
+  "date": "",
+  "historical_context": "This article discusses vulnerabilities in Ruby on Rails applications, particularly relevant during the time when Rails 3 was prevalent, with some techniques applicable to older versions.",
+  "target_audience": "Hackers, security professionals, developers working with Ruby on Rails.",
+  "short_summary": "This article provides an overview of various attack vectors and vulnerabilities in Ruby on Rails applications, including user input handling, session management, and code execution techniques. It highlights common pitfalls and specific vulnerabilities like CVE-2013-3221.",
+  "summary": "The article serves as a comprehensive guide to attacking Ruby on Rails applications, focusing on the Model-View-Controller (MVC) architecture and the various ways user input can be manipulated. It delves into the intricacies of how Rails processes different types of input, including application/x-www-form-urlencoded, XML, and JSON, and discusses the implications of these processing methods on security. The author emphasizes the importance of understanding the params hash and how it can be exploited through various coding pitfalls, such as improper session management and mass assignment vulnerabilities.\n\nAdditionally, the article highlights specific vulnerabilities, including CVE-2013-3221, which exploits MySQL's type conversion to reset passwords. The author provides practical examples and code snippets to illustrate how attackers can leverage these vulnerabilities for remote code execution and session tampering. Overall, this write-up is a valuable resource for anyone looking to understand the security landscape of Ruby on Rails applications and the potential attack vectors that exist within them."
+}

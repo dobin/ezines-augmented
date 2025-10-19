@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Galicia Kalidade",
+  "authors": "MaD MoTHeR TeaM",
+  "date": "",
+  "historical_context": "This article discusses one of the earliest macro viruses, specifically targeting Microsoft Word, and highlights the evolution of malware in the early 1990s.",
+  "target_audience": "hackers, malware researchers, security professionals",
+  "short_summary": "The article presents the Galicia Kalidade, a macro virus written in VBA for Microsoft Word. It infects documents by searching for a specific string and deletes critical system files, showcasing an early example of malware targeting office applications.",
+  "summary": "In this article, the author introduces the Galicia Kalidade, claiming it to be the smallest macro virus ever created. Written as part of a VBA language tutorial, this virus infects Microsoft Word documents by executing on the AutoClose event. When a document is closed, it searches for the string 'dir a:' in any case or font. If found, the virus proceeds to delete critical system files, namely MSDOS.SYS and IO.SYS, and displays a message box indicating its action. This unique approach to infection, particularly its reliance on a specific string, illustrates the creativity and technical prowess of early malware authors.\n\nThe Galicia Kalidade is notable not only for its functionality but also for its cultural significance as the first Spanish macro virus. The article serves as both a technical demonstration and a commentary on the emerging threats posed by macro viruses in office applications. By focusing on a localized version for Spanish users, the author emphasizes the growing accessibility of malware creation tools and the need for awareness in the evolving landscape of computer security."
+}

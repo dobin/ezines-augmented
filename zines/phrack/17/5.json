@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seventeen, Issue 5, Phile #5 of 12",
+  "title": "How to Hack A CDC Cyber",
+  "authors": "Grey Sorcerer",
+  "date": "07 April 1988",
+  "historical_context": "This article reflects the hacking techniques and mindset prevalent in the late 1980s, particularly focusing on CDC Cyber systems, which were widely used in academic and research institutions.",
+  "target_audience": "Hackers, security researchers, and those interested in historical hacking techniques.",
+  "short_summary": "This article provides a detailed guide on hacking CDC Cyber systems, including tips on user number acquisition, exploiting system processes, and utilizing batch jobs for unauthorized access. It emphasizes stealth and clever manipulation of system commands.",
+  "summary": "In 'How to Hack A CDC Cyber', Grey Sorcerer shares a wealth of knowledge on penetrating CDC Cyber systems, offering practical advice for aspiring hackers. The article begins with general hacking tips, stressing the importance of anonymity and caution, such as using remote dial-ups and avoiding user number reuse. Sorcerer humorously discusses the use of punch cards, detailing how to exploit their processing to gain unauthorized access to user data. He also introduces the concept of 'Telex', the timeshare system that allows for higher priority access compared to batch jobs, which can be manipulated for greater efficiency in executing commands.\n\nThe article delves into various techniques, such as the 'Worm' method, which allows a user to submit multiple copies of a job to overwhelm the system, effectively causing it to crash. Additionally, Sorcerer explains the use of Checkpoint and Restart utilities to manipulate user validations, enabling a hacker to gain elevated privileges. Overall, this article serves as both a historical document of hacker culture and a technical guide, illustrating the creativity and audacity of early hackers in navigating and exploiting computer systems."
+}

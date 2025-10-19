@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x08 of 0x0e",
+  "title": "IA32 Advanced Function Hooking",
+  "authors": "mayhem <mayhem@hert.org>",
+  "date": "December 08th 2001",
+  "historical_context": "This article discusses function hooking in the Linux kernel, particularly focusing on the 2.4 series, which was a significant version at the time for kernel development and security.",
+  "target_audience": "Security researchers, kernel developers, and advanced programmers interested in low-level system manipulation.",
+  "short_summary": "The article provides a comprehensive guide on function hooking in the Linux kernel, detailing techniques, code examples, and a library for creating hooks. It emphasizes the importance of understanding the underlying assembly and C code for effective hooking.",
+  "summary": "In 'IA32 Advanced Function Hooking', mayhem explores the intricacies of hooking functions within the Linux kernel, particularly for the IA32 architecture. The article begins with a historical overview of hooking techniques, highlighting the evolution of methods since the late 1990s. It introduces the Linux Kernel Hooker (LKH), a library designed to facilitate the creation and management of hooks in kernel functions. The author details various hooking techniques, including modifying function entry points and managing callbacks, while emphasizing the need for careful handling of parameters and return values to ensure stability and security in kernel operations.\n\nThe article also provides a thorough explanation of the LKH API, which allows developers to create, destroy, and manipulate hooks easily. The author includes practical examples of hooking functions like sys_fork and schedule, demonstrating how to implement callbacks and manage the state of hooks. By the end of the article, readers are equipped with both theoretical knowledge and practical tools to implement function hooking in their own kernel modules, making it a valuable resource for anyone interested in low-level programming and system security."
+}

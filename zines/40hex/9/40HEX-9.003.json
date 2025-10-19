@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 5, Phile #3 of 11",
+  "title": "Phoenix 2000 Virus Debug Script",
+  "authors": "Dark Angel",
+  "date": "December, 1991",
+  "historical_context": "The Phoenix 2000 virus emerged during the early 1990s, a time when computer viruses were becoming more prevalent and sophisticated. This period marked a significant evolution in malware, with viruses starting to infect executable files and becoming memory resident.",
+  "target_audience": "Security professionals, malware researchers, and hobbyist programmers interested in virus creation and detection.",
+  "short_summary": "This article provides a detailed overview of the Phoenix 2000 virus, including its characteristics, symptoms, and a debug script for its creation. It highlights the virus's ability to infect .COM and .EXE files and discusses its operational mechanics.",
+  "summary": "The article presents the Phoenix 2000 virus, a rare parasitic resident virus discovered in December 1991. Originating from Bulgaria, it infects .COM and .EXE files, particularly targeting those with a specific structure of binary 00 characters. The virus becomes memory resident upon execution, leading to a decrease in available system memory and altering infected files without changing their timestamps. Notably, it can reinfect .COM files, compounding its size with each infection, while .EXE files may become partially infected if they lack the required binary structure. The article includes a debug script for creating the virus, showcasing the technical intricacies involved in its development and operation.\n\nThe Phoenix 2000 virus serves as a case study in early malware behavior, illustrating how viruses could manipulate system resources and file integrity. The detailed instructions for creating the virus provide insight into the mindset of early virus authors, emphasizing the technical skills required to craft such malware. This article is a valuable resource for understanding the evolution of computer viruses and the methodologies employed by their creators during this formative period in cybersecurity history."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x0a of 0x0e",
+  "title": "Developing StrongARM/Linux shellcode",
+  "authors": "funkysh <funkysh@sm.pl>",
+  "date": "",
+  "historical_context": "This article provides insights into writing shellcode for the StrongARM architecture, which was significant in the late 1990s and early 2000s due to its use in mobile devices and embedded systems.",
+  "target_audience": "Security researchers, exploit developers, and those interested in ARM architecture.",
+  "short_summary": "This paper details the process of writing shellcode for the StrongARM Linux platform, covering ARM architecture, instruction sets, system calls, and practical examples of shellcode.",
+  "summary": "The article serves as a guide for developing shellcode specifically for the StrongARM Linux environment, focusing on the unique aspects of the ARM architecture. It begins with a brief history of ARM, explaining its design goals and evolution, particularly the StrongARM variant developed by Intel. The author outlines the ARM architecture's characteristics, including its 32-bit RISC design, register usage, and fixed-length instruction set, which are crucial for understanding how to write effective shellcode.\n\nThe paper delves into the specifics of ARM system calls, common operations, and techniques for avoiding null bytes in shellcode, which are critical for successful exploitation. The author provides several example shellcodes, demonstrating how to implement system calls like execve and setuid, along with detailed explanations of the instructions used. This resource is particularly valuable for anyone looking to understand the intricacies of ARM shellcode development and the challenges associated with it."
+}

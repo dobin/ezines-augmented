@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Three, Phile 8 of 10",
+  "title": "Making a Shock Rod",
+  "authors": "Circle Lord",
+  "date": "",
+  "historical_context": "This article reflects the DIY ethos prevalent in early hacker culture, where individuals sought to create their own tools and devices, often for unconventional purposes.",
+  "target_audience": "Hackers, DIY electronics enthusiasts, security professionals.",
+  "short_summary": "This article provides a detailed guide on building a circuit that generates high voltage electricity, which can be used for various defensive applications. It includes a list of components and schematics for assembly.",
+  "summary": "In 'Making a Shock Rod', Circle Lord presents a straightforward method for constructing a high-voltage circuit capable of generating thousands of volts from a simple 6-volt power source. The article outlines the necessary components, including a GE-3 transistor, a transformer, and various capacitors, along with a schematic diagram to aid in assembly. The circuit is designed to deliver a shock that can deter multiple attackers, making it a practical tool for personal security or even unconventional applications like electrifying lockers or theater seats. \n\nThe author emphasizes the importance of adjusting the potentiometer R1 to achieve the desired shock level, providing a hands-on approach that encourages experimentation. This article not only serves as a technical guide but also embodies the spirit of innovation and resourcefulness that characterizes hacker culture, inviting readers to explore the boundaries of electronics and security in creative ways."
+}

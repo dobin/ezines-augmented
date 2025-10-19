@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 27, File 5 of 12",
+  "title": "COSMOS: COmputer System for Mainframe OperationS Part Two",
+  "authors": "King Arthur",
+  "date": "",
+  "historical_context": "This article is part of a series focusing on computer security practices in the early days of mainframe computing, reflecting the security concerns of the time.",
+  "target_audience": "Security professionals, system administrators, hackers interested in historical security practices.",
+  "short_summary": "This article provides practical security measures for mainframe systems, focusing on dial-up security, password management, site security, employee security, and general security practices. It emphasizes the importance of proactive measures to safeguard computer systems.",
+  "summary": "In this continuation of the COSMOS series, King Arthur outlines essential security practices for mainframe systems, particularly those utilizing dial-up connections. The article stresses that dial-up lines are a primary vulnerability, and recommends minimizing their use, employing external hardware for access control, and implementing callback modems to enhance security. Password management is also highlighted, with guidelines suggesting that passwords should be complex, changed regularly, and never identical to account names. The author warns against common pitfalls, such as easily guessable passwords, and advocates for a systematic approach to password generation and management.\n\nThe article further discusses site security, urging organizations to manage sensitive information disposal and ensure proper identification for access to computer facilities. Employee security is addressed, emphasizing the need for vigilance against social engineering attacks and the importance of clear communication protocols. Finally, the author calls for a comprehensive understanding of existing security features within systems and encourages ongoing education and awareness in the field of computer security. This article serves as a timeless reminder of the foundational principles of cybersecurity that remain relevant today."
+}

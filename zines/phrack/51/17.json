@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 7, Issue 51, Article 17 of 17",
+  "title": "Phrack Magazine Extraction Utility",
+  "authors": "Phrack Staff, Daos",
+  "date": "September 01, 1997",
+  "historical_context": "This article provides a utility for extracting text files from Phrack Magazine's specially tagged flatfiles, reflecting the early days of digital text processing in hacker culture.",
+  "target_audience": "Hackers, programmers, and security professionals interested in text processing and extraction techniques.",
+  "short_summary": "The article introduces a utility for extracting text files from Phrack Magazine's tagged flatfiles, offering both C and Perl implementations. It serves as a practical tool for users to manage and organize source code from the magazine's articles.",
+  "summary": "The 'Phrack Magazine Extraction Utility' article presents a tool designed to extract text files from specially formatted flatfiles used in Phrack Magazine. The utility is available in both C and Perl versions, allowing users flexibility in their choice of programming language. The C implementation is straightforward, utilizing standard file handling and string manipulation techniques to identify and extract content between specified tags. The Perl version offers a similar functionality with a more concise syntax, showcasing the versatility of scripting languages in text processing tasks.\n\nThis utility is particularly useful for readers who wish to organize and access source code snippets from the magazine's articles efficiently. By creating a hierarchical directory structure, users can easily navigate through the extracted files. The article not only serves as a practical guide for using the utility but also reflects the hacker ethos of sharing tools and knowledge within the community, emphasizing the importance of accessibility in programming and security practices."
+}

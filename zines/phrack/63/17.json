@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x11 of 0x14",
+  "title": "Security Review Of Embedded Systems And Its Applications To Hacking Methodology",
+  "authors": "Cawan: <chuiyewleong[at]hotmail.com> or <cawan[at]ieee.org>",
+  "date": "",
+  "historical_context": "This article reflects the growing integration of embedded systems in everyday life and their implications for security and hacking methodologies, particularly during the early 2000s when smart technologies began to proliferate.",
+  "target_audience": "Hackers, security professionals, embedded systems developers.",
+  "short_summary": "The article explores the security vulnerabilities of embedded systems and discusses various hacking methodologies that leverage these weaknesses. It covers the classification of architectures, the use of FPGAs in hacking, and practical examples of attacks using embedded Linux.",
+  "summary": "The article begins by outlining the pervasive nature of embedded systems in modern life, particularly in smart homes and building automation. It highlights the security challenges posed by the widespread use of IPv4 and the limitations of embedded systems in implementing robust security measures like SSL and SSH. The author categorizes embedded system architectures into hardcore and softcore processing, emphasizing the advantages of FPGAs for hacking applications due to their reprogrammable nature and ability to perform parallel processing. \n\nSubsequent sections delve into practical hacking techniques using embedded systems, including port scanning, brute-force attacks, and SQL injection. The author provides a detailed walkthrough of creating a 'hacking machine' using Altera's NIOS development board and embedded Linux, showcasing how to exploit vulnerabilities in networked systems. The article concludes by discussing the potential of embedded systems for future applications in security and hacking, urging readers to consider both the utility and risks associated with these technologies."
+}

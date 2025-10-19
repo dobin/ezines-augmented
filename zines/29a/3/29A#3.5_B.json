@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Messev v1.00",
+  "authors": "T-2000 / Invaders",
+  "date": "March 1998 / May 1998",
+  "historical_context": "This article discusses the development of a stealth virus during a time when computer viruses were becoming increasingly sophisticated, reflecting the hacker culture's focus on evasion and stealth.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "Messev v1.00 is a stealthy .EXE infector designed to drop the Gwar bootsector virus. It employs various techniques to evade detection and includes anti-debugging and anti-tracer capabilities.",
+  "summary": "The Messev v1.00 virus, crafted by T-2000 of the Invaders group, is a parasitic resident .EXE infector that stealthily drops the Gwar bootsector virus. With a size of over 2776 bytes, it utilizes advanced techniques such as tunneling on INT 13h and INT 21h, variable encryption, and full stealth capabilities that render it invisible to many antivirus scanners. The virus is designed to evade detection by modifying system parameters and employing anti-debugging tricks, making it one of the stealthiest viruses of its time. It also includes features to trash boot sectors if a tracer is detected, showcasing the author's focus on evasion and countermeasures against analysis tools. The article provides insights into the virus's structure, capabilities, and the author's experiences during its development, reflecting the hacker ethos of creativity and technical prowess in malware design.",
+  "additional_notes": "The author encourages modifications and sharing of the source code, emphasizing a collaborative spirit within the hacker community."
+}

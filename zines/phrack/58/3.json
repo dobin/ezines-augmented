@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x03 of 0x0e",
+  "title": "Signal Noise",
+  "authors": "phrackstaff",
+  "date": "2001/12/20",
+  "historical_context": "This article reflects the hacker culture of the early 2000s, focusing on UNIX signal handling and covert communication methods.",
+  "target_audience": "Hackers, security researchers, UNIX enthusiasts",
+  "short_summary": "The article explores UNIX signal handling, particularly focusing on SIGSEGV and methods to recover from it. It also discusses covert data transmission using signals, showcasing practical examples.",
+  "summary": "This article delves into the intricacies of UNIX signal handling, particularly the notorious SIGSEGV signal, which indicates a segmentation fault. The author discusses how processes can potentially recover from this signal, which typically leads to termination. By overriding the default signal handler, a process can continue execution after a fault, although this is fraught with risks as the process may be in an undefined state. The article provides a detailed examination of the kernel's signal delivery mechanism and presents a preload library that can be used to recover from SIGSEGV for experimental purposes. However, the author cautions against using this technique in production systems due to its inherent instability.\n\nAdditionally, the article introduces a novel method of data transmission using UNIX signals, likening it to a covert channel. By sending specific signals to represent binary data, the author illustrates how processes can communicate without traditional networking methods. This section includes practical code examples for both sending and receiving data via signals, showcasing the creativity and resourcefulness of the hacker community in utilizing system features for unconventional purposes."
+}

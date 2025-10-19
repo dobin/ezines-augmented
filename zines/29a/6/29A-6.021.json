@@ -1,0 +1,34 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #6 of 11",
+      "title": "Biocode uploading using only HTTP.",
+      "authors": "TheVoid '11111010001",
+      "date": "",
+      "historical_context": "This article discusses techniques for exploiting IIS servers, particularly relevant during the early 2000s when many such servers were vulnerable to various attacks.",
+      "target_audience": "Hackers, security researchers, and those interested in malware development.",
+      "short_summary": "The article presents a method for uploading malicious code to IIS servers using HTTP requests, bypassing traditional TFTP methods and firewalls.",
+      "summary": "In this article, TheVoid outlines a novel technique for infecting IIS servers by leveraging HTTP requests to upload malicious code, circumventing the limitations of TFTP. The method involves executing commands on the server to create and upload files line by line, ultimately allowing the worm to propagate without relying on TFTP, which is often blocked by firewalls. The author humorously addresses the ease of exploiting vulnerable servers, emphasizing the simplicity of the technique and its effectiveness against common security measures.",
+      "techniques": [
+        "Using HTTP requests to execute commands on the server.",
+        "Creating files on the server by echoing lines into them.",
+        "Utilizing the debug command to convert scripts into executable files."
+      ]
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #7 of 11",
+      "title": "Firewall bypassing techniques for wormies.",
+      "authors": "TheVoid '11111010001",
+      "date": "",
+      "historical_context": "This article reflects the ongoing battle between malware developers and network security professionals, particularly in the context of firewalls and intrusion prevention systems.",
+      "target_audience": "Hackers, malware developers, and security professionals interested in firewall evasion techniques.",
+      "short_summary": "The article discusses various methods for bypassing firewalls when attempting to infect servers with worms, highlighting both incoming and outgoing traffic strategies.",
+      "summary": "TheVoid provides a detailed examination of techniques for circumventing firewalls that may impede the spread of worms. The article outlines several scenarios, including how to exploit outgoing traffic rules and utilize reverse connections to maintain control over infected machines. The author humorously presents the challenges posed by firewalls while offering practical solutions, such as using DNS requests or manipulating TCP flags to send commands to infected servers. This piece serves as both a guide for aspiring malware developers and a commentary on the persistent cat-and-mouse game between attackers and defenders in the cybersecurity landscape.",
+      "techniques": [
+        "Using reverse connections to download worm code.",
+        "Exploiting DNS traffic to bypass firewall restrictions.",
+        "Sending packets with specific flags to communicate with infected machines."
+      ]
+    }
+  ]
+}

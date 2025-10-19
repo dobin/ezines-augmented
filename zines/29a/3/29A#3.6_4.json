@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Z0MBiE.PGPMorph-II",
+  "authors": "Z0MBiE International",
+  "date": "1998",
+  "historical_context": "This article is part of the hacker culture of the late 1990s, focusing on virus creation and propagation techniques, particularly in relation to the PGP encryption standard.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "The article details the creation of a polymorphic virus capable of infecting various file types, including COM and EXE files, while utilizing PGP encryption for its payload.",
+  "summary": "In 'Z0MBiE.PGPMorph-II', the author presents a sophisticated approach to virus creation, emphasizing the use of polymorphism to evade detection by antivirus software. The virus is designed to infect both COM and EXE files, showcasing its versatility. The article provides a detailed breakdown of the assembly code used to implement the virus, including the structure of the PGP-encrypted payload and the mechanisms for file infection. The author also discusses the importance of stealth and adaptability in malware design, reflecting the ongoing cat-and-mouse game between virus creators and antivirus developers. This piece serves as both a technical guide and a cultural artifact from a time when the hacker community was deeply engaged in exploring the boundaries of software manipulation and security."
+}

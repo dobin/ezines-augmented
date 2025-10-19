@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 1, Phile #3 of 11",
+  "title": "The 1963 Virus",
+  "authors": "",
+  "date": "",
+  "historical_context": "The 1963 virus is one of the early examples of computer viruses, showcasing the evolution of malware from simple programs to more complex threats. This article provides insight into the mechanics of an overwriting virus.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "This article presents a detailed examination of the 1963 virus, classified as an overwriting virus. It discusses how the virus operates by attaching its code to the end of the infected file, effectively overwriting it while retaining some of the original data.",
+  "summary": "The 1963 virus is a fascinating case study in the early development of malware. Classified as an overwriting virus, it exhibits a unique behavior by appending its own code to the end of the file it infects, rather than completely erasing the original content. This duality of overwriting while preserving data presents a complex challenge for detection and removal. The article includes a debug script of the virus, allowing readers to analyze its structure and functionality in detail.\n\nThe technical breakdown of the virus reveals its assembly code, showcasing the intricate operations it performs. The article serves as a reminder of the ingenuity of early malware authors and the ongoing battle between security professionals and malicious actors. Understanding the mechanics of such viruses is crucial for modern security practices, as many principles of malware design remain relevant today."
+}

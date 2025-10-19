@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 2, Phile #7 of 11",
+  "title": "SVC 5.0",
+  "authors": "Dark Angel",
+  "date": "1993",
+  "historical_context": "SVC 5.0 is a notable example of a stealth virus from the early 1990s, a time when computer viruses were becoming more sophisticated and stealth techniques were being developed to evade detection.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "SVC 5.0 is a stealth virus that infects COM and EXE files without altering the original files on disk. It utilizes a memory-resident approach to conceal its presence and avoid common detection methods.",
+  "summary": "SVC 5.0 represents a significant advancement in stealth virus technology, demonstrating how malware can operate without modifying the original files on disk. Unlike earlier viruses that would rewrite files, SVC 5.0 alters only the memory image, which results in fewer disk accesses and avoids the common pitfalls of file corruption associated with disk rewriting. This stealth capability allows it to evade detection by standard antivirus tools of the time, which often relied on file size or content checks to identify infections.\n\nThe article provides a detailed disassembly of the virus code, showcasing its installation process and infection mechanisms. It highlights the virus's ability to check for certain conditions before executing its payload, such as verifying the execution of programs with specific strings in their filenames. This level of sophistication indicates a growing understanding of operating system internals and the need for stealth in malware design. The technical details presented serve as both a historical record of early virus development and a cautionary tale for modern security practices."
+}

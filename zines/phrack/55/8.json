@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #8 of 19",
+  "title": "The Frame Pointer Overwrite",
+  "authors": "klog <klog@promisc.org>",
+  "date": "09.09.99",
+  "short_summary": "This article explores the exploitation of a buffer overflow vulnerability by demonstrating how to manipulate the frame pointer with a single byte overflow. It provides a detailed example of a vulnerable SUID program and outlines the steps to exploit it, emphasizing the challenges and considerations involved.",
+  "summary": "In 'The Frame Pointer Overwrite', klog delves into the intricacies of exploiting buffer overflow vulnerabilities, specifically focusing on a scenario where only a single byte can be overflowed. The article presents a pseudo vulnerable SUID program and meticulously walks through the process of exploiting it, highlighting how the overflow can be leveraged to alter the execution flow of the program. By examining the stack structure and the role of the frame pointer, klog illustrates that even minimal overflows can lead to significant security breaches if exploited correctly.\n\nThe author emphasizes the importance of understanding the execution context and the challenges posed by such an exploit, including the need to accurately predict stack sizes and the positioning of variables. While the technique may seem impractical in real-world scenarios, it serves as a reminder that no vulnerability is too small to be exploited. The article concludes with a call to recognize the potential of even minor flaws in software security, reinforcing the notion that every vulnerability can be a gateway to exploitation if approached with the right knowledge and techniques."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0c, Issue 0x41, Phile #0x0a of 0x0f",
+  "title": "phook - The PEB Hooker",
+  "authors": "[Shearer] - eunimedesAThotmail.com, Dreg - DregATfr33project.org",
+  "date": "October 15 2007",
+  "historical_context": "This article discusses PEB hooking, a technique used in reverse engineering and malware analysis, which was particularly relevant in the context of Windows security.",
+  "target_audience": "Hackers, security researchers, malware analysts, and reverse engineers.",
+  "short_summary": "The article introduces 'phook', a tool for implementing PEB hooking in Windows processes. It explains the underlying concepts of the Process Environment Block (PEB) and how to manipulate it to replace DLLs in memory, allowing for advanced hooking techniques.",
+  "summary": "The article provides an in-depth exploration of PEB hooking, a method that allows for the replacement of a DLL in memory with a fake DLL, enabling the interception of API calls without altering the original executable. It begins with an introduction to the PEB and its significance in the Windows operating system, detailing the structure and components necessary for understanding the hooking process. The authors highlight the limitations of traditional hooking methods, such as IAT hooking, and present PEB hooking as a more robust alternative that can evade detection by software protection systems.\n\nThe implementation of 'phook' is described in detail, including the design of its components such as InjectorDLL, which creates suspended processes for DLL injection, and Console Control, which provides an interactive command interface for executing hooking commands. The article also discusses the advantages of PEB hooking, such as its stability and the ability to monitor multiple APIs through a stack of fake DLLs. The authors conclude by emphasizing the potential applications of phook in reverse engineering and malware analysis, making it a valuable resource for security professionals and hackers alike."
+}

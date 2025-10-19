@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #009 of 11",
+  "title": "Grace",
+  "authors": "TLN",
+  "date": "02/95",
+  "historical_context": "This article discusses a mid-file COM/EXE TSR (Terminate and Stay Resident) virus from the mid-1990s, a period marked by the rise of computer viruses and malware.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in virus development.",
+  "short_summary": "The article presents a mid-file COM/EXE TSR infector virus named 'Grace', detailing its unique infection mechanism that evades traditional virus scanners. It discusses the virus's structure, vulnerabilities, and humorous messages displayed upon execution.",
+  "summary": "In this article, TLN introduces 'Grace', a mid-file COM/EXE TSR virus that employs an innovative infection mechanism, making it difficult for conventional virus scanners to detect it. Unlike other viruses that infect at entry points, Grace infects the middle of the host file, which allows it to evade heuristic detection. However, this design choice also exposes it to signature scanning vulnerabilities due to its fixed entry point code. The author notes that while the virus is effective, it has limitations, such as increased memory usage and extra disk accesses due to its design choices. The article also humorously reflects on the challenges faced during its development, including the author's frustration with the coding process and the resulting inefficiencies in the virus's implementation.\n\nThe code provided is modular and includes extensive comments, making it accessible for readers interested in understanding the inner workings of the virus. Grace infects COM and EXE files during various operations, such as opening and executing, and displays quirky messages like 'Have a nice DOS!' upon execution. TLN's candid writing style and technical insights provide a glimpse into the mindset of virus developers during this era, highlighting both the creativity and challenges involved in malware creation."
+}

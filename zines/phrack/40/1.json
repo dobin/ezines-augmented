@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty, File 1 of 14",
+  "title": "Phrack 40",
+  "authors": "Dispater, Knight Lightning, Brian Oblivion, Crimson Flash, Toucan Jones, Datastream Cowboy, Taran King, The Racketeer, Rambone",
+  "date": "August 1, 1992",
+  "historical_context": "This issue marks the 40th Anniversary of Phrack Magazine and reflects the vibrant hacker culture of the early 1990s, including events like SummerCon '92.",
+  "target_audience": "Hackers, phreakers, security professionals, and enthusiasts of hacker culture.",
+  "short_summary": "Phrack 40 celebrates its 40th issue with articles on cellular telephony, insights from the SummerCon '92, and a special profile on legendary hacker Lex Luthor. It also features discussions on network security and the underground software trading scene.",
+  "summary": "In this landmark 40th issue of Phrack, the magazine reflects on its journey and the hacker culture that has evolved over the years. The issue includes a detailed report on the successful SummerCon '92, showcasing the largest turnout in its history. Notable contributions include Brian Oblivion's continuation of his exploration into cellular telephony and Crimson Flash's in-depth analysis of telephony techniques, including RC/MAC, FACS, and MARCH. The articles reveal the vulnerabilities in telecommunications that were often overlooked by major companies like Southwestern Bell and BT Tymnet, emphasizing the role of hackers in exposing these weaknesses.\n\nAdditionally, the issue features a special Phrack Pro-Phile on Lex Luthor, a prominent figure in the underground hacking community, providing readers with insights into his legendary status and contributions. The Network Miscellany column and Pirates Cove section keep readers updated on the latest happenings in the underground software trading world. With a mix of technical knowledge, cultural commentary, and community news, Phrack 40 serves as both a celebration of hacker culture and a critical resource for those involved in the field."
+}

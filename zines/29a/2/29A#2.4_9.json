@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virus spotlite: Padanian Warrior 1",
+  "authors": "b0z0/iKx",
+  "date": "1997",
+  "historical_context": "This article discusses a boot virus from the late 1990s, a time when viruses were becoming increasingly sophisticated and prevalent in the computing landscape.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The article provides an in-depth analysis of the Padanian Warrior 1 boot virus, detailing its stealth techniques, infection methods, and payload activation strategies, all within a compact code size.",
+  "summary": "The Padanian Warrior 1 is a compact boot virus that infects the Master Boot Record (MBR) of hard disks and floppy disks accessed via DOS. It employs a variety of clever techniques to remain stealthy and effective, such as not allocating memory and using ports for MBR infection. The virus's residency is achieved by copying itself into an unused part of the Interrupt Vector Table, allowing it to operate without typical memory allocation. Notably, it utilizes the 18_tech method to avoid detection by antivirus software, making it less noticeable during operation. The virus also features a unique payload activation mechanism that counts down with each boot, incrementing with successful floppy infections, thereby prolonging its life on busy systems while potentially activating on isolated machines. The article concludes with a disassembly of the virus code, showcasing its efficient use of 386 instructions and compact design, making it a noteworthy study for those interested in malware development and analysis.",
+  "disasm": "The article includes a detailed disassembly of the virus code, demonstrating its functionality and the clever techniques employed to achieve its goals."
+}

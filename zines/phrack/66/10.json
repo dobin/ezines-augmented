@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x0A of 0x11",
+  "title": "MALLOC DES-MALEFICARUM",
+  "authors": "blackngel",
+  "date": "2009",
+  "historical_context": "This article builds upon previous works on heap exploitation techniques, particularly focusing on malloc vulnerabilities and their exploitation in the context of Linux systems.",
+  "target_audience": "Security researchers, exploit developers, and those interested in heap overflow vulnerabilities.",
+  "short_summary": "This paper serves as a practical guide to exploiting malloc vulnerabilities, detailing various techniques and correcting misconceptions from earlier works. It introduces new methods and provides proof of concepts for heap overflow exploitation.",
+  "summary": "In 'MALLOC DES-MALEFICARUM', blackngel presents a comprehensive exploration of heap overflow exploitation techniques, particularly focusing on the malloc implementation in Linux. The article demystifies several methods previously discussed in the context of heap exploitation, providing practical examples and correcting misunderstandings from earlier literature. The author emphasizes the importance of understanding the underlying malloc implementation and introduces new techniques that allow for arbitrary code execution through heap manipulation. Key concepts such as the 'House of Mind', 'House of Prime', and others are discussed, each representing different strategies for exploiting malloc vulnerabilities. The article also highlights the evolution of these techniques and their applicability in modern systems, making it a valuable resource for security professionals and exploit developers alike. Overall, it serves as both a historical account and a practical guide for those looking to deepen their understanding of heap exploitation."
+}

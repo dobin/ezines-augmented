@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Seven, Issue Fifty, Phile #9 of 16",
+  "title": "SS7 based diverter",
+  "authors": "The MasterMiiND",
+  "date": "",
+  "short_summary": "This article presents a detailed guide on building a telephone diverter using the SS7 signaling system, allowing users to make calls anonymously and avoid charges. It includes technical specifications, a parts list, and a schematic for construction.",
+  "summary": "In this article, The MasterMiiND shares a comprehensive design for a telephone diverter, also known as a 'Gold Box', which allows users to call one number and receive a dial tone from another, effectively masking their identity. The diverter is built to work with modern SS7 switching systems, addressing the shortcomings of older designs that were incompatible with contemporary technology. The author emphasizes the importance of understanding the SS7 system's properties to successfully implement the diverter, detailing the electrical signals involved in the operation of the device. \n\nThe article provides a step-by-step guide on constructing the diverter, including a parts list and a schematic diagram. The diverter can be used for various purposes, such as making anonymous calls or avoiding long-distance charges. The author also discusses the implications of using such a device, including the potential for misuse and the importance of ethical considerations in the hacker community. Overall, this article serves as both a technical manual and a commentary on the evolving landscape of telephone technology and hacking culture."
+}

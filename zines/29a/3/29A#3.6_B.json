@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "DOS.ExeHeader.Numbless.512",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1998",
+  "historical_context": "This article reflects the late 1990s era of virus creation, particularly focusing on DOS-based systems, which were prevalent before the rise of Windows operating systems.",
+  "target_audience": "Virus developers, security researchers, and those interested in malware history.",
+  "short_summary": "The article presents a simple DOS EXE infector virus that utilizes blank spaces in the EXE header to insert itself. It features stealth capabilities and an anti-debugging routine, while acknowledging the limitations of its spread due to the decline of DOS.",
+  "summary": "In this article, Jacky Qwerty introduces a DOS EXE infector virus, detailing its functionality and construction. The virus operates by exploiting unused spaces in the EXE header, converting the infected file into a COM image. It hooks into Int 13h to monitor disk operations, allowing it to stealthily infect other EXE files while avoiding larger files and Windows executables to maintain system stability. The author notes that the virus is designed to be 'full stealth,' meaning it does not easily reveal its presence to users or antivirus software. However, it is limited in its spread due to the declining use of DOS and the rarity of small EXE files, which are typically under 64 KB in size.\n\nThe technical details provided include assembly code snippets for building the virus, showcasing the author's programming skills and understanding of low-level system operations. The article also includes a disclaimer emphasizing that the code is for educational purposes only, reflecting a common sentiment in the hacker community of the time. The author expresses admiration for fellow virus creators, highlighting a sense of camaraderie among those involved in virus development. Overall, this piece serves as both a technical guide and a historical artifact from the early days of malware development."
+}

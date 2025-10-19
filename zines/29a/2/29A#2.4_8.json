@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "HMA Boot Virus",
+  "authors": "Q the Misanthrope",
+  "date": "Not specified",
+  "historical_context": "This article discusses a boot virus that exploits the High Memory Area (HMA), a technique relevant during the DOS and early Windows era.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in historical malware techniques.",
+  "short_summary": "The article details the design and implementation of a boot virus that utilizes the High Memory Area (HMA) to persistently infect systems by modifying the CONFIG.SYS file.",
+  "summary": "In this article, Q the Misanthrope presents a boot virus that cleverly utilizes the High Memory Area (HMA) to ensure its persistence across system reboots. The virus employs a brute force method to gain access to the HMA, which allows it to operate in a memory space that is typically reserved for system use. Upon booting, the virus waits for DOS to load, creates a random file, and modifies the CONFIG.SYS file to include an 'Install=' statement that re-invokes the virus on subsequent boots. This method of infection is compact, requiring only 512 bytes of code, and is compatible with Windows 95, showcasing the virus's adaptability to different operating environments.\n\nThe technical details provided in the article include assembly code snippets that illustrate the virus's functionality, such as hooking into DOS interrupts and manipulating memory. The author explains how the virus installs itself by modifying critical system files and how it can evade detection by checking for its own presence before attempting to infect. This article serves as a historical reference for understanding early malware techniques and the evolution of virus design, making it a valuable read for those interested in the roots of computer security and malware analysis."
+}

@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Automated vulnerability auditing in machine code",
+  "authors": "Tyler Durden <tyler@phrack.org>",
+  "date": "May 22, 2007",
+  "historical_context": "This article reflects the growing need for automated tools in vulnerability analysis, a response to the increasing complexity of software and the demand for security.",
+  "target_audience": "Security researchers, hackers, and developers interested in vulnerability analysis and static code analysis.",
+  "short_summary": "The article discusses the design and implementation of Chevarista, a static analyzer for binary programs aimed at automating vulnerability detection without executing the code. It explores various analysis techniques, including control flow and data flow analysis, and highlights the challenges of auditing machine code compared to source code.",
+  "summary": "In 'Automated vulnerability auditing in machine code', Tyler Durden introduces Chevarista, a static analysis tool designed to identify vulnerabilities in binary programs. The article emphasizes the necessity of automated auditing due to the impracticality of exhaustive manual analysis, especially as software complexity increases. Durden outlines the differences between static and dynamic analysis, arguing that while fuzzing is useful, it lacks the depth of understanding that static analysis provides. Chevarista aims to bridge this gap by analyzing machine code directly, allowing for the identification of vulnerabilities such as buffer overflows and memory leaks without executing the program. The author discusses various techniques, including control flow and data flow analysis, and the challenges of recovering information from binary code, such as variable names and types, which are often lost during compilation. Durden concludes by encouraging the underground community to adopt formal techniques for vulnerability discovery, while also acknowledging the limitations and ongoing development of Chevarista.",
+  "code": "The source code for Chevarista is mentioned to be available upon request, indicating that it is not included in the article but can be shared with interested parties."
+}

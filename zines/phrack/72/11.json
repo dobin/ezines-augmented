@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Desync the Planet - Rsync Remote Code Execution",
+  "authors": "Simon Scannell, Pedro Gallegos, Jasiel Spelman",
+  "date": "October 2024",
+  "historical_context": "This article discusses vulnerabilities found in Rsync, a widely used file synchronization tool, and their implications for supply chain attacks, referencing past exploits and the importance of securing such utilities.",
+  "target_audience": "Security researchers, penetration testers, system administrators, and developers interested in software vulnerabilities and exploitation techniques.",
+  "short_summary": "The article details critical vulnerabilities in Rsync that allow unauthenticated remote code execution and arbitrary file read/write capabilities. It explores exploitation techniques, including memory corruption and path traversal vulnerabilities, and discusses potential supply chain attack scenarios.",
+  "summary": "In this comprehensive analysis, the authors uncover multiple vulnerabilities within the Rsync file synchronization utility, including memory corruption and path traversal issues. These vulnerabilities can be exploited by unauthenticated attackers to execute arbitrary code on public Rsync servers or manipulate files on client machines. The exploitation techniques discussed include infoleaks that can bypass Address Space Layout Randomization (ASLR) and heap overflows that allow for arbitrary writes. The authors provide a detailed breakdown of the exploitation process, including the exploitation of server-side checksum parsing and heap grooming techniques to achieve remote code execution. Furthermore, the article highlights potential supply chain attack scenarios, emphasizing the risks posed by compromised Rsync servers that could lead to malicious payloads being injected into downstream software updates. The findings underscore the necessity for robust security measures in widely used software utilities like Rsync."
+}

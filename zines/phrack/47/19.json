@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Six, Issue Forty-Seven, File 19 of 22",
+  "title": "A Guide To British Telecom's Caller ID Service",
+  "authors": "DrB0B",
+  "date": "November 1, 1994",
+  "historical_context": "This article discusses the introduction of Caller ID services in the UK, which were relatively new at the time compared to the US. It highlights the technical differences in implementation and the public's understanding of the service.",
+  "target_audience": "Phone phreaks, telecommunications enthusiasts, security professionals.",
+  "short_summary": "The article provides an in-depth technical overview of British Telecom's Caller ID service, including its features, signaling protocols, and the underlying technology. It also discusses the public's initial confusion regarding the service and its implications for privacy.",
+  "summary": "In this article, DrB0B delves into the intricacies of British Telecom's Caller Display Service, particularly focusing on Calling Line Identification Presentation (CLIP). The service, which was set to launch in late 1994, allows users to see the caller's number and, eventually, their name. The article outlines the technical specifications of the service, including the necessary definitions, signaling protocols, and the various layers of communication involved. DrB0B emphasizes the importance of understanding these technical details, especially for phone phreaks who may want to exploit or enhance their use of the service. \n\nThe author also addresses the public's misunderstanding of the Caller ID service, noting that BT delayed its launch due to concerns that users were not grasping the implications of the technology. This article serves as both a technical guide and a commentary on the societal impact of emerging telecommunications technologies, making it a relevant read for those interested in the evolution of phone services and privacy concerns in telecommunications."
+}

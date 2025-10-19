@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x07 of 0x11",
+  "title": "Persistent BIOS Infection",
+  "authors": "aLS, Alfredo",
+  "date": "June 1 2009",
+  "historical_context": "This article discusses the potential for BIOS-level malware, a topic that has gained renewed interest with the rise of UEFI and firmware security concerns.",
+  "target_audience": "Security researchers, malware analysts, and advanced hackers interested in low-level system security.",
+  "short_summary": "The article presents a method for creating a persistent BIOS infection, detailing the process of modifying BIOS firmware to embed malicious payloads that execute before the operating system loads. It covers both VMware and real BIOS modifications, emphasizing the implications for system security.",
+  "summary": "In 'Persistent BIOS Infection', the authors delve into the intricacies of BIOS firmware and the potential for malicious modifications. They argue that while many believe BIOS infections are outdated, the reality is that with the right techniques, attackers can embed persistent rootkits directly into BIOS firmware. The paper outlines a systematic approach to modifying BIOS, starting with an overview of BIOS basics, followed by detailed steps for both VMware's Phoenix BIOS and real Award BIOS modifications. The authors provide proof-of-concept code and discuss payload strategies, including how to leverage BIOS calls to manipulate the operating system's behavior once it boots. They emphasize the importance of understanding BIOS structure and the risks associated with firmware vulnerabilities, making a compelling case for the need for better security measures in BIOS design.",
+  "additional_notes": "The article serves as both a technical guide and a warning about the vulnerabilities inherent in BIOS firmware, highlighting the need for ongoing research and development in firmware security."
+}

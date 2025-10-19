@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 3, File 002",
+  "title": "40Hex is now a print magazine",
+  "authors": "Geoff Heap",
+  "date": "Mon, 16 Aug 93 17:19:02 EDT",
+  "historical_context": "This article marks the transition of 40Hex from an online publication to a printed format, reflecting the growing interest in computer viruses during the early 1990s.",
+  "target_audience": "Hackers, virus researchers, security professionals, and anyone interested in computer viruses.",
+  "short_summary": "The article announces the launch of 40Hex Hardcopy, a printed version of the popular underground virus magazine, aimed at educating readers about computer viruses through disassemblies, programming articles, and interviews.",
+  "summary": "In this article, Geoff Heap introduces the new printed version of 40Hex, a magazine that has gained significant traction in the underground community for its in-depth coverage of computer viruses. The printed magazine, known as 40Hex Hardcopy, aims to cater to a diverse audience, providing both advanced programming articles for seasoned assembly language programmers and introductory content for novices. Each issue promises a complete virus disassembly, detailed programming insights, and interviews with notable virus writers and researchers, fostering a comprehensive understanding of the virus landscape. \n\nHeap emphasizes the importance of discourse in the field, with an editorial column dedicated to discussing various virus-related issues, encouraging submissions from all perspectives. The magazine is available through subscriptions, with a commitment to maintaining the free online version, ensuring accessibility for those who wish to stay informed about the evolving world of computer viruses. This move to print signifies a notable moment in hacker culture, highlighting the increasing public interest in computer security and the underground virus scene."
+}

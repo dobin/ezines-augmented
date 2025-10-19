@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3c, Phile #0x08 of 0x10",
+  "title": "Static Kernel Patching",
+  "authors": "jbtzhm <jbtzhm@nsfocus.com>",
+  "date": "",
+  "short_summary": "This article discusses a method for static kernel patching in Linux, focusing on how to embed a loadable kernel module (LKM) into the kernel image to ensure it runs on reboot, thus avoiding detection.",
+  "summary": "The article provides a detailed guide on static kernel patching, specifically targeting Linux systems. It begins with an introduction to the concept of loadable kernel modules (LKMs) and the need for stealthy installation methods that evade detection. The author outlines the steps required to extract the kernel from its image, allocate space for the LKM, and modify the kernel to ensure the LKM is executed upon boot. The process involves manipulating the kernel's symbol table and modifying the system call table to redirect calls to the LKM's initialization function. The article also discusses potential countermeasures to prevent detection of the patched kernel, emphasizing the importance of maintaining system integrity and security. The technical depth of the article makes it particularly relevant for security researchers and practitioners interested in kernel-level security and stealth techniques.",
+  "historical_context": "This article is part of a broader discourse on kernel security and the methods used by attackers to maintain persistence on compromised systems. It reflects the hacker culture's interest in low-level system manipulation and the ongoing cat-and-mouse game between security professionals and malicious actors.",
+  "target_audience": "Hackers, security researchers, and professionals interested in kernel security and exploitation techniques."
+}

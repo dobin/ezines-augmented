@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Encryption: theory",
+  "authors": "VirusBuster",
+  "date": "",
+  "historical_context": "This article discusses the evolution of virus encryption techniques during the early days of computer viruses, highlighting the shift from visible code to encrypted forms.",
+  "target_audience": "Security professionals, malware analysts, and hackers interested in virus decryption techniques.",
+  "short_summary": "The article provides an introduction to encryption methods used in computer viruses, detailing how early viruses were unencrypted and how encryption evolved to obscure code. It discusses various decryption methods and provides examples of encrypted virus structures.",
+  "summary": "In 'Encryption: theory', VirusBuster introduces readers to the fundamental concepts of encryption as applied to computer viruses. The article begins by explaining the historical context of early viruses, which had their code openly visible, and transitions to the first instances of encrypted viruses, such as Alexander.1951. The author outlines the basic structure of an encrypted virus, which typically includes a decryption routine followed by the actual virus code, and emphasizes the importance of understanding these structures for effective virus analysis and decryption. \n\nThe article delves into various decryption methods, illustrating how viruses can decrypt themselves either from top to bottom or bottom to top. VirusBuster provides practical advice on using debugging tools to trace and save decrypted code, along with examples of common decryption patterns found in viruses. The piece serves as both a historical overview and a technical guide, making it a valuable resource for anyone looking to deepen their understanding of virus encryption and decryption techniques."
+}

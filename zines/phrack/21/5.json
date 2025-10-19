@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 21, File 5 of 11",
+  "title": "Satellite Communications",
+  "authors": "Scott Holiday",
+  "date": "July 11, 1988",
+  "historical_context": "This article was written during a time when satellite communications were becoming more prevalent, and the technology was still evolving. It reflects the early understanding and challenges of satellite communication systems.",
+  "target_audience": "Hackers, telecommunications professionals, and those interested in satellite technology.",
+  "short_summary": "Scott Holiday's article provides an in-depth look at satellite communications, discussing the technology behind microwave terminals, propagation delays, and the methods of accessing satellites. It highlights both the advantages and disadvantages of satellite communication systems.",
+  "summary": "In 'Satellite Communications', Scott Holiday delves into the intricacies of satellite communication systems, which utilize microwave terminals to facilitate reliable and high-capacity communication circuits. Positioned in geosynchronous orbits, these satellites maintain a fixed position relative to the Earth, requiring three satellites to cover the globe. The article explains the mechanics of transponders, the propagation delay inherent in satellite communications, and the various methods of accessing satellites, such as FDMA, TDMA, and CDMA. Each method has its trade-offs in terms of error rates and throughput, making the choice of access method crucial for effective communication.\n\nHoliday also discusses the unique challenges posed by satellite communications, including propagation delays that affect both voice and data transmissions. He notes that while satellite lines are advantageous for broadband applications and international communications, they come with significant drawbacks such as delayed responses in conversations and potential connection losses due to modem incompatibilities. The article concludes with a nod to the future of satellite communications, suggesting that hackers may one day leverage this technology for innovative applications, hinting at the evolving landscape of telecommunications."
+}

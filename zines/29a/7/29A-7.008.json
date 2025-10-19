@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Self-Executing HTML",
+  "authors": "roy g biv / 29A",
+  "date": "May 2003",
+  "historical_context": "This article is significant in the context of early malware development, showcasing innovative techniques for exploiting HTML and email systems to execute malicious code.",
+  "target_audience": "Hackers, security researchers, malware analysts.",
+  "short_summary": "The article discusses a novel technique for creating self-executing HTML files that can spread malware via email. It details the use of MHTML and DHTML to execute code automatically when the email is opened.",
+  "summary": "In 'Self-Executing HTML', author roy g biv introduces a groundbreaking method for crafting self-executing HTML files that can be disseminated through email. By leveraging MHTML (MIME HTML) and DHTML (Dynamic HTML), the article explains how attackers can embed executable code within emails that automatically executes upon opening. The author outlines the technical details, including the use of the 'Content-Location:' token to specify file paths and the manipulation of Internet Explorer's object model to execute the code seamlessly. This technique exemplifies the creativity and technical prowess of malware authors in the early 2000s, pushing the boundaries of what was possible with HTML and email systems at the time.\n\nThe article also provides practical examples of how the malicious email might be structured, including obfuscation techniques to evade detection by security software. The use of polymorphic engines to alter the email text further complicates detection efforts, showcasing the ongoing arms race between malware developers and security professionals. Overall, this piece serves as both a historical document and a technical guide, illustrating the evolution of malware techniques and the importance of understanding these methods for modern cybersecurity practices."
+}

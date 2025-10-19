@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Macro virus trickz",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1997",
+  "historical_context": "This article was written shortly after the release of Microsoft Office '97, which included Word '97. It reflects the early days of macro viruses and the challenges faced by virus writers at that time.",
+  "target_audience": "Hackers, virus writers, security professionals, and those interested in malware development.",
+  "short_summary": "The article discusses common problems and limitations associated with macro viruses, particularly in Microsoft Word. It provides solutions and code examples to overcome issues like the 'SaveAs' problem and multi-language support challenges.",
+  "summary": "In 'Macro virus trickz', Jacky Qwerty explores the intricacies of writing macro viruses for Microsoft Word, focusing on prevalent issues such as the 'SaveAs' problem and multi-language support. The 'SaveAs' problem arises when a macro virus attempts to save an infected document, as Word restricts saving options to its template directory, which can alert users to the virus's presence. Qwerty proposes a clever solution that involves making Word perceive the infected document as a genuine document, thus allowing users to save it freely without suspicion. The article includes a detailed code example demonstrating this workaround, showcasing the author's technical prowess and understanding of Word's macro environment.\n\nAdditionally, the article addresses the challenges of creating multi-language macro viruses, as different language versions of Word use different menu item names. Qwerty suggests a method for intercepting file-related macros based on the installed Word language, allowing the virus to function correctly across various localizations. Despite the potential for user customization to disrupt this approach, the author emphasizes its effectiveness under standard installations. Overall, the article serves as a technical guide for those interested in the mechanics of macro viruses, while also providing a cautionary note regarding the ethical implications of such knowledge."
+}

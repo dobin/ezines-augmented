@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Four, Phile #4 of 11",
+  "title": "Profile of MAX long distance service",
+  "authors": "Phantom Phreaker",
+  "date": "02/21/86",
+  "historical_context": "This article provides insights into the MAX long distance service during a time when telecommunications were transitioning with the advent of Equal Access, which allowed customers to choose their long-distance carriers.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts",
+  "short_summary": "The article details the operational mechanics of the MAX long distance service, including dialing procedures, error handling, and the use of tones for phreaking. It serves as a guide for users looking to navigate the MAX system effectively.",
+  "summary": "In this article, Phantom Phreaker explores the intricacies of the MAX long distance service, a product of Lexitel that was on the verge of merging with Allnet. The author outlines the dialing process, emphasizing the importance of inputting a valid six-digit authorization code followed by the area code and number. The article also highlights the use of 2600 Hz tones to reset the system after an invalid code, a technique familiar to phreakers of the time. Additionally, it notes the limitations of the MAX service, such as restrictions on certain exchanges and the inability to make international calls.\n\nThe article serves as both a practical guide and a historical snapshot of telecommunications practices in the mid-1980s. It provides valuable insights for those interested in the mechanics of long-distance calling services and the phreaking culture that sought to exploit these systems. The detailed descriptions of error messages and operational nuances reflect the author's deep understanding of the technology, making it a relevant read for modern security researchers and telecommunications historians alike."
+}

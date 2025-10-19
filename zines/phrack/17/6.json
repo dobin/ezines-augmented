@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seventeen, Issue 6, Phile #6 of 12",
+  "title": "How to Hack an HP 2000",
+  "authors": "Grey Sorcerer",
+  "date": "07 April 1988",
+  "historical_context": "This article was published during a time when personal computing was becoming more widespread, and security vulnerabilities in systems like the HP 2000 were being explored by hackers.",
+  "target_audience": "Hackers, security researchers, and enthusiasts of vintage computing.",
+  "short_summary": "The article provides techniques for bypassing security on the HP 2000 system, including exploiting the HELLO program and utilizing a two-terminal method to manipulate data buffers.",
+  "summary": "In 'How to Hack an HP 2000', Grey Sorcerer outlines several methods to exploit vulnerabilities in the HP 2000 system's security. The article begins by detailing how to bypass the HELLO program, which is designed to restrict access. By manipulating the login sequence with a break command, users can abort the HELLO program and gain unauthorized access. Additionally, the author describes a method for creating a 'bad file' that can cause the system to crash when saved, demonstrating a significant flaw in the HP 2000's handling of file operations.\n\nThe most intriguing technique discussed is the 'two terminal' method, which takes advantage of the system's buffer management. By using two terminals, one can create a large data file while the other reads old data from the disk, potentially uncovering sensitive information. This method highlights the importance of understanding how data is stored and managed in memory. The article serves as both a technical guide and a cautionary tale about the inherent vulnerabilities in early computing systems, making it a relevant read for those interested in the history of hacking and computer security."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x0c of 0x10",
+  "title": "NTIllusion: A portable Win32 userland rootkit",
+  "authors": "Kdm <Kodmaker@syshell.org>",
+  "date": "",
+  "historical_context": "This article is a detailed tutorial on creating a userland rootkit for Windows, showcasing techniques that were relevant during the rise of rootkit threats in the early 2000s.",
+  "target_audience": "Security researchers, malware analysts, and those interested in rootkit development.",
+  "short_summary": "The article provides a comprehensive guide on building a userland rootkit for Windows, focusing on code injection, process hiding, and stealth techniques. It discusses various methods for manipulating system functions to maintain invisibility and control over user processes.",
+  "summary": "In this article, Kdm presents a thorough exploration of userland rootkits, specifically the NTIllusion rootkit designed for Windows. The paper begins by explaining the fundamental concepts of rootkits, distinguishing between userland and kernel land rootkits. It details the techniques for code injection and interception, including system hooks, CreateRemoteThread, and manipulating thread contexts. The author emphasizes the importance of stealth, outlining methods to hide processes, files, and registry entries from standard system tools. The rootkit operates without requiring administrative privileges, making it particularly dangerous as it can remain undetected by users who typically do not operate with elevated rights.\n\nThe article further delves into specific implementation strategies, such as API hooking and the use of the Process Environment Block (PEB) to hide loaded modules. Kdm provides code examples for various functions, including process hiding, file hiding, and a global TCP backdoor for password grabbing. The conclusion reflects on the effectiveness of userland rootkits and the ongoing cat-and-mouse game between malware developers and security professionals, highlighting the need for vigilance and advanced detection methods in modern computing environments."
+}

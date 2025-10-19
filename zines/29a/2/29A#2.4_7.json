@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Paraguay 3.0 Virus",
+  "authors": "Int13h",
+  "date": "Not specified",
+  "historical_context": "This article discusses a DOS virus created in the early 1990s, a time when computer viruses were becoming more prevalent and sophisticated. The Paraguay virus is notable for its stealth techniques and ability to infect various file types.",
+  "target_audience": "Security professionals, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The Paraguay 3.0 virus is a sophisticated DOS virus that employs various stealth techniques to infect COM and EXE files. It features a fast infection mechanism and can delete files on specific conditions, showcasing the evolving complexity of malware during its time.",
+  "summary": "The Paraguay 3.0 virus, coded by Int13h, is a notable example of early DOS malware that demonstrates advanced infection techniques for its time. It infects COM and EXE files, specifically targeting those between 666 and 60000 bytes. The virus employs a resident mechanism using the Memory Control Block (MCB) and hooks into INT 21h to execute its payload. Its stealth capabilities include hiding its presence from antivirus software by manipulating file attributes and time stamps, as well as avoiding reinfection of already infected files. Additionally, it features a destructive payload that can delete files in the C:\\WINDOWS directory on Paraguay's independence day if certain conditions are met, highlighting the malicious intent behind its design.\n\nThe virus is also polymorphic, changing its code with each infection to evade detection. It includes various checks to avoid infecting files with specific extensions and those on Novell Networks, showcasing a level of sophistication in its design. The article provides a detailed breakdown of the virus's assembly code, illustrating the technical prowess required to create such malware. Overall, the Paraguay 3.0 virus serves as a historical reference point in the evolution of computer viruses and the ongoing battle between malware creators and security professionals."
+}

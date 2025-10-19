@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x05 of 0x12",
+  "title": "WRITING SHELLCODE FOR IA-64",
+  "authors": "papasutra of haquebright",
+  "date": "",
+  "historical_context": "This article discusses shellcode development for the IA-64 architecture, which was introduced by Intel and HP in the mid-1990s as a successor to the IA-32 architecture.",
+  "target_audience": "Security researchers, hackers, and developers interested in low-level programming and shellcode development.",
+  "short_summary": "The article provides a comprehensive guide to writing shellcode for the IA-64 architecture, covering its unique features, instruction set, and optimization techniques. It includes example code and practical advice for developers.",
+  "summary": "This paper serves as a detailed guide for writing shellcode specifically for the IA-64 architecture, which is notable for its explicit parallel instruction computing (EPIC) design. The author begins by explaining the architecture's fundamentals, including its fixed instruction size, the concept of bundles, and the importance of instruction types and templates. The IA-64 architecture allows for advanced features such as parallel execution and a rich set of registers, which are crucial for efficient shellcode development. The author emphasizes the need for careful consideration of dependency conflicts and memory alignment when coding for this architecture.\n\nThe article also delves into practical coding aspects, including the use of GCC IA-64 assembly language and the construction of system calls. The provided example code illustrates how to perform an execve system call, showcasing the intricacies of shellcode development on IA-64. The author concludes with references for further reading and optimization techniques, making this article a valuable resource for anyone looking to understand or work with IA-64 shellcode."
+}

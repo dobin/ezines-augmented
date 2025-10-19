@@ -1,0 +1,14 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #8 of 11",
+      "title": "IIS Log Cleaning in Run-Time",
+      "authors": "Unknown",
+      "date": "Unknown",
+      "historical_context": "This article addresses the need for stealth in web server exploitation, particularly concerning IIS log files.",
+      "target_audience": "Hackers, penetration testers",
+      "short_summary": "The article describes a method for cleaning IIS log files in real-time to avoid detection after an exploit.",
+      "summary": "In this article, the author presents a method for cleaning IIS log files without stopping the IIS service, which is crucial for maintaining stealth during an attack. The traditional method of stopping the service to delete logs is criticized for its unreliability. Instead, the author suggests opening the log file in read-write mode and overwriting its contents with zeros. The article provides a detailed implementation of the log cleaning process, including recursive searches for log files and the use of Windows API functions. This approach allows attackers to erase their tracks effectively, emphasizing the importance of log management in web server security."
+    }
+  ]
+}

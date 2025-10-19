@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Hooking Windows API",
+  "authors": "Holy_Father <holy_father@phreaker.net>",
+  "date": "6.10.2002",
+  "historical_context": "This article was written during a time when Windows NT technology was becoming prevalent, and understanding API hooking was crucial for both security professionals and hackers.",
+  "target_audience": "Hackers, security researchers, malware developers, and anyone interested in Windows internals.",
+  "short_summary": "This article provides a comprehensive guide on various methods of hooking API functions in Windows, detailing techniques for both pre-execution and runtime modifications. It covers practical examples and code snippets for implementing these techniques.",
+  "summary": "In 'Hooking Windows API', Holy_Father delves into the intricacies of API hooking on Windows systems, particularly those based on NT technology. The article begins with an introduction to the concept of hooking, emphasizing the ability to replace the code of API functions to alter program behavior. The author categorizes hooking methods into two main types: hooking before running a process and hooking during its execution. The former includes techniques like rewriting the entry point of a function or modifying the Import Address Table (IAT), while the latter focuses on runtime modifications using methods such as DLL injection and direct memory manipulation.\n\nThe article provides detailed explanations and code examples for each hooking method, including the use of Windows API functions like VirtualProtect, WriteProcessMemory, and CreateRemoteThread. The author also discusses the challenges associated with each technique, such as the need for appropriate memory access rights and the complexities of managing original function calls. Overall, this document serves as a valuable resource for anyone looking to understand and implement API hooking in Windows, offering insights that remain relevant in the context of modern security research and malware development."
+}

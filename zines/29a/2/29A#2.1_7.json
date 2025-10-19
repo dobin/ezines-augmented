@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Two Sides of Virus Scene",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1997",
+  "historical_context": "This article reflects the early days of computer viruses, highlighting the division between creative virus developers and destructive vandals. It provides insight into the mindset of virus creators during a time when the internet was becoming more accessible and the virus scene was evolving.",
+  "target_audience": "Hackers, virus developers, security professionals, and those interested in the history of malware.",
+  "short_summary": "Jacky Qwerty discusses the dichotomy within the virus scene, distinguishing between 'good' virus creators who seek challenges and innovation, and 'bad' ones who engage in destructive behavior. He shares his own contributions to the virus landscape, including notable viruses and utilities, while advocating for responsible coding practices.",
+  "summary": "In this article, Jacky Qwerty presents a passionate defense of the 'good' side of the virus scene, where creativity and technical challenge reign supreme. He contrasts this with the 'bad' side, characterized by mindless destruction and a lack of innovation. Qwerty emphasizes the importance of using one's skills for constructive purposes, encouraging fellow virus creators to push the boundaries of what is possible rather than resorting to vandalism. He expresses disdain for those who take the easy route, advocating for a more thoughtful approach to virus development.\n\nQwerty outlines his own contributions to the virus community, detailing several of his creations, including the first Win32 infector and a macro virus. He also introduces utilities designed to aid budding virus developers, emphasizing the educational aspect of his work. His call to action is clear: knowledge should be shared and not hoarded, and aspiring coders should strive to learn and innovate rather than follow in the footsteps of destructive peers. The article serves as both a manifesto for responsible virus creation and a historical snapshot of the virus scene in the late 1990s."
+}

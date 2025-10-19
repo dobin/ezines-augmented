@@ -1,0 +1,1232 @@
+                             ==Phrack Inc.==
+
+                Volume 0x10, Issue 0x47, Phile #0x07 of 0x11
+
+|=-----------------------------------------------------------------------=|
+|=----=[ Bypassing CET & BTI With Functional Oriented Programming ]=-----=|
+|=-----------------------------------------------------------------------=|
+|=------------------------------=[ LMS ]=--------------------------------=|
+|=-----------------------------------------------------------------------=|
+
+----| Table of contents
+
+1  - Introduction
+2  - FOP Background
+3  - FOP Gadget identification
+    3.1 Identification Process
+    3.2 Gadget Depth
+    3.3 Gadget Examples
+4  - FOP Dispatcher Gadget
+    4.1 - _dl_call_fini Dispatcher Gadget
+    4.2 - link_map Examination
+5  - Symbolic Engine
+    5.1 - Phase 1: Static Analysis
+    5.2 - Phase 2: Symbolic Execution
+6  - Examples
+7  - Final Thoughts
+    7.1 - Constraints
+    7.2 - Nomenclature
+    7.3 - Architecture Differences
+    7.4 - Turing Completeness
+    7.6 - Future Work
+    7.5 - Kernel FOP
+    7.7 - Possible Mitigations
+    7.8 - Conclusion
+8  - Acknowledgments
+9  - References
+10 - Appendix A: ARM "bin/sh" in memory chain
+11 - Appendix B: Intel "/bin/sh" in memory chain
+12 - Appendix C: Source Code
+
+
+----|  1. Introduction
+
+    Return Oriented Programming (ROP) has been around for over 15 years 
+now [1]. Since then, other code reuse techniques have been demonstrated 
+to work in certain circumstances, such as Jump Oriented Programming (JOP) 
+[2][3]. With the growth of these two techniques in the last decade, new 
+protections have been created to limit their usability. Some of these 
+include Control-Flow Enforcement Technology (CET) [4] for Intel processors 
+and Pointer Authentication (PAC) and Branch Target Identification (BTI) 
+[5][6] for ARM processors. The intent of these protections is to limit 
+the use of code reuse attacks such as ROP and JOP within a program.
+
+CET encompasses two primary protective measures: the Shadow Stack and 
+Indirect Branch Targeting (IBT) [7]. The Shadow Stack, a secondary 
+hardware stack, primarily records return addresses to verify the integrity 
+of the return path's control flow. While alternative methods to manipulate 
+values within this secondary stack do exist, the primary safeguard lies in 
+inspecting returns, thereby constraining ROP in scenarios such as stack 
+buffer overflows or stack pivots. 
+
+IBT involves the direct enforcement of specific landing destinations for 
+indirect branches, whether they are register or memory jump/call 
+instructions. Although the landing pad instruction necessary for IBT has 
+been incorporated since GCC 8 [8], its full integration into the Linux 
+system was only recently finalized [9]. Typically placed at the beginning 
+of functions susceptible to indirect referencing, this landing pad 
+directive serves as a safeguard. In Intel processors this landing pad 
+instruction is `ENDBR64`. Should an indirect jump or call fail to land on 
+the specified instruction, a trap is triggered. This protective measure 
+aims to mitigate the effectiveness of JOP attacks.
+
+Regarding ARM protections, we have PAC/BTI [6]. PAC involves applying a
+lightweight hashing protection to a memory value, typically pointers, 
+although it can be applied to almost any value. This process entails 
+storing the hashed value within the unused topmost bits of the pointer. 
+Given that userspace applications generally utilize no more than 48 bits 
+of the available 64-bit address space, this approach is feasible. 
+
+It can be easily implemented with a few instructions at both the beginning 
+and end of a function to safeguard return addresses. While it can also 
+serve to verify against other forms of memory corruption, it's not yet 
+commonplace in Linux to fully validate every potential function pointer 
+(a point of consideration for future developments).
+
+The second safeguard, BTI, mirrors IBT in functionality, albeit with 
+slightly different terminology. Like IBT, it involves placing a landing 
+pad instruction at the onset of functions to protect against JOP attacks 
+stemming from indirect branches. In ARM processors this landing pad 
+instruction is aptly named `BTI`.
+
+Given that both processor types (Intel, ARM) incorporate two primary
+techniques aimed at mitigating code reuse attacks such as ROP and JOP,
+leveraging these techniques to exploit a memory corruption vulnerability
+becomes a daunting task, if not nearly impossible. Instead of attempting 
+to bypass these safeguards, why not utilize them in accordance with their 
+original design? This approach can be achieved through Function Oriented
+Programming (FOP).
+
+
+----|  2. FOP Background
+
+    Ah, indeed, let's clarify: FOP diverges from the realm of Functional
+Programming paradigms, so aficionados of Haskell need not fret; they will 
+not find solace here. FOP, or Functional Oriented Programming, involves 
+employing an entire function (from its prologue to its epilogue) as a 
+gadget. Unlike the traditional notion of "gadgets" in ROP or JOP 
+scenarios, which typically consist of just a few instructions, such as 
+the classic "POP RDI; RET;", FOP extends gadgets to encompass entire 
+functions.
+
+The purpose of utilizing the entire function as the gadget is to leverage 
+two abilities from functions. The first is the ability to utilize a 
+function as intended. An example would be that by controlling two 
+parameters of a function call, such as strcpy, it becomes possible to 
+manipulate values in memory. This may seem like a small feat, but this 
+could be expanded to any function that includes a starting landing pad 
+instruction in Glibc, such as `mprotect` or `syscall`. 
+
+The second ability is gained by the side effects that occur from calling 
+a function. As parameter registers are usually considered volatile, there 
+is no value in restoring or protecting them. This results in parameter 
+register values to potentially be of use after a function call. 
+
+An example of this can be found in the Glibc internal function 
+`__hash_string`, and is used in the examples in Appendix B. This function 
+is normally used to create a hash of a string for lookup operations, 
+taking the string as the first argument through the RDI register. This 
+function has the unintended consequence of moving the RDI register to 
+point to the first null byte in memory, if RDI points to a valid address. 
+
+This is compiler and architecture dependent, but has been observed to be 
+fairly consistent across several Libc versions. While the intention of 
+this function is to return a hash of a string, an attacker can use this 
+to increment RDI to the end of a memory segment. Chaining similar side 
+effects together can then result in further modifications of registers 
+or values in memory. 
+
+The abilities described are dependent on a reliable dispatcher gadget. In 
+the aforementioned example, the dispatcher must not modify the volatile 
+argument registers between FOP gadget calls. This paper examines such a 
+dispatcher that is found normally within Glibc, and is called within 
+normal execution. Because the dispatcher's function call takes no 
+parameters, the parameter registers are not reset between calls. This 
+allows the next FOP gadget to use the parameter registers set by the 
+previous call. Using a memory corruption vulnerability and this 
+dispatcher, it becomes possible to build a FOP chain to gain execution.
+
+While FOP isn't an entirely novel technique, this paper endeavors to shed
+light on its potential impact on modern systems. The concept of employing
+entire functions as gadgets found its initial implementation in 2011 [10]. 
+The primary revelation was the ability to chain multiple Return-Into-Libc
+functions on the stack, thereby achieving Turing-complete functionality. 
+This concept underwent refinement, leading to the emergence of Loop 
+Oriented Programming (LOP) in 2015 [11]. LOP showcased the utilization of 
+function chaining with a loop gadget serving as a dispatcher. 
+Subsequently, in 2018, this evolved into FOP [12].
+
+FOP shares similarities with Counterfeit Object-Oriented Programming 
+(COOP) [18], with the primary distinction being FOP's avoidance of C++ 
+requirements and its broader applicability beyond vtable effects. COOP, 
+though mostly a theoretical attack, has shown potential in bypassing CET 
+protections [17]. 
+
+The illustrative example in [17] demonstrates the effective use of simple 
+functions to exploit a vulnerable Windows application, achieving execution 
+by leveraging a favorable trigger function that allows argument control 
+and external parameter loading, resulting in a shorter necessary chain. 
+In contrast, this paper explores a similar chain entirely within libc, 
+without relying on external strings or parameter loading, which leads to 
+a larger overall chain.
+
+While previous papers offered glimpses into the implementation of FOP, 
+this paper seeks to delve deeper into its utilization within Linux 
+environments. By demonstrating that a FOP attack can work solely within 
+Glibc, this paper will show that FOP is of use in a modern age of CPU 
+protections. This paper will also explore aspects such as gadget 
+identification and attack complexity, thereby expanding the scope of 
+FOP's application.
+
+
+----|  3. FOP Gadget Identification
+
+    In any code reuse attack, the effectiveness of the attack framework
+heavily relies on the gadgets employed. FOP follows a distinct approach 
+to gadget identification, compared to traditional ROP and JOP techniques.
+
+In ROP, identifying gadgets often involves searching for a return 
+instruction (0xC3 in x86-64) and tracing backward to uncover useful 
+instructions formed by byte combinations. Similarly, in JOP, this process 
+involves substituting the return instruction with a jump to a specified 
+location or register. However, FOP introduces a departure from this 
+conventional method. While it may still be feasible to identify a return 
+instruction and backtrack to the beginning of a function, the control 
+flow within functions may not always follow a linear path. Instead, it 
+may include conditional jumps and loops that alter the flow of execution.
+
+Consequently, FOP necessitates an alternate approach where identification
+proceeds forward from a designated starting point. Fortunately, the
+protective measures that FOP aims to circumvent introduce landing pad
+instructions alongside IBT and Branch Target Identification (BTI). These
+landing pad instructions serve as indicators for identifying a starting
+position from which to proceed forward during gadget identification.
+
+--------|  3.1 Identification Process
+
+    While pinpointing the starting location of a function marks a crucial
+step, it doesn't guarantee that the function can serve as a viable FOP 
+gadget. Here, symbolic execution proves invaluable. Symbolic execution 
+involves interpreting instructions as logical operations rather than 
+executing them outright [13]. This approach enables the traversal of 
+potential code paths within a code segment or binary without requiring 
+the setup of the exact runtime environment.
+
+Symbolic execution offers distinct advantages, particularly in identifying
+potential code paths and defining them through symbols. However, it's not
+without its limitations. One significant drawback lies in the possibility 
+of traversing paths that may not be feasible in a real-world scenario. 
+Because symbolic execution doesn't directly execute code paths, 
+comparisons may be misinterpreted, leading to issues like path explosion, 
+especially within loops or comparisons.
+
+When a comparison is encountered, symbolic execution can bifurcate the 
+code path into two possible branches, potentially leading to an 
+exponential increase in the number of traversed paths. This can 
+significantly slow down path traversal and exhaust system memory, 
+particularly when dealing with code paths containing numerous comparisons, 
+loops, or function calls. As we'll explore later, path explosion poses a 
+challenge when attempting to identify gadgets with a substantial number of 
+instructions. While this may increase the time taken to identify gadgets, 
+in most cases, it should not impede the discovery of a sufficient set of 
+potential gadgets.
+
+This leads to the crux of this section; a tool designed to identify FOP
+gadgets from core dumps was created [14]. This tool leverages a symbolic
+execution framework to pinpoint potential FOP gadgets and present them to 
+the user. Compatible with both ARM and x86-64 core dumps, the tool 
+endeavors to identify FOP gadgets within all executable regions.
+
+Examining the gadget counts below, we observe a considerable number of
+gadgets, even with a modest gadget depth of only 15 instructions. In this
+table, 'Built' represents software compiled from source, where-as the 
+others represent software obtained from Linux distribution repositories. 
+Furthermore, 'Depth' represents the max number of instructions analyzed 
+beyond each landing pad instruction, indicating gadgets that included a 
+return instruction within that depth:
+
+    +-----------------+----------+----------+----------+
+    |     Library     | Depth 15 | Depth 25 | Depth 50 |
+    +-----------------+----------+----------+----------+
+    | Built (x86-64)  |    1426  |     2765 |     5438 |
+    | Centos (x86-64) |    1268  |     2618 |     4912 |
+    | Ubuntu (x86-64) |    1294  |     2667 |     4897 |
+    | Built (ARM)     |    1348  |     2161 |     3298 |
+    | OpenSuse (ARM)  |    1320  |     2084 |     3212 |
+    +-----------------+----------+----------+----------+
+
+The table above illustrates several tested Glibc versions, comprising
+custom-compiled Glibc variants with default compilation parameters, 
+alongside the necessary security flags to integrate the discussed 
+mitigations. It's important to note that the gadget counts for the Glibc 
+versions were measured during the summer of 2023 and may not reflect the 
+current environment accurately. This caveat is warranted due to the 
+limited availability of identifiable Glibc libraries compiled with BTI 
+support for ARM at that time.
+
+Furthermore, it's essential to recognize that the table provided is not 
+an exhaustive representation of all the diverse distributions available.
+
+--------|  3.2 Gadget Depth
+
+    In the table above, three examples of gadget depth are displayed. 
+Gadget depth refers to the number of instructions examined before 
+determining failure if a return instruction is not encountered. The 
+values of 15, 25, and 50 have been arbitrarily chosen to illustrate a 
+method for categorizing the number of gadgets present in the tested 
+libraries. 
+
+In reality, the majority of gadgets may be too complicated or consist of 
+too many constraints to be functional or useful; constraints are examined 
+in the following section. This leads to the primary point that most useful 
+gadgets can be identified within 15 instructions or fewer. These types of 
+gadgets typically consist of simple register-setting instructions that 
+return early with minimal processing, as illustrated in Section 3.3.
+
+The gadget depth can also be significantly impacted by simple operations. 
+For example, the prologue and epilogue of a function can take up nearly 10
+instructions, as demonstrated by the first example in Section 3.3.
+Instructions like ENDBR64, PUSH, POP, and RET account for 9 of the 15
+instructions in the gadget. While these instructions might not ultimately
+affect the final state of the environment, as all values are restored, 
+they cannot be ignored during gadget identification.
+
+Ultimately the gadget depth is an arbitrary value, similar to the number 
+of bytes to look backward in ROP gadgets.
+
+--------|  3.3 Gadget Examples
+
+    This section will provide a few gadget examples to illustrate how 
+the tooling displays the gadget and how this translates to the code. All 
+examples will be acquired from Glibc 2.39, self-compiled for testing 
+purposes, within the Intel architecture. The output will first display 
+the tooling output, then will be followed by the assembly code that 
+creates this output.
+
+The first example is a simple gadget that sets the register RDI to 1:
+
+```
+-------------------------------
+libc.so.6 0x139e40:
+   Results:
+      RAX: 0x1
+      RDI: 0x1
+-------------------------------
+0000000000139e40 <_nss_files_endetherent>:
+  139e40:       f3 0f 1e fa   endbr64
+  139e44:       bf 01 00 ...  mov    edi,0x1
+  139e49:       e9 f2 e6 ...  jmp    128540 <__nss_files_data_endent>
+  
+0000000000128540 <__nss_files_data_endent>:
+  128540:       f3 0f 1e fa   endbr64
+  128544:       41 54         push   r12
+  128546:       55            push   rbp
+  128547:       53            push   rbx
+  128548:       48 8b 2d ...  mov    rbp,QWORD PTR [rip+0xb75f1]
+  12854f:       48 85 ed      test   rbp,rbp
+  128552:       75 0c         jne    128560 <__nss_files_data_endent+0x20>
+  128554:       5b            pop    rbx
+  128555:       b8 01 00 ...  mov    eax,0x1
+  12855a:       5d            pop    rbp
+  12855b:       41 5c         pop    r12
+  12855d:       c3            ret
+-------------------------------
+```
+
+As can be found in the assembly above, the gadget would depend on the 
+value within [rip+0xb75f1], but as the core file used to create this 
+gadget had this value set to 0; this check ultimately failed and this 
+path was guaranteed to occur. This results in the RDI register holding 
+onto the initially set value of 1.
+
+The following gadget demonstrates the ability to move values between
+registers. In this case, the value in the RDI register is transferred 
+to  the RSI register:
+
+```
+-------------------------------
+libc.so.6 0x152510:
+   Results:
+      RAX: 0x7f309b99c000
+      RSI: RDI
+-------------------------------
+0000000000152510 <_dl_mcount_wrapper_check>:
+  152510:       f3 0f 1e fa   endbr64
+  152514:       48 8b 05 ...  mov   rax,QWORD PTR [rip+0x84a6d]
+  15251b:       48 89 fe      mov   rsi,rdi
+  15251e:       48 83 b8 ...  cmp   QWORD PTR [rax+0xa90],0x0
+  152525:       00 
+  152526:       74 18         je    152540 <_dl_mcount_wrapper_check+0x30>
+    ...
+  152540:       c3            ret
+-------------------------------
+
+```
+
+The final gadget shows an example of the tooling identifying symbolic
+restraints to make the gadget successfully pass. In this case, these are
+memory constraints to pass a comparison and jump, as well as demonstrating
+that parameter based reads and writes occur within this gadget:
+
+```
+-------------------------------
+libc.so.6 0x26bb0:
+   Results:
+      RDI: [RDI]
+   Read Constraints:
+       0: Qword [RDI]
+       1: Dword [16 + RDI]
+   Write Constraints:
+       2: Dword [16 + RDI] = 0xffffffff + [16 + RDI]
+   Jump Constraints:
+       Qword [RDI] != 0
+       Dword [16 + RDI] != 1
+-------------------------------
+0000000000026bb0 <__gconv_release_step>:
+   26bb0:       f3 0f 1e fa   endbr64
+   26bb4:       55            push   rbp
+   26bb5:       53            push   rbx
+   26bb6:       48 89 fb      mov    rbx,rdi
+   26bb9:       48 83 ec 08   sub    rsp,0x8
+   26bbd:       48 8b 3f      mov    rdi,QWORD PTR [rdi]
+   26bc0:       48 85 ff      test   rdi,rdi
+   26bc3:       74 43         je     26c08 <__gconv_release_step+0x58>
+   26bc5:       83 6b 10 01   sub    DWORD PTR [rbx+0x10],0x1
+   26bc9:       75 32         jne    26bfd <__gconv_release_step+0x4d>
+    ...
+   26bfd:       48 83 c4 08   add    rsp,0x8
+   26c01:       5b            pop    rbx
+   26c02:       5d            pop    rbp
+   26c03:       c3            ret
+-------------------------------
+```
+
+These gadgets demonstrate a few examples of gadgets that can be found 
+within Glibc. They also highlight a feature that has not been directly 
+mentioned yet, this being that any function that contains a valid landing 
+pad could become a gadget. This means that the function does not need to 
+be an exported function but can be Glibc internal functions that a 
+programmer may not have knowledge about. One bit of information to note 
+is that exported functions `SHOULD` be more likely to contain the needed 
+landing pad instruction compared to internal functions.
+
+
+----|  4. FOP Dispatcher Gadget
+
+    While the abundance of gadgets is noteworthy, their utility is greatly
+diminished without a dispatcher. In the context of a FOP attack, a 
+dispatcher serves as the orchestrator of our gadgets. Since FOP attacks 
+are restricted from modifying the stack to comply with protection schemes, 
+a dispatcher becomes essential for managing the loading and execution of 
+subsequent  gadgets.
+
+In essence, a dispatcher in FOP resembles those employed in JOP, wherein 
+the dispatcher loads a memory location and then jumps to or calls that 
+address. However, the primary distinction lies in the dispatcher's need 
+to operate within the constraints imposed by existing protections. This 
+means refraining from direct jumps to the dispatcher itself, while 
+ensuring that landing at a valid landing pad instruction enables effective 
+access to the dispatcher. Moreover, the dispatcher must maintain adequate 
+control to initiate a FOP attack while adhering to the restrictions 
+imposed by these new security measures.
+
+When it comes to identifying dispatcher gadgets, a crucial aspect is 
+assessing how the dispatcher utilizes available resources. Specifically, 
+this involves analyzing the manipulation of key registers during the 
+dispatching process. These key registers typically correspond to the 
+calling convention within the architecture and host environment. For 
+instance, in Intel architectures these registers include RDI, RSI, RDX, 
+and RCX, while in ARM architectures they are R0, R1, R2, and R3.
+
+The same tooling employed for identifying gadgets can also be utilized 
+to identify dispatchers. Through this process, it was determined that 
+all tested Glibc versions across all architectures contained at least 
+one dispatcher that is accessible during normal execution.
+
+One such dispatcher gadget, described below, is located within the
+`_dl_call_fini` function. In earlier versions of Glibc, this functionality 
+was integrated within `_dl_fini`. However, starting from version 2.37, it 
+was separated into its own distinct function. `_dl_call_fini` is typically 
+invoked during the exit routines of a binary, either after `exit(0)` has 
+been called or when the binary has returned normally from the `main` 
+function.
+
+--------|  4.1 _dl_call_fini Dispatcher Gadget
+
+Below is the code snippet extracted from the GLibc 2.39 source code:
+
+```
+void
+_dl_call_fini (void *closure_map)
+{
+  struct link_map *map = closure_map;
+
+  /* Make sure nothing happens if we are called twice.  */
+  map->l_init_called = 0;
+
+  ElfW(Dyn) *fini_array = map->l_info[DT_FINI_ARRAY];
+  if (fini_array != NULL)
+    {
+      ElfW(Addr) *array = (ElfW(Addr) *) (map->l_addr
+                                          + fini_array->d_un.d_ptr);
+      size_t sz = (map->l_info[DT_FINI_ARRAYSZ]->d_un.d_val
+                   / sizeof (ElfW(Addr)));
+
+      while (sz-- > 0)
+        ((fini_t) array[sz]) ();
+    }
+
+  /* Next try the old-style destructor.  */
+  ElfW(Dyn) *fini = map->l_info[DT_FINI];
+  if (fini != NULL)
+    DL_CALL_DT_FINI (map, ((void *) map->l_addr + fini->d_un.d_ptr));
+}
+```
+
+Indeed, the provided code snippet showcases a 'while' loop that iterates
+through an array of function pointers and invokes them, as long as the 
+size variable remains greater than zero. To gain insight into the nature 
+and location of these values, we can examine the `link_map` structure 
+utilized for the map. Below is a truncated version of this structure:
+
+```
+struct link_map
+  {
+    /* These first few members are part of the protocol with the debugger.
+       This is the same format used in SVR4.  */
+
+    ElfW(Addr) l_addr;      /* Difference between the address in the ELF
+                                  file and the addresses in memory.  */
+    char *l_name;           /* Absolute file name object was found in.  */
+    ElfW(Dyn) *l_ld;        /* Dynamic section of the shared object.  */
+    struct link_map *l_next, *l_prev; /* Chain of loaded objects.  */
+
+    /* All following members are internal to the dynamic linker.
+       They may change without notice.  */
+
+    /* This is an element that is only ever different from a pointer to
+       the very same copy of this type for ld.so when it is used in more
+       than one namespace.  */
+    struct link_map *l_real;
+
+    /* Number of the namespace this link map belongs to.  */
+    Lmid_t l_ns;
+
+    struct libname_list *l_libname;
+     ElfW(Dyn) *l_info[DT_NUM + DT_THISPROCNUM 
+        + DT_VERSIONTAGNUM + DT_EXTRANUM + DT_VALNUM + DT_ADDRNUM];
+```
+
+--------|  4.2 link_map Examination
+
+Let's delve into a brief analysis of the expected values and their 
+locations within the `link_map` structure.
+
+    1. l_addr: This member typically points to the first page of a
+       program's memory. It serves as a reference for accessing various 
+       offsets or values within the binary. By keeping track of the main 
+       address, programs can efficiently navigate their memory space.
+
+    2. l_info: This member contains an offset pointer that specifies the
+       location of data stored within the main program's memory-mapped 
+       pages. In conjunction with `l_addr`, it facilitates the 
+       determination of the exact address of the structure to which 
+       `l_info` points. In this context, `l_info` typically points to 
+       the dynamic table, which plays a crucial role during process 
+       creation for dynamic allocations and memory loading.
+
+Within the dynamic table two noteworthy fields emerge:
+
+    - DT_FINI_ARRAY: This field points to an array of function pointers
+      intended to be executed at the end of program execution.
+
+    - DT_FINI_ARRAY_SZ: As implied, this field denotes the size of the
+      `DT_FINI_ARRAY` array.
+
+It is worth noting that these values and pointers are typically located 
+in read-only memory within the binary. This is an important consideration, 
+as it prevents tampering with these arrays, mitigating potential 
+exploitation methods such as the dtors and ctors attacks of the past [15].
+
+To give a very brief explanation of the importance of the `link_map`
+structure, I will defer to the few comments within the source, located 
+right before this structure definition:
+
+```
+/* 
+Structure describing a loaded shared object.  The `l_next' and `l_prev'
+members form a chain of all the shared objects loaded at startup.
+
+These data structures exist in space used by the run-time dynamic linker;
+modifying them may have disastrous results.
+
+This data structure might change in the future, if necessary.  User-level
+programs must avoid defining objects of this type.  
+*/
+```
+
+The `link_map` structure houses various pointers and registered values
+essential for linker operations. As cautioned by the comment, altering 
+these values at runtime can lead to dire consequences. Of particular 
+significance here is the dynamic access of `l_info` and `l_addr` within 
+`_dl_call_fini`. This suggests that modifying either of these values 
+provides the capability to influence the location from which the function 
+array is accessed. Additionally, adjusting `l_addr` could impact the size 
+variable, adding to the potential for manipulation and control.
+
+The alteration of these values holds the potential to seize control of 
+program execution. When coupled with the previously identified gadgets, 
+such modifications can culminate in complete control over the program, 
+akin to the capabilities observed ROP and JOP attacks. An additional 
+crucial aspect worth examining is the structure of the loop in memory, 
+as this factor can significantly influence the success or failure of a 
+FOP attack:
+
+```
+    10d4:       49 8d 1c d4             lea    (%r12,%rdx,8),%rbx
+    10d8:       0f 1f 84 00 00 00 00    nopl   0x0(%rax,%rax,1)
+    10df:       00
+    10e0:       ff 13                   call   *(%rbx)
+    10e2:       48 89 d8                mov    %rbx,%rax
+    10e5:       48 83 eb 08             sub    $0x8,%rbx
+    10e9:       49 39 c4                cmp    %rax,%r12
+    10ec:       75 f2                   jne    10e0 <_dl_call_fini+0x50>
+```
+
+As evident from the provided code snippet, the `dl_fini_array` is loaded 
+into RBX at the memory address 0x10d4, positioned towards the end of the 
+array and traversed backward. It's essential to highlight that there's no 
+direct counter; rather, a comparison occurs between the current index 
+(RBX/RAX) and the beginning of the array (R12), followed by an 
+unconditional jump without additional checks. Consequently, targeting 
+this call loop does not involve modification of any crucial registers, 
+thus preserving their integrity.
+
+
+----|  5. Symbolic Engine
+
+    This section delves deeper into the symbolic engine and the approach 
+taken within the tooling. The original tooling was built upon an older 
+and currently unsupported framework called pysymemu [19]. Despite its 
+lack of updates and support for Python 3, pysymemu was chosen because it 
+provided one of the easiest frameworks to understand at a low level, 
+allowing for the extraction of necessary functionalities. This included 
+updates to incorporate more modern Z3 functionality for symbolic 
+expressions.
+
+The tooling relies exclusively on core files for identifying potential
+gadgets, which means the core file must include all executable sections.
+Normally, core files avoid dumping executable sections to save space, 
+assuming that all libraries can be reloaded from memory. To ensure the 
+necessary sections are included, the following command can be used to 
+include the needed sections from a core dump:
+
+`echo 0x37 > /proc/self/coredump_filter`
+
+The meaning behind 0x37 can be examined in more detail in the core man 
+page `man core`. In essence is that this filter includes the ability to 
+save file-backed mappings.
+
+Overall, the tooling uses a modified version of this symbolic engine in 
+a two-step approach to identifying FOP gadgets.
+
+--------|  5.1 Phase 1: Static Analysis
+
+    The first step involves identifying potential gadgets in an entirely
+static manner by walking through potential gadgets until a return 
+instruction is found. The starting point of a gadget is marked by the 
+ENDBR64 instruction in x64 or the BTI instruction in ARM. If the maximum 
+gadget depth is reached before a return instruction is found, the path is 
+abandoned, and the next path is examined.
+
+This means that the path identified in this first phase will be the 
+required path taken by the symbolic engine in phase 2.
+
+This stage 1 approach of static analysis can also be used for identifying
+potential dispatcher gadgets. While the tooling may produce some false
+positives due to a less fine-grained examination, it ensures that no 
+potential gadgets are overlooked.
+
+--------|  5.2 Phase 2: Symbolic Execution
+
+    In phase 2, the symbolic execution engine is employed to examine each
+potential gadget identified in the first stage. The symbolic environment
+is set up to closely mirror the running environment based on the core file
+used for gadget identification. This involves hosting memory segments and
+executable memory space to analyze potential memory accesses or value
+transfers. All operations are tracked and reset between examinations of
+potential gadgets to ensure accuracy and consistency.
+
+During the symbolic stage, there are several potential termination 
+conditions, known as kill states. These include potential infinite loops 
+that may have been passed during stage 1. Another example is impossible 
+states, such as a memory comparison to a register value within a function. 
+Since static analysis lacks knowledge of memory or register values, it may 
+result in multiple potential paths being passed to the symbolic engine. If 
+the symbolic engine determines that the memory does not currently hold the 
+required value, the path may be deemed impossible and terminated.
+
+Impossible paths can also arise when the static engine passes in an 
+identified path, which should be a static set of instructions, but during 
+the symbolic execution phase, this deviates from the path. This results in 
+the engine determining the current path as invalid, as it diverged from 
+the expected path identified in phase 1.
+
+While this approach may be inefficient in some aspects, it helps determine
+the exact approach taken by a gadget, and confirms that the path taken is 
+the correct one. This approach exemplifies the utilization of 
+deterministic memory from the core file.
+
+In its current state, the symbolic engine is only designed to handle
+deterministic paths, as nondeterministic paths generate more gadgets and 
+are less reliable in environments where the memory is known.
+
+
+----|  6. Examples
+
+    While examples within text may seem mundane to some, for those who
+appreciate such illustrations, please stick around! The examples presented
+in this paper will now be demonstrated using the custom-built GLibc 2.37
+versions utilized for gadget identification earlier. These versions, 
+alongside the examples, are attach at the end of this paper in Appendix C 
+and where used for identification, along with the entire chains and 
+associated code for testing purposes.
+
+The test case involves a straightforward heap vulnerability that grants 
+the ability to perform arbitrary memory writes. To demonstrate, a basic 
+memory leak scenario is provided, showcasing the semi-arbitrary nature of 
+leaking an address within the given menu heap example. Subsequently, upon 
+obtaining an arbitrary write capability, the `ld_addr` is overwritten with 
+the address of our data on the heap, thereby enabling redirection to the 
+desired chain.
+
+Below, Appendix A and B present two FOP chains showcasing the ability to
+manipulate registers, memory, and execution state sufficiently to write 
+the string "/bin/sh\x00" to memory and execute the `system` function on 
+it, within both an Intel and an ARM context.
+
+Additionally, the examples folder within the tooling repository contains
+several more examples, such as writing arbitrary shellcode to memory,
+`mprotect`-ing the memory range, and then executing the shellcode. 
+However, a simple "/bin/sh" shellcode was not included in this paper due 
+to the FOP chain length extending into the thousands of gadgets, which 
+would not be as visually appealing.
+
+Altogether, the Intel chain comprised of 123 gadgets, 12 of which were 
+unique, while the ARM chain consisted of approximately 140 gadgets, of 
+which 15 were unique.
+
+
+----|  7. Final Thoughts
+
+    As illustrated in this paper, FOP emerges as a versatile technique 
+poised to potentially succeed and replace ROP and JOP in the code-reuse 
+attack landscape. This shift coincides with the integration of modern CPU 
+protections such as CET and PAC/BTI, which FOP is capable of defeating.
+
+--------|  7.1 Constraints
+
+    However, despite its capabilities, several caveats must be considered 
+when attempting to orchestrate a FOP chain-based attack. Firstly, akin to 
+ROP and JOP, initiating a FOP attack necessitates a memory corruption 
+vulnerability. This typically requires an arbitrary write capability to 
+gain sufficient access to a dispatcher, subsequently pointing to an 
+attacker-controlled chain.
+
+Secondly, a memory leak is often imperative, mirroring the prerequisites 
+of previous attacks like ROP. With the advent of Address Space Layout
+Randomization (ASLR) and Position Independent Executables (PIE), 
+circumventing these protections remains a challenge for FOP techniques.
+
+Lastly, perhaps the most significant hurdle lies in the size of FOP 
+chains. As these attacks demand more intricate sequences, the chains can 
+quickly balloon in size. For instance, the arbitrary shellcode example
+referenced in this paper utilizes over 1000 gadgets across both ARM and 
+Intel architectures to write just a few dozen bytes to memory. This 
+necessity may render the implementation of FOP attacks more arduous 
+compared to ROP, which often requires only a handful of gadgets to 
+achieve similar objectives.
+
+--------|  7.2 Nomenclature
+
+    When deliberating over the appropriate designation for this technique, 
+whether it should be termed FOP or use the previous nomenclature of LOP, 
+it seemed prudent to consider the naming conventions of other similar 
+techniques. Typically, these names derive from the predominant gadget type 
+rather than the specific triggering instance. For instance, JOP is so 
+named because its gadgets predominantly utilize jump instructions, rather 
+than referring to whether the dispatcher incorporates a jump. Similarly, 
+Call Oriented Programming (COP) is named based on the predominant gadget 
+type rather than the nature of the throwing instance.
+
+Given this pattern, FOP seems to align with established conventions, 
+focusing on the predominant feature of the technique, functional-oriented 
+gadgets, rather than the specific throwing instance. However, it's 
+important to acknowledge that this is largely a matter of preference and 
+interpretation, and opinions may vary on the matter.
+
+--------|  7.3 Architecture Differences
+
+    A noteworthy aspect within the realm of FOP is the comparative
+functionality between ARM and Intel architectures. ARM architecture 
+boasts greater functionality within FOP when juxtaposed with Intel. 
+While this may not be fully evident in the examples provided, as a non 
+architecture-dependent approach was taken when considering the important 
+registers used in FOP, it is worth noting.
+
+ARM architecture features the R0 register as the first parameter and the
+return register, allowing FOP to leverage not only the side-effects of a
+function but also its return value. This grants ARM instances an added 
+level of versatility in FOP techniques. In contrast, Intel architecture 
+lacks this functionality, as the return instruction utilizes the RAX 
+register. Consequently, no gadgets were identified to utilize the RAX 
+register values in Intel architecture. This discrepancy is logical, given 
+that RAX is not designated as a parameter register in the x86_64 
+specification, unlike in ARM architecture.
+
+--------|  7.4 Turing Completeness
+
+    Although this paper did not delve into this area, the author believes 
+that FOP can achieve Turing completeness given a sufficient set of 
+functions in a program. FOP goes beyond conventional function operations 
+included within Glibc; it also considers the usage of side effects of 
+these functions when assessing the potential Turing completeness of the 
+gadget set.
+
+--------|  7.5 Kernel FOP
+
+    While not explored within the confines of this paper, it is worth 
+noting that FOP has demonstrated success within kernel instances as well. 
+Given the vast array of functions and capabilities within the kernel, it 
+is unsurprising that there is an ample supply of gadgets and dispatchers 
+to choose from within this domain. The following code excerpt from the 
+Linux kernel [16] showcases one such function that could potentially 
+serve as a dispatcher gadget, assuming control of RDI and non-zero RSI. 
+This scenario is feasible, as heap corruption techniques can often lead 
+to primary register control from the outset:
+
+```
+void destroy_params(const struct kernel_param *params, unsigned num)
+{
+    unsigned int i;
+
+    for (i = 0; i < num; i++)
+        if (params[i].ops->free)
+            params[i].ops->free(params[i].arg);
+}
+```
+
+--------|  7.6 Future Work
+
+    In terms of future work, there are several avenues to explore within 
+the realm of FOP. While existing tooling can identify FOP gadgets in a 
+given instance, there's room for improvement in terms of speed and 
+analysis techniques. Additionally, while FOP has been successfully 
+demonstrated in Linux environments, there's potential to extend its 
+application to other operating systems such as Windows or Apple 
+environments.
+
+Given Apple's implementation of PAC and BTI support in newer models of 
+their devices, analyzing these techniques may yield valuable insights for 
+future exploitation. Investigating the feasibility of utilizing FOP in 
+these environments could open up new avenues for code reuse attacks and 
+enhance our understanding of modern security protections. Therefore, 
+future research efforts could focus on adapting FOP techniques to operate 
+effectively within diverse operating system environments, including 
+Windows and Apple platforms.
+
+--------|  7.7 Possible Mitigations
+
+    Lastly, there exists the potential to mitigate these techniques. 
+While Glibc developers might find it relatively straightforward to 
+incorporate PAC authentication to the `link_map` structure on Linux ARM 
+instances, it doesn't resolve the underlying issue. Such a patch could 
+be circumvented by leveraging potential dispatchers found in a main 
+program or secondary libraries to achieve similar effects.
+
+Alternatively, the most effective approach to curtail FOP attacks is to
+introduce cleanup instructions at the end of every function. This would
+involve zeroing out parameter registers within both Intel and ARM
+architectures. For Intel, this shouldn't pose any issues, as parameter
+registers are typically volatile and not reused after a function call.
+However, with ARM, a potential complication arises with the R0 register, 
+as it cannot be zeroed because it contains the return value. 
+
+This may allow potential gadgets to modify R0 and subsequently utilize 
+its values within secondary calls to construct operational chains based 
+on a single parameter register. While Glibc wasn't determined to contain 
+the gadgets to accomplish this, it's not unreasonable to assume that such 
+gadgets could exist in the future or in larger code bases. This mitigation 
+approach does not protect against using FOP functions as intended, 
+particularly when dispatch parameters can be controlled via memory 
+corruption. The dispatcher shown in 7.5 is one such example. 
+
+--------|  7.8 Conclusion
+
+    In conclusion, this paper has delved into the nuances of Functional
+Oriented Programming (FOP), a technique that shows promise as a successor 
+to traditional code reuse attacks such as Return-Oriented Programming 
+(ROP) and Jump-Oriented Programming (JOP). Through comprehensive 
+exploration and analysis, we've uncovered the versatility and potential 
+of FOP across various architectures, including ARM and Intel. Looking 
+ahead, the future of FOP holds opportunities for further research and 
+development, with potential applications extending beyond Linux 
+environments. As security landscapes evolve and adversaries adapt, 
+understanding and addressing the nuances of FOP will be crucial in 
+bolstering cyber defense strategies and safeguarding against emerging 
+threats.
+
+
+----|  8. Acknowledgments
+
+    Large thanks to Rewzilla for the knowledge and time they have 
+imparted upon me. Not only for proof reading this paper but for also 
+leading me  into the world of binary exploitation and low level assembly. 
+Without their initial nudge into this world of information, I would not 
+be have been able to make it to where I am today. 
+    
+    Another thanks to the Phrack team for all the work they do and for 
+their time in giving feedback for this paper.
+
+
+----|  9. References
+
+[1]   H. Shacham, "The geometry of innocent flesh on the bone: 
+return-into-libc without function calls (on the x86)," October, 2007. 
+https://doi.org/10.1145/1315245.1315313
+[2]   S. Checkoway, L. Davi, A. Dmitrienko, A.-R. Sadeghi, H. Shacham, and 
+M. Winandy, "Return-oriented programming without returns," October, 2010. 
+https://dl.acm.org/doi/10.1145/1866307.1866370.
+[3]   T. Bletsch, X. Jiang, V. W. Freeh, and Z. Liang, "Jump-oriented 
+programming: a new class of code-reuse attack," March, 2011. 
+https://dl.acm.org/doi/10.1145/1966913.1966919
+[4]   T. Garrison, "Intel CET Answers Call to Protect Against Common 
+Malware Threats," May, 2020. https://newsroom.intel.com/editorials/intel-
+cet-answers-call-protect-common-malware-threats/
+[5]   A. Mujumdar, "Armv8.1-M architecture: PACBTI extensions - 
+Architectures and Processors blog - Arm Community blogs - Arm Community." 
+April, 2021. 
+https://community.arm.com/arm-community-blogs/b/architectures-and-
+processors-blog/posts/armv8-1-m-pointer-authentication-and-branch-
+target-identification-extension
+[6]   Qualcomm, "Pointer Authentication on ARMv8.3: Design and Analysis of 
+the New Software Security Instructions." January, 2017. 
+https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/
+pointer-auth-v7.pdf
+[7]   Intel, "Intel vPro® PCs Feature Silicon-Enabled Threat Detection." 
+November, 2022. https://www.intel.com/content/www/us/en/architecture-and-
+technology/pcs-silicon-enabled-threat-protection-paper.html
+[8]   M. Larabel, "Control-Flow Enforcement Technology Begins To Land In 
+GCC 8." August, 2017. 
+https://www.phoronix.com/news/Intel-CET-GCC-8-Landing
+[9]   P. Zijlstra, "[PATCH 00/29] x86: Kernel IBT." February, 2022. 
+https://lore.kernel.org/lkml/20220218164902.008644515@infradead.org/
+[10]  M. Tran, M. Etheridge, T. Bletsch, X. Jiang, V. Freeh, and P. Ning, 
+"On the Expressiveness of Return-into-libc Attacks," 2011. 
+https://link.springer.com/chapter/10.1007/978-3-642-23644-0_7
+[11]  B. Lan, Y. Li, H. Sun, C. Su, Y. Liu, and Q. Zeng, "Loop-Oriented 
+Programming: A New Code Reuse Attack to Bypass Modern Defenses," August, 
+2015. http://ieeexplore.ieee.org/document/7345282/
+[12]  Y. Guo, L. Chen, and G. Shi, "Function-Oriented Programming: A New 
+Class of Code Reuse Attack in C Applications," May, 2018. 
+https://ieeexplore.ieee.org/document/8433189/
+[13]  T. Avgerinos, A. Rebert, S. K. Cha, and D. Brumley, "Enhancing 
+Symbolic Execution with Veritesting," May, 2014. 
+https://dl.acm.org/doi/10.1145/2568225.2568293
+[14]  LMS57, "LMS57/FOP_Mythoclast." January, 2024. 
+https://github.com/LMS57/FOP_Mythoclast
+[15]  Juan M. Bello Rivas, "Overwriting the .dtors section." December, 
+2000. https://lwn.net/2000/1214/a/sec-dtors.php3
+[16]  Linus Torvalds, "linux/kernel/params.c at master · torvalds/linux." 
+https://github.com/torvalds/linux/blob/master/kernel/params.c#L757
+[17]  Offsec, "Bypassing Intel CET with Counterfeit Objects" August, 2022.
+https://www.offsec.com/blog/bypassing-intel-cet-with-counterfeit-objects/
+[18]  F. Schuster, T. Tendyck, C. Liebchen, L. Davi, A.-R. Sadeghi, and T. 
+Holz, “Counterfeit Object-oriented Programming: On the Difficulty of 
+Preventing Code Reuse Attacks in C++ Applications,” May, 2015. 
+https://ieeexplore.ieee.org/document/7163058
+[19]  feliam, “PySymEmu.” https://github.com/feliam/pysymemu  
+
+
+----|  10. Appendix A: ARM "/bin/sh" in memory chain
+
++-------------------------+----------------------+
+|      Function Name      | Equivalent Operation |
++-------------------------+----------------------+
+| __gconv_compare_...     | MOV X3, 0x0          |
+| free_mem                | MOV X2, 0x0          |
+| __libc_current_sigrtmin | MOV X0, 0x22         |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdr_void@GLIBC_2.17     | MOV X0, 0x1          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| inet6_option_init       | MOV X3, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| xdrmem_create...        | MOV [X0], X3   #'/'  |
+| __gconv_compare_...     | MOV X3, 0x0          |
+| free_mem                | MOV X2, 0x0          |
+| __libc_current_sigrtmin | MOV X0, 0x22         |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| pthread_barrierattr_... | MOV X0, 0x16         |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| _svcauth_short          | MOV X0, 0x2          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| inet6_option_init       | MOV X3, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_barrierattr_... | MOV X2, X0           |
+| xdr_void@GLIBC_2.17     | MOV X0, 0x1          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdrmem_create...        | MOV [X0], X3   #'b'  |
+| __gconv_compare_...     | MOV X3, 0x0          |
+| free_mem                | MOV X2, 0x0          |
+| __profile_frequency     | MOV X0, 0x64         |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| _svcauth_short          | MOV X0, 0x2          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| inet6_option_init       | MOV X3, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_barrierattr_... | MOV X2, X0           |
+| _svcauth_short          | MOV X0, 0x2          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdrmem_create...        | MOV [X0], X3   #'i'  |
+| __gconv_compare_...     | MOV X3, 0x0          |
+| free_mem                | MOV X2, 0x0          |
+| xdr_void@GLIBC_2.17     | MOV X0, 0x1          |
+| dysize                  | MOV X0, 0x16D        |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdr_void@GLIBC_2.17     | MOV X0, 0x1          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| inet6_option_init       | MOV X3, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_barrierattr_... | MOV X2, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdrmem_create...        | MOV [X0], X3   #'n'  |
+| __gconv_compare_...     | MOV X3, 0x0          |
+| free_mem                | MOV X2, 0x0          |
+| __libc_current_sigrtmin | MOV X0, 0x22         |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdr_void@GLIBC_2.17     | MOV X0, 0x1          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| inet6_option_init       | MOV X3, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_barrierattr_... | MOV X2, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdr_void@GLIBC_2.17     | MOV X0, 0x1          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdrmem_create...        | MOV [X0], X3   #'/'  |
+| __gconv_compare_...     | MOV X3, 0x0          |
+| free_mem                | MOV X2, 0x0          |
+| xdr_void@GLIBC_2.17     | MOV X0, 0x1          |
+| dysize                  | MOV X0, 0x16D        |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| inet6_option_init       | MOV X3, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_barrierattr_... | MOV X2, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| _svcauth_short          | MOV X0, 0x2          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdrmem_create...        | MOV [X0], X3   #'s'  |
+| __gconv_compare_...     | MOV X3, 0x0          |
+| free_mem                | MOV X2, 0x0          |
+| __profile_frequency     | MOV X0, 0x64         |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdr_void@GLIBC_2.17     | MOV X0, 0x1          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| inet6_option_init       | MOV X3, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_barrierattr_... | MOV X2, X0           |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| pthread_getcpuclock...  | MOV X0, 0x3          |
+| __deadline_from_...     | ADD X2, X2, X0       |
+| xdrmem_create...        | MOV [X0], X3   #'h'  |
+| __mq_nofity_fork_...    | MOV X0, LIBC         |
+| system                  | SYSTEM               |
+| _exit                   | EXIT                 |
++-------------------------+----------------------+
+
+
+----|  11. Appendix B: Intel "/bin/sh" in memory chain
+
++---------------------------+--------------------------+
+|       Function Name       |   Equivalent Operation   |
++---------------------------+--------------------------+
+| _nss_files_endpwent       | MOV RDI, 0x6             |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| _dl_mcount_wrapper...     | MOV RSI, RDI             |
+| __default_pthread_attr... | MOV RDI, LIBC            |
+| _dl_tunable_set_...       | MOV RDX, 0x1             |
+| __memset_sse2...          | MOV [RDI], SIL     #'/'  |
+| endttyent                 | MOV RDI, 0x0             |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __libc_sa_len             | SUB RDI, 0x1             |
+| _dl_mcount_wrapper...     | MOV RSI, RDI             |
+| __default_pthread_attr... | MOV RDI, LIBC            |
+| __hash_string             | SET RDI TO END OF STRING |
+| _dl_tunable_set_...       | MOV RDX, 0x1             |
+| __memset_sse2...          | MOV [RDI], SIL     #'b'  |
+| _nss_files_endpwent       | MOV RDI, 0x6             |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| _dl_mcount_wrapper...     | MOV RSI, RDI             |
+| __default_pthread_attr... | MOV RDI, LIBC            |
+| __hash_string             | SET RDI TO END OF STRING |
+| _dl_tunable_set_...       | MOV RDX, 0x1             |
+| __memset_sse2...          | MOV [RDI], SIL     #'i'  |
+| endttyent                 | MOV RDI, 0x0             |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __libc_sa_len             | SUB RDI, 0x1             |
+| __li bc_sa_len            | SUB RDI, 0x1             |
+| _dl_mcount_wrapper...     | MOV RSI, RDI             |
+| __default_pthread_attr... | MOV RDI, LIBC            |
+| __hash_string             | SET RDI TO END OF STRING |
+| _dl_tunable_set_...       | MOV RDX, 0x1             |
+| __memset_sse2...          | MOV [RDI], SIL     #'n'  |
+| _nss_files_endpwent       | MOV RDI, 0x6             |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| _dl_mcount_wrapper...     | MOV RSI, RDI             |
+| __default_pthread_attr... | MOV RDI, LIBC            |
+| __hash_string             | SET RDI TO END OF STRING |
+| _dl_tunable_set_...       | MOV RDX, 0x1             |
+| __memset_sse2...          | MOV [RDI], SIL     #'/'  |
+| _nss_files_endhostent     | MOV RDI, 0x3             |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| _dl_mcount_wrapper...     | MOV RSI, RDI             |
+| __default_pthread_attr... | MOV RDI, LIBC            |
+| __hash_string             | SET RDI TO END OF STRING |
+| _dl_tunable_set_...       | MOV RDX, 0x1             |
+| __memset_sse2...          | MOV [RDI], SIL     #'s'  |
+| _nss_files_endprotoent    | MOV RDI, 0x5             |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| __cache_sysconf           | SUB RDI, 0xB9            |
+| _dl_mcount_wrapper...     | MOV RSI, RDI             |
+| __default_pthread_attr... | MOV RDI, LIBC            |
+| __hash_string             | SET RDI TO END OF STRING |
+| _dl_tunable_set_...       | MOV RDX, 0x1             |
+| __memset_sse2...          | MOV [RDI], SIL     #'h'  |
+| __default_pthread_attr... | MOV RDI, LIBC            |
+| system                    | SYSTEM                   |
++---------------------------+--------------------------+
+
+
+----|  12. Appendix C: Source Code
+
+|=[ EOF ]=---------------------------------------------------------------=|

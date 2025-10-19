@@ -1,0 +1,26 @@
+{
+  "articles": [
+    {
+      "reference": "Volume One, Issue Five, Phile #5 of 12",
+      "title": "Digital Multiplex System (DMS) 100",
+      "authors": "Knight Lightning",
+      "date": "Not specified",
+      "historical_context": "The DMS-100 was a significant advancement in digital switching technology during the late 20th century, representing a shift towards integrated voice and data communications.",
+      "target_audience": "Telecommunications professionals, security researchers, and technology historians.",
+      "short_summary": "This article provides an in-depth overview of the DMS-100 digital switching system, detailing its features, benefits, and operational capabilities for business communications.",
+      "summary": "The DMS-100/IBN is a sophisticated digital switching system designed to integrate voice and data communications for businesses of various sizes. It offers features such as Automatic Route Selection, Station Message Detail Recording, and Direct Inward System Access, which enhance efficiency and cost-effectiveness in communication management. The system is modular, allowing for scalability and adaptability to meet evolving business needs. The DMS-100 is backed by trained personnel, ensuring reliable operation and support.",
+      "additional_info": "The article also discusses the technical specifications of attendant consoles and electronic business sets, emphasizing their role in facilitating seamless communication within organizations."
+    },
+    {
+      "reference": "Volume One, Issue Five, Phile #6 of 12",
+      "title": "Know Your Hardware",
+      "authors": "The Leftist",
+      "date": "Tue, 19 Dec 89 17:45 CST",
+      "historical_context": "This article reflects the DIY ethos prevalent in hacker culture during the late 1980s, showcasing a playful yet potentially dangerous approach to hardware manipulation.",
+      "target_audience": "Hacker enthusiasts, DIY hobbyists, and those interested in practical pranks.",
+      "short_summary": "A humorous guide on creating a simple device using common hardware and matches, intended for playful mischief rather than serious harm.",
+      "summary": "In this lighthearted article, the author presents a DIY project for creating a non-lethal 'bomb' using everyday materials like nuts, bolts, and strike-anywhere matches. The instructions detail how to assemble the device, which is designed to create a loud noise when thrown against a hard surface, serving as a prank tool rather than a weapon. The playful tone and the emphasis on harmless fun reflect the spirit of the hacker community at the time, encouraging creativity and experimentation with hardware.",
+      "additional_info": "While the article is meant for entertainment, it also serves as a reminder of the potential dangers of mishandling materials and the importance of safety in DIY projects."
+    }
+  ]
+}

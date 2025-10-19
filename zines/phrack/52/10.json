@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 8, Issue 52, article 10 of 20",
+  "title": "a Quick nT Interrogation Probe (QTIP)",
+  "authors": "twitch <twitch@aye.net>",
+  "date": "January 26, 1998",
+  "short_summary": "QTIP is a tool that exploits null sessions in Windows NT to gather information about user accounts and shares on a target machine. It provides various options for retrieving user lists, share lists, and specific user information.",
+  "summary": "The article introduces QTIP, a tool designed to exploit the null session feature in Windows NT, which allows unauthenticated connections to gather sensitive information from the target system. The author explains that null sessions can be used to enumerate user accounts, share lists, and even access registry information without needing a username or password. The article provides a detailed breakdown of the tool's functionality, including command-line options for retrieving various types of information. It emphasizes the importance of system administrators being aware of this vulnerability and suggests measures to mitigate the risks, such as blocking NBT traffic and disabling null sessions through registry settings.\n\nThe code for QTIP is included, showcasing its straightforward implementation using Windows API calls. The author encourages readers to experiment with the tool and adapt it for their own needs, while also highlighting the necessity of responsible use. The article serves as both a technical guide for using QTIP and a cautionary tale about the security implications of null sessions in networked environments."
+}

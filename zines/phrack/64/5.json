@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Hijacking RDS-TMC Traffic Information signals",
+  "authors": "Andrea \"lcars\" Barisani, Daniele \"danbia\" Bianco",
+  "date": "2007",
+  "short_summary": "This article explores the vulnerabilities of the RDS-TMC protocol used for traffic information in satellite navigation systems. It details how to decode and potentially inject false traffic messages using simple hardware and software tools.",
+  "summary": "The article begins by introducing the Radio Data System - Traffic Message Channel (RDS-TMC), a protocol that allows FM broadcasts to convey real-time traffic information to satellite navigation systems. The authors highlight the importance of this protocol in modern navigation and the potential consequences of its vulnerabilities. They provide a detailed explanation of the RDS-TMC message structure, including the various blocks and bits that comprise a message, and emphasize the lack of authentication and encryption in the protocol, making it susceptible to exploitation.\n\nThe authors then present a DIY approach to sniffing RDS-TMC traffic using inexpensive hardware components, including FM radios and demodulators. They introduce their open-source tool, the Simple RDS Decoder, which can decode RDS-TMC messages and demonstrate how attackers could inject false traffic information into the system. The article concludes with a discussion on the implications of such attacks, particularly in the context of social engineering and the potential for causing traffic disruptions. Overall, this piece serves as both a technical guide and a cautionary tale about the security risks associated with widely adopted but poorly secured protocols."
+}

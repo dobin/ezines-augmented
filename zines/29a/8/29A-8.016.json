@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "BOOT CD INFECTION",
+  "authors": "LiTlLe VxW",
+  "date": "December 2004",
+  "historical_context": "This article discusses the evolution of boot viruses from floppy disks to CD-ROMs, reflecting the changing landscape of malware as technology advanced.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in virus development.",
+  "short_summary": "The article explores the concept of boot CD infections, detailing methods for creating viruses that can infect bootable CD images. It covers the structure of bootable CDs, the El Torito specification, and techniques for infection.",
+  "summary": "In 'BOOT CD INFECTION', LiTlLe VxW delves into the transition from traditional floppy and hard disk boot viruses to the more complex realm of CD-ROM infections. The author highlights the obsolescence of floppy-based viruses due to the rise of CD technology, positing that a boot virus targeting CD-ROMs can persist longer since the only way to eliminate it is to physically dispose of the infected CD. The article emphasizes the need for a virus to infect CD images, such as ISO files, which are prevalent among P2P users. The author notes that while coding a boot virus for floppy disks was straightforward, CD-ROMs present unique challenges due to their read-only nature, necessitating a focus on infecting the boot image instead of the CD itself.\n\nThe article further explains the El Torito Bootable CD-ROM Format Specification, detailing how boot records and descriptors are structured within a CD. It outlines two primary methods for infecting a bootable CD image: directly modifying an existing boot image or creating a new boot record for a non-bootable CD. The author concludes with a cautionary note on the potential for boot/MBR infectors to survive and the importance of combining these techniques with PE infectors for effective malware development. Overall, this article serves as a technical guide for those interested in the intricacies of boot virus creation and the evolving landscape of malware."
+}

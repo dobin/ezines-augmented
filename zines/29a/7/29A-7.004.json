@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "SFP Revisited",
+  "authors": "Ratter/29A",
+  "date": "",
+  "historical_context": "This article revisits the System File Protection (SFP) mechanism in Windows, particularly focusing on methods to bypass it. It reflects the hacker culture's ongoing interest in exploiting system vulnerabilities, especially during the early 2000s when Windows XP was prevalent.",
+  "target_audience": "Hackers, security researchers, and those interested in Windows internals.",
+  "short_summary": "The article presents two methods to bypass Windows' System File Protection (SFP) feature. The first method involves manipulating the sfc.dll to terminate the watcher thread, while the second method exploits an undocumented function in sfc_os.dll to temporarily exempt files from protection.",
+  "summary": "In 'SFP Revisited', Ratter/29A explores two distinct methods for circumventing the System File Protection (SFP) feature in Windows operating systems, particularly Windows 2000 and XP. The first method leverages an undocumented export from sfc.dll, specifically the SfcTerminateWatcherThread function, to terminate the thread responsible for monitoring file changes. This requires elevated privileges, which can be obtained through an administrator account. The author provides a code snippet demonstrating how to adjust privileges and invoke the function in a remote thread, effectively disabling SFP on the target machine.\n\nThe second method is described as a more elegant solution, utilizing an undocumented export from sfc_os.dll called SfcFileException. This function allows users to exempt specific files from SFP for a duration of one minute, effectively creating a temporary backdoor. The author emphasizes the necessity of administrator privileges for this method as well. Both methods highlight the ongoing cat-and-mouse game between system developers and hackers, showcasing the ingenuity of the hacker community in finding and exploiting system vulnerabilities."
+}

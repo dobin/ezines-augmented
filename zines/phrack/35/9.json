@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-five, File 9 of 13",
+  "title": "AUTO-ANSWER IT!",
+  "authors": "Twisted Pair",
+  "date": "",
+  "historical_context": "This article reflects the early days of home automation and phone hacking, showcasing the DIY spirit prevalent in hacker culture during the 1980s.",
+  "target_audience": "Hackers, phreakers, electronics enthusiasts, and security professionals.",
+  "short_summary": "This article presents simple circuits to automatically answer a phone and listen to audio remotely. It details the components needed and provides schematics for building the circuits, highlighting their potential uses in monitoring and automation.",
+  "summary": "In 'AUTO-ANSWER IT!', Twisted Pair introduces readers to the fascinating world of remote audio monitoring through simple electronic circuits. The article outlines two primary methods for automatically answering a phone using minimal components, emphasizing the affordability and accessibility of the required parts. The first method utilizes a Diac to switch the line upon receiving a ring, allowing an audio source to be coupled into the phone line. The second method enhances this setup with a bridge rectifier and optical coupler, enabling the remote activation of devices like tape recorders or amplifiers upon answering the call. This DIY approach encourages experimentation and creativity in home automation and monitoring setups.\n\nThe article also suggests additional components, such as DTMF decoders and encoders, which can be integrated into the circuits for more advanced functionalities. These components can facilitate remote control and monitoring of devices, making it possible to create a variety of applications, from simple call screening to complex automated systems. The playful tone and practical advice reflect the hacker ethos of the time, inviting readers to explore the possibilities of electronics and phreaking while providing a glimpse into the burgeoning field of home automation."
+}

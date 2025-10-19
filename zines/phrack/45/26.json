@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Five, File 26 of 28",
+  "title": "Cellular Debug Mode Commands",
+  "authors": "Unknown",
+  "date": "1993",
+  "historical_context": "This article provides insights into the debugging and testing modes of early cellular phones, reflecting the hacking culture of the early 90s where enthusiasts explored the inner workings of technology.",
+  "target_audience": "Hackers, security researchers, telecommunications professionals, and enthusiasts of vintage technology.",
+  "short_summary": "The article lists various debug commands for Motorola and Novatel cellular phones, detailing how to access hidden test modes and the functions available within them. It serves as a guide for those interested in manipulating and understanding cellular technology.",
+  "summary": "This article serves as a comprehensive guide to accessing and utilizing debug commands for Motorola and Novatel cellular phones. It outlines specific codes that can be entered to enter test modes, allowing users to manipulate various functions of the devices, such as muting audio, changing power levels, and displaying software versions. The commands are presented in a straightforward manner, making it easy for readers to follow along and experiment with their devices. The author emphasizes the importance of caution when using these commands, as improper use could lead to device malfunctions or damage.\n\nIn addition to the command lists, the article provides context on how to enter test modes for different models of phones, including the Novatel 8325. It highlights the hidden menus that are typically unknown to the average user, which can be accessed through specific key combinations. This exploration of cellular technology not only showcases the capabilities of these devices but also reflects the hacker ethos of the time, where understanding and manipulating technology was a form of empowerment and exploration."
+}

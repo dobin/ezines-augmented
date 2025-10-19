@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x0e of 0x10",
+  "title": "A Dynamic Polyalphabetic Substitution Cipher",
+  "authors": "Veins <veins at tristeza.org>",
+  "date": "2004",
+  "historical_context": "This article discusses the evolution of polyalphabetic substitution ciphers, particularly focusing on the DPA-128 cipher, which was a response to the weaknesses of traditional ciphers.",
+  "target_audience": "Cryptographers, security researchers, and enthusiasts interested in cipher design and cryptanalysis.",
+  "short_summary": "The article presents the DPA-128 cipher, a dynamic polyalphabetic substitution cipher that utilizes key-dependent substitution tables. It discusses its implementation, weaknesses, and potential applications as a one-way hash function and PRNG.",
+  "summary": "In this article, Veins introduces the DPA-128, a 128-bit secret-key block cipher that enhances traditional polyalphabetic substitution by incorporating key-dependent substitution tables. The author explains the fundamental concepts of polyalphabetic substitution and its vulnerabilities, emphasizing that while DPA-128 is functional, it is still a work in progress and should not be used for sensitive data. The cipher operates through a series of rounds, each involving byte chaining, subkey-related shifting, and substitution, which aims to achieve Shannon's principles of confusion and diffusion. However, the author warns of its weaknesses, including susceptibility to various cryptographic attacks and the potential for information leakage about the plaintext and key.",
+  "additional_notes": "The article includes source code for the DPA-128 cipher and utilities for testing its performance and security, making it a practical resource for those interested in implementing or analyzing this cipher."
+}

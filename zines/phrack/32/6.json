@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 32, File #6 of 12",
+  "title": "Exploration of: Automatic Teller Machine Cards",
+  "authors": "Jester Sluggo",
+  "date": "May 13, 1989",
+  "historical_context": "This article was written during a time when ATMs were becoming increasingly popular, and concerns about their security were starting to emerge.",
+  "target_audience": "Hackers, security professionals, and individuals interested in ATM technology and vulnerabilities.",
+  "short_summary": "This article provides an in-depth exploration of how Automatic Teller Machines (ATMs) operate, detailing the structure of ATM cards and the security vulnerabilities associated with them. It outlines various methods of exploiting these vulnerabilities, including physical theft, insider theft, and data-link interception.",
+  "summary": "In 'Exploration of: Automatic Teller Machine Cards', Jester Sluggo delves into the mechanics of ATMs and the technology behind ATM cards. The article explains how ATMs connect to a main computer to process transactions, detailing the information stored on the magnetic strips of ATM cards. Sluggo highlights the dual-layered security of the cards, which includes embossed information and magnetic data, while also pointing out the potential for exploitation due to the system's design flaws. He emphasizes the importance of understanding these vulnerabilities for both users and security professionals alike.\n\nThe article goes on to outline four primary methods of attacking ATMs: vandalization, physical penetration (including card counterfeiting), insider theft, and data-link interception. Each method is described with a mix of humor and caution, reflecting the hacker culture of the time. Sluggo shares anecdotes about how he gathered information from bank employees, illustrating the lengths to which hackers might go to uncover security weaknesses. Ultimately, this piece serves as both a technical guide and a cautionary tale about the vulnerabilities inherent in the banking systems of the late 1980s."
+}

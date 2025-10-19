@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 7, Issue 51, Phile #09 of 17",
+  "title": "Bypassing Integrity Checking Systems",
+  "authors": "halflife <halflife@infonexus.com>",
+  "date": "September 01, 1997",
+  "historical_context": "This article was written during a time when integrity checking systems like Tripwire were becoming common in UNIX environments, and the hacker community was adapting to countermeasures against their exploits.",
+  "target_audience": "Hackers, security researchers, system administrators interested in security bypass techniques.",
+  "short_summary": "The article discusses methods to bypass integrity checking systems, particularly focusing on Tripwire. It details how to exploit the trust placed in the operating system by integrity checkers and provides code examples for a stealthy loadable kernel module (LKM) that can hide malicious modifications.",
+  "summary": "In the face of increasing security measures, particularly integrity checking systems like Tripwire, hackers have sought ways to bypass these defenses. This article outlines a method to exploit the inherent trust that integrity checkers place in the operating system. The author introduces a loadable kernel module (LKM) called 'twhack' that can stealthily modify system calls to hide unauthorized changes to binaries. By redirecting system calls such as execve and getdirentries, the module allows a hacker to execute a trojan version of the login program while preventing detection by integrity checkers. The article emphasizes the importance of understanding the underlying mechanisms of integrity checking systems to effectively bypass them.\n\nThe technical details provided include the manipulation of the system call table and the use of a secondary module, 'syscheck', to monitor changes to the system calls. This dual-module approach illustrates a sophisticated method for maintaining persistence and stealth in a compromised system. The article serves as a practical guide for those interested in the technical aspects of system security and the ongoing cat-and-mouse game between security measures and hacking techniques."
+}

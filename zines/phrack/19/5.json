@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 19, Phile #5 of 8",
+  "title": "Facility Assignment and Control System",
+  "authors": "Phantom Phreaker",
+  "date": "1988",
+  "historical_context": "This article is part of the early hacker culture, focusing on telecommunications and phreaking, a practice that was prevalent before the widespread adoption of digital communication technologies.",
+  "target_audience": "Telecom enthusiasts, hackers, phreakers, and security professionals interested in telecommunications systems.",
+  "short_summary": "The article provides an in-depth look at the Facility Assignment and Control System (FACS), detailing its components and functions within the telecommunications network. It aims to educate true telecom enthusiasts about the workings of the system, while cautioning against malicious use of the information.",
+  "summary": "The Facility Assignment and Control System (FACS) is a comprehensive network component system crucial for managing telecommunications infrastructure. This article, written by Phantom Phreaker, expands on a previous work titled 'FACS FACTS' and aims to provide a detailed understanding of FACS for serious phreaks and hackers. It outlines the five main subsystems of FACS: PREMIS, SOAC, LFACS, COSMOS, and WM, each serving distinct roles in the management of service orders and facility assignments within the telephone network. The author emphasizes that this information is intended for educational purposes only and warns against any malicious use of the data presented. \n\nThe article delves into the functionalities of each subsystem, such as PREMIS's role in customer service interactions and SOAC's processing of service orders. LFACS manages the inventory of outside loop plant facilities, while COSMOS oversees central office facilities. The Work Manager (WM) acts as a bridge between SOAC/LFACS and COSMOS systems, ensuring efficient communication and data flow. Overall, this piece serves as a valuable resource for those interested in the technical aspects of telecommunications and the historical context of phreaking culture."
+}

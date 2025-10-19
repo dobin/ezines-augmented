@@ -1,0 +1,14 @@
+{
+  "reference": "Volume 1, Issue 1, Phile #1 of 1",
+  "title": "Virus Spotlight: Tiny Virus",
+  "authors": "Patti Hoffman",
+  "date": "June, 1990",
+  "historical_context": "The Tiny Virus is one of the earliest known MS-DOS viruses, highlighting the growing concerns around computer security in the early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in virus development.",
+  "short_summary": "This article provides an in-depth look at the Tiny Virus, one of the smallest MS-DOS viruses. It details its behavior, detection methods, and includes a disassembly of the virus code.",
+  "summary": "The article presents the Tiny Virus, also known as the 163 COM Virus, which was discovered in June 1990. It is characterized as a rare, non-resident .COM file infector that primarily targets COMMAND.COM files. The virus is notable for its small size of just 163 bytes and its ability to replicate by infecting other .COM files in the current directory. The author explains the symptoms of infection, including file growth and changes to date/time stamps, and provides a detailed disassembly of the virus code, illustrating how it operates using key MS-DOS functions. The Tiny Virus serves as an example of early malware behavior and highlights the importance of detection and removal methods available at the time, such as ViruScan and F-Prot. The article concludes with a challenge for readers to create a new strain of the Tiny Virus, emphasizing the ongoing evolution of malware development.",
+  "code_snippet": {
+    "description": "The disassembly of the Tiny Virus code demonstrates how it locates and infects .COM files using DOS interrupt calls.",
+    "code": "start:\n                jmp     loc_1                   ;jump to virus\n\nloc_1:\n                call    sub_1                   ;\n\nsub_1           proc    near                    ;\n                pop     si                      ;locate all virus code via\n                sub     si,10Bh                 ;si, cause all offsets will\n                mov     bp,data_1[si]           ;change when virus infects\n                add     bp,103h                 ;a COM file\n                lea     dx,[si+1A2h]            ;offset of '*.COM',0 - via SI\n                xor     cx,cx                   ;clear cx - find only normal\n                mov     ah,4Eh                  ;find first file\n"
+  }
+}

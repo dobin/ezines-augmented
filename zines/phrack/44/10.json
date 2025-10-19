@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 10 of 27",
+  "title": "Protective Measures Against Compromising Electro Magnetic Radiation Emitted by Video Display Terminals",
+  "authors": "Professor Erhart Moller",
+  "date": "",
+  "historical_context": "This article discusses the vulnerabilities associated with electromagnetic radiation emitted by video display terminals, a concern that has grown with the increasing reliance on electronic devices for data processing.",
+  "target_audience": "Security professionals, researchers in electromagnetic compatibility, and individuals interested in data protection and privacy.",
+  "short_summary": "The article explores the types of compromising electromagnetic radiation emitted by video display terminals and presents protective measures to mitigate these risks. It details the nature of emissions, their potential for interception, and various shielding techniques.",
+  "summary": "In this comprehensive examination, Professor Erhart Moller outlines the various forms of compromising electromagnetic radiation emitted by video display terminals, including electric and magnetic fields, shell waves, and interference currents in power lines. The article emphasizes that these emissions can be intercepted and decoded, potentially exposing sensitive data. Moller provides experimental evidence demonstrating how a standard television receiver can capture and display this compromising information, underscoring the need for effective protective measures. \n\nThe article categorizes protective strategies into three main approaches: modification of devices, heterodyning strategies, and shielding. Instrument modification involves altering the circuitry to reduce emissions, while heterodyning introduces noise to obscure the compromising signals. However, the most effective and practical solution is shielding, which can be applied to devices, rooms, and buildings to prevent unauthorized access to emitted data. Moller discusses various shielding materials and construction techniques, emphasizing their importance in maintaining data security in an increasingly electronic world."
+}

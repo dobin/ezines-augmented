@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Eight, File 9 of 15",
+  "title": "Cellular Telephony",
+  "authors": "Brian Oblivion",
+  "date": "",
+  "historical_context": "This article discusses the evolution and technical aspects of cellular telephony, a technology that became widely available to the public in the late 1970s.",
+  "target_audience": "Hackers, phreakers, security professionals, and telecommunications enthusiasts.",
+  "short_summary": "This article provides an in-depth look at the history and technical workings of cellular telephony, including the Advanced Mobile Phone Service (AMPS) and various methods of traffic handling. It also discusses the implications for privacy and security in mobile communications.",
+  "summary": "In 'Cellular Telephony,' Brian Oblivion explores the historical development of mobile communication, tracing its roots from early radio systems to the introduction of the Advanced Mobile Phone Service (AMPS) in 1979. The article highlights the technological advancements that made cellular phones feasible, such as large-scale integrated circuits and microprocessors. Oblivion explains key concepts like frequency reuse and cell splitting, which allow cellular networks to handle multiple simultaneous calls efficiently. He also delves into the various frequency bands and channel allocations that define cellular communication today.\n\nThe article further examines the technical details of how cellular phones communicate, including methods like Frequency Division Multiple Access (FDMA), Time-Division Multiple Access (TDMA), and Code-Division Multiple Access (CDMA). Oblivion warns readers about the legal implications of monitoring cellular conversations, emphasizing the ease with which one can listen in on calls despite the legal risks. Overall, this piece serves as both a historical account and a technical guide, making it a valuable resource for anyone interested in the intersection of telecommunications and security."
+}

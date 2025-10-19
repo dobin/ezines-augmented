@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Users Guide to VAX/VMS",
+  "authors": "Black Kat",
+  "date": "Not specified",
+  "historical_context": "This article is part of a series aimed at users of the VAX/VMS operating system, which was widely used in academic and corporate environments during the 1980s and 1990s.",
+  "target_audience": "System administrators, VAX/VMS users, and those interested in legacy computing systems.",
+  "short_summary": "This article provides a comprehensive guide to using various utilities in the VAX/VMS operating system, including the Help, Backup, Mail, Phone, Library, and Sort utilities, as well as advanced features like subprocesses and DECnet.",
+  "summary": "The article is divided into two main parts: Part C focuses on practical utilities available in VAX/VMS, such as the Help Utility, which offers command explanations and usage tips; the Backup Utility, which details methods for data preservation; and the Mail Utility, which allows users to send and manage messages. Each utility is explained with commands and examples, making it accessible for users to implement these features effectively. The Phone Utility simulates a telephone system for user communication, while the Library Utility helps manage related files in a structured manner. The Sort Utility is introduced for organizing data records efficiently.\n\nPart D delves into advanced functionalities of VAX/VMS, including subprocess management through the SPAWN command, which allows users to create and manage multiple processes. The article explains how to interrupt processes, control batch jobs, and utilize DECnet for remote file access and task communication. It also covers the concept of VAXclusters, which enhance resource sharing and processing capabilities across multiple systems. Overall, the guide serves as a valuable resource for users looking to maximize their efficiency and understanding of the VAX/VMS operating system."
+}

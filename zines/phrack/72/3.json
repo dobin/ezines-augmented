@@ -1,0 +1,52 @@
+{
+  "articles": [
+    {
+      "reference": "Volume 0x10, Issue 0x48, Phile #0x03 of 0x12",
+      "title": "Linenoise",
+      "authors": "Phrack Staff",
+      "date": "",
+      "short_summary": "A collection of various short papers and notes that do not fit into other categories, covering topics from EICAR test files to network scanning techniques.",
+      "summary": "Linenoise serves as a repository for diverse short papers, corrections, and late submissions that contribute to the hacker community's knowledge base. The articles within this issue range from practical applications of the EICAR test file to advanced network scanning techniques using AF_XDP. Each piece offers insights into different aspects of hacking and security, reflecting the eclectic nature of the Phrack community. The collection emphasizes the importance of sharing knowledge and techniques among hackers, phreakers, and security professionals."
+    },
+    {
+      "reference": "Volume 0x10, Issue 0x48, Phile #0x04 of 0x12",
+      "title": "A Hacker's Introduction To CHERI",
+      "authors": "xcellerator",
+      "date": "",
+      "short_summary": "An introduction to the CHERI (Capability Hardware Enhanced RISC Instructions) project, discussing its potential impact on binary exploitation and security.",
+      "summary": "This article introduces CHERI, a project aimed at enhancing hardware capabilities to improve security in computing. It discusses the challenges of traditional binary exploitation and how CHERI's capability-based architecture can mitigate these issues. The author explains the concept of capabilities, which allow for more granular control over memory access, and how this could lead to safer software without requiring a complete rewrite of existing codebases. The article emphasizes the importance of understanding CHERI for security professionals and exploit developers alike, as it represents a significant shift in how we think about memory safety and exploitation."
+    },
+    {
+      "reference": "Volume 0x10, Issue 0x48, Phile #0x05 of 0x12",
+      "title": "High-Performance Network Scanning With AF_XDP",
+      "authors": "c3l3si4n",
+      "date": "",
+      "short_summary": "A detailed guide on building a high-performance network scanner using the Linux kernel's eBPF and AF_XDP subsystems.",
+      "summary": "This article outlines the development of a high-performance network scanner that leverages the Linux kernel's eBPF and AF_XDP features to bypass traditional network stack overhead. The author explains the limitations of conventional scanning methods and how kernel bypass techniques can significantly enhance scanning speed and efficiency. The scanner's architecture is described, including its components and the use of zero-copy data transfer to minimize latency. Performance comparisons with existing tools like masscan demonstrate the potential of this approach for security researchers and penetration testers, highlighting the importance of modern networking techniques in the field of cybersecurity."
+    },
+    {
+      "reference": "Volume 0x10, Issue 0x48, Phile #0x06 of 0x12",
+      "title": "MMIO in the Middle",
+      "authors": "b1ack0wl",
+      "date": "",
+      "short_summary": "An exploration of Memory Mapped Input Output (MMIO) in embedded devices, focusing on the TP-Link WR940N router.",
+      "summary": "This article delves into the workings of Memory Mapped Input Output (MMIO) in System on Chips (SoCs) used in embedded devices, specifically the TP-Link WR940N router. The author discusses the process of interacting with MMIO regions and how to manipulate them through the bootloader. By analyzing the router's firmware and utilizing QEMU for emulation, the article demonstrates how to read and write to physical memory, enabling deeper insights into the device's functionality. The exploration highlights the potential for exploiting MMIO vulnerabilities in embedded systems, providing a practical guide for security researchers interested in hardware hacking."
+    },
+    {
+      "reference": "Volume 0x10, Issue 0x48, Phile #0x07 of 0x12",
+      "title": "Shell Your Way to Network Mastery",
+      "authors": "Gabriel & Thomas",
+      "date": "",
+      "short_summary": "A guide to exploiting vulnerabilities in UPnP services, focusing on command injection techniques.",
+      "summary": "This article provides an in-depth analysis of vulnerabilities in Universal Plug and Play (UPnP) services, particularly focusing on command injection flaws in the linuxigd implementation. The authors detail how attackers can exploit these vulnerabilities to execute arbitrary commands on network devices. Through a series of examples, they illustrate the process of crafting malicious requests that bypass security checks, leveraging the lack of input validation in the service's handling of parameters. The article serves as both a tutorial and a cautionary tale, emphasizing the need for robust security practices in network services."
+    },
+    {
+      "reference": "Volume 0x10, Issue 0x48, Phile #0x08 of 0x12",
+      "title": "Breaking ToaruOS",
+      "authors": "NOT / Firzen, Binary Gecko",
+      "date": "",
+      "short_summary": "A walkthrough of finding and exploiting a kernel zero-day vulnerability in the ToaruOS operating system.",
+      "summary": "This article outlines the process of discovering and exploiting a kernel zero-day vulnerability in the ToaruOS operating system. The authors detail the setup of a controlled environment for testing and the various mitigations present in the kernel. They explain how to bypass these mitigations and achieve arbitrary code execution, ultimately leading to privilege escalation. The article serves as a practical guide for aspiring security researchers, illustrating the techniques and thought processes involved in kernel exploitation, while also highlighting the importance of understanding the underlying architecture and security mechanisms."
+    }
+  ]
+}

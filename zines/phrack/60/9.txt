@@ -1,0 +1,1534 @@
+                             ==Phrack Inc.==
+
+               Volume 0x0b, Issue 0x3c, Phile #0x09 of 0x10
+
+
+|=-------------------=[ Big Loop Integer Protection]=------------------=|
+|=---------------------------------------------------------------------=|
+|=--------------=[ Oded Horovitz ohorovitz@entercept.com ]=------------=|
+
+--[ Contents
+
+  1 - Introduction
+
+  2 - Part I - Integer problems
+    2.1 - Introduction
+    2.2 - Basic code samples
+
+  3 - Part II - Exploitation pattern
+    3.1 - One input, two interpretations
+    3.2 - What is the nature of the input?
+    3.3 - Suggested detection
+
+
+  4 - Part III - Implementation
+    4.1 - Introduction 
+    4.2 - Why gcc?
+    4.3 - A bit about gcc
+        4.3.1 - Compilation flow 
+        4.3.2 - The AST
+        4.3.3 - Getting started 
+    4.4 - Patch Goals 
+    4.5 - Patch overview
+        4.5.1 - Tactics
+        4.5.2 - Modifying the AST
+    4.6 - Limitations
+
+  5 - References
+
+  6 - Thanks
+
+  7 - Appendix A - Real life examples
+    7.1 - Apache Chunked encoding
+    7.2 - OpenSSH auth
+  
+  8 - Appendix B - Using blip  
+
+--[ 1 - Introduction
+
+Integer overflow and integer sign vulnerabilities are now common 
+knowledge. This has led to increased exploitation of integer-related 
+vulnerabilities. The article will attempt to suggest a way to detect 
+these vulnerabilities by adding compiler support that detects and flags 
+integer vulnerabilities exploitations. Specifically a gcc patch is 
+presented to demonstrate the feasibility of this technique.
+
+The article is divided into three parts. Part one contains a brief 
+introduction to some of the common integer related vulnerabilities. We 
+list some of the recent public vulnerabilities. Part two of the article 
+tries to explain the root cause of the problem with integer 
+vulnerabilities. Using real examples, the article explains why 
+exploitation is possible in the first place, and how it may be possible 
+to detect exploitation of integer vulnerabilities, even when the 
+vulnerability is not known in advance. Part three goes through the 
+implementation of the suggested detection scheme. Since the 
+implementation of this detection scheme is in the form of a gcc patch, 
+introduction information about gcc internals is provided as well. We 
+summarize the paper by demonstrating the protection at work against 
+OpenSSH and the Apache httpd packages.
+
+--[ 2 - Part I - Integer problems
+
+----[ 2.1 - Introduction
+
+In the last year the attention seems to have shifted to a new bad 
+programming practice. This practice is related to the possibility to 
+integer overflows that cause buffer overflows. It turns out the many 
+popular and (assumed to be) secure software packages (OpenSSH, Apache, 
+*BSD kernel) share this vulnerability. The root cause for this bad 
+practice is insufficient input validation for integer type input. Integer 
+input looks so naive, only a few bits long. What can go wrong here? Well, 
+it seems that quite a lot can go wrong. The following is a table of 
+integer related vulnerabilities taken from the OpenBSD and FreeBSD 
+security lists. All vulnerabilities have been reported during year 2002. 
+
+-------------------------------------------------------------------------
+| Vulnerable package     | Short description of vulnerability           |
+-------------------------------------------------------------------------
+| OpenBSD select syscall | Positive limit checks against int value      |
+| (See reference [4])    | allowing stack overflow                      |
+-------------------------------------------------------------------------
+| RPC xdr_array          | Int overflow cause small buffer allocation   |
+|                        | which later overflowed with input            |
+-------------------------------------------------------------------------
+| OpenSSH Authentication | Int overflow cause small buffer allocation   |
+|                        | which later overflowed with input            |
+-------------------------------------------------------------------------
+| Apache chunked-encoding| Positive condition is done on signed int     |
+|                        | allowing heap overflow                       |
+-------------------------------------------------------------------------
+| FreeBSD get_pallette   | Positive condition is done on signed int     |
+|                        | allowing information leak from kernel to user|
+-------------------------------------------------------------------------
+| FreeBSD accept1,getsoc-| Positive condition is done on signed int     |
+| kname1,getpeername1    | allowing information leak from kernel to user|
+-------------------------------------------------------------------------
+ Table 1 - Sample integer vulnerabilities in year 2002.
+
+The common problem that exists in all of the above vulnerabilities is 
+that an input of integer type (signed and unsigned) was used to trigger 
+overflow (when writing) or info leak (when reading) to/from program 
+buffers. All of the above vulnerabilities would have been prevented if 
+proper limits had been enforced. 
+
+----[ 2.2 - Basic code samples
+
+Integer vulnerabilities can be further illustrated by looking at the 
+following two simple code samples. 
+
+Example 1 (int overflow): 
+-------------------------
+01	int main(int argc,char* argv[]){
+
+02		unsigned int len,i;
+03		char	*buf;
+		
+04		if(argc != 3) return -1;
+		
+05		len=atoi(argv[1]);
+
+06		buf = (char*)malloc(len+1);
+07		if(!buf){
+08			printf("Allocation faild\n");
+09			return -1;
+10		}
+		
+11		for(i=0; i < len; i++){
+12			buf[i] = _toupper(argv[2][i]);
+13		}	
+14		buf[i]=0;
+		
+15		printf("%s\n",buf);
+16	}
+
+The code above seems quite legit. The program converts a string to its 
+upper case representation. First it allocates enough space for the string 
+and the NULL termination character. Then it converts each character into 
+its upcase value. But when looking a bit closer, we can identify two 
+major problems in the code. First, the program trusts the user to have as 
+much characters as he specifies (which is obviously not the case)(line 
+5). Second, the program doesn't take into account that by calculating the 
+space to allocate, an integer overflow may occur (line 6). Trying to 
+generalize the problem, the first bug may allow the attacker to read 
+information, which he didn't provide (by trusting the user input and 
+reading *len* chars from argv[2]). The second bug allows the attack to 
+overflow the heap with its own data, and therefore to fully compromise 
+the program.
+
+
+Example 2 (sign check-bypass):
+------------------------------
+01	#define BUF_SIZE 10
+02	int	max = BUF_SIZE;
+
+03	int main(int argc,char* argv[]){
+
+04		int		len;
+05		char	buf[BUF_SIZE];
+		
+06		if(argc != 3) return -1;
+		
+07		len=atoi(argv[1]);
+
+08		if(len < max){
+09			memcpy(buf,argv[2],len);
+10			printf("Data copied\n");
+11		}
+12		else
+13			printf("Too much data\n");
+		
+		
+14	}
+
+The second example shows a program that had the intention to solve the 
+problem introduced in the first example, by attempting to enforce user 
+input length to a known and predefined maximum value. The problem in this 
+code is that len is defined as a signed int. In this case a very big 
+value (unsigned wise) is interpreted as a negative value (line 8), which 
+will bypass the limit check. Still, in line 9 the same value is 
+interpreted as an unsigned positive number causing a buffer overflow and 
+possibly allowing a full compromise.
+
+--[ 3 - Part II  - Exploitation pattern
+
+----[ 3.1 - One input, two interpretations
+
+So what is the real problem? How come such security-oriented packages 
+have these vulnerabilities? The answer is that integer inputs sometimes 
+have an ambiguous interpretation at different parts of the code (integer 
+may change their sign at different values, implicit type cast, integer 
+overflows). That ambiguous interpretation is hard to notice when 
+implementing input validation code.
+
+To explain this ambiguity let us look at the first example. At the time 
+of allocation (line 6), the code believes that since the input is a 
+number, then adding another number will yield a bigger number (len+1). 
+But since typical C language programs ignore integer overflows the 
+particular number 0xffffffff do not apply to this assumption and yields 
+unexpected result (zero). Unfortunately the same error is *NOT* repeated 
+later in the code. Therefore the same input 0xffffffff this time 
+interpreted as an unsigned value (a huge positive number). 
+
+In the second example the ambiguity of the input is even more obvious. 
+Here the code includes a silent type casting generated by the compiler 
+when calling memcpy. The code therefore is checking the value of the 
+input as if it was a signed number (line 8) while using it to copy data 
+as if it was an unsigned (line 9). 
+
+This ambiguity is invisible for the coder eye, and may go undetected, 
+leaving the code vulnerable to this "stealthy" attack.
+
+----[ 3.2 - What is the nature of the input?
+
+Looking back at the above examples reveal a common meaning for the 
+attacker input. (Sorry if the next few lines will explain the obvious :>) 
+The above input is a number for a reason. It is a counter! It counts 
+items! It doesn't matter what those "items" are (bytes, chars, objects, 
+files, etc.). They are still countable amount of items. And what can you 
+do with such a counter? Well, you are most likely to do some processing 
+"count" amount of times. As a note I will say that not *every* number is 
+also a counter. There are many other reasons to have numbers around. But 
+the one that are related to integer vulnerabilities happend to be 
+"counters" most of the time.
+
+For example, if the count is for challenge response you may want to read 
+"count" amount of responses (OpenSSH). Or if the count is buffer length 
+you may want to copy "count" amount of bytes from one memory location to 
+the other (Apache httpd). 
+
+The bottom line is that somewhere behind this number there is the proper 
+"loop" in the code that will do some processing, "count" number of times. 
+This "loop" may have multiple forms such as the for-loop in the first 
+example, or as an implicit loop in memcpy. Still all loop flavors will 
+end up looping around the "count".
+
+----[ 3.3 - Suggested detection
+
+Ok, what do we have so far about those vulnerabilities?
+- The input was ambiguously used in the code.
+- Somewhere in the code there is a loop that uses the input integer as an 
+iteration counter. 
+
+To make the interpretation of the number ambiguous, the attacker has to 
+send a huge number. Looking at the first example we can see that in order 
+to make the number ambiguous the attacker needed to send such a big 
+number that if doing (len+1) the number will overflow. For that to happen 
+the attacker will have to send the value 0xffffffff. Looking at the 
+second example, in order to make the interpretation of the number 
+ambiguous, the attacker needs to send such a number that will fall into 
+the negative range of an integer 0x80000000-0xffffffff. 
+
+The same huge number sent by the attacker to trigger the vulnerability is 
+later used in a loop as the iterations counter (As discussed in the 
+section "What is the nature of the input?") 
+
+Now lets analyze the exploit process:
+
+1. Attacker wants to overflow buffer.
+2. Attacker may use integer vulnerability
+3. Attacker sends a huge integer to trigger the vulnerability.
+4. Count loop executes (probably) using attacker input as the loop bound.
+5. A Buffer is overflowed (On early iterations of the loop!)
+
+Therefore detecting (and preventing) integer vulnerability exploitation 
+is possible by validating the loop bounds before its execution. The 
+validation of the loop will check that the loop limit is not above a 
+predefined threshold, and if the limit is higher that the threshold a 
+special handler will be triggered to handle the possible exploitation. 
+
+Since the value required to trigger most integer vulnerabilities is huge, 
+we can assume (hope) that most legitimate loops will not trigger this 
+protection.
+
+To get a feeling for what values we expect to see in integer 
+Vulnerabilities, lets examine the following samples:
+
+- Allocating buffer for user data + program data
+
+Looks like: buf = malloc(len + sizeof(header));
+
+In this case the value required for triggering int overflow is very close 
+to 0xffffffff since most program struct sizes are in the range of several 
+bytes to hundreds bytes at most.
+
+- Allocating arrays
+
+looks like: buf = malloc(len * sizeof(object));
+
+In this case the value required for triggering the overflow may be much 
+smaller then in the first example but it is still a relatively huge 
+value. For example if sizeof(object) == 4 then the value should be bigger 
+then 0x40000000 (one Giga). Even if the sizeof(object)== 64 the value 
+should be bigger then 0x4000000 (64 Mega) in order to cause an overflow.
+
+- Falling to negative range
+
+In this case the value required to make a number negative is any number 
+bigger then 0x7fffffff. 
+
+
+Looking at the values required to trigger the integer vulnerability, we 
+can choose a threshold such as 0x40000000 (One Giga) that will handle 
+most cases. Or we can select smaller threshold for better protection, 
+which may trigger some false positives.
+
+--[ 4 - Part III - Implementation
+
+----[ 4.1 - Introduction 
+
+Once we have a suggested a way to detect integer attacks, it will be nice 
+to implement a system based on that idea. A possible candidate for 
+implementing this system is to extend an existing compiler. Since the 
+compiler knows about all loops in the application, it will be possible 
+for the compiler to add the appropriate security checks before any "count 
+loop". Doing so will secure the application without any knowledge of the 
+specific vulnerability.
+
+Therefore I choose to implement this system as a gcc patch and name it 
+"Big Loop Integer Protection" a.k.a blip. Using the -fblip flag one may 
+now be able to protect his application from the next yet to be public 
+integer exploit.
+
+----[ 4.2 - Why gcc?
+
+Choosing gcc was not a tough decision. First this compiler is one of the 
+most common compilers in the Linux, *nix world. Therefore, patching gcc 
+will allow protecting all applications compiled with gcc. Second, the 
+gcc is open-source therefore it may be feasible to implement this patch 
+in the first place. Third, previous security patches were implemented as 
+gcc patches (StackGaurd, ProPolice).So why not follow their wisdom? 
+
+----[ 4.3 - A bit about gcc
+
+Well.., all happy I set down knowing that I'm about to make a gcc patch 
+for preventing integer attacks. But, except of that, what do I really 
+know about gcc at all? I must admit that the answer for that question was 
+- "not much". 
+
+To overcome this little problem, I was looking for some documentation 
+about gcc internals. I also hoped to find something similar to what I 
+wanted to do, which already exists. Fast enough, it was clear that before 
+jumping to other examples, I must understand the gcc beast. 
+
+.. Two weeks later, I have read enough of the gcc internal documentation, 
+and I spent enough time in debugging sessions of the compiler, to be able 
+to start modifying the code. However before I start jumping into details 
+I would like to provide some background about how gcc works, which I hope 
+the reader will find useful.
+
+------[ 4.3.1 - Compilation flow 
+
+The gcc compiler is really an amazing machine. The design goals of gcc 
+include the ability to support multiple programming languages, which 
+later can be compiled into multiple platforms and instruction sets. In 
+order to achieve such a goal, the compiler uses several abstraction 
+layers. 
+
+At first, a language file is processed (parsed) by a language "Front 
+End". Whenever you invoke the gcc compiler, the compiler will decide 
+which of the available "Front End"s is good for parsing the input files, 
+and will execute that  "Front End". The "Front End" will parse the whole 
+input file and will convert it (using many global helper functions) to an 
+"Abstract Syntax Tree" (AST). By doing so the "Front End" makes the 
+original programming language transparent to the gcc "Back End". The AST 
+as its name suggests, is a data-structure, which resides in memory and 
+can represent all the features of all the programming languages gcc 
+supports. 
+
+Whenever the "Front End" finishes to parse a complete function, and 
+converts it to an AST representation, a gcc function called 
+rest_of_compilation is being called. This function takes down the AST 
+output from the parser and "expands" it into a "Register Transfer 
+Language" (RTL). The RTL, which is the "expanded" version of the AST, is 
+then processed again and again through the many different phases of 
+compilation. 
+
+To get a feeling for work that is done on the RTL tree, a subset 
+list of the different phases is:
+ - Jump Optimization
+ - CSE (Common sub-expression elimination)
+ - Data flow analysis
+ - Instruction combination
+ - Instruction scheduling
+ - Basic block reordering
+ - Branch shortening
+ - Final (code generation)
+
+I've selected only a few phases out of the big list of phases to 
+demonstrate the work done on RTL. The full list is quite more extensive 
+and can be found in the gcc internal docs (see "Getting started" for link 
+to docs). The nice thing about RTL is that all those phases are performed 
+independent of the target machine. 
+
+The last phase which is performed on the RTL tree, will be the "final" 
+phase. At that point the RTL representation is ready to be substituted by 
+actual assembly instructions that deal with the specific architecture. 
+This phase is possible due to the fact that the gcc maintains an abstract 
+definition of "machine modes". A set of files that can describe each 
+supported machine hardware, and instruction set in a way that makes it 
+possible to translate RTL to the appropriate machine code.
+
+
+------[ 4.3.2 - The AST
+
+I will now focus on the AST, which I will refer to as the "TREE". This 
+TREE is the output of the front end parsing of a language file. The TREE 
+contains all the information existing in the source file which is 
+required for code generation (e.g. declaration, functions, types..). In 
+addition the TREE also includes some of the attributes and implicit 
+transformations that the compiler may choose to perform (e.g. type 
+conversion, auto variables..). 
+
+Understanding the TREE is critical for creating this patch. Fortunately 
+the TREE is well structured and even if its object-oriented-like-
+programming-using-c is overwhelming at first, after a few debugging 
+sessions, every thing starts to fall in place. 
+
+The core data structure of the TREE is the tree_node (defined in tree.h). 
+This structure is actually one big union that can represent any piece of 
+information. The way it works is that any tree node has its code, which 
+is accessible using "TREE_CODE (tree node)". Using this code the compiler 
+may know which of the union fields are relevant for that node (e.g. A 
+constant number will have the TREE_CODE() == INTEGER_CST, therefore the 
+node->int_cst is going to be the union member that will have the valid 
+information.). As a note, I will say that there is no need to access any 
+of the tree node structure fields directly. For each and every field in 
+that structure there is a dedicated macro that uniforms the access to 
+that field. In most cases this macro will contain some additional checks 
+of the node, and maybe even some logic to execute whenever access to that 
+field is made (e.g. DECL_RTL which is responsible to retrieve the RTL 
+representation of a TREE node, will call make_decl() if no RTL expression 
+exists for that node).
+
+So we know about the TREE and tree node, and we know that each node can 
+represent many different things, what else is important to know about the 
+tree nodes? Well, one thing is the way tree nodes are linked to each 
+other. I will try to give a few sample scenarios that represent most of 
+the cases where one tree node is related to another one.
+
+Reference I - Chains:
+A chain is a relation that can be best described as a list. When the 
+compiler needs to maintain a list of nodes *that don't have any link-
+related information*, it will simply use the chain field of the tree node 
+(accessible using the TREE_CHAIN() macro). An example for such a case is 
+the list of statements nodes in a function body. For each statement in a 
+COMPOUND_STMT list there is a chained statement that represents the 
+following statement in the code.
+
+Reference II - Lists:
+Whenever simple chaining is not enough, the compiler will use a special 
+tree node code of TREE_LIST. TREE_LIST allows the compiler to save some 
+information attached to each item on the list. To do so each item in the 
+list is represented by three tree nodes. The first tree node will have 
+the code TREE_LIST. This tree node will have the TREE_CHAIN pointing to 
+the next node in the list. It will have the TREE_VALUE pointing to the 
+actual tree node item, and it will also have TREE_PURPOSE which may point 
+to another tree node that holds extra information about this item meaning 
+in the list. As an example the tree node of code CALL_EXPR, will have a 
+TREE_LIST as its second operand. This list will represent the parameters 
+sent to the called function.
+
+Reference III - Direct reference:
+Many of the tree node fields are tree nodes themselves. It may be 
+confusing at first glance, but it will be clear soon enough. A few common 
+examples are:
+ - TREE_TYPE this field represent the type of a tree node. For example 
+each tree node with expression code must have a type. 
+
+ - DECL_NAME whenever some declaration tree nodes have a name, it will 
+not exist as a string pointed directly by the declaration tree node. 
+Instead using the DECL_NAME one can get access to another tree node of 
+code IDENTIFIER_NODE. The latter will have the requested name 
+information.
+
+ - TREE_OPERAND() One of the most commonly used references. Whenever 
+there is a tree node, which has a defined number of "child" tree nodes, 
+the TREE_OPERAND() array will be used (e.g. tree node of code IF_STMT 
+will have TREE_OPERAND(t,0) as a COND_EXPR node, TREE_OPERAND(t,1) as the 
+THEN_CLAUSE statement node, and TREE_OPERAND(t,2) as the ELSE_CLAUSE 
+statement tree node.)
+
+Reference IV - Vectors:
+Last and quite less common is the tree node vector. This container, which 
+is accessible using the TREE_VEC_XXX macros, is used to maintain varying 
+size vectors.
+ 
+There is a lot more to know about AST tree nodes for which the gcc 
+internal documents may have better and more complete explanations. So I 
+will stop my AST overview here with a suggestion to read the docs.
+
+In addition to storing the abstract code in the AST. There are several 
+global structures, which are being extensively used by the compiler. I 
+will try to name a few of those global structures that I found very 
+useful to checkout while doing some debugging sessions.
+
+  - current_stmt_tree : provides the last added stmt to the tree , last 
+expression type, and the expression file name.
+
+  - current/global_binding_level : provides binding information, 
+such as defined names in a particular binding level, and block pointers
+
+  - lineno : var containing the line number that is parsed at the moment
+  - input_filename: file name that is parsed at the moment
+
+------[ 4.3.3 - Getting started 
+
+If you want to experience the AST tree yourself, or to dig into the patch 
+details, it is recommended to read this getting started section. You are 
+safe to continue to the next section if you do not wish to do that.
+
+First thing first, get the compiler source code. The version I used as 
+base for this patch is gcc 3.2. For information about download and build 
+of the compiler please check http://gcc.gnu.org/install/ 
+
+(Please remember to specify the compiler version you wish to download. 
+The default version may be the last-release, which was not checked 
+against this patch)
+
+Next thing you may want to do is to sit down and carefully read the gcc 
+internal documents. ( For the sake of this patch, you should be familiar 
+with the first 9 sections of this document ) The document is located 
+http://gcc.gnu.org/onlinedocs/gccint/
+
+Assuming you read the document and you want to go to the next level, I 
+recommend to have a set of simple programs to be used as compiler 
+language file, your debugger of choice, and start debugging the compiler. 
+Some good break points that you might find useful are:
+
+  - add_stmt : called whenever the parser decides to add a new statement 
+into the AST. This break point may be very handy when it is not so clear 
+how a specific tree node is being created. By breaking on add_stmt and 
+checking up the call stack, it is easy to find more interesting places to 
+dig into.
+
+  - rest_of_compiliation : called whenever a function was completely 
+converted into AST representation. If you are interested to check out how 
+the AST is turning into RTL this is a good place to start.
+
+  - expand_stmt: called each time a statement is about to be expanded 
+into RTL code. Setting a Break point here will allow you to easily 
+investigate the structure of an AST tree node without the need to go 
+through endless nesting levels. 
+
+<TIP> Since the gcc compiler will end up calling the cc1 compiler for *.c 
+files, you may want to debug cc1 in the first place, and save yourself 
+the trouble of making your debugger follow the child process of gcc 
+</TIP>
+
+Soon enough you will need some reference for all the little macros used 
+while messing with the AST tree. For that I recommend getting familiar 
+with the following files:
+
+gcc3.2/gcc/gcc/tree.h
+gcc3.2/gcc/gcc/tree.def
+
+
+----[ 4.4 - Patch Goals 
+
+
+Like every project in life, you have to define the project goals.  First 
+you better know if you reached your goals. Second, which is not less 
+important, since resources are limited, it is much easier to protect 
+yourself from a never-ending project. 
+
+The goals of this patch were above all to be a proof of concept for the 
+suggested integer exploits prevention scheme. Its therefore *not* a goal 
+to solve all current and future problems in the security world, or even 
+not to solve all exploits that have integer input related to them.
+
+The second goal of this implementation is to keep the patch simple. Since 
+the patch is only a proof of concept, we preferred to keep things simple 
+and avoid fancy solutions if they required more complex code. 
+
+
+Last but not least the third goal is to make this patch usable. That 
+means easy to use, intuitive, and able to protect real world packages 
+bigger then 30 lines of code :).
+
+----[ 4.5 - Patch overview
+
+The patch will introduce a new flag to the gcc compiler named "blip". By 
+compiling a file using the -fblip flag,  the compiler  generates code 
+that will check for the "blip" condition for every for/while loop and for 
+every call to a "loop like" function.
+
+A "loop like" function is any function that is a synonym for a loop. 
+(e.g. memcpy, bcopy, memset, etc.).
+
+The generated check, will evaluate if a loop is about to execute a "Huge" 
+number of times. (defined by LIBP_MAX). Each time a loop is about to 
+execute, the generated code verifies that the loop limit is smaller than 
+the threshold. If an attempt to execute a loop more than the threshold 
+value is identified, the __blip_violation() handler will be called 
+instead of the loop, leading to a controlled termination of the 
+processes.
+
+The current version of the patch will support only the C language. This 
+decision was made in order to keep this first version of the patch small 
+and simple. Also, all the vulnerable packages that this patch was planned 
+to protect are written in C. So I thought that having only C is a good 
+start.
+
+
+------[ 4.5.1 - Tactics
+
+Having the above goals in mind, I had to take some decisions during the 
+development of the patch. One of the problems I had was to choose the 
+right place to hack the code. There are quite a lot of options available, 
+and I will try to give some pros and cons for each option, hoping it will 
+help others to make educated decisions once they encounter the same 
+dilemmas.
+
+The first thing that I had to decide was the program representation I 
+want to modify. The process of compilation looks more or less like that:
+
+Processing		Program representation
+------------		------------
+Programming =>	1. Source code
+Parsing => 		2. AST
+Expanding => 	3. RTL
+"final" =>		4. Object file
+
+So what is the right place to implement the checks? 
+
+The following table lists some of the pros and cons for modifying the 
+code at different stages during the compilation process.
++-------------+-----------------------------+---------------------------+
+|Stage        |Pros                         | Cons                      |
++-------------+-----------------------------+---------------------------+
+| AST         |- Target independent         |- No access to hardware    |
+|             |- Language independent       |  Registers, instructions  |
+|             |- Optimization independent   |                           |
+|             |- High level Access to       |                           |
+|             |  language "source"          |                           |
+|             |- Intuitive to add code      |                           |
++-------------+-----------------------------+---------------------------+
+| RTL         |- Target independent         |- Low level "source" access|
+|             |- Language independent       |- May interfere with       |
+|             |- Full access to target      |  optimization             |
+|             |  hardware                   |                           |
++-------------+-----------------------------+---------------------------+
+| Object file |- Language independent       |- Hardware dependent       |
+|             |                             |- Lack syntax information  |
+|             |                             |- Modification of flow may |
+|             |                             | break compiler logic      |
++-------------+-----------------------------+---------------------------+
+
+After some thought I decided to modify the AST representation. It seems 
+to be the most natural place to do such a change. First, the patch 
+doesn't really need to access low-level information such as hardware 
+registers, or even virtual registers allocations. Second, the patch can 
+easily modify the AST to inject custom logic into it, while doing the 
+same at the RTL level will require major changes, which will hurt the 
+abstraction layers defined in gcc.
+
+
+Solving my second dilemma was not as easy as the first one. Now that AST 
+patching was the plan I had in mind, I needed to find the best point in 
+time in which I will examine the existing AST tree, and emit my checks on 
+it. I had three possible options. 
+
+1) Add a call to my function from the parser code of some language (which 
+happened to be C).  By doing so, I have the chance to evaluate and modify 
+the tree "on the fly" and therefore save an extra pass over the tree 
+later. A clear disadvantage is the patch becomes language dependent. 
+
+2) Wait until the whole function is parsed by the front-end.  Then go 
+through the created tree, before converting it to RTL and find the 
+places, which require checks, and patch them. An advantage of this method 
+is that the patch is no longer language dependent. On the other hand, 
+implementing a "tree walk" that will scan a given tree, is quite complex 
+and error prone task, which will go against the goals we defined above 
+such as simple, and useful patch. 
+
+3) Patch the AST tree *while* it is being converted into RTL. Although 
+this option looks like the most advantageous (language independent, no 
+need for a tree walk) it still has a major disadvantage which is the 
+uncertainty of being able to *safely* modify the AST tree at that time. 
+Since the RTL "conversion machine" is already processed some parts of the 
+AST tree, it might be dangerous to patch the AST tree at that time.
+
+Finally, I have decided that the goal of making this patch simple, 
+implies selecting the first option of calling my evolution functions from 
+the C parser.
+
+I've placed the hook into my patch in three locations. Two calls inside 
+the c-parse.y (main parser file) code allowing me to examine the FOR and 
+WHILE loops and to modify them on the fly. The third call is located 
+outside the parser since catching all call locations was quite tricky to 
+do from within the parser. Basically since in many different situations a 
+CALL_EXPR is created hooking all of them seems to be non-natural. The 
+alternative that I found which seems to work just fine for me, was to add 
+a call to my function inside the build_function_call() within the c-
+typeck.c file (C compiler type-checking expression builder).
+
+The main entry into the patch is the blip_check_loop_limit() function 
+which will do all the work of checking if a loop seems to be relevant, 
+and to call the right function that will do the actual patching of the 
+AST tree.
+
+In order for a loop to be considered it needs to look like a count loop. 
+The blip patch will therefore try to examine each loop and decide if the 
+loop seems to be a counter loop (exact criteria for examining loops will 
+follow). For each count loop an attempt is made to detect the "count" 
+variable and the "limit" variable.
+
+Example of simple loops and their variables:
+ - for(i=0; i < j; i+=3}{;} ==> Increment loop, i = count j = limit.
+ - while(len--){;} ==> decrement loop, len = counter ; 0 = limit.
+
+The current implementation considers a loop as count loop only if:
+ - 2 variables are detected in the loop condition 
+   (sometimes one of them can be a constant)
+ - one of those variables is modified in the loop condition or in the 
+loop expr
+ - *only one* variable is modified
+ - the modification is of the increment / decrement style (++,--,+=,-=)
+
+The code, which examines the loop, is executed in blip_find_loop_vars() 
+and it may be improved in the future to identify more loops as count 
+loops.
+
+After detecting the loop direction, the loop count and the limit, the AST 
+tree is modified to include a check that verifies that a big loop is 
+reported as a blip violation.
+
+In order to keep the patch simple and risk free, any time a loop seems 
+too complex to be understood as count loop, the loop will be ignored 
+(Using the blip warning flags its possible to list the ignored loops, and 
+the reason why they were ignored). 
+
+
+------[ 4.5.2 - Modifying the AST
+
+When you start patching complex applications such as gcc, you want to 
+make sure you are not causing any "butterfly effect" while modifying 
+memory resident structures on the fly. To save yourself from a lot of 
+trouble I will suggest avoiding modification to any structure directly. 
+But instead use the existing functions that the language parser would 
+have used if the code you want to "inject" was found in the original 
+source code. Following this layer of encapsulation will save you from 
+making mistakes such as forgetting to initialize a structure member, or 
+not updating another global variable or flag. 
+
+I found it very helpful to simulate the code injection by actually 
+modifying the source code, and tracing the compiler as it builds the AST 
+tree, and later mimicking the code creation by using the same functions 
+used by the parser to build my new check code. This way I was able to 
+eliminate the need of "dirty" access to the AST tree, which I was quite 
+afraid of while starting the modification.
+
+Knowing the right set of functions to use to inject any code I would 
+like, the question became what would I really like to inject? The answer 
+differs a bit between the different loop types. In the case of a for-loop 
+the blip patch will add the check expression as the last expression in 
+the FOR_INIT statement. In the case of the while loop the blip patch will 
+add the check expression as a new statement before the while loop. In the 
+case of a function call to a "loop like" function such as memcpy, the 
+blip patch will replace the whole call expression with a new condition 
+expression, having the __blip_violation on the "true" side, and the 
+original call expression on the "false" side.
+
+Let's illustrate the last paragraph with some samples..
+
+Before blip
+-----------
+
+1) for(i=0;i< len;i++){}
+
+2) While(len--){}	
+
+3) p = memcpy(d,s,l)
+
+
+After blip
+----------
+
+1) for(i=0,<blip_check>?__blip_violation:0;i<len;i++){}
+
+2) <blip_check>?__blip_violation:0;
+   while(len--){}
+
+3) p = <blip_check>?__blip_violation : memcpy(d,s,l)
+
+
+The <blip_check> itself is quite simple. If the loop is incremental 
+(going up) then the check will look like: (limit > count && limit-count > 
+max).  If the loop is going down the check will be (count > limit && 
+count - limit > max). There is a need to check the delta between the 
+count and the limit and not only the limit since we don't want to trigger 
+false positive in a loop such as:
+
+len = 0xffff0000;
+for(i=len-20;i < len; i++){};
+
+The above example may look at first like an integer exploit. But it may 
+also be a legitimate loop which simply happens to iterate over very high 
+values.
+
+The function responsible for building the <blip_check> is 
+blip_build_check_exp(), and its the code is self-explanatory, so I will 
+not duplicate the function comments here.	
+
+One of the difficulties I had while injecting the blip code, was the 
+injection of the __blip_violation function into the target file. While 
+creating the <blip_check> I simply created expressions which reference 
+the same tree nodes I found in the loop condition or as parameter to the 
+loop like function call. But the __blip_violation function didn't exist 
+in the name space of the compiled file, and therefore trying to reference 
+it was a bit trickier, or so I thought. Usually when a CALL_EXPR is 
+created, a FUNCTION_DECL is identified (as one of the available function 
+visible to the caller) and an ADDR_EXPR is later created to express the 
+address of the declared function.  Since __blip_violation was not 
+declared , attempts to execute lookup_name() for that name will yield 
+an empty declaration. 
+
+Fortunately gcc was kind / forgiving enough, and I was able to build a 
+FUNCTION_DECL and reference it leaving all the rest of the work for the 
+RTL to figure out. The code, which builds the function call, is located 
+in blip_build_violation_call(). The function body of __blip_violation is 
+located in the libgcc2.c (Thanks for ProPolice for giving an example..).
+
+<DISCLAIMER> All the modification above is being done in the spirit of 
+proof of concept for the blip integer exploits detection. There is no 
+warranty that the patch will actually increase the protection of any 
+system, nor that it will keep the compiler stable and usable (while using 
+-fblip), nor that any of the coding / patching recommendation made in the 
+article will make any sense to the hardcore maintainer of the gcc project 
+:>.</DISCLAIMER>
+
+----[ 4.6 - Limitations
+
+This section summarizes the limitations known to me at the time of 
+writing this article. I will start from the high-level limitations going 
+to the low level technical limitations. 
+
+ - The first limitation is the coverage of the patch. The patch is 
+designed to stop integer vulnerabilities that yield big loops. Other 
+vulnerabilities that are due to bad design or lack of integer validation 
+will not be protected. 
+
+For example the following code is vulnerable but cannot be protected by 
+the patch:
+
+void foo(unsigned int len,char* buf){
+
+	char	dst[10];
+
+	if(len < 10){
+		strcpy(dst,buf);
+	}
+}
+
+
+ - Sometimes a generic integer overflow done "by the book" will not be 
+detected. An example for such a case will be the xdr_array vulnerability. 
+The problem is due to the fact that the malloc function was called with 
+the overflowed expression of *two* different integer input, while the 
+blip protection can handle only a single big count loop. When looking at 
+the xdr_array loop, we can see that it will be easy for the attacker to 
+supply such input integers, that will overflow the malloc expression, but 
+will still keep the loop count small.
+
+
+ - Some count loops will not be considered. One example is a complex 
+loop condition and it is non trivial to identify the count loop. Such 
+loops must be ignored, or otherwise false positives may occur which may 
+lead to undefined execution.
+
+ - [Technical limitation] The current version is designed to work only 
+with C language. 
+
+ - [Technical limitation] The current version will not examine embedded 
+assembly code which may include "loop" instructions. Therefore allowing 
+integer overflow exploitation to go undetected.
+
+--[ 5 - References
+
+[1] StackGuard 
+    Automatic Detection and Prevention of Stack Smashing Attacks
+    http://www.immunix.org/StackGuard/
+
+[2] ProPolic 
+    GCC extension for protecting applications from stack-smashing attacks
+    http://www.trl.ibm.com/projects/security/ssp/
+
+[3] GCC
+    GNU Compiler Collection
+    http://gcc.gnu.org
+
+[4] noir
+    Smashing The Kernel Stack For Fun And Profit
+    Phrack Issue #60, Phile 0x06 by noir
+
+[5] Halvar Flake
+    Third Generation Exploits on NT/Win2k Platforms
+    http://www.blackhat.com/presentations/bh-europe-01/halvar-flake/bh-
+europe-01-halvarflake.ppt
+
+[6] MaXX
+    Vudo malloc tricks
+    Phrack Issue 0x39, Phile #0x08
+
+[7] Once upon a free()..
+    Phrack Issue 0x39, Phile #0x09
+
+[8] Aleph One
+    Smashing The Stack For Fun And Profit
+    Phrack Issue 0x31, Phile #0x0E
+
+
+--[ 6 - Thanks
+
+I want to thanks my team for helping me in the process of creating the 
+paper. Thank you Monty, sinan, yona, shok for your helpful comments and 
+ideas for improving the paper. If you think the English in this paper is 
+broken imagine what my team had to go through :>. Without you guys I 
+would never made it.
+
+Thanks to anonymous :> for read proofing the paper, and providing helpful 
+technical feedback and reassurance.
+
+--[ 7 - Appendix A - Real life examples
+
+Having the patch ready, I wanted to give it a test drive on one of the 
+known and high profile vulnerabilities. The criteria used for checking 
+the patch was: 
+
+ - The package should be compiled successfully with the patch 
+ - The patch should be able to protect the package against exploitation 
+of the known bugs
+
+I've selected to test the patch on Apache httpd and the OpenSSH packages. 
+Since both packages are: high profile, have vulnerabilities that the 
+patch should is expected to protect against (in vulnerable version), and 
+they are big enough to "qa" the patch a little bit.
+
+
+The protection test was proven to be successful:), and the vulnerable 
+version compiled with -fblip proved to be non exploitable. 
+
+The following section explains how to compile the packages with the blip 
+patch. We will show the output assembly generated before / after the 
+patch for the code which was enabling the exploit to overflow the program 
+buffers.
+
+----[ 7.1 - Apache Chunked encoding
+
+--[ Vulnerability info
+
+Just to make sure that all are in sync with the issue of the apache 
+chunked-encoding vulnerability I will list part of the vulnerable code 
+followed by some explanation.
+
+Code: Apache src/main/http_protocol.c : ap_get_client_block()
+
+01 len_to_read = get_chunk_size(buffer);
+
+<some code here...>
+
+02 r->remaining = len_to_read;
+
+<some code here...>
+
+03 len_to_read = (r->remaining > bufsiz) ? bufsiz : r->remaining;
+04 len_read = ap_bread(r->connection->client, buffer , len_to_read);
+
+
+The vulnerability in this case allows a remote attacker to send a 
+negative chunk length. Doing so will bypass the check at line 3, and will 
+end up with calling the ap_bread() with a huge positive number. 
+
+--[ Testing patch
+
+To compile the apache httpd with the -fblip enabled, one may edit the 
+file src/apaci and add the following line at the EOF "echo '-fblip'".
+
+Any attempt to send a negative chunk length after compiling apache httpd 
+with the blip patch will end up with the httpd executing the 
+__blip_violation.
+
+According to the blip theory, the attack should trigger some kind of a 
+loop. We can see at line 4 of the listed code that a call is made to the 
+ap_bread() function. So if the theory is correct we are supposed to find 
+a loop inside that function. 
+
+
+/*
+ * Read up to nbyte bytes into buf.
+ * If fewer than byte bytes are currently available, then return those.
+ * Returns 0 for EOF, -1 for error.
+ * NOTE EBCDIC: The readahead buffer _always_ contains *unconverted* 
+data.
+ * Only when the caller retrieves data from the buffer (calls bread)
+ * is a conversion done, if the conversion flag is set at that time.
+ */
+API_EXPORT(int) ap_bread(BUFF *fb, void *buf, int nbyte)
+{
+    int i, nrd;
+
+    if (fb->flags & B_RDERR)
+	return -1;
+    if (nbyte == 0)
+	return 0;
+
+    if (!(fb->flags & B_RD)) {
+	/* Unbuffered reading.  First check if there was something in the
+	 * buffer from before we went unbuffered. */
+	if (fb->incnt) {
+	    i = (fb->incnt > nbyte) ? nbyte : fb->incnt;
+#ifdef CHARSET_EBCDIC
+	    if (fb->flags & B_ASCII2EBCDIC)
+		ascii2ebcdic(buf, fb->inptr, i);
+	    else
+#endif /*CHARSET_EBCDIC*/
+	    memcpy(buf, fb->inptr, i);
+	    fb->incnt -= i;
+	    fb->inptr += i;
+	    return i;
+	}
+	i = read_with_errors(fb, buf, nbyte);
+#ifdef CHARSET_EBCDIC
+	if (i > 0 && ap_bgetflag(fb, B_ASCII2EBCDIC))
+	    ascii2ebcdic(buf, buf, i);
+#endif /*CHARSET_EBCDIC*/
+	return i;
+    }
+
+    nrd = fb->incnt;
+/* can we fill the buffer */
+    if (nrd >= nbyte) {
+#ifdef CHARSET_EBCDIC
+	if (fb->flags & B_ASCII2EBCDIC)
+	    ascii2ebcdic(buf, fb->inptr, nbyte);
+	else
+#endif /*CHARSET_EBCDIC*/
+	memcpy(buf, fb->inptr, nbyte);
+	fb->incnt = nrd - nbyte;
+	fb->inptr += nbyte;
+	return nbyte;
+    }
+
+    if (nrd > 0) {
+#ifdef CHARSET_EBCDIC
+	if (fb->flags & B_ASCII2EBCDIC)
+	    ascii2ebcdic(buf, fb->inptr, nrd);
+	else
+#endif /*CHARSET_EBCDIC*/
+	memcpy(buf, fb->inptr, nrd);
+	nbyte -= nrd;
+	buf = nrd + (char *) buf;
+	fb->incnt = 0;
+    }
+    if (fb->flags & B_EOF)
+	return nrd;
+
+/* do a single read */
+    if (nbyte >= fb->bufsiz) {
+/* read directly into caller's buffer */
+	i = read_with_errors(fb, buf, nbyte);
+#ifdef CHARSET_EBCDIC
+	if (i > 0 && ap_bgetflag(fb, B_ASCII2EBCDIC))
+	    ascii2ebcdic(buf, buf, i);
+#endif /*CHARSET_EBCDIC*/
+	if (i == -1) {
+	    return nrd ? nrd : -1;
+	}
+    }
+    else {
+/* read into hold buffer, then memcpy */
+	fb->inptr = fb->inbase;
+	i = read_with_errors(fb, fb->inptr, fb->bufsiz);
+	if (i == -1) {
+	    return nrd ? nrd : -1;
+	}
+	fb->incnt = i;
+	if (i > nbyte)
+	    i = nbyte;
+#ifdef CHARSET_EBCDIC
+	if (fb->flags & B_ASCII2EBCDIC)
+	    ascii2ebcdic(buf, fb->inptr, i);
+	else
+#endif /*CHARSET_EBCDIC*/
+	memcpy(buf, fb->inptr, i);
+	fb->incnt -= i;
+	fb->inptr += i;
+    }
+    return nrd + i;
+}
+
+ 
+We can see in the code several possible execution flows. Each one of them 
+includes a "loop" that moves all the data into the buf parameter. If the 
+code supports CHARSET_EBCDIC then the ascii2ebdcdic function executes the 
+deadly loop. On other normal cases, the memcpy function implements the 
+deadly loop. 
+
+Following is the assembly code generated for the above function. 
+
+	.type	ap_bread,@function
+ap_bread:
+	pushl	%ebp
+	movl	%esp, %ebp
+	subl	$40, %esp
+	movl	%ebx, -12(%ebp)
+	movl	%esi, -8(%ebp)
+	movl	%edi, -4(%ebp)
+	movl	8(%ebp), %edi
+	movl	16(%ebp), %ebx
+	testb	$16, (%edi)
+	je	.L68
+	movl	$-1, %eax
+	jmp	.L67
+.L68:
+	movl	$0, %eax
+	testl	%ebx, %ebx
+	je	.L67
+	testb	$1, (%edi)
+	jne	.L70
+	cmpl	$0, 8(%edi)
+	je	.L71
+	movl	8(%edi), %esi
+	cmpl	%ebx, %esi
+	jle	.L72
+	movl	%ebx, %esi
+.L72:
+	cmpl	$268435456, %esi          ------------------------
+	jbe	.L73
+	movl	%esi, (%esp)               Blip Check (Using esi)
+	call	__blip_violation
+	jmp	.L74                      ------------------------
+.L73:
+	movl	4(%edi), %eax
+	movl	12(%ebp), %edx
+	movl	%edx, (%esp)
+	movl	%eax, 4(%esp)
+	movl	%esi, 8(%esp)
+	call	memcpy
+.L74:
+	subl	%esi, 8(%edi)
+	addl	%esi, 4(%edi)
+	movl	%esi, %eax
+	jmp	.L67
+.L71:
+	movl	%edi, (%esp)
+	movl	12(%ebp), %eax
+	movl	%eax, 4(%esp)
+	movl	%ebx, 8(%esp)
+	call	read_with_errors
+	jmp	.L67
+.L70:
+	movl	8(%edi), %edx
+	movl	%edx, -16(%ebp)
+	cmpl	%ebx, %edx
+	jl	.L75
+	cmpl	$268435456, %ebx          ------------------------
+	jbe	.L76
+	movl	%ebx, (%esp)               Blip check (using ebx)
+	call	__blip_violation
+	jmp	.L77                      ------------------------
+.L76:
+	movl	4(%edi), %eax
+	movl	12(%ebp), %edx
+	movl	%edx, (%esp)
+	movl	%eax, 4(%esp)
+	movl	%ebx, 8(%esp)
+	call	memcpy
+.L77:
+	movl	-16(%ebp), %eax
+	subl	%ebx, %eax
+	movl	%eax, 8(%edi)
+	addl	%ebx, 4(%edi)
+	movl	%ebx, %eax
+	jmp	.L67
+.L75:
+	cmpl	$0, -16(%ebp)
+	jle	.L78
+	cmpl	$268435456, -16(%ebp)     ------------------------
+	jbe	.L79
+	movl	-16(%ebp), %eax             Blip check
+	movl	%eax, (%esp)                (using [ebp-16])
+	call	__blip_violation
+	jmp	.L80                      ------------------------
+.L79:
+	movl	4(%edi), %eax
+	movl	12(%ebp), %edx
+	movl	%edx, (%esp)
+	movl	%eax, 4(%esp)
+	movl	-16(%ebp), %eax
+	movl	%eax, 8(%esp)
+	call	memcpy
+.L80:
+	subl	-16(%ebp), %ebx
+	movl	-16(%ebp), %edx
+	addl	%edx, 12(%ebp)
+	movl	$0, 8(%edi)
+.L78:
+	testb	$4, (%edi)
+	je	.L81
+	movl	-16(%ebp), %eax
+	jmp	.L67
+.L81:
+	cmpl	28(%edi), %ebx
+	jl	.L82
+	movl	%edi, (%esp)
+	movl	12(%ebp), %eax
+	movl	%eax, 4(%esp)
+	movl	%ebx, 8(%esp)
+	call	read_with_errors
+	movl	%eax, %esi
+	cmpl	$-1, %eax
+	jne	.L85
+	jmp	.L91
+.L82:
+	movl	20(%edi), %eax
+	movl	%eax, 4(%edi)
+	movl	%edi, (%esp)
+	movl	%eax, 4(%esp)
+	movl	28(%edi), %eax
+	movl	%eax, 8(%esp)
+	call	read_with_errors
+	movl	%eax, %esi
+	cmpl	$-1, %eax
+	jne	.L86
+.L91:
+	cmpl	$0, -16(%ebp)
+	setne	%al
+	movzbl	%al, %eax
+	decl	%eax
+	orl	-16(%ebp), %eax
+	jmp	.L67
+.L86:
+	movl	%eax, 8(%edi)
+	cmpl	%ebx, %eax
+	jle	.L88
+	movl	%ebx, %esi
+.L88:
+	cmpl	$268435456, %esi          ------------------------
+	jbe	.L89
+	movl	%esi, (%esp)               Blip check (using esi)
+	call	__blip_violation
+	jmp	.L90                      ------------------------
+.L89:
+	movl	4(%edi), %eax
+	movl	12(%ebp), %edx
+	movl	%edx, (%esp)
+	movl	%eax, 4(%esp)
+	movl	%esi, 8(%esp)
+	call	memcpy
+.L90:
+	subl	%esi, 8(%edi)
+	addl	%esi, 4(%edi)
+.L85:
+	movl	-16(%ebp), %eax
+	addl	%esi, %eax
+.L67:
+	movl	-12(%ebp), %ebx
+	movl	-8(%ebp), %esi
+	movl	-4(%ebp), %edi
+	movl	%ebp, %esp
+	popl	%ebp
+	ret
+
+
+One can notice that before any call to the memcpy function (which is one 
+of the "loop like" functions), a little code was added which calls 
+__blip_violation in the case the 3rd parameter of memcpy is bigger than 
+blip_max. 
+
+Another thing worth mentioning is the way the injected check is accessing 
+this 3rd parameter. In the first block of the injected code the parameter 
+is stored at the esi register, at the second block the parameter is 
+stored in the ebx register and in the third block the parameter is stored 
+on the stack at ebp-16. The reason for that is very simple. Since the 
+modification of the code was done at the AST tree, and since the patch 
+was using the exact same tree node that was used in the call expression 
+to memcpy, the RTL generated the same code for both the call expression 
+and the check expression. 
+
+Now lets go back to the ap_bread function. And lets assume that the 
+CHARSET_EBCDIC was indeed defined. In that case the ascii2ebcdic function 
+would have being the one to have the "vulnerable" loop. Therefore we hope 
+that the blip patch would check the loop in that function as well.
+
+
+The following is the ascii2ebcdic code taken from src/ap/ap_ebcdic.c
+
+API_EXPORT(void *)
+ascii2ebcdic(void *dest, const void *srce, size_t count)
+{
+    unsigned char *udest = dest;
+    const unsigned char *usrce = srce;
+
+    while (count-- != 0) {
+        *udest++ = os_toebcdic[*usrce++];
+    }
+
+    return dest;
+}
+
+
+ 
+Result of compiling the above function with the -fblip 
+
+	.type	ascii2ebcdic,@function
+ascii2ebcdic:
+	pushl	%ebp
+	movl	%esp, %ebp
+	pushl	%edi
+	pushl	%esi
+	pushl	%ebx
+	subl	$12, %esp
+	movl	16(%ebp), %ebx
+	movl	8(%ebp), %edi
+	movl	12(%ebp), %esi
+	cmpl	$0, %ebx            -------------------
+	jbe	.L12
+	cmpl	$268435456, %ebx
+	jbe	.L12                   Blip check
+	movl	%ebx, (%esp)
+	call	__blip_violation
+.L12:                            -------------------
+	decl	%ebx
+	cmpl	$-1, %ebx
+	je	.L18
+.L16:
+	movzbl	(%esi), %eax
+	movzbl	os_toebcdic(%eax), %eax
+	movb	%al, (%edi)
+	incl	%esi
+	incl	%edi
+	decl	%ebx
+	cmpl	$-1, %ebx
+	jne	.L16
+.L18:
+	movl	8(%ebp), %eax
+	addl	$12, %esp
+	popl	%ebx	
+	popl	%esi
+	popl	%edi
+	popl	%ebp
+	ret
+.Lfe2:
+
+While processing the ascii2ebcdic function, the blip patch identified the 
+while loop as a count-loop. The loop condition supplies all the 
+information required to create a <blip_check>. First we identify the 
+variables of the loop. In this case "count" is one var and the constant 
+"0" is the second one. Looking for variable modification, we can see that 
+"count" is decremented in the expression "count--". Since "count" is the 
+only modified variable we can say that "count" is the count-variable and 
+the constant 0 is the limit-variable. We can also say that the loop is a 
+decrement-loop since the modification operation is "--". The check 
+therefore will be (count > limit && count - limit > MAX_BLIP). Looking at 
+the above assembly code, we can see that the loop count is stored in the 
+ebx register (Its easy to spot this by looking at the code below label 12 
+(L12). This code represent the while condition. It first decrements ebx 
+and later compares it with the loop constant). The <blip_check> therefore 
+will utilize the ebx register for the check.
+
+----[ 7.2 - OpenSSH auth
+
+--[ Vulnerability info	
+
+The OpenSSH Vulnerability is an example of an integer overflow bug, which 
+results in a miscalculated allocation size. The following is a snippet of 
+the vulnerable code:
+
+OpenSSH auth2-chall.c : input_userauth_info_response()
+
+01 nresp = packet_get_int();
+
+<some code here ..>
+
+02 response = xmalloc(nresp * sizeof(char*));
+03 for(i = 0; i < nresp; i++)
+04	response[i] = packet_get_string(NULL);
+
+At line 01 the code reads an integer into an unsigned variable. Later the 
+code allocates an array with nresp entries. The problem is that nresp * 
+sizeof(char*) is an expression that may overflow. Therefore sending nresp 
+bigger than 0x40000000 allows allocation of a small buffer that can be 
+later overflowed by the assignment in line 04.
+
+--[ Testing the patch
+
+To compile the OpenSSH package with the -fblip enabled, one may add -
+fblip to the CFLAGS definition at Makefile.in (i.e. CFLAGS=@CFLAGS@ -
+fblip)
+
+Any attempt to send a large number of responses after compiling OpenSSH 
+with the blip patch will end up with OpenSSH executing the 
+__blip_violation. 
+
+The following is snippet of the vulnerable function. 
+
+static void
+input_userauth_info_response(int type, u_int32_t seq, void *ctxt)
+{
+	Authctxt *authctxt = ctxt;
+	KbdintAuthctxt *kbdintctxt;
+	int i, authenticated = 0, res, len;
+	u_int nresp;
+	char **response = NULL, *method;
+
+	<omitted code>
+
+	nresp = packet_get_int();
+
+	if (nresp != kbdintctxt->nreq)
+		fatal("input_userauth_info_response: wrong number of 
+replies");
+
+	if (nresp > 0) {
+		
+		-----------------------------------------
+			 **  Vulnerable code **
+		-----------------------------------------
+
+		response = xmalloc(nresp * sizeof(char*));
+		for (i = 0; i < nresp; i++)
+			response[i] = packet_get_string(NULL);
+
+
+	}
+
+	<omitted code>
+}
+
+The above function is translated to the following assembly code if 
+compiled with the -fblip protection.(In order to make blip modification 
+readable, the code was compiled using -O instead of using -O2, which will 
+reorder basic blocks)
+
+	.type	input_userauth_info_response,@function
+input_userauth_info_response:
+
+	movl	-16(%ebp), %eax
+	movl	$0, 4(%eax)
+	call	packet_get_int
+	movl	%eax, %esi
+	movl	-20(%ebp), %edx
+	cmpl	12(%edx), %eax
+	je	.L111
+	movl	$.LC15, (%esp)
+	call	fatal
+.L112:
+	testl	%esi, %esi
+	je	.L113
+	leal	0(,%esi,4), %eax
+	movl	%eax, (%esp)
+	call	xmalloc
+	movl	%eax, -32(%ebp)
+	movl	$0, %ebx
+	cmpl	$0, %esi
+	jbe	.L115
+	cmpl	$268435456, %esi          ------------------------
+	jbe	.L115
+	movl	%esi, (%esp)                   Blip Check
+	call	__blip_violation
+.L115:                                 ------------------------
+	cmpl	%esi, %ebx
+	jae	.L113
+.L120:
+	movl	$0, (%esp)
+	call	packet_get_string
+	movl	-32(%ebp), %ecx
+	movl	%eax, (%ecx,%ebx,4)
+	incl	%ebx
+	cmpl	%esi, %ebx
+	jb	.L120
+
+The blip patch identified the for-loop as a count-loop and injected a 
+code to direct the flow to the _blip_violation handler in the case that 
+the limit (i.e. nresp) is bigger then the BLIP_MAX. Therefore if nresp 
+value will be high enough to trigger an overflow in the call to xmalloc, 
+it will also be high enough to get caught by the <blip_check>.
+
+--[ 8 - Appendix B - Using blip  
+
+To enable the blip patch one should first add the -fblip flag when 
+executing the gcc compiler. 
+
+The blip patch will attempt to emit the <blip_check> whenever it seems 
+possible to do so. The patch will silently ignore all loops or calls, 
+which cannot be protected. In order to see the ignored loops one can use 
+one of the following warning flags, which will also provide a message 
+describing the reason for ignoring the specific loop.
+
+Warning flags:
+- blip_for_not_emit - report ignored for loops.
+- blip_while_not_emit - report ignored while loops.
+- blip_call_not_emit - report ignored calls to loop like function.
+
+A reason for ignoring a loop will be one of the following:
+- Loop variables are less then 4 bytes long
+- for init is not an expression
+- call to function is made using a pointer to function
+- call parameters have side effects. Reusing the expression may cause 
+unexpected results
+- loop condition is too complex in order to find the loop variables
+- non of loop variables is modified (not enough info to make check)
+- both loop var are modified
+- condition is too complex
+
+The blip patch is also capable of reporting check statistics. Using the 
+-fblip_stat one can make the blip patch to print out statistical 
+information about amount of loops processed and the amount of loops that 
+where successfully checked. 
+
+The following command line will compile the first sample code. The output 
+of the compilation will follow
+
+$ gcc -o sample -fblip -fblip_stat -O sample.c
+
+-=] Blip statistics (checks emits)
+Total:	1/100%		1/100%
+for:	1/100%		1/100%
+while:	0/0%		0/0%
+calls:	0/0%		0/0%
+-=] End Blip Statistics
+
+
+|=[ EOF ]=---------------------------------------------------------------=|
+

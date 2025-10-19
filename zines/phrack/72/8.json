@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "A learning approach on exploiting CVE-2020-9273",
+  "authors": "dukpt",
+  "date": "Not specified",
+  "historical_context": "This article discusses a vulnerability in ProFTPd, a widely used FTP server, focusing on a use-after-free bug that was discovered in 2020. The article provides a detailed analysis of the exploit and its implications for security.",
+  "target_audience": "Security researchers, penetration testers, and those interested in vulnerability exploitation.",
+  "short_summary": "This article provides a comprehensive guide on exploiting a use-after-free vulnerability in ProFTPd (CVE-2020-9273). It covers the vulnerability's background, exploitation techniques, and potential future work in the field of security research.",
+  "summary": "The article begins with an introduction to ProFTPd and the specific vulnerability (CVE-2020-9273) that allows for exploitation through a use-after-free condition during FTP data transfers. The author emphasizes a learning-oriented approach, aiming to help readers understand the intricacies of the exploit and reproduce the steps independently. The article details the internal workings of ProFTPd, including its memory allocation strategies and the conditions necessary for triggering the vulnerability. It also discusses various exploitation strategies, including the use of GDB for debugging and memory layout analysis, as well as the potential for leaking sensitive information from memory.\n\nThe author outlines a step-by-step methodology for exploiting the vulnerability, including the necessary conditions for successful exploitation, such as having a valid user account and write permissions on the FTP server. The article concludes with ideas for future work, suggesting that further research could focus on improving the reliability of the exploit and exploring additional attack vectors. Overall, this article serves as a valuable resource for those looking to deepen their understanding of vulnerability exploitation in FTP servers."
+}

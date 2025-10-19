@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 7, Issue 51, Phile #08 of 17",
+  "title": "Shared Library Redirection Techniques",
+  "authors": "halflife <halflife@infonexus.com>",
+  "date": "September 01, 1997",
+  "historical_context": "This article was published during a time when shared libraries were becoming increasingly common in Unix-like operating systems, and understanding their manipulation was crucial for both developers and security researchers.",
+  "target_audience": "Hackers, security professionals, software developers",
+  "short_summary": "The article explores techniques for shared library function call redirection, detailing how to preload libraries to manipulate function calls. It discusses the use of environment variables and provides examples of code for implementing these techniques.",
+  "summary": "In 'Shared Library Redirection Techniques', halflife delves into the intricacies of shared libraries, emphasizing their role in reducing memory usage by allowing multiple programs to share code segments. The article introduces the concept of function call redirection through preloading shared libraries, particularly focusing on the LD_PRELOAD environment variable. This technique enables users to intercept and modify function calls before they reach their intended targets, which can be useful for debugging or malicious purposes. The author provides a detailed explanation of the dlopen() and dlsym() functions, which are essential for loading shared libraries and retrieving function addresses, respectively.\n\nThe article also includes practical examples, such as a TTY logger that captures keystrokes from non-privileged programs by preloading a custom shared library. This example illustrates the potential for both benign and malicious applications of shared library manipulation. Additionally, halflife discusses portability issues across different Unix-like systems and highlights bugs in various implementations that could affect the reliability of these techniques. Overall, this article serves as a valuable resource for anyone interested in the technical aspects of shared libraries and their implications for security and software development."
+}

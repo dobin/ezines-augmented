@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x07 of 0x12",
+  "title": "ICMP based remote OS TCP/IP stack fingerprinting techniques",
+  "authors": "Ofir Arkin & Fyodor Yarochkin",
+  "date": "",
+  "historical_context": "This article discusses techniques for OS fingerprinting using ICMP, a method that gained relevance as TCP/IP stack implementations varied across systems.",
+  "target_audience": "Security researchers, penetration testers, and network administrators interested in OS fingerprinting techniques.",
+  "short_summary": "The article introduces an ICMP-based method for remote OS fingerprinting, highlighting its efficiency and stealth compared to traditional TCP-based methods. It discusses the nuances of ICMP responses from different operating systems and presents the Xprobe tool for practical implementation.",
+  "summary": "In this article, Arkin and Yarochkin present an innovative approach to remote OS fingerprinting using ICMP responses, which can be more accurate than traditional TCP-based methods for certain operating systems. The authors explain how variations in ICMP implementation across different platforms can be exploited to identify the OS with minimal network traffic, making it a stealthy alternative to conventional techniques. They detail the specific fields in ICMP packets that can reveal OS-specific behaviors, such as the IP total length field, IP ID, and TTL values, among others.\n\nThe authors also introduce the Xprobe tool, which utilizes a logical decision tree based on their findings to perform OS fingerprinting efficiently. They discuss the challenges of maintaining and updating the logic tree as new operating systems emerge and suggest a signature-based approach as a more flexible solution for future developments. The article serves as a valuable resource for security professionals looking to enhance their network reconnaissance capabilities while remaining undetected."
+}

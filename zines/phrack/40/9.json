@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Four, Issue Forty, File 9 of 14",
+  "title": "BT Tymnet",
+  "authors": "Toucan Jones",
+  "date": "August 1, 1992",
+  "historical_context": "This article is part of a series exploring the British Telecom Tymnet service, which was significant in the early 1990s for providing access to various data services and networks.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts, and security professionals.",
+  "short_summary": "This article provides detailed information on the BT-GNS Worldwide Asynchronous Outdial Service, including access locations, service classifications, and terminal identifiers. It is part two of a three-part series on BT Tymnet.",
+  "summary": "In this second part of the BT Tymnet series, Toucan Jones delves into the specifics of the BT-GNS Worldwide Asynchronous Outdial Service. The article outlines various access locations across the United States, categorized by state and city, along with their respective area codes and service density. This information is crucial for users looking to connect to the Tymnet network for data services, especially during a time when telecommunications were rapidly evolving and becoming more accessible to the public. The article serves as a practical guide for hackers and phreakers interested in exploiting these services for various purposes, including data retrieval and communication.",
+  "additional_info": "The article is rich with technical details, including modem compatibility and service classifications, making it a valuable resource for those looking to understand the infrastructure of early data networks."
+}

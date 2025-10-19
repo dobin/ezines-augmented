@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x0F of 0x11",
+  "title": "Linux Kernel Heap Tampering Detection",
+  "authors": "Larry H. <larry@subreption.com>",
+  "date": "April 2009",
+  "historical_context": "This article discusses the state of kernel heap management in Linux and introduces KERNHEAP, a set of protections against heap-related vulnerabilities.",
+  "target_audience": "Security professionals, kernel developers, and researchers interested in operating system security.",
+  "short_summary": "The article presents KERNHEAP, a framework designed to enhance the integrity of the Linux kernel's heap management by implementing various protective measures against common vulnerabilities such as heap overflows and use-after-free errors.",
+  "summary": "In this comprehensive article, Larry H. delves into the vulnerabilities associated with the Linux kernel's heap management, particularly focusing on the SLAB allocator. The author outlines the historical context of kernel heap allocators and the evolution of memory management techniques in Linux. He introduces KERNHEAP, a framework aimed at enhancing kernel security by implementing integrity checks and protections against heap-related vulnerabilities. Key features of KERNHEAP include meta-data protection, detection of arbitrary free pointers, and sanitization of memory in look-aside caches. The article also discusses the challenges of maintaining security in an evolving kernel environment and the necessity of continuous adaptation of protective measures to counteract emerging threats. Overall, the work emphasizes the importance of robust kernel memory management practices in safeguarding against exploitation."
+}

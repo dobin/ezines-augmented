@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x0c of 0x12",
+  "title": "Building ptrace injecting shellcodes",
+  "authors": "anonymous author <p59_0c@author.phrack.org>",
+  "date": "",
+  "historical_context": "This article discusses techniques for exploiting the ptrace system call in Linux, particularly in the context of security vulnerabilities in chroot environments. It reflects the hacking culture of the early 2000s, where such techniques were critical for gaining unauthorized access to systems.",
+  "target_audience": "hackers, security researchers, and those interested in exploit development",
+  "short_summary": "The article provides a detailed guide on how to use the ptrace system call to inject shellcode into a running process. It covers the necessary environment setup, the mechanics of ptrace, and practical code examples for successful exploitation.",
+  "summary": "This article delves into the ptrace system call, a powerful tool for tracing and manipulating processes in Linux. The author explains the rationale behind using ptrace for injecting shellcode, particularly in scenarios where traditional methods of breaking out of chroot environments have become ineffective. The article outlines the requirements for using ptrace, including the need for proper permissions and the mechanics of making ptrace calls. It emphasizes the importance of understanding the stack and registers when injecting code into a target process.\n\nThe practical section of the article provides a step-by-step guide to writing shellcode that utilizes ptrace for process injection. The author shares C code examples and assembly snippets, illustrating how to attach to a process, modify its execution flow, and inject custom shellcode. The article concludes with a discussion on the implications of these techniques, highlighting their relevance in the context of modern security practices and the ongoing evolution of exploit development. Overall, it serves as both a historical document and a technical reference for those interested in the intricacies of process manipulation in Linux."
+}

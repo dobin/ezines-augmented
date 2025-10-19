@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Revenge 2.05 Disassembled",
+  "authors": "Tcp/29A",
+  "date": "1996",
+  "historical_context": "This article discusses the Revenge 2.05 virus, notable for its complexity and encryption techniques, reflecting the state of malware development in the mid-1990s.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The article provides a detailed disassembly of the Revenge 2.05 virus, highlighting its unique features, including multiple polymorphic decryption loops and its design aimed at evading antivirus detection.",
+  "summary": "In this article, Tcp/29A dissects the Revenge 2.05 virus, which is characterized by its intricate structure and advanced encryption methods. The virus employs four different polymorphic decryption loops, consuming over 7KB of code, which showcases the author's intent to challenge the limitations of contemporary antivirus solutions. The disassembly reveals that the virus contains unused code and is not optimized, indicating a certain level of experimentation in its design. The author humorously notes that the virus seems to mock antivirus software, particularly those that struggle to detect it due to its encryption techniques. The article also includes assembly code snippets and instructions for compiling the virus, making it a valuable resource for those interested in understanding the inner workings of malware from a historical perspective.",
+  "additional_notes": "The article serves as both a technical guide and a cultural artifact, reflecting the hacker ethos of the time, where creating complex malware was seen as a form of art and a challenge against security measures."
+}

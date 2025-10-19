@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Linux Virus Writing Tutorial",
+  "authors": "mandragore",
+  "date": "xx/12/99",
+  "historical_context": "This article was written during a time when Linux was gaining popularity, and the concept of writing viruses for Linux was relatively new. It reflects the hacker culture of the late 1990s, where exploring system vulnerabilities was a common practice among enthusiasts.",
+  "target_audience": "Hackers, security researchers, and those interested in malware development.",
+  "short_summary": "This tutorial provides a comprehensive guide on writing a Linux virus, covering assembly language, ELF file manipulations, and directory operations. It emphasizes theoretical knowledge with practical insights into the Linux operating system's internals.",
+  "summary": "In this tutorial, mandragore delves into the intricacies of writing a Linux virus, starting with the basics of Linux assembly language and the use of debugging tools like gdb. The author explains the syscall interface, which is crucial for interacting with the Linux kernel, and provides a detailed overview of the ELF (Executable and Linkable Format) file structure, including headers and sections. The tutorial emphasizes the importance of understanding these components for effective virus creation and manipulation. The author also shares personal anecdotes and challenges faced during the development process, making the tutorial both informative and engaging.\n\nThe article progresses to cover directory operations, explaining how to navigate and manipulate directories within the Linux filesystem. It highlights the significance of using appropriate syscalls for directory access and file searching. The final sections encourage readers to implement advanced features in their viruses, such as stealth techniques and payloads, while also stressing the ethical considerations of virus writing. Overall, this tutorial serves as a foundational resource for those interested in the technical aspects of malware development in a Linux environment, while also reflecting the hacker ethos of experimentation and exploration."
+}

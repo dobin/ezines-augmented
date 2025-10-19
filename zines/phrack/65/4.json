@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0c, Issue 0x41, Phile #0x04 of 0x0f",
+  "title": "Stealth hooking : Another way to subvert the Windows kernel",
+  "authors": "mxatone and ivanlef0u",
+  "date": "",
+  "historical_context": "This article discusses advanced techniques for rootkits on the Windows platform, particularly focusing on stealth hooking methods that exploit the kernel's own mechanisms.",
+  "target_audience": "Security researchers, malware analysts, and advanced hackers interested in kernel exploitation and rootkit development.",
+  "short_summary": "The article presents stealth hooking techniques to subvert the Windows kernel, focusing on manipulating the Interrupt Descriptor Table (IDT) and NonPaged pool allocations to achieve stealthy control over system behavior.",
+  "summary": "In this comprehensive exploration of stealth hooking techniques, the authors delve into the intricacies of the Windows kernel, particularly the Interrupt Descriptor Table (IDT) and NonPaged pool memory management. They outline how rootkits can leverage these components to execute code without detection by traditional anti-rootkit measures. By modifying the IDT's handling of hardware interrupts, attackers can redirect execution flow to their own routines, effectively hijacking system behavior while remaining undetected. The paper also discusses the exploitation of NonPaged pool allocations, demonstrating how attackers can manipulate memory management structures to gain control over kernel operations without relying on static hooks or traditional methods of code injection.\n\nThe authors provide detailed technical insights into the mechanisms of Windows kernel memory management, including the allocation and free algorithms for NonPaged memory. They illustrate how to create stealthy hooks that evade detection by modifying dynamically allocated code and exploiting the kernel's own structures against itself. The article serves as both a technical proof of concept and a cautionary tale about the evolving landscape of rootkit development, emphasizing the need for more robust detection and prevention mechanisms in modern operating systems."
+}

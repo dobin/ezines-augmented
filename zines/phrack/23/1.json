@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 23, File 1 of 12",
+  "title": "Phrack Inc. XXIII Index",
+  "authors": "Knight Lightning & Taran King",
+  "date": "January 25, 1989",
+  "historical_context": "This issue of Phrack Inc. reflects the growing interest in hacking and computer security during the late 1980s, a time when personal computing was becoming more widespread and the internet was in its infancy.",
+  "target_audience": "Hackers, security researchers, computer enthusiasts",
+  "short_summary": "The index for Phrack Inc. Issue XXIII provides an overview of the articles included in this issue, highlighting topics such as Unix hacking, the Vicious Circle Trilogy, and the Future Transcendent Saga.",
+  "summary": "In this issue of Phrack Inc., the editors, Knight Lightning and Taran King, present a comprehensive index that outlines the various articles featured in the newsletter. The issue includes notable contributions such as 'Phrack Prophile XXIII' featuring The Mentor, and the continuation of the Vicious Circle Trilogy with 'Subdivisions' as well as the introduction of the Future Transcendent Saga. The editors also address reader feedback regarding previous articles, particularly concerning Unix password hacking programs, emphasizing the importance of user competence in executing such tools.\n\nThe index serves as a roadmap for readers interested in the evolving landscape of hacking and computer security. It reflects the community's engagement with technical topics, including VMS hacking and methods to determine if a telephone is tapped. The inclusion of various authors and perspectives showcases the collaborative spirit of the hacker culture during this era, making it a valuable resource for both seasoned hackers and newcomers alike."
+}

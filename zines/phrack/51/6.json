@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 7, Issue 51, Phile #6 of 17",
+  "title": "LOKI 2 (the implementation)",
+  "authors": "daemon9 <route@infonexus.com>",
+  "date": "September 01, 1997",
+  "short_summary": "This article presents the implementation details of LOKI2, an information-tunneling program that exploits vulnerabilities in network protocols to create covert channels for data transmission. It includes instructions for building and installing the software, as well as technical details on its cryptographic features.",
+  "summary": "The article serves as a companion to a previous piece on covert channels in network protocols, focusing specifically on the implementation of LOKI2. This tool is designed to tunnel shell commands through seemingly benign ICMP and DNS traffic, effectively disguising malicious activity as normal network behavior. The author emphasizes the program's proof-of-concept nature, highlighting that the vulnerabilities it exploits have been known for years. LOKI2 supports various encryption methods, including Blowfish and XOR, and offers features like protocol swapping, although the latter is still in beta. The article provides detailed instructions for building and installing LOKI2 on various operating systems, including Linux, OpenBSD, FreeBSD, and Solaris. It also discusses potential caveats and known bugs, particularly regarding the handling of ICMP packets under different network configurations.",
+  "historical_context": "LOKI2 was developed during a time when network security was becoming increasingly important, as more organizations began to rely on the internet for communication. The article reflects the hacker culture's ongoing interest in exploring and exploiting network vulnerabilities.",
+  "target_audience": "This article is aimed at hackers, security researchers, and professionals interested in network security and covert communication techniques."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-Six, File 2 of 11",
+  "title": "Diet Phrack",
+  "authors": "Phrack Staff",
+  "date": "",
+  "historical_context": "This article reflects the hacker culture of the early 1990s, showcasing a mix of humor, technical commentary, and social critique.",
+  "target_audience": "Hackers, phreakers, security enthusiasts, and those interested in hacker culture.",
+  "short_summary": "Diet Phrack serves as a forum for readers to engage with the Phrack staff, featuring humorous UNIX commands, a bizarre letter about a 'Power Computer,' and reviews of new utilities.",
+  "summary": "In this issue of Diet Phrack, the Phrack staff opens the floor to readers, inviting them to share their thoughts and questions. The article humorously responds to a reader's complaint about the lack of 'real hacking tricks' by providing a series of absurd UNIX commands that parody the frustrations of novice users. This playful tone sets the stage for a deeper exploration of the hacker ethos, where humor and technical knowledge intertwine. The article also includes a strange letter from Abraham Epstein, who claims to have encountered a powerful computer that manipulates thoughts, reflecting the paranoia and conspiracy theories prevalent in the hacker community of the time.\n\nAdditionally, the article reviews new software utilities, including ERIKB, a comsec utility with dubious functionalities, and NeTw1z, an IRC utility that allows users to post their 'information' while complaining about others. Both utilities are presented with a satirical edge, highlighting the often juvenile and irreverent nature of hacker culture. Overall, Diet Phrack encapsulates the spirit of the early 90s hacking scene, blending technical insights with a healthy dose of humor and social commentary."
+}

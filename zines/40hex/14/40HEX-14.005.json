@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, File 005",
+  "title": "The Blah Virus",
+  "authors": "Dark Angel",
+  "date": "31 December 1994",
+  "historical_context": "This article discusses the Blah virus, a notable example of a multipartite virus that infects both partition tables and batch files, showcasing early malware techniques.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The Blah virus is a stealthy, multipartite virus that infects both the partition table and batch files. It demonstrates unique infection techniques and stealth capabilities, making it a noteworthy study in early malware development.",
+  "summary": "The Blah virus, crafted by Dark Angel in late 1994, is a memory-resident, stealthy multipartite virus that targets both the partition table and batch files. It operates by infecting the partition table of the first hard drive and appending its code to batch files, allowing it to remain undetected during execution. The virus utilizes a clever method of hiding its presence by manipulating file lengths and read requests, ensuring that infected batch files appear unaltered until executed. This stealth mechanism is designed to activate after a certain number of file operations, effectively evading detection by the operating system and users alike.\n\nThe article provides the raw source code for the virus, along with a detailed explanation of its functionality. It outlines how the virus installs itself, the structure of its code, and the implications of its stealth capabilities. The Blah virus serves as an early example of the complexities involved in malware design, illustrating the lengths to which creators would go to ensure their creations could evade detection and persist in systems. This piece remains relevant for understanding the evolution of malware and the foundational techniques that continue to influence modern threats."
+}

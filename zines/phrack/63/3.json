@@ -1,0 +1,34 @@
+{
+  "articles": [
+    {
+      "reference": "Volume 0x0b, Issue 0x3f, Phile #0x03 of 0x14",
+      "title": "Analyzing Suspicious Binary Files and Processes",
+      "authors": "Boris Loza, PhD",
+      "date": "Not specified",
+      "short_summary": "This article provides a comprehensive guide on how to analyze suspicious binary files and processes using standard UNIX utilities. It covers various tools and techniques for forensic analysis.",
+      "summary": "The article begins by emphasizing the importance of patience and creativity in security forensics. It details methods for analyzing unknown binary files, starting with the 'strings' command to extract printable strings, followed by using commands like 'file', 'nm', and 'ldd' to gather more information about the file's nature and dependencies. The author also discusses the use of debugging tools like 'adb' and 'truss' to analyze the behavior of suspicious processes. The article concludes with a note on the necessity of hands-on practice and experience in mastering these techniques, highlighting that not all files are easily analyzed, especially if they are stripped binaries.",
+      "historical_context": "This article reflects the early 2000s focus on UNIX systems and the growing need for forensic analysis tools as cybersecurity threats became more prevalent.",
+      "target_audience": "Security professionals, forensic analysts, and hackers interested in binary analysis."
+    },
+    {
+      "reference": "Volume 0x0b, Issue 0x3f, Phile #0x03 of 0x14",
+      "title": "TCP Timestamp to Count Hosts Behind NAT",
+      "authors": "Elie aka Lupin",
+      "date": "Not specified",
+      "short_summary": "This article discusses the exploitation of TCP timestamps to count hosts behind Network Address Translation (NAT) devices, providing insights into a design error in the TCP specification.",
+      "summary": "The article begins with an introduction to TCP timestamp options and their implications for host fingerprinting and NAT detection. It explains how NAT devices handle TCP timestamps improperly, allowing for passive detection of multiple hosts behind a single IP address. The author outlines a method for counting hosts by analyzing timestamp increments and provides a proof of concept for the technique. The article also discusses the historical context of NAT and its design errors, emphasizing the need for better protocol specifications to avoid such vulnerabilities in the future. The author concludes by suggesting potential mitigations and the importance of understanding protocol design.",
+      "historical_context": "This article highlights the ongoing challenges posed by NAT in networking and security, particularly in the early 2000s when NAT became widely adopted.",
+      "target_audience": "Network security professionals, penetration testers, and researchers interested in TCP/IP vulnerabilities."
+    },
+    {
+      "reference": "Volume 0x0b, Issue 0x3f, Phile #0x03 of 0x14",
+      "title": "All Hackers Need To Know About Elliptic Curve Cryptography",
+      "authors": "f86c9203",
+      "date": "Not specified",
+      "short_summary": "This article serves as an introduction to Elliptic Curve Cryptography (ECC), covering its mathematical foundations, security implications, and practical implementations.",
+      "summary": "The article begins with an overview of public key cryptography and the advantages of ECC over traditional methods like RSA. It explains the mathematical concepts behind elliptic curves and their group structures, emphasizing the efficiency of ECC in terms of key sizes and computational requirements. The author discusses the security of ECC, particularly in relation to the discrete logarithm problem, and presents the Elliptic Curve Integrated Encryption Scheme (ECIES) as a practical application. The article includes source code for a complete ECC implementation, catering to the needs of hackers and developers looking for compact and efficient cryptographic solutions. The author concludes by encouraging further exploration of ECC and its applications in modern security protocols.",
+      "historical_context": "This article reflects the growing interest in ECC during the early 2000s as a more efficient alternative to traditional cryptographic methods, particularly in resource-constrained environments.",
+      "target_audience": "Cryptography enthusiasts, security researchers, and developers interested in implementing ECC."
+    }
+  ]
+}

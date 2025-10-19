@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0e, Issue 0x44, Phile #0x08 of 0x13",
+  "title": "Practical cracking of white-box implementations",
+  "authors": "SysK - whiteb0x [o] phrack o org",
+  "date": "",
+  "short_summary": "This article provides a practical approach to cracking white-box cryptography, focusing on the DES algorithm and its vulnerabilities. It discusses techniques for reverse engineering and key recovery, making it accessible for hackers and security enthusiasts.",
+  "summary": "The article delves into white-box cryptography, a method designed to protect cryptographic keys by embedding them within the encryption algorithm itself, making them difficult to extract. The author explains the concept of white-box implementations, particularly in the context of the DES algorithm, and outlines the challenges and techniques involved in cracking such systems. The paper is aimed at hackers and security professionals who may not have a deep mathematical background in cryptography but are interested in practical applications and vulnerabilities of white-box designs.\n\nThe author walks through specific challenges, including two case studies: one involving a challenge from hack.lu and another based on a binary implementation of DES. The article details the reverse engineering process, key recovery techniques, and the cryptanalysis of white-box implementations. It emphasizes the importance of understanding the internal workings of the algorithms and the potential weaknesses that can be exploited. The conclusion highlights the relevance of white-box cryptography in modern security applications, particularly in DRM and embedded systems, while encouraging further exploration and understanding of these cryptographic protections."
+}

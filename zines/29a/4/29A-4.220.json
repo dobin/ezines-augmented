@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Make your own CheckSumMappedFile",
+  "authors": "Bumblebee/29a",
+  "date": "",
+  "historical_context": "This article is set in the context of early Windows NT development, where the handling of PE files and their checksums was crucial for software integrity and security.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article provides a detailed disassembly of the CheckSumMappedFile function from 'imagehlp.dll' and offers a custom implementation for calculating checksums in PE files, particularly useful for virus developers.",
+  "summary": "In 'Make your own CheckSumMappedFile', Bumblebee/29a delves into the intricacies of the CheckSumMappedFile function found in Windows NT's 'imagehlp.dll'. The article begins with a disassembly of the function, explaining how it calculates a checksum for mapped files. This is particularly relevant for developers working with PE files, as the checksum is essential for validating the integrity of executable images. The author emphasizes that while the checksum is often zero for non-driver files, Microsoft recommends valid checksums for all images, making this knowledge valuable for those looking to manipulate or create malware that operates under NT systems.\n\nThe article further provides a custom implementation of the checksum calculation, detailing how to call the function and integrate it into a virus. The author includes assembly code snippets and explanations of the steps involved in computing the checksum, highlighting the importance of updating the old checksum to maintain the integrity of the infected file. This technical guide serves as both an educational resource and a practical tool for those interested in the low-level workings of Windows executable files, particularly in the context of malware development."
+}

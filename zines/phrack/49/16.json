@@ -1,0 +1,44 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Seven, Issue Forty-Nine, Phile #1 of 16",
+      "title": "CIA attacked, pulls plug on Internet site",
+      "authors": "unknown",
+      "date": "1996",
+      "short_summary": "The CIA's website was hacked and replaced with a parody, prompting the agency to shut it down temporarily. This incident highlights vulnerabilities in government web security.",
+      "summary": "In a striking incident, the CIA's website was compromised by a hacker who replaced its homepage with a parody reading 'Welcome to the Central Stupidity Agency.' The breach occurred on a Wednesday evening, leading the CIA to shut down the site the following morning while they investigated the security lapse. CIA officials confirmed that the attack did not compromise any classified information but underscored the need for improved security measures on public-facing websites. This incident mirrors a previous attack on the Justice Department's site, emphasizing the ongoing vulnerabilities faced by government agencies in the digital age."
+    },
+    {
+      "reference": "Volume Seven, Issue Forty-Nine, Phile #2 of 16",
+      "title": "Letter From Senator Patrick Leahy (D-VT) on Encryption",
+      "authors": "Patrick Leahy",
+      "date": "May 2, 1996",
+      "short_summary": "Senator Leahy advocates for stronger encryption technologies and the repeal of outdated export restrictions, emphasizing the importance of privacy and security in digital communications.",
+      "summary": "In a letter dated May 2, 1996, Senator Patrick Leahy expresses his support for legislation aimed at promoting strong encryption technologies. He highlights the inadequacies of current export restrictions that limit American companies to weak encryption methods, which can be easily compromised. Leahy argues that robust encryption is essential for protecting individual privacy and ensuring secure communications over the Internet, especially for sensitive information. He introduces the 'Promotion of Commerce On-Line in the Digital Era (PRO-CODE) Act of 1996,' which seeks to eliminate government-mandated encryption systems and loosen export restrictions, thereby fostering the development of strong cryptographic solutions."
+    },
+    {
+      "reference": "Volume Seven, Issue Forty-Nine, Phile #3 of 16",
+      "title": "Java Black Widows - Sun Declares War",
+      "authors": "unknown",
+      "date": "1996",
+      "short_summary": "Sun Microsystems responds to security concerns regarding Java applets, which have been found to pose significant risks to users' systems.",
+      "summary": "In response to growing concerns about the security of Java applets, Sun Microsystems has declared a war on 'Black Widow' applets, which are malicious programs designed to exploit vulnerabilities in users' systems. An investigation by the Online Business Consultant revealed that these applets could consume system resources and potentially upload sensitive information without user consent. The Princeton University team, which conducted a study on Java security, warned that the current Java system could not be easily secured. Sun's security experts acknowledged the challenges of creating a secure environment for running untrusted applets and proposed a 'sandbox model' to restrict applet capabilities and enhance user control over their browser environment."
+    },
+    {
+      "reference": "Volume Seven, Issue Forty-Nine, Phile #4 of 16",
+      "title": "Jacking in from the 'Smoked Filled Room' Port",
+      "authors": "Brock N. Meeks",
+      "date": "September 1996",
+      "short_summary": "The article discusses the implications of the digital telephony bill and the expansion of wiretap capabilities for law enforcement, raising concerns about privacy and accountability.",
+      "summary": "Brock N. Meeks reports on the controversial digital telephony bill, which has been quietly included in a massive spending bill, allowing for expanded wiretap capabilities for law enforcement agencies. This legislation enables the FBI and other agencies to conduct 'multipoint wiretaps,' allowing them to follow conversations across multiple phones. The article highlights the lack of accountability measures that were stripped from the original bill, raising alarms about the potential for abuse of power and the erosion of privacy rights. Meeks emphasizes the need for public scrutiny and accountability in the legislative process, warning that such measures could undermine democratic principles."
+    },
+    {
+      "reference": "Volume Seven, Issue Forty-Nine, Phile #5 of 16",
+      "title": "Panix Attack",
+      "authors": "Joshua Quittner",
+      "date": "September 30, 1996",
+      "short_summary": "An Internet service provider, Panix, suffers a prolonged denial-of-service attack, highlighting vulnerabilities in network security and the impact of hacker tools.",
+      "summary": "Joshua Quittner recounts the harrowing experience of Alexis Rosen, co-founder of Panix, as his Internet service provider faced a relentless denial-of-service attack known as a 'syn flood.' The attack, which lasted for weeks, overwhelmed the mail servers and forced Rosen to work tirelessly to mitigate the damage. The incident drew attention to the ease with which such attacks could be executed, particularly following the publication of how-to articles in hacker journals like Phrack. Quittner reflects on the implications of powerful hacking tools falling into the hands of inexperienced users, contrasting the intentions of traditional hackers with those who engage in malicious attacks for disruption rather than intellectual challenge."
+    }
+  ]
+}

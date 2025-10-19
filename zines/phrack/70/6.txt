@@ -1,0 +1,1071 @@
+                            ==Phrack Inc.==
+
+               Volume 0x10, Issue 0x46, Phile #0x06 of 0x0f
+
+|=-----------------------------------------------------------------------=|
+|=--------=[ .NET Instrumentation via MSIL bytecode injection ]=---------=|
+|=-----------------------------------------------------------------------=|
+|=----------=[ by Antonio "s4tan" Parata <aparata@gmail.com>]=-----------=|
+|=-----------------------------------------------------------------------=|
+
+
+1 - Introduction
+2 - CLR environment
+    2.1 - Basic concepts
+        2.1.1 - Metadata tables
+        2.1.2 - Metadata token
+        2.1.3 - MSIL bytecode
+    2.2 - Execution environment
+3 - JIT compiler
+    3.1 - The compileMethod
+    3.2 - Hooking the compileMethod
+4 - .NET Instrumentation
+    4.1 - MSIL injection strategy
+    4.2 - Resolving the method handle
+    4.3 - Implementing a trampoline via the calli instruction
+    4.4 - Crafting a dynamic method
+    4.5 - Invoking the user defined code
+    4.6 - Fixing the SEH table
+5 - Real world examples
+    5.1 - Web application password stealer
+    5.2 - Malware inspection
+6 - Conclusion
+7 - References
+8 - Source Code
+
+
+--[ 1 - Introduction
+
+In this article we will explore the internals of the .NET framework with
+the purpose of providing an innovative method to instrument .NET programs
+at runtime.
+
+Actually, there are several libraries that allow to instrument .NET
+programs; most of them install a hook in the code generated after compiling
+a given method, or by modifying the Assembly and saving back the result of
+the modification.
+
+Microsoft also provides a profile API in order to instrument the execution
+of a given program. However the API must be activated before executing the
+program by setting specific environment variables.
+
+Our goal is to instrument the program at runtime by leaving the Assembly
+binary untouched; all this by using a high level .NET language. As we will
+see, this is done by injecting additional MSIL code just before the target
+method is compiled.
+
+
+--[ 2 - CLR environment
+
+Before describing in depth how to inject additional MSIL code in a method,
+it is necessary to provide some basic concepts as on how the .NET framework
+works and which are its basic components.
+
+We will only describe the concepts that are relevant to our purpose.
+
+
+---[ 2.1 - Basic concepts
+
+A .NET binary is typically called Assembly (even if it doesn't contain any
+assembly code). It is a self-describing structure, meaning that inside an
+Assembly you will find all the necessary information to execute it (for
+more information on this subject see [01]).
+
+As we will shortly see, all this information can be accessed by using
+reflection. Reflection allows us to have a full picture of which types and
+methods are defined inside the Assembly. We can also have access to the
+names and types of the parameters passed to a specific method. The only
+missing information are the names of the local variables, but as we will
+see this is not a problem at all.
+
+
+----[ 2.1.1 - Metadata tables
+
+All the above mentioned information is stored inside tables called
+Metadata tables.
+
+The following list taken from [02] shows the index and names of all the
+existing tables:
+
+00 - Module            01 - TypeRef          02 - TypeDef
+04 - Field             06 - MethodDef        08 - Param
+09 - InterfaceImpl     10 - MemberRef        11 - Constant
+12 - CustomAttribute   13 - FieldMarshal     14 - DeclSecurity
+15 - ClassLayout       16 - FieldLayout      17 - StandAloneSig
+18 - EventMap          20 - Event            21 - PropertyMap
+23 - Property          24 - MethodSemantics  25 - MethodImpl
+26 - ModuleRef         27 - TypeSpec         28 - ImplMap
+29 - FieldRVA          32 - Assembly         33 - AssemblyProcessor
+34 - AssemblyOS        35 - AssemblyRef      36 - AssemblyRefProcessor
+37 - AssemblyRefOS     38 - File             39 - ExportedType
+40 - ManifestResource  41 - NestedClass      42 - GenericParam
+44 - GenericParamConstraint
+
+Each table is composed of a variable number of rows. The size of a row
+depends on the kind of table and can contain a reference to other Metadata
+tables.
+
+Those tables are referenced by the Metadata token, a notion that is
+described in the next paragraph.
+
+
+----[ 2.1.2 - Metadata token
+
+The Metadata token (or token for short) is a fundamental concept in the CLR
+framework. A token allows you to reference a given table at a given index.
+It is a 4-byte value, composed of two parts [08]: a table index and the
+RID.
+
+The table index is the topmost byte wich points to a table. A RID is a
+3-byte record identifier pointing in the table, which starts at offset one.
+
+As an example, let's consider the following Metadata token:
+
+(06)00000F
+
+0x06 is the number of the referenced table, which in this case is
+MethodDef. The last three bytes are the RID, that in this case has a value
+of 0x0F.
+
+
+----[ 2.1.3 - MSIL bytecode
+
+When we write a program in a .NET high level language, the compiler will
+translate this code into an intermediate representation called MSIL or as
+defined in the ECMA-335 [03] CIL, which stands for Common Intermediate
+Language.
+
+By installing Visual Studio you will also install a very handy utility
+called ILDasm, that allows you to disassemble an Assembly by displaying the
+MSIL code and other useful information.
+
+As an example let try to compile the following C# source code:
+
+------#------#------#------<START CODE>------#------#------#------
+public class TestClass
+{
+    private String _message;
+
+    public TestClass(String txt)
+    {
+        this._message = txt;
+    }
+
+    private String FormatMessage()
+    {
+        return "Hello " + this._message;
+    }
+
+    public void SayHello()
+    {
+        var message = this.FormatMessage();
+        Console.WriteLine(message);
+    }
+}
+------#------#------#------<END   CODE>------#------#------#------
+
+The result of the compilation is an Assembly with three methods:
+.ctor : void(string), FormatMessage : string() and SayHello : void().
+
+Let's try to display the MSIL code of the SayHello method:
+
+------#------#------#------<START CODE>------#------#------#------
+.method public hidebysig instance void  SayHello() cil managed
+// SIG: 20 00 01
+{
+  // Method begins at RVA 0x21f8
+  // Code size       16 (0x10)
+  .maxstack  1
+  .locals init ([0] string message)
+  IL_0000:  /* 00   |                  */ nop
+  IL_0001:  /* 02   |                  */ ldarg.0
+  IL_0002:  /* 28   | (06)00000F       */
+    call       instance string MockLibrary.TestClass::FormatMessage()
+  IL_0007:  /* 0A   |                  */ stloc.0
+  IL_0008:  /* 06   |                  */ ldloc.0
+  IL_0009:  /* 28   | (0A)000014       */
+    call       void [mscorlib]System.Console::WriteLine(string)
+  IL_000e:  /* 00   |                  */ nop
+  IL_000f:  /* 2A   |                  */ ret
+} // end of method TestClass::SayHello
+------#------#------#------<END   CODE>------#------#------#------
+
+For each instruction we can see the associated MSIL byte values. It is
+interesting to see that the code doesn't contain any reference to unmanaged
+memory but only to metadata tokens.
+
+The two call instructions reference two different tables, due to the
+FormatMessage method being implemented in the current Assembly and the
+WriteLine method implemented in an external Assembly.
+
+If we take a look at the list of tables presented in 2.1.1 we can see that
+the Metadata token (0A)000014 references the table 0x0A which is the
+MemberRef table, index 0x14 which is WriteLine. Instead the token
+(06)00000F references the table 0x06 which is the MethodDef table, index
+0x0F which is FormatMessage.
+
+
+---[ 2.2 - Execution environment
+
+The CLR execution environment is very strict and forbids any kind of
+dangerous operation. If we compare it with the unmanaged world where we
+were able to jump in the middle of an instruction to confuse the
+disassembler, to create all kinds of opaque instructions or to jump to any
+valid address, we will discover a sad truth: everything is forbidden.
+
+The CLR is a stack based machine. This means that there is no concept of
+registers and every parameter is pushed on the stack in order to be passed
+to other functions. When we exit a method, the stack must be empty or at
+least contain the value that should be returned.
+
+As already said, everything is based on the definition of the Metadata
+token. If we try to invoke a call with an invalid token we will receive a
+fatal exception. This poses a serious problem for our goal, since we cannot
+call methods that are not referenced by the original Assembly.
+
+
+--[ 3 - JIT compiler
+
+When a method is executed we have two different scenarios. The first one is
+when the method is already compiled, in this case the code just jumps to
+the compiled unmanaged code. The second scenario is when the method isn't
+yet compiled, in this case the code jumps to a stub that will call the
+exported method compileMethod, defined in corjit.h [04], in order to
+compile and then execute the method.
+
+
+---[ 3.1 - The compileMethod
+
+Let's analyze this interesting method a bit more. The signature of
+compileMethod is the following:
+
+virtual CorJitResult __stdcall compileMethod (
+            ICorJitInfo                 *comp,               /* IN */
+            struct CORINFO_METHOD_INFO  *info,               /* IN */
+            unsigned /* code:CorJitFlag */   flags,          /* IN */
+            BYTE                        **nativeEntry,       /* OUT */
+            ULONG                       *nativeSizeOfCode    /* OUT */
+            ) = 0;
+
+The most interesting structure is the CORINFO_METHOD_INFO
+which is defined in corinfo.h [05] and has the following format:
+
+struct CORINFO_METHOD_INFO
+{
+    CORINFO_METHOD_HANDLE       ftn;
+    CORINFO_MODULE_HANDLE       scope;
+    BYTE *                      ILCode;
+    unsigned                    ILCodeSize;
+    unsigned                    maxStack;
+    unsigned                    EHcount;
+    CorInfoOptions              options;
+    CorInfoRegionKind           regionKind;
+    CORINFO_SIG_INFO            args;
+    CORINFO_SIG_INFO            locals;
+};
+
+For our purpose the most important field is the ILCode byte pointer.  It
+points to a buffer which contains the MSIL bytecode. By modifying this
+buffer we are able to alter the method execution flow.
+
+As a side note, this method is also extensively used by .NET obfuscators.
+In fact we can read the following comment in the source code:
+
+Note: Obfuscators that are hacking the JIT depend on this method having
+__stdcall calling convention
+
+An obfuscator typically encrypts the MSIL bytecode of a method, then when
+the method is bound to be executed they decrypt the bytecode and pass this
+value as byte pointer instead of the encrypted one. This also explains why
+if we open it in ILDasm or with a decompiler we receive back an error. How
+can they know when a method is going to be called? This is pretty easy,
+the code in charge for the replacement process is placed inside the type
+constructor. This specific constructor is invoked only once: before a new
+object of that specific type is created.
+
+
+---[ 3.2 - Hooking the compileMethod
+
+Since the compileMethod is exported by the Clrjit.dll (or from mscorjit.dll
+for older .NET versions), we can easily install a hook to intercept all the
+requests for compilation. The following F# pseudo-code shows how to do
+this:
+
+------#------#------#------<START CODE>------#------#------#------
+[<DllImport(
+    "Clrjit.dll",
+    CallingConvention = CallingConvention.StdCall, PreserveSig = true)
+>]
+extern IntPtr getJit()
+
+[<DllImport("kernel32.dll", SetLastError = true)>]
+extern Boolean VirtualProtect(
+    IntPtr lpAddress,
+    UInt32 dwSize,
+    Protection flNewProtect,
+    UInt32& lpflOldProtect)
+
+let pVTable = getJit()
+_pCompileMethod <- Marshal.ReadIntPtr(pVTable)
+
+// make memory writable
+let mutable oldProtection = uint32 0
+if not <| VirtualProtect(
+    _pCompileMethod,
+    uint32 IntPtr.Size,
+    Protection.PAGE_EXECUTE_READWRITE,
+    &oldProtection)
+then
+    Environment.Exit(-1)
+
+let protection = Enum.Parse(
+    typeof<Protection>,
+    oldProtection.ToString()) :?> Protection
+
+// save original compile method
+_realCompileMethod <-
+    Some (Marshal.GetDelegateForFunctionPointer(
+        Marshal.ReadIntPtr(_pCompileMethod),
+        typeof<CompileMethodDeclaration>) :?> CompileMethodDeclaration
+    )
+RuntimeHelpers.PrepareDelegate(_realCompileMethod.Value)
+RuntimeHelpers.PrepareDelegate(_hookedCompileMethodDelegate)
+
+// install compileMethod hook
+Marshal.WriteIntPtr(
+    _pCompileMethod,
+    Marshal.GetFunctionPointerForDelegate(_hookedCompileMethodDelegate)
+)
+
+// repristinate memory protection flags
+VirtualProtect(
+    _pCompileMethod,
+    uint32 IntPtr.Size,
+    protection,
+    &oldProtection
+    ) |> ignore
+------#------#------#------<END   CODE>------#------#------#------
+
+When we modify the MSIL code we must pay attention to the stack size. Our
+framework needs some stack space in order to work and if the method that is
+going to be compiled doesn't need any local variables, we will receive an
+exception at runtime. In order to fix this problem it is enough to modify
+the maxStack variable of CORINFO_METHOD_INFO structure before writing it
+back.
+
+
+--[ 4 - .NET Instrumentation
+
+Now it is time to modify the MSIL buffer of our method of choice and
+redirect the flow to our code. As we will see this is not a smooth process
+and we need to take care of numerous aspects.
+
+
+---[ 4.1 - MSIL injection strategy
+
+In order to invoke our code the process that we will follow is composed of
+the following steps:
+
+1. Install a trampoline at the beginning of the code. This
+   trampoline will call a dynamically defined method.
+
+2. Define a dynamic method that will have a specific method signature.
+
+3. Construct an array of objects that will contain the parameters
+    passed to the method.
+
+4. Invoke a dispatcher function which will load our Assembly
+   and will finally call our code by passing a handle to the original
+   method and an array of objects representing the method parameters.
+
+In the end the structure that we are going to create will follow the path
+defined in the following diagram:
+
+|     ...       |
+|     ...       |      +---------------+
+|   Trampoline  |----> |               |
+| Original MSIL |      |    Dynamic    |
+|     ...       |      |    Method     |---------+
+|     ...       |      |               |         |
+                       +---------------+         v
+                                         +---------------+
+                                         |               |
+                                         |  Framework    |
+                                         |  Dispatcher   |
+                                         |               |
+                                         +---------------+
+                                                 |
+                                      +----------+
+                                      |
+                                      v
+                               +---------------+
+                              |               |
+                              |     User      |
+                              | Code Monitor  |
+                              |               |
+                              +---------------+
+
+
+---[ 4.2 - Resolving the method handle
+
+As we will see in the next paragraph, it is necessary to resolve the handle
+of the method that will be compiled in order to obtain the needed
+information via reflection. I have found a method to resolve it, it is not
+very elegant but it works :P.
+
+The following F# pseudo-code will show you how to resolve a method handle
+given the CorMethodInfo structure:
+
+------#------#------#------<START CODE>------#------#------#------
+let getMethodInfoFromModule(
+    methodInfo: CorMethodInfo,
+    assemblyModule: Module) =
+    let mutable info: FilteredMethod option = None
+    try
+        // dirty trick, is there a
+        // better way to know the module of the compiled method?
+        let mPtr =
+            assemblyModule.ModuleHandle.GetType()
+            .GetField("m_ptr",
+                BindingFlags.NonPublic ||| BindingFlags.Instance)
+        let mPtrValue = mPtr.GetValue(assemblyModule.ModuleHandle)
+        let mpData =
+            mPtrValue.GetType()
+            .GetField("m_pData",
+                BindingFlags.NonPublic ||| BindingFlags.Instance)
+
+        if mpData <> null then
+            let mpDataValue = mpData.GetValue(mPtrValue) :?> IntPtr
+            if mpDataValue = methodInfo.ModuleHandle then
+                // module found, get method name
+                let tokenNum =
+                    Marshal.ReadInt16(nativeint(methodInfo.MethodHandle))
+                let token = (0x06000000 + int32 tokenNum)
+                let methodBase = assemblyModule.ResolveMethod(token)
+
+                if  methodBase.DeclaringType <> null &&
+                    isMonitoredMethod(methodBase) then
+                    let mutable numOfParameters =
+                        methodBase.GetParameters() |> Seq.length
+                    if not methodBase.IsStatic then
+                        // take into account the this parameter
+                        numOfParameters <- numOfParameters + 1
+
+                    // compose the result info
+                    info <- Some {
+                        TokenNum = tokenNum
+                        NumOfArgumentsToPushInTheStack = numOfParameters
+                        Method = methodBase
+                        IsConstructor = methodBase :? ConstructorInfo
+                        Filter = this
+                    }
+    with _ -> ()
+    info
+------#------#------#------<END   CODE>------#------#------#------
+
+This method must be invoked for each module of all loaded Assemblies.
+
+Now that we have a MethodBase object, we can use it to extract the needed
+information, like the number of accepted parameters and their types.
+
+
+---[ 4.3 - Implementing a trampoline via the calli instruction
+
+Our first obstacle is to create a MSIL bytecode that can invoke an
+arbitrary function. Among all the available OpCodes, the one of interest
+for us is the calli instruction [06] (beware of its usage, as it makes our
+code unverifiable).
+
+From the MSDN page we can read that:
+
+"The method entry pointer is assumed to be a specific pointer to native
+code (of the target machine) that can be legitimately called with the
+arguments described by the calling convention (a metadata token for a
+stand-alone signature). Such a pointer can be created using the Ldftn or
+Ldvirtftn instructions, or passed in from native code."
+
+Nice, we can specify an arbitrary pointer to native code. The only
+difficulty is that we cannot use the Ldftn or Ldvirtftn since they need a
+metadata token, and we cannot specify this value. Not too bad, since from
+the Ldftn documentation we can read that [07]:
+
+"Pushes an unmanaged pointer (type native int) to the native code
+implementing a specific method onto the evaluation stack."
+
+So, if we have an unmanaged pointer we can simulate the Ldftn with a simple
+Ldc_I4 instruction (supposing that we are operating on a 32 bit
+environment) [09].
+
+Unfortunately now we have another, even bigger, problem. The calli
+instruction needs a callSiteDescr. From [08] we can read that:
+
+"<token> - referred to callSiteDescr - must be a valid StandAloneSig".
+
+The StandAloneSig is the table number 17. As I have already said we cannot
+specify this Metadata token (since it probably doesn't exist in the table).
+
+I have played a bit with the calli instruction in order to see if it
+accepts also other kinds of Metadata tokens. In the end I discovered that
+it also accepts a token from one of the following tables: TypeSpec, Field
+and MethodDef.
+
+For our purpose, the MethodDef table is the most interesting one, since we
+can fake a valid MethodDef token by creating a DynamicMethod (more on this
+later). We can now close the circle by using the calli instruction and
+modifying the metadata token in order to specify a MethodDef.
+
+We will use the MethodBase object that we obtained in the previous step in
+order to know how many parameters the method accepts and push them in the
+stack before invoking calli.
+
+The following F# pseudo-code shows how to build the calli instruction:
+
+------#------#------#------<START CODE>------#------#------#------
+// load all arguments on the stack
+for i=0 to filteredMethod.NumOfArgumentsToPushInTheStack-1 do
+    ilGenerator.Emit(OpCodes.Ldarg, i)
+
+// emit calli instruction with a pointer to the dynamic method,
+// the token used by the calli is not important as I'll modify it soon
+ilGenerator.Emit(OpCodes.Ldc_I4, functionAddress)
+ilGenerator.EmitCalli(
+    OpCodes.Calli,
+    CallingConvention.StdCall,
+    dispatcherMethod.ReturnType,
+    dispatcherArgs)
+
+// this index allow to modify the right byte
+let patchOffset = ilGenerator.ILOffset - 4
+ilGenerator.Emit(OpCodes.Nop)
+
+// check if I have to pop the return value
+match filteredMethod.Method with
+| :? MethodInfo as mi ->
+    if mi.ReturnType <> typeof<System.Void> then
+        ilGenerator.Emit(OpCodes.Pop)
+| _ -> ()
+
+// end method
+ilGenerator.Emit(OpCodes.Ret)
+------#------#------#------<END   CODE>------#------#------#------
+
+The functionAddress variable contains the native pointer of our dynamic
+method. One last step is to patch the calli Metadata token with a MethodDef
+token whose value we know to be correct. As value we will use the token of
+the method that it is being compiled.
+
+The following F# pseudo-code show how to modify the MSIL bytecode at the
+right offset:
+
+------#------#------#------<START CODE>------#------#------#------
+// craft MethodDef metadata token index
+let b1 = (filteredMethod.TokenNum &&& int16 0xFF00) >>> 8
+let b2 = filteredMethod.TokenNum &&& int16 0xFF
+
+// calli instruction accept 0x11 as table index (StandAloneSig),
+// but seems that also other tables are allowed.
+// In particular the following ones seem to be accepted as
+// valid: TypeSpec, Field and Method (most important)
+trampolineMsil.[patchOffset] <- byte b2
+trampolineMsil.[patchOffset+1] <- byte b1
+trampolineMsil.[patchOffset + 3] <- 6uy // 6(0x6): MethodDef Table
+------#------#------#------<END   CODE>------#------#------#------
+
+Since this step is a bit complex let's try to summarize our actions:
+
+1. We use the calli instruction to invoke an arbitrary method by specifying
+   a native address pointer.
+
+2. We modify the calli metadata token by specifying a MethodDef token and
+   not a StandAloneSig token.
+
+3. We pass as Metadata token value the token of the method currently
+   compiled. This kind of token describes the method that must be called.
+
+Our next step is to be sure that the method invoked by calli satisfies the
+information contained in the referenced Metadata token.
+
+
+---[ 4.4 - Crafting a dynamic method
+
+We now have to create the dynamic method that satisfies the information
+provided by the token passed to the calli instruction. From [10] we can
+read that:
+
+"The method descriptor is a metadata token that indicates the method to
+call and the number, type, and order of the arguments that have been placed
+on the stack to be passed to that method as well as the calling convention
+to be used."
+
+So, in order to create a method that satisfies the signature of the method
+referenced by the token we will use a very powerful .NET capability, which
+allows us to define dynamic method. This step allows the following:
+
+1. Create a method that has the same signature of the method that will be
+   compiled. This will guarantee that the information carried by the 
+   metadata token is legit.
+
+2. We are now in a situation where we can specify a valid metadata
+   token, since the new dynamic type is created in the current execution
+   environment.
+
+This dynamic method will call another method (a dispatcher) that accepts
+two arguments: a string representing the location of the Assembly to load
+(more on this later) and an array of objects which contains the arguments
+passed to the method.
+
+In creating this method you have to pay attention when creating the objects
+array, since in .NET not everything is an object.
+
+The following F# pseudo-code creates the dynamic method with the right
+signature:
+
+------#------#------#------<START CODE>------#------#------#------
+let argumentTypes = [|
+    if not filteredMethod.Method.IsStatic then
+        yield typeof<Object>
+    yield!
+        filteredMethod.Method.GetParameters()
+        |> Array.map(fun p -> p.ParameterType)
+|]
+
+let dynamicType =
+    _dynamicModule.DefineType(
+        filteredMethod.Method.Name + "_Type" + string(!_index))
+let dynamicMethod =
+    dynamicType.DefineMethod(
+        dynamicMethodName,
+        MethodAttributes.Static |||
+        MethodAttributes.HideBySig |||
+        MethodAttributes.Public,
+        CallingConventions.Standard,
+        typeof<System.Void>,
+        argumentTypes
+    )
+------#------#------#------<END   CODE>------#------#------#------
+
+We can now proceed with the creation of the method body. We need to pay
+attention to two facts: ValueType parameters must be boxed, and Enum
+parameters must be converted to another form (after some trials and errors
+I found that Int32 is a good compromise).
+
+------#------#------#------<START CODE>------#------#------#------
+// push the location of the Assembly to load containing the monitors
+let assemblyLocation =
+    if filteredMethod.Filter.Invoker <> null
+    then filteredMethod.Filter.Invoker.Assembly.Location
+    else String.Empty
+ilGenerator.Emit(OpCodes.Ldstr, assemblyLocation)
+
+// get the parameter types
+let parameters =
+    filteredMethod.Method.GetParameters()
+    |> Seq.map(fun pi -> pi.ParameterType)
+    |> Seq.toList
+
+// create argv array
+ilGenerator.Emit(OpCodes.Ldc_I4,
+    filteredMethod.NumOfArgumentsToPushInTheStack)
+ilGenerator.Emit(OpCodes.Newarr, typeof<Object>)
+
+// fill the argv array
+for i=0 to filteredMethod.NumOfArgumentsToPushInTheStack-1 do
+    ilGenerator.Emit(OpCodes.Dup)
+    ilGenerator.Emit(OpCodes.Ldc_I4, i)
+    ilGenerator.Emit(OpCodes.Ldarg, i)
+
+    // check if I have to box the value
+    if filteredMethod.Method.IsStatic || i > 0 then
+        // this check is necessary becasue the
+        // GetParameters method doesn't consider the 'this' pointer
+        let paramIndex = if filteredMethod.Method.IsStatic then i else i - 1
+        if parameters.[paramIndex].IsEnum then
+            // consider all enum as Int32 type to avoid access problems
+            ilGenerator.Emit(OpCodes.Box, typeof<Int32>)
+
+        elif parameters.[paramIndex].IsValueType then
+            // all value types must be boxed
+            ilGenerator.Emit(OpCodes.Box, parameters.[paramIndex])
+
+    // store the element in the array
+    ilGenerator.Emit(OpCodes.Stelem_Ref)
+
+// emit call to dispatchCallback
+let dispatchCallbackMethod =
+    Type.GetType("ES.Anathema.Runtime.Dispatcher")
+    .GetMethod("dispatchCallback", BindingFlags.Static ||| BindingFlags.Public)
+ilGenerator.EmitCall(OpCodes.Call, dispatchCallbackMethod, null)
+
+ilGenerator.Emit(OpCodes.Ret)
+------#------#------#------<END   CODE>------#------#------#------
+
+The call will end up invoking a framework method that is in charge for the
+dispatch of the call to the user defined code.
+
+
+---[ 4.5 - Invoking the user defined code
+
+In order to make the code easy to extend, we can implement a mechanism that
+will load a user defined Assembly and invoke a specific method. In this way
+we have an architecture that resembles that of a plugin-based architecture.
+We call these plugins: monitors. Each monitor can be configured in order to
+intercept a specific method.
+
+In order to locate the monitors we will use the software design paradigm
+"convention over configuration", which implies that all classes whose name
+ends in "Monitor" are loaded.
+
+This last method is very simple, it just retrieves the MethodBase object
+from the stack in order to pass it to the monitor and finally invoke it.
+The assemblyLocation parameter is the one that specifies where the user
+defined Assembly is located.
+
+------#------#------#------<START CODE>------#------#------#------
+let dispatchCallback(assemblyLocation: String, argv: Object array) =
+    if File.Exists(assemblyLocation) then
+        let callingMethod =
+            try
+                // retrieve the calling method from the stack trace
+                let stackTrace = new StackTrace()
+                let frames = stackTrace.GetFrames()
+                frames.[2].GetMethod()
+            with _ -> null
+
+        // invoke all the monitors, we use "convention over configuration"
+        let bytes = File.ReadAllBytes(assemblyLocation)
+        for t in Assembly.Load(bytes).GetTypes() do
+            try
+                if t.Name.EndsWith("Monitor") && not t.IsAbstract then
+                    let monitorConstructor =
+                        t.GetConstructor([|
+                            typeof<MethodBase>;
+                            typeof<Object array>|])
+                    if monitorConstructor <> null then
+                        monitorConstructor.Invoke([|callingMethod; argv|]) |> ignore
+            with _ -> ()
+------#------#------#------<END   CODE>------#------#------#------
+
+
+---[ 4.6 - Fixing the SEH table
+
+We are near the end, we have modified the MSIL bytecode, we have created a
+dynamic method and a trampoline. The final step is to write back the
+CORINFO_METHOD_INFO structure and call the real compileMethod.
+Unfortunately by doing so you will soon receive a runtime error when you
+try to instrument a method that uses a try/catch clause.
+
+This is due to the fact that the creation of the trampoline has made the
+SEH table invalid. This table contains information on the portions of code
+that are inside try/catch clauses. From [11] we can see that by adding
+additional MSIL code, the properties TryOffset and HandlerOffset will
+assume an invalid value.
+
+This table is located after the IL Code, as shown in the following
+diagram:
+
+        +--------------------+
+        |                    |
+        |     Fat Header     |
+        |                    |
+        +--------------------+
+        |                    |
+        |                    |
+        |      IL Code       |
+        |                    |
+        |                    |
+        +--------------------+
+        |                    |
+        |     SEH Table      |
+        |                    |
+        +--------------------+
+
+We also have a confirmation from the source code, in fact in corhlpr.cpp
+([12]) we can see that the SEH table is added to the outBuff variable after
+that was already filled with the IL code.
+
+So, to get the address of the SEH table it is enough to add to the IlCode
+pointer, located in the CorMethodInfo structure, the length of the MSIL
+code.
+
+Before showing the code that does that we have to take into account that
+the SEH Table can be of two different types: FAT or SMALL. What changes is
+only the dimensions of its fields. So fixing this table it is just a matter
+of locating it and enumerating each clause to fix their values.
+
+The following F# pseudo-code does exactly this:
+
+------#------#------#------<START CODE>------#------#------#------
+let fixEHClausesIfNecessary(
+    methodInfo: CorMethodInfo,
+    methodBase: MethodBase,
+    additionalCodeLength: Int32) =
+    let clauses = methodBase.GetMethodBody().ExceptionHandlingClauses
+    if clauses.Count > 0 then
+        // locate SEH table
+        let codeSizeAligned =
+            if (int32 methodInfo.IlCodeSize) % 4 = 0 then 0
+            else 4 - (int32 methodInfo.IlCodeSize) % 4
+        let mutable startEHClauses =
+            methodInfo.IlCode +
+            new IntPtr(int32 methodInfo.IlCodeSize + codeSizeAligned)
+
+        let kind = Marshal.ReadByte(startEHClauses)
+        // try to identify FAT header
+        let isFat = (int32 kind &&& 0x40) <> 0
+
+        // it is always plus 3 because even if it is small it is
+        // padded with two bytes. See: Expert .NET 2.0 IL Assembler p. 296
+        startEHClauses <- startEHClauses + new IntPtr(4)
+
+        for i=0 to clauses.Count-1 do
+            if isFat then
+                let ehFatClausePointer =
+                    box(startEHClauses.ToPointer())
+                        :?> nativeptr<CorILMethodSectEhFat>
+                let mutable ehFatClause = NativePtr.read(ehFatClausePointer)
+
+                // modify the offset value
+                ehFatClause.HandlerOffset <-
+                    ehFatClause.HandlerOffset + uint32 additionalCodeLength
+                ehFatClause.TryOffset <-
+                    ehFatClause.TryOffset + uint32 additionalCodeLength
+
+                // write back the result
+                let mutable oldProtection = uint32 0
+                let memSize = Marshal.SizeOf(typeof<CorILMethodSectEhFat>)
+                if not <| VirtualProtect(
+                    startEHClauses,
+                    uint32 memSize,
+                    Protection.PAGE_READWRITE,
+                    &oldProtection) then
+                    Environment.Exit(-1)
+
+                let protection = Enum.Parse(
+                    typeof<Protection>,
+                    oldProtection.ToString()) :?> Protection
+                NativePtr.write ehFatClausePointer ehFatClause
+
+                // repristinate memory protection flags
+                VirtualProtect(
+                    startEHClauses,
+                    uint32 memSize,
+                    protection,
+                    &oldProtection) |> ignore
+
+                // go to next clause
+                startEHClauses <- startEHClauses + new IntPtr(memSize)
+            else
+                //... do same as above but for small size table
+------#------#------#------<END   CODE>------#------#------#------
+
+Once we have fixed this table we can finally invoke the real compileMethod.
+
+
+--[ 5 - Real world examples
+
+The code presented is part of a project called Anathema that will allow you
+to easily instrument .NET programs. Let's try to use the framework by
+instrumenting a web application in order to steal the user passwords and to
+instrument a real world malware in order to log all method calls.
+
+
+---[ 5.1 - Web application password stealer
+
+Let's see how we can use this instrumentation method in order to implement
+a password stealer for a web application. For our demo we will use a very
+popular .NET web server called Suave ([13]). We will write the web
+application in F# and the password stealer as a C# console application, in
+this way we can instrument the interesting method before it is compiled. In
+the other case we have to force the .NET runtime to recompile the method in
+order to apply the instrumentation (see [14] for a possible approach).
+
+The web application is very simple and contains only a form; its HTML code
+is shown below:
+
+------#------#------#------<START CODE>------#------#------#------
+<h1>-= Secure Web Shop Login =-</h1>
+<form method="POST" action="/login">
+    <table>
+        <tr>
+            <td>Username:</td>
+            <td><input type="text" name="username"></td>
+        </tr>
+        <tr>
+            <td>Password:</td>
+            <td><input type="password" name="password"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" name="Login"></td>
+        </tr>
+    </table>
+</form>
+------#------#------#------<END   CODE>------#------#------#------
+
+The F# code in charge for the authentication is the following:
+
+------#------#------#------<START CODE>------#------#------#------
+let private _accounts = [
+    ("admin", BCrypt.HashPassword("admin"))
+    ("guest", BCrypt.HashPassword("guest"))
+]
+
+let private authenticate(username: String, password: String) =
+    _accounts
+    |> List.exists(fun (user, hash) ->
+        let usernameMatch = user.Equals(username, StringComparison.Ordinal)
+        let passwordMatch = BCrypt.Verify(password, hash)
+        usernameMatch && passwordMatch
+    )
+
+let private doLogin(ctx: HttpContext) =
+    match (tryGetParameter(ctx, "username"), tryGetParameter(ctx, "password")) with
+    | (Some username, Some password) when authenticate(username, password) ->
+        OK "Authentication successfully executed!" ctx
+    | _ -> OK "Wrong username/password combination" ctx
+------#------#------#------<END   CODE>------#------#------#------
+
+So, the best way to intercept passwords is the 'authenticate' method. We
+will start by creating a class in charge of printing the received password,
+this is done by creating the following simple class:
+
+------#------#------#------<START CODE>------#------#------#------
+class PasswordStealerMonitor
+{
+    public PasswordStealerMonitor(MethodBase m, object[] args)
+    {
+        Console.WriteLine(
+                "[!] Username: '{0}', Password: '{1}'",
+                args[0],
+                args[1]);
+    }
+}
+------#------#------#------<END   CODE>------#------#------#------
+
+Now, the final step is to instrument the application, this is done using
+the following code:
+
+------#------#------#------<START CODE>------#------#------#------
+// create runtime
+var runtime = new RuntimeDispatcher();
+var hook = new Hook(runtime.CompileMethod);
+var authenticateMethod = GetAuthenticateMethod();
+runtime.AddFilter(
+    typeof(PasswordStealerMonitor),
+    "SecureWebShop.Program.authenticate");
+
+// apply hook
+var jitHook = new JitHook();
+jitHook.InstallHook(hook);
+jitHook.Start();
+
+// start the real web application
+SecureWebShop.Program.main(new String[] { });
+------#------#------#------<END   CODE>------#------#------#------
+
+Once the web application is run and we try to login, we will see the
+following output in the console:
+
+-= Secure Web Shop =-
+Start web server on 127.0.0.1:8080
+[14:45:49 INF] Smooth! Suave listener started in 631.728 with binding 127.0.0.1:8080
+[!] Username: 's4tan', Password: 'wrong_password'
+[!] Username: 'admin', Password: 'admin'
+
+
+---[ 5.2 - Malware inspection
+
+Let's consider a sample of the Hawkeye malware, written in .NET, with the
+following MD5 hash: 130efba199b389ab71a374bf95be2304.
+
+The sample contains two levels of packing. We could trace the packers but
+let's focus on the main payload (MD5: 97d74c20f5d148ed68e45dad0122d3b5).
+When the main payload is launched the following method calls are logged:
+
+c:\>MLogger.exe malware.exe
+[+] Debugger.My.MyApplication.Main(Args: System.String[]) : System.Void
+[+] Debugger.My.MyProject..cctor()
+[...]
+[+] Debugger.My.MyProject.get_Application() : Debugger.My.MyApplication
+[+] Debugger.My.MyProject+ThreadSafeObjectProvider`1.get_GetInstance() : T
+[+] Debugger.My.MyApplication..ctor()
+[+] Debugger.My.MyProject+ThreadSafeObjectProvider`1.get_GetInstance() : T
+[+] Debugger.My.MyProject+MyForms..ctor()
+[+] Debugger.Debugger..ctor()
+[+] Debugger.Clipboard..ctor()
+[+] Debugger.Clipboard.add_Changed(obj: Debugger.Clipboard+ChangedEventHandler)
+    : System.Void
+[+] Debugger.My.Resources.Resources.get_CMemoryExecute() : System.Byte[]
+[+] Debugger.My.Resources.Resources.get_ResourceManager() :
+    System.Resources.ResourceManager
+[+] Debugger.Debugger.InitializeComponent() : System.Void
+[+] Debugger.Debugger.Decrypt(
+    encryptedBytes: System.String, secretKey: System.String) : System.String
+[+] Debugger.Debugger.getAlgorithm(secretKey: System.String) :
+    System.Security.Cryptography.RijndaelManaged
+[+] Debugger.Debugger.Decrypt(
+    encryptedBytes: System.String, secretKey: System.String) : System.String
+[+] Debugger.Debugger.getAlgorithm(secretKey: System.String) :
+    System.Security.Cryptography.RijndaelManaged
+[+] Debugger.Debugger.Decrypt(
+    encryptedBytes: System.String, secretKey: System.String) : System.String
+[+] Debugger.Debugger.getAlgorithm(secretKey: System.String) :
+    System.Security.Cryptography.RijndaelManaged
+[...]
+[+] Debugger.Debugger.IsConnectedToInternet() : System.Boolean
+[+] Debugger.Debugger.GetInternalIP() : System.String
+[+] Debugger.Debugger.GetExternalIP() : System.String
+[+] Debugger.Debugger.GetBetween(
+    Source: System.String, Before: System.String, After: System.String) : System.String
+[+] Debugger.Debugger.GetAntiVirus() : System.String
+[+] Debugger.Debugger.GetFirewall() : System.String
+[+] Debugger.Debugger.unHide() : System.Void
+[+] Debugger.My.MyProject+ThreadSafeObjectProvider`1.get_GetInstance() : T
+[+] Debugger.My.MyComputer..ctor()
+[+] Debugger.Debugger.unhidden(path: System.String) : System.Void
+[...]
+[+] Debugger.My.Resources.Resources.get_mailpv() : System.Byte[]
+[+] Debugger.My.Resources.Resources.get_ResourceManager() :
+    System.Resources.ResourceManager
+[+] Debugger.Debugger.HookKeyboard() : System.Void
+[+] Debugger.Clipboard.Install() : System.Void
+[+] Debugger.My.MyProject+ThreadSafeObjectProvider`1.get_GetInstance() : T
+[+] Debugger.My.MyComputer..ctor()
+[+] Debugger.Debugger.IsConnectedToInternet() : System.Boolean
+[+] Debugger.Debugger.IsConnectedToInternet() : System.Boolean
+[+] Debugger.My.MyProject.get_Computer() : Debugger.My.MyComputer
+[...]
+
+
+--[ 6 - Conclusion
+
+Instrumenting a .NET program via MSIL bytecode injection is a pretty useful
+technique that allows you to have full control of method invocation by
+using a high level .NET language.
+
+As we have seen, doing so requires a lot of attention and knowledge of the
+internal workings of the CLR, but in the end the outcome is worth the
+trouble.
+
+
+--[ 7 - References
+
+[01] Metadata and Self-Describing Components - https://goo.gl/bbSG7p
+[02] The .NET File Format - http://www.ntcore.com/files/dotnetformat.htm
+[03] Standard ECMA-335 - https://goo.gl/J9kko6
+[04] corjit.h - https://goo.gl/J68Poi
+[05] corinfo.h - https://goo.gl/G31KHP
+[06] OpCodes.Calli Field - https://goo.gl/D7ug93
+[07] OpCodes.Ldftn Field - https://goo.gl/sHzz1S
+[08] Expert .NET 2.0 IL Assembler - https://goo.gl/3LKLSW
+[09] OpCodes.Ldc_I4 Field - https://goo.gl/qEW2Lx
+[10] OpCodes.Call Field - https://goo.gl/29rqZk
+[11] ExceptionHandlingClause Class - https://goo.gl/bjLqSv
+[12] corhlpr.cpp - https://goo.gl/DDVKgH
+[13] Suave web server - https://suave.io/
+[14] .NET CLR Injection - https://goo.gl/nryxYB
+
+
+--[ 8 - Source Code
+
+|=[ EOF ]=---------------------------------------------------------------=|

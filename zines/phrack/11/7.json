@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Eleven, Phile #7 of 12",
+  "title": "Hacking Primos I, II, III",
+  "authors": "Evil Jay",
+  "date": "",
+  "historical_context": "This article is part of the early hacking culture, focusing on gaining access to systems, particularly those running the Primos operating system. It reflects the mindset and techniques used by hackers in the early 1980s.",
+  "target_audience": "Hackers, security professionals, and those interested in historical hacking techniques.",
+  "short_summary": "This article provides a guide on gaining access to Primos systems, detailing methods for finding user accounts, escalating privileges, and using basic commands. It serves as a practical introduction for beginners in hacking.",
+  "summary": "In 'Hacking Primos I, II, III', Evil Jay revises and expands upon earlier works, offering insights into accessing Primos systems. The article begins with methods to discover user accounts through MFD directories, emphasizing the importance of understanding system commands. It highlights the SYS1 account as a key target for privilege escalation, detailing how to locate and exploit files containing user credentials. The author also introduces the concept of a Trojan Horse, explaining how to manipulate Command Processing Language (CPL) files to execute unauthorized commands once access is gained. \n\nThe article concludes with a list of basic commands that beginners can use once logged into a Primos system, providing a practical toolkit for navigating and manipulating the environment. This guide serves not only as a historical document of early hacking practices but also as a foundational resource for those looking to understand the intricacies of system access and exploitation in a bygone era of computing."
+}

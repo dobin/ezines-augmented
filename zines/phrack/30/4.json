@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 30, File #4 of 12",
+  "title": "Hacking VM/CMS",
+  "authors": "Goe",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early days of hacking into IBM's VM/CMS systems, showcasing the vulnerabilities present in user management and password handling.",
+  "target_audience": "Hackers, security researchers, and IT professionals interested in legacy systems and their vulnerabilities.",
+  "short_summary": "The article discusses hacking techniques for IBM's VM/CMS operating system, detailing default user IDs, passwords, and methods to exploit system vulnerabilities for unauthorized access.",
+  "summary": "In 'Hacking VM/CMS', Goe provides a detailed examination of the IBM VM/SP running CMS, focusing on the default user IDs and passwords that are often overlooked by system administrators. The article includes tables listing these credentials, which are critical for gaining unauthorized access to the system. Goe emphasizes the importance of understanding the virtual addresses used in the system's directory and how they relate to user privileges and access control. The author also shares practical insights on exploiting weak password management practices, such as accessing privileged user accounts through command execution and leveraging the system's file structure to retrieve sensitive information.\n\nThe article serves as a cautionary tale for system administrators, highlighting the need for robust security measures in legacy systems. Goe's narrative not only illustrates the technical aspects of hacking into VM/CMS but also reflects the hacker ethos of sharing knowledge and experiences within the community. The techniques discussed remain relevant for understanding the vulnerabilities in older systems and the importance of securing user credentials against unauthorized access."
+}

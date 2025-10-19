@@ -1,0 +1,298 @@
+                
+                           ==Phrack Inc.==
+
+              Volume 0x0b, Issue 0x3e, Phile #0x08 of 0x10
+
+|=-----=[ FIST! FIST! FIST! Its all in the wrist: Remote Exec ]=---------=|
+|=-----------------------------------------------------------------------=|
+|=--------------------------=[ by grugq ]=------------------------------=|
+
+
+ 1 - Abtract
+ 2 - Introduction
+ 3 - Principles
+ 4 - Background
+ 5 - Requirements
+ 6 - Design and Implementation
+   6.1 - gdbprpc
+   6.2 - ul_exec
+ 7 - Conclusion
+ 8 - Greets
+ 9 - Bibliography
+10 - SourceC0de
+
+---[ 1 - Abstract
+
+The infrastructue of anti-forensics is built on the three strategies of
+data destruction, data hiding and data contraception. The principles of
+data contracteption, and a technique for executing a data contraception
+attack are presented. This technique provides the ability to execute a
+binary on a remote system without creating a file on the disk.
+
+---[ 2 - Introduction
+
+In the years since the introduction of the first two strategies of
+anti-forensics [grugq 2002], there has been little additional public
+research on anti-forensics. This paper introduces and discusses a third
+core anti-forensics strategy: data contraception. Like the other
+anti-forensic strategies, data destruction and data hiding, data
+contraception seeks to reduce the quantity and quality of forensic
+evidence. Data contraception achieves this by using two core principles:
+preventing data from reaching the disk, and using common utilities, rather
+than custom tools, wherever possible.
+
+The rest of this paper will explore data contraception, looking first at
+the core principles of data contaception, then at the requirements for a
+data contraception tool, and finally the design and implemenation of such a
+tool: rexec (remote exec).
+
+--[ 3 - Principles
+
+Data contraception is the attempt to limit the quantity and quality of
+forensic evidence by keeping forensically valuable, or useful, data off the
+disk. To accomplish this there are two core techniques for interacting with
+the operating system: firstly, operate purely in memory, and secondly use
+common utilities rather than custom crafted tools.
+
+The first principle of data contraception, keeping data off the disk, is
+most important when dealing with files that interact directly with the
+operating system such as binaries, LKMs and scripts. The second principle
+is for guidance when implementing the first principle, and it ensures that
+any data which does touch the disk is of limited value to a forensic
+analyst.
+
+Operating in memory only is not a new technique and its already fairly well
+understood with regards to rootkit development. However, using in memory
+only techniques during a penetration is not as thoroughly documented in the
+literature. Within rootkit technologies, the most frequently encountered
+technique for operating in memory is to use ptrace() to attach to an
+existing process and inject code into it's address space. Additionaly,
+injecting kernel modules directly into the kernel is also a well known
+technique. This paper will focus on developing in memory systems for
+penetration tools.
+
+Implementing an in-memory-only system requires a program on the remote
+target host acting as a server to interact with the operating system. This
+server acts as either an Inter Userland Device (IUD) -- providing access to its
+own address space -- or an Intra Userland Device (IUD) -- providing access to
+another address space. In either case, this IUD is critical to the effective
+execution of a successful data contracteption attack.
+
+The second principle of data contraception is critical in reducing the
+effectiveness of a forensic examination. The use of common utilties means
+that nothing of value exists for an analyst to recover. An example would be
+a back door written using gawk. Since some version 3.x, GNU Awk has
+supported network programming. Why the GNU people added network support to
+a text processing tools is something of a mystery, however it is a useful
+feature for a data contraception attack. Here is a proof of concept
+backdoor developed in a few minutes using gawk.
+
+[------------------------------------------------------------------------]
+        #!/usr/bin/gawk -f
+
+        BEGIN {
+                Port    =       8080
+                Prompt  =       "bkd> "
+
+                Service = "/inet/tcp/" Port "/0/0"
+                while (1) {
+                        do {
+                                printf Prompt |& Service
+                                Service |& getline cmd
+                                if (cmd) {
+                                        while ((cmd |& getline) > 0)
+                                                print $0 |& Service
+                                        close(cmd)
+                                }
+                        } while (cmd != "exit")
+                        close(Service)
+                }
+        }
+[------------------------------------------------------------------------]
+
+To effectively use a script, such as the above, in an attack, the attacker
+would employ the first principle of anti-forensics. In practice, this means
+the attacker would launch the script interpretor and then copy the script
+itself to the interpretor's stdin. This prevents the script from appearing
+on the disk where it might be discovered during a forensic analysis.
+
+Using these two core principles of data contraception, the rest of this
+paper will examine some existing data contraception tools, along with the
+design and implementation of remote exec: rexec.
+
+---[ 4 - Background
+
+There are already several projects which use a data contraception
+methodology, although the terminology for data contraception is more recent
+than their development. The projects that the author is aware of are:
+MOSDEF; Core Impact, and ftrans. The first two projects are commercial
+penetration testing tools, the last is an "anti-honeypot" tool. 
+
+Core Impact implements a data contraception techinque called "syscall
+proxying". Core Impact uses an exploited process as an IUD (Intra), and a
+client which contains the attacker's "business logic". The IUD server
+executes system calls for the client and returns the result. This allows
+the attacker's code to run locally on the client system, and yet behave as
+if it were local to the remote system. According to Dave Aitel, there are
+problems with technique, mostly related to execution speed and complexities
+involving fork().
+
+As a solution to the problems he experienced implementing the Core Impact
+syscall proxying technique, Dave Aitel developed MOSDEF. MOSDEF uses an
+exploited process as an IUD (Intra), and a client which contains a
+compiler. This allows a penetration tester to build an arbitrary program
+on the client and inject it into the address space under the control of the
+IUD for execution. In this technique, the attacker's code runs on the
+remote host, however it exists only in memory. The problems with this
+technique are limitations in the size and complexity of the attacker's
+code, and all of the issues related to implementing a compiler.
+
+Unrelated to the previous two penetration testing programs, ftrans is a
+pure anti-forensics tool designed to operate in the extremely hostile
+forensic environment of a honey pot. The ftrans program uses a custom built
+server which uses SSL to copy a binary from the client into it's own
+address space. It then uses ul_exec() [grugq 2004] to execute the binary
+from a memory buffer. This technique is most similar to what this paper
+will discuss, the design and implementation of rexec.
+
+---[ 5 - Requirements
+
+With data contraception, any action which requires the creation of a file
+is to be avoided. The most common reason for requiring a file is to execute
+a binary. Building a tool which can execute an arbitrary binary on a remote
+host leaves open any number of possible implementations. The requirements
+need to be narrowed down to a manageable set using the principles of data
+contracteption. From those requirements it is then possible to develop a
+design and implementation.
+
+Firstly, the tool has to be able to run over any number of shell
+connections, so the communications protocol between the client and server
+should be ASCII text based. Using ASCII text will mean a slow protocol,
+however robustness and effectiveness, rather than speed, are critical to
+the performance of the tool in the real world.
+
+Secondly, the IUD server has to be a common Unix utility rather than a
+custom crafted tool. That way, the discovery of the server does not
+indicate that the compromised machine has been subjected to a data
+contracteption attack. Using a common utility rather than writing a custom
+tool means that the IUD server will not be intellegent in how it operates.
+Based on the preceeding requirements, its clear that the client has to be
+complex to compensate for the dumb server. This is acceptable because the
+user of a data contraception tool will have complete control over at least
+one machine.
+
+---[ 6 - Design and Implementation
+
+The core design for a data contraception tool to execute binaries on a
+remote system purely from memory is:
+
+        *) use an IUD to gain access to an address space
+        *) upload the binary to execute into memory
+        *) load the binary into an address space
+        *) transfer control of execution to the binary
+
+A library to load ELF binaries from memory into an existing address space
+already exists: ul_exec. Using ul_exec allows the tool to simply upload a
+copy of ul_exec and the binary, then transfer control to ul_exec().
+Therefore, in order to implement the data contraception tool, all that is
+required is a suitable IUD.
+
+A suitable IUD would have to be a common Unix utility which can manipulate
+registers and memory and accepts commands as text. There is one obvious
+solution: gdb. The GNU debugger uses text commands to interact with, and
+operate on, a slave child process.
+
+Using gdb as an IUD allows an attacker to be exploit agnost for
+anti-forensic attacks. After using an arbitrary exploit to gain access to a
+shell, an attacker is able to execute any binary without creating a
+forensic trace. By the same token, once an attacker has shell access to a
+host, he is able to execute an artibtrary command without leaving any
+evidence of forensic value. An IUD seperate from an exploited process
+allows an attacker to use anti-forensic attacks at any point after owning
+a box, rather than only during the initial exploitation phase.
+
+--[ 6.1 - gdbprpc
+
+To interface with gdb, a library was written which creates wrappers for the
+core functions of an IUD. These are memory and register access, and control
+over the execution of various regions of code. This library, gdbrpc,
+creates an arbitrary slave child process for an address space to
+manipulate.
+
+Each gdbrpc session is described by an abstract object: rgp_t. This object
+is created using rgp_init(), which takes a readable and writeable file
+descriptor to a pty based shell. The facilities to execute system calls and
+examine and set memory contents are encapsulated behind standardised
+function calls. For example:
+
+        int rgp_brk(rgp_t *rp, void * end_data_segment);
+        void rgp_set_addr32(rgp_t *rp, void *addr, unsigned int val);
+        unsigned int rgp_get_addr32(rgp_t *rp, void *addr);
+        void rgp_set_reg(rgp_t *rp, rgp_reg reg, unsigned int val);
+
+Copying data into and out of a slave process is accomplished using the
+functions:
+
+        void rgp_copy_to(rgp_t *rp, void *remote, void *local, size_t n);
+        void rgp_copy_from(rgp_t *rp, void *local, void *remote, size_t n);
+
+With the gdbrpc API set, it is trivial to allocate memory in a process,
+copy in arbitrary quantities of code and data, and transfer control of
+execution.
+
+--[ 6.2 - ul_exec
+
+In order for the ul_exec library to be correctly loaded into the address
+space it needs to be relocated to the load address. This is done internally
+within rexec. First, rexec allocates the space for the library in the
+remote address space with rpg_mmap(). The address of that space is then
+used to relocate an internally loaded copy of the ul_exec library, and the
+resultant relocated library is then loaded remotely.
+
+With the ul_exec library loaded in an address space, all that is required
+is creating a memory buffer containing the desired ELF binary. This is
+trivially accomplished using rgp_mmap() and rgp_copy_to().
+
+Finally, putting it all together it is possible to encapsulate the entire
+process into a single call:
+
+        int rx_execve(int fd, char *fname, int argc, char **argv);
+
+--[ 7 - Conclusion
+
+Along with the other two anti-forensic strategies, data destruction and
+data hiding, data contraception helps an attacker reduce the effectiveness
+of a forensic analysis. Data contraception attack techniques have been used
+frequently in the past, although without the articulation of the formalised
+core principlies. These two principles, operating in memory to keep data
+off the disk, and using common utilities rather than incriminating custom
+crafted tools, form the core of the data contraception strategy. A frequent
+component of data contraception attacks is an IUD, which acts as a server
+providing the client access to the operating system without altering the
+file system.
+
+A tool which implements a data contraception attack, remote exec, uses gdb
+as an IUD providing access to a slave process' address space. Accessing rexec
+requires a complex client which can gain access to a pty based shell. A tool
+to encapsulate the rexec protocol has been developed: xsh. The "eXploit
+SHell" is embedded within screen and provides a rich data contraception
+environment for penetration time anti forensic attacks.
+
+--[ 8 - Greets
+
+gera, mammon, grendel PhD, xvr, a_p, _dose, "the old man", apach3, random,
+joey, mikasoft, eugene.
+
+--[ 9 - Bibliography
+
+- grugq 2002 - The Art of Defiling: Defeating Forensic Analysis on Unix
+  https://phrack.org/issues/59/6#article
+
+- grugq 2004 - The Design and Implementation of ul_exec 
+  http://www.hcunix.net/papers/grugq_ul_exec.txt
+
+
+--[ 10 - SourceC0de
+
+|=[ EOF ]=---------------------------------------------------------------=|
+

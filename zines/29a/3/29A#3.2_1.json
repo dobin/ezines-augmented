@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "RAR and ARJ Droppers",
+  "authors": "Int13h/IKX",
+  "date": "October 28, 1998",
+  "historical_context": "This article reflects the early days of malware development, where authors shared techniques for creating droppers that could embed executable files within compressed archives.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "This article presents two 32-bit programs that act as droppers for RAR and ARJ archives. The author provides detailed assembly code and explanations for creating these droppers using API calls.",
+  "summary": "In this article, Int13h/IKX shares two programs designed to drop files into RAR and ARJ archives, respectively. The programs are written in assembly language and utilize Windows API calls to manipulate file handles and write data. The author emphasizes that the routines are based on previous tutorials, showcasing a collaborative spirit within the hacker community. The code is structured to calculate CRC32 checksums for the files being dropped, ensuring integrity and compatibility with the archive formats. The use of assembly language highlights the low-level programming skills prevalent among hackers of the time, as well as the focus on stealth and efficiency in malware design.\n\nThe article serves as both a technical guide and a historical artifact, illustrating the methods used by early malware authors to distribute malicious payloads. By providing the source code and detailed explanations, Int13h/IKX contributes to the knowledge base of the hacking community, allowing others to learn from and build upon these techniques. The emphasis on API-based programming reflects the growing complexity of malware development during this era, as hackers sought to leverage operating system features to achieve their goals."
+}

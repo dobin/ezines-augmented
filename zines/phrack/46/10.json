@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Six, File 10 of 28",
+  "title": "A Guide to Porno Boxes",
+  "authors": "Carl Corey",
+  "date": "",
+  "historical_context": "This article is one of the first discussions in Phrack about cable TV descrambling, reflecting the hacker culture's interest in circumventing commercial restrictions on media access.",
+  "target_audience": "Hackers, phreakers, and individuals interested in cable television technology and security.",
+  "short_summary": "This article provides an in-depth guide on how to create and use 'porno boxes' for descrambling cable television signals. It discusses various methods used by cable companies to prevent unauthorized access, as well as techniques for circumventing these measures.",
+  "summary": "In 'A Guide to Porno Boxes', Carl Corey explores the various methods employed by cable companies to restrict access to their services and how individuals can bypass these restrictions. The article begins with a historical overview of cable scrambling techniques, from the older trap methods to modern addressable traps. Corey explains how these systems work and the evolution of descrambling technology, including the use of sync suppression and video inversion techniques. He also touches on future technologies and the implications of digital encryption in cable services.\n\nThe article further delves into the tactics used by cable companies to detect unauthorized access, such as market codes, bullet codes, and leak detection methods. Corey provides practical advice on how to avoid detection while using modified boxes, emphasizing the risks involved with tampering. He concludes with suggestions on obtaining and modifying descrambling devices, including the use of cubes and the elusive 'HOLY GRAIL' method for restoring video signals. Overall, the article serves as a comprehensive guide for those interested in the technical aspects of cable descrambling and the ongoing battle between consumers and service providers."
+}

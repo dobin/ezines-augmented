@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 13 of 27",
+  "title": "Northern Telecom's FMT-150B/C/D Optical Fiber Digital Transmission System",
+  "authors": "FyberLyte",
+  "date": "9-93",
+  "historical_context": "This article discusses the FMT-150 fiber optic transmission system, which was relevant during the early 1990s as telecommunications began transitioning to digital systems.",
+  "target_audience": "Serious phreaks, telecommunications engineers, and security researchers interested in fiber optic technology.",
+  "short_summary": "The article provides a detailed overview of the FMT-150 optical fiber transmission system, including its components, maintenance procedures, and operational commands. It is aimed at serious phreakers and offers insights into interfacing with the system.",
+  "summary": "In this article, FyberLyte delves into the intricacies of Northern Telecom's FMT-150 optical fiber transmission system, which utilizes DM-13 multiplexers and fiber transports to facilitate high-speed digital communication. The FMT-150 is designed for various applications, including subscriber loops and interoffice links, and is presented in a compact shelf format. The author outlines the system's components, such as the maintenance control unit and service channel unit, and provides detailed specifications for interfacing with the system, including wiring diagrams and terminal configurations. This technical guide is particularly valuable for phreakers looking to understand and manipulate telecommunications equipment for their purposes.\n\nThe article also covers operational procedures, login methods, and troubleshooting tips, emphasizing the importance of understanding the system's alarms and commands. FyberLyte warns readers about the redundancy built into telecommunications systems, advising caution when attempting to interfere with them. Overall, this piece serves as a comprehensive resource for those interested in the technical aspects of fiber optic transmission systems and the potential for exploration within telecommunications infrastructure."
+}

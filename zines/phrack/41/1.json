@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Four, Issue Forty-One, File 1 of 13",
+  "title": "Phrack 41",
+  "authors": "Dispater, The Racketeer, Scott Simpson, The Cavalier, VaxBuster, Bobby Zero, Caligula XXI, Datastream Cowboy",
+  "date": "December 31, 1992",
+  "historical_context": "This issue marks the last one edited by Dispater, reflecting on the evolution of the hacking community and the challenges faced by its members.",
+  "target_audience": "Hackers, phreakers, security professionals, and those interested in hacker culture.",
+  "short_summary": "Phrack 41 features a farewell from editor Dispater, a response to community feedback, and various articles covering hacking techniques, security vulnerabilities, and profiles of notable figures in the hacking scene.",
+  "summary": "In this pivotal issue of Phrack, editor Dispater bids farewell, citing personal challenges and a waning interest in the editorial role. He reflects on the community's evolution and the importance of exposing security flaws to challenge the status quo. The issue includes a Loopback section addressing reader feedback and contributions from various authors, including The Racketeer, who continues his Network Miscellany column with insights on fake mail. The Phrack Pro-Phile section delves into the enigmatic figure of Supernigger, offering wisdom for those in the hacker scene. The issue also features technical articles on hacking AT&T's System 75, building a DMS-10 switch, and TTY spoofing, showcasing the diverse interests and skills within the hacking community. Overall, Phrack 41 serves as a reflection on the past and a look toward the future of hacking culture.",
+  "additional_notes": "This issue encapsulates the spirit of the early 90s hacker culture, emphasizing the importance of information sharing and the critique of traditional security practices."
+}

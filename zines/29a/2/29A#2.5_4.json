@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virus: Zohra",
+  "authors": "Wintermute/29A",
+  "date": "April/1997",
+  "historical_context": "This article discusses the Zohra virus, a polymorphic virus that was notable in the late 1990s for its advanced stealth techniques and payload activation on a specific date.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The Zohra virus is a polymorphic COM/EXE infector that employs advanced techniques to evade detection and has a unique payload that activates on April 14th. It features double encryption and stealth mechanisms against antivirus software.",
+  "summary": "The Zohra virus, crafted by Wintermute of the 29A group, is a sophisticated polymorphic virus that infects COM and EXE files. It utilizes a unique method of infection through the MCB (Memory Control Block) and employs a double encryption technique to obfuscate its code. The virus is designed to evade detection by antivirus software through various stealth mechanisms, including tunneling the interrupt 21h and employing anti-debugging routines. Its payload, which activates on April 14th to commemorate the anniversary of the Spanish Second Republic, is a non-destructive video effect that displays a message to the user. The article provides a detailed examination of the virus's code, including its encryption routines and the polymorphic engine that generates random decryption routines, making it a significant study for those interested in malware development and detection evasion techniques."
+}

@@ -1,0 +1,26 @@
+                              ==Phrack Magazine==
+
+                 Volume Four, Issue Forty-Three, File 11 of 27
+
+                     Help for Verifying Novell Security
+                                 Provided By
+                               Phrack Magazine
+
+In nearly a year since their release, the programs Hack.exe and View.exe
+are still potential threats to the security of Novell Networks.  Despite
+Novell's commendable response with a patch for the holes these programs
+exposed, many system administrators have not yet implemented the fix.
+
+We at Phrack encourage system administrators to uudecode and execute the
+following programs to determine whether or not their servers are at
+risk.
+
+The patches, SECUREFX.NLM for Netware 3.11, and SECUREFX.VAP for Netware
+2.2 are available via Novell's NetWire, or from ftp.novell.com.  Users
+with additional questions about Netware security can call Novell
+directly at 800-638-9273.
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+

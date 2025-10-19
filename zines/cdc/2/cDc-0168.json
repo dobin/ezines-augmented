@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Bank Fraud",
+  "authors": "White Knight",
+  "date": "07/20/1991",
+  "historical_context": "This article was published during a time when check fraud was a prevalent issue, and the methods described reflect the social engineering techniques and vulnerabilities in banking systems of the early 1990s.",
+  "target_audience": "Hackers, phreakers, and individuals interested in social engineering and financial fraud.",
+  "short_summary": "The article outlines a method for committing bank fraud using stolen checks and fake identification. It provides a step-by-step guide on how to exploit bank verification systems to cash fraudulent checks without raising suspicion.",
+  "summary": "In 'Bank Fraud', White Knight presents a detailed guide on executing a bank fraud scheme that exploits the weaknesses of check verification systems prevalent in the early 1990s. The article begins by explaining the importance of having a good fake ID and stolen checks, emphasizing that the verification systems like Telecheck do not confirm account balances, only past fraudulent activity. This loophole allows individuals to operate under the radar for a brief period after passing a bad check. The author stresses the need for careful planning, including choosing the right bank and timing the cashing of checks across multiple branches to maximize profit while minimizing risk of detection.\n\nThe method involves opening a savings account under a false identity, depositing a small amount, and then cashing checks made out to that identity at various branches. The article provides practical tips on how to avoid detection, such as using drive-up windows and disguising license plates. White Knight's writing captures the thrill of the scam while also serving as a cautionary tale about the ease with which individuals can exploit banking systems, reflecting the hacker ethos of the time that celebrated cleverness and subversion of authority."
+}

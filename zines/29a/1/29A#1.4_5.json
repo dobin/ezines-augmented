@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Trumpet WinCock",
+  "authors": "Unknown",
+  "date": "Not specified",
+  "historical_context": "This article presents an early example of a memory-resident virus, showcasing techniques that were innovative at the time.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "The article describes a novel type of computer virus, named Trumpet WinCock, which infects COM and EXE files without increasing their size. It operates by becoming memory resident and inserting itself into executable files during their execution.",
+  "summary": "Trumpet WinCock is a pioneering example of a guest infector virus that cleverly avoids traditional infection methods like appending or overwriting. Instead, it remains memory resident and searches for unused space within the target executable to insert its code, ensuring that the host file's size remains unchanged. This approach eliminates the need for stealth techniques, as the host file continues to function normally. The virus activates under specific conditions, notably when executed in March and when the seconds field of the system time equals eight, showcasing a unique payload that displays a message on the screen in a whirlwind pattern. The article includes detailed assembly code for the virus, providing insights into its operational mechanics and the methods used to infect files without detection. This technical exploration serves as a historical reference for the evolution of malware and the creativity of early virus authors."
+}

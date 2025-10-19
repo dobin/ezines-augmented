@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "HMA Residency",
+  "authors": "\"Q\" the Misanthrope",
+  "date": "",
+  "historical_context": "This article discusses the use of High Memory Area (HMA) for virus residency, a technique that emerged during the early days of personal computing, particularly with the introduction of the 80286 processor.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article provides a detailed tutorial on utilizing the High Memory Area (HMA) for storing viruses, explaining its advantages over conventional memory usage and detailing methods for enabling and hooking interrupts in the HMA.",
+  "summary": "\"HMA Residency\" by \"Q\" the Misanthrope delves into the technical intricacies of using the High Memory Area (HMA) to store viruses, a method that allows malware to evade detection by conventional memory tools. The article begins by explaining the concept of HMA, which is a 65520-byte area in memory that is not typically monitored by standard memory management tools. This makes it an ideal location for malicious code, as many antivirus programs did not initially scan this area. The author provides historical context regarding the 80286 processor and the introduction of the a20 line, which enabled access to this additional memory space. \n\nThe article further outlines various methods for enabling the a20 gate, including using HIMEM.SYS and direct control of the 8042 keyboard controller. It also covers techniques for hooking interrupts to ensure that the virus can operate effectively within the HMA. The author emphasizes the importance of understanding how to manipulate the interrupt chain and provides code snippets for various operations, demonstrating the labor-intensive process of ensuring that the virus remains functional while residing in the HMA. Ultimately, the article serves as both a technical guide and a historical reflection on early virus development techniques."
+}

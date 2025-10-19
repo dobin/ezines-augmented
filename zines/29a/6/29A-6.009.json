@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Infecting ISO CD Images",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article reflects the early 2000s era of computer viruses and malware, particularly focusing on the distribution methods via CD-ROMs, which were prevalent at the time.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in computer virus propagation techniques.",
+  "short_summary": "The article discusses methods for infecting ISO CD images, detailing the structure of CD sectors and the potential for viruses to spread through CD-ROMs. It highlights the advantages of using CD images for malware distribution and provides a technical overview of the infection process.",
+  "summary": "The article provides a comprehensive breakdown of the CD sector structure, explaining the fixed length of sectors and the differences between data track types (MODE1 and MODE2). It discusses the importance of the Table of Contents (TOC) in determining file locations within the image and the potential for infecting these images by modifying existing executables or inserting new ones. The author outlines a theoretical framework for infecting ISO images, which includes determining the image format, setting up read/write operations, and processing the TOC to identify executable files. The practical implications of this knowledge are significant for understanding how malware can be designed to exploit CD-ROM distribution methods, making it a relevant read for those interested in the history and evolution of computer security threats."
+}

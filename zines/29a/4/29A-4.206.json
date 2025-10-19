@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "New Instructions Tutorial",
+  "authors": "Qozah",
+  "date": "1999",
+  "historical_context": "This article was written during a time when new processor architectures were emerging, particularly with the introduction of the Intel Pentium Pro and the 486 series, which brought new assembly instructions that could be leveraged for more efficient coding, especially in the context of malware development.",
+  "target_audience": "Hackers, malware developers, security researchers, assembly language programmers",
+  "short_summary": "This tutorial introduces new assembly instructions available since the 486 processor, highlighting their potential applications in code optimization, polymorphism, and evasion of antivirus detection. The author provides detailed descriptions of various instructions and their uses.",
+  "summary": "In 'New Instructions Tutorial', Qozah explores the underutilized assembly instructions introduced with the 486 and Pentium Pro processors. The article emphasizes the importance of these instructions for malware developers, particularly in optimizing code and creating polymorphic engines that can evade antivirus software. Qozah provides a breakdown of several key instructions, such as BSWAP, CMPXCHG, and RDTSC, explaining their formats and practical applications in assembly programming. The tutorial serves as a guide for those looking to enhance their coding techniques using these advanced instructions, while also providing insights into how they can be used to manipulate data and improve performance in malicious software development. Overall, the article is a valuable resource for hackers and security researchers interested in the intricacies of assembly language and processor capabilities."
+}

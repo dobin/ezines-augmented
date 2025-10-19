@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Generic Polymorphic Programming",
+  "authors": "Rajaat 29A",
+  "date": "November '98",
+  "historical_context": "This article discusses advancements in virus writing techniques during the late 1990s, a time when polymorphic viruses were becoming increasingly sophisticated.",
+  "target_audience": "Hackers, virus writers, security researchers, and those interested in malware development.",
+  "short_summary": "The article explores the concept of a generic polymorphic engine that can mutate any given piece of code, enhancing the complexity and evasion capabilities of viruses. It outlines the architecture of such a system and the challenges involved in implementing it.",
+  "summary": "In 'Generic Polymorphic Programming', Rajaat 29A delves into the evolution of polymorphic engines, proposing a novel approach that allows for the generation of mutations from any input code. The article highlights the limitations of existing polymorphic engines, which typically rely on predefined rules for mutation. Instead, the author suggests a system that can take arbitrary code and produce a variety of polymorphic outputs, thereby increasing the difficulty of detection by antivirus software. This is achieved through a combination of an opcode scrambler and a polymorpher, which work in tandem to create complex, unpredictable variations of the original code.\n\nThe article also addresses the technical challenges of implementing such a system, including the need for a relocation/exclusion/resolve (RER) table to manage jumps and register handling during the morphing process. Rajaat outlines a hierarchical structure for the various modules involved in the polymorphic engine, including scramblers, mutators, shrinkers, and expanders. Each module plays a specific role in optimizing and transforming the code, ultimately leading to a more sophisticated and resilient form of malware. This exploration not only serves as a technical guide for aspiring virus writers but also provides insight into the ongoing arms race between malware developers and security professionals."
+}

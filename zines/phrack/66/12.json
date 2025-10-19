@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Alphanumeric RISC ARM Shellcode",
+  "authors": "Yves Younan (yyounan@fort-knox.org), Pieter Philippaerts (pieter@mentalis.org)",
+  "date": "Not specified",
+  "historical_context": "This article addresses the growing importance of ARM architecture in mobile devices and the associated security risks as these devices become more connected.",
+  "target_audience": "Security researchers, exploit developers, ARM architecture enthusiasts.",
+  "short_summary": "The article discusses the creation of alphanumeric shellcode for ARM architecture, detailing the ARM processor's features, addressing modes, and the challenges of writing shellcode that can bypass input validation filters.",
+  "summary": "The article begins by highlighting the significance of the ARM architecture, especially with the rise of mobile devices that utilize ARM processors. It explains that while ARM applications are susceptible to traditional attacks like buffer overflows, the unique characteristics of ARM architecture present challenges for exploit writers. The authors introduce the concept of alphanumeric shellcode, which consists solely of alphanumeric characters to evade filtering mechanisms that may block non-alphanumeric inputs. This is particularly relevant given the increasing connectivity of ARM devices, which raises the potential for exploitation.\n\nThe article delves into the specifics of the ARM architecture, including its instruction set, addressing modes, and the implications of conditional execution. It provides a comprehensive overview of how to construct alphanumeric shellcode, detailing the constraints imposed by the ARM instruction set and offering practical strategies for overcoming these challenges. The authors also discuss self-modifying code as a technique to execute non-alphanumeric instructions, emphasizing the importance of understanding the ARM instruction cache and how to manipulate it effectively. Overall, the article serves as a valuable resource for those interested in ARM exploitation techniques and the nuances of writing effective shellcode."
+}

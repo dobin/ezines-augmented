@@ -1,0 +1,14 @@
+{
+  "reference": "Volume 3, Issue 3, Phile #1 of 1",
+  "title": "DAME, Revisited",
+  "authors": "Dark Angel of Phalcon/Skism",
+  "date": "",
+  "historical_context": "This article revisits the DAME (Dark Angel's Multiple Encryptor) virus, which was previously discussed in an earlier issue of 40Hex. It reflects the ongoing development and refinement of malware techniques during the early 1990s.",
+  "target_audience": "Malware developers, security researchers, and those interested in historical hacking techniques.",
+  "short_summary": "The article presents an updated version of the DAME virus, addressing flaws from the previous release and introducing new features. It includes source code and detailed explanations of the enhancements made.",
+  "summary": "In 'DAME, Revisited', Dark Angel provides a comprehensive update to the DAME virus, correcting issues identified in its earlier version, particularly with the prefetch queue and the quality of the generated code. The article includes source code split into two files, LAME.ASM and DAME.ASM, with a clear instruction to separate them before assembly. The author acknowledges feedback from the community and critiques of the original release, showcasing a collaborative spirit in the hacker community. The new version of DAME introduces several enhancements, such as improved encryption routines, user-friendly features, and robust error handling, making it a more effective tool for malware developers. Dark Angel emphasizes the importance of understanding the underlying mechanics of the virus for both educational and practical purposes, inviting readers to explore the intricacies of the code provided.",
+  "source_code": {
+    "LAME.ASM": "Assembly code for the LAME virus demonstrating DAME's functionality.",
+    "DAME.ASM": "Source code for Dark Angel's Multiple Encryptor, detailing its features and usage."
+  }
+}

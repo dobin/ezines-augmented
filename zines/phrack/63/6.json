@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x06 of 0x14",
+  "title": "Hacking Windows CE",
+  "authors": "san <san@xfocus.org>",
+  "date": "",
+  "historical_context": "This article provides insights into the security vulnerabilities of Windows CE, an embedded operating system widely used in PDAs and mobile devices during the early 2000s. It discusses buffer overflow exploits and shellcode development specific to the ARM architecture, reflecting the growing concerns over mobile security at the time.",
+  "target_audience": "Security researchers, hackers, and developers interested in embedded systems and mobile security.",
+  "short_summary": "The article explores buffer overflow vulnerabilities in Windows CE, detailing the ARM architecture, memory management, and the development of shellcode. It provides practical examples of exploiting these vulnerabilities, emphasizing the importance of security in mobile devices.",
+  "summary": "This comprehensive article delves into the security challenges posed by Windows CE, particularly focusing on buffer overflow vulnerabilities. It begins with an overview of Windows CE and its architecture, emphasizing the ARM processor's role in embedded systems. The author explains the intricacies of memory management in Windows CE, highlighting how ROM and RAM are utilized differently compared to traditional operating systems. The article then transitions into practical exploitation techniques, detailing how to write shellcode tailored for Windows CE and how to locate API addresses within the coredll.dll. The author provides a step-by-step guide to crafting a buffer overflow exploit, demonstrating the process of manipulating the stack to gain control over the execution flow. Additionally, the article discusses the implications of these vulnerabilities in the context of mobile security, urging developers to be vigilant in their coding practices to mitigate such risks. Overall, this piece serves as both a technical guide and a cautionary tale about the evolving landscape of mobile security."
+}

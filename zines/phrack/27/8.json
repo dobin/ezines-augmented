@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 27, File 8 of 12",
+  "title": "Sending Fake Mail In Unix",
+  "authors": "Dark OverLord",
+  "date": "May 26, 1989",
+  "historical_context": "This article was published during the early days of Unix and email systems, when the understanding of email protocols and security was still developing. The ability to send fake emails was a notable technique among hackers and phreakers of the time.",
+  "target_audience": "Hackers, security professionals, Unix users",
+  "short_summary": "This article provides a shell script for sending fake emails from a Unix system. It outlines the necessary commands and parameters to manipulate email headers, demonstrating a simple yet effective method for spoofing email addresses.",
+  "summary": "In 'Sending Fake Mail In Unix', Dark OverLord presents a straightforward shell script designed to send fake emails using Unix commands. The script allows users to specify the recipient's email address, the sender's address, and the mailer host, making it a versatile tool for those looking to experiment with email spoofing. The author emphasizes the importance of understanding the underlying mechanisms of email protocols, particularly the Simple Mail Transfer Protocol (SMTP), which is leveraged in this script to send the fabricated messages.\n\nThe article serves as both a technical guide and a cautionary note, encouraging users to have fun while also advising them to stay out of trouble. By providing a practical example of how to manipulate email headers and utilize telnet to connect to a mail server, Dark OverLord not only showcases the capabilities of Unix systems but also highlights the ethical considerations surrounding such techniques. This piece remains relevant for those interested in the history of email security and the evolution of hacking practices."
+}

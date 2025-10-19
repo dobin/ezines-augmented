@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "USA Virus News",
+  "authors": "Unknown",
+  "date": "December 1991",
+  "historical_context": "This article was published during the early 1990s, a time when computer viruses were becoming increasingly prevalent and a topic of concern in the computing community.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in virus analysis.",
+  "short_summary": "The article provides an overview of various computer viruses that were notable at the time, including their characteristics and impacts on systems.",
+  "summary": "The article serves not only as a catalog of notable viruses but also as a reflection of the growing concerns around computer security. By detailing the characteristics of viruses like the Bob Ross virus and the Sunday Virus, the author highlights the need for vigilance among users and system administrators. The discussion includes insights into how these viruses spread and the implications for data integrity and system performance. Overall, 'USA Virus News' is a crucial read for anyone looking to understand the early challenges posed by malware and the foundational knowledge necessary for combating such threats."
+}

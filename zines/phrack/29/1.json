@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 29, File #1 of 12",
+  "title": "Phrack Inc. XXIX Index",
+  "authors": "Taran King, Knight Lightning",
+  "date": "November 17, 1989",
+  "historical_context": "This issue marks the fourth anniversary of Phrack Inc., a significant milestone in the hacker culture of the late 1980s.",
+  "target_audience": "Hackers, security researchers, and those interested in the history of hacking culture.",
+  "short_summary": "This index provides an overview of the articles featured in the 29th issue of Phrack Inc., including topics on electronic fund transfers, Internet protocols, and hacking techniques.",
+  "summary": "In this issue, readers can explore the second part of the 'Introduction to the Internet Protocols,' which delves into the technical aspects of networking that are essential for any aspiring hacker. The 'Network Miscellany' section focuses on Public Access Unix systems, providing insights into the landscape of accessible computing during that era. Furthermore, 'Covert Paths' discusses techniques for remaining undetected while hacking on the Internet, a topic that remains relevant in today's cybersecurity discussions. Overall, this index encapsulates the spirit of exploration and knowledge-sharing that defines Phrack Inc."
+}

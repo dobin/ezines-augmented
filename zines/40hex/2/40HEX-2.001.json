@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 2, Phile #1 of 1",
+  "title": "HOW TO GET INFECTED FILES INTO LAME BBS's",
+  "authors": "HR",
+  "date": "",
+  "historical_context": "This article reflects the early 1990s hacker culture where bulletin board systems (BBS) were popular for file sharing, including malicious software. It showcases the mindset of evading detection by system operators and antivirus tools.",
+  "target_audience": "Hackers, malware developers, and individuals interested in BBS culture.",
+  "short_summary": "The article provides a method for evading detection of infected files on BBS systems by using compression tools and hex editing techniques. It discusses how to manipulate file headers to bypass virus scanners and detection programs.",
+  "summary": "In this article, the author outlines a technique for sending infected files to bulletin board systems (BBS) without detection. The method involves compressing the infected file using tools like PKLITE or LZEXE, which alters the file's checksum and ID strings, making it less likely to be flagged by virus scanners such as SCAN or detection tools like CHK4BOMB. The author emphasizes the importance of using a hex editor to overwrite specific parts of the file header with garbage data, effectively masking the original file's identity and making it undetectable by common scanning methods.\n\nThe article also warns that while this technique can successfully deliver a virus into a system, it compromises the file's integrity, rendering it undecompressible. The author notes that any files infected by the virus will lose their encryption, indicating that this method is primarily for initial infiltration rather than long-term stealth. The article concludes with a note on the evolving nature of virus detection, mentioning that newer versions of SCAN have improved capabilities, but the described technique remains effective against certain detection methods."
+}

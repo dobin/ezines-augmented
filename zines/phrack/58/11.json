@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x0b of 0x0e",
+  "title": "HP-UX (PA-RISC 1.1) Overflows",
+  "authors": "Zhodiac <zhodiac@softhome.net>",
+  "date": "11/10/2001",
+  "historical_context": "This article was published in the early 2000s, a time when buffer overflow vulnerabilities were a significant concern in software security, particularly on less common architectures like HP-UX PA-RISC.",
+  "target_audience": "Security researchers, exploit developers, and those interested in legacy systems and buffer overflow techniques.",
+  "short_summary": "The article provides an in-depth look at buffer overflow exploitation on HP-UX PA-RISC 1.1, detailing the architecture, stack organization, and specific vulnerabilities. It includes practical examples and shellcode for exploitation.",
+  "summary": "This paper delves into the intricacies of buffer overflow exploitation on the HP-UX PA-RISC 1.1 architecture. It begins with a primer on RISC fundamentals, explaining the architecture's unique register and stack organization. The author emphasizes that while many buffer overflow documents exist, this one specifically targets the nuances of HP-UX, providing insights into how to exploit vulnerabilities effectively. The article includes a detailed examination of both leaf and non-leaf functions, illustrating how the stack grows and how this affects buffer overflow exploits. The author also discusses a specific vulnerable program and demonstrates how to control the program's flow by overwriting the return address of the strcpy() function, a critical insight for exploit developers on this platform.\n\nAdditionally, the paper presents two shellcodes: one for local exploitation and another for remote access, showcasing the author's practical approach to demonstrating the exploitation techniques discussed. The inclusion of references and greetings to fellow hackers and researchers adds a personal touch, reflecting the collaborative spirit of the hacking community at the time. Overall, this article serves as both a historical document and a technical guide for those interested in the security landscape of early 2000s computing."
+}

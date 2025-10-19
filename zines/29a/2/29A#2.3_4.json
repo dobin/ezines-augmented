@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "PE Write Section",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1997",
+  "historical_context": "This article is from the late 1990s, a time when the understanding of the Portable Executable (PE) format was crucial for reverse engineering and malware analysis. The utility discussed is a practical tool for modifying PE files, which was particularly relevant for hackers and security researchers at the time.",
+  "target_audience": "Hackers, security professionals, reverse engineers.",
+  "short_summary": "The article introduces PEWRSEC, a utility for modifying the write permissions of sections in Portable Executable (PE) files. Unlike existing tools, PEWRSEC can be compiled easily and is designed for quick access to modify PE files without the overhead of large dependencies.",
+  "summary": "In this article, Jacky Qwerty presents PEWRSEC, a utility designed to set the write bit for sections in PE files. This functionality is particularly useful for those working with first-generation samples where write access to the code section is necessary. The author contrasts PEWRSEC with EDITBIN, a tool from the SDK that requires large DLL dependencies, highlighting the simplicity and efficiency of PEWRSEC, which can be compiled as a straightforward COM file. The utility allows users to specify a section name or defaults to the code section, making it versatile for various use cases in PE file manipulation.\n\nThe article includes a detailed explanation of the PE file structure, including the DOS header, NT headers, and section headers, providing readers with the necessary context to understand how PEWRSEC operates. The code snippet showcases the implementation of the utility, emphasizing its ability to read, modify, and write back the PE file structure. This practical tool remains relevant for those interested in reverse engineering and malware analysis, as it simplifies the process of modifying executable files, a common task in the field of security research."
+}

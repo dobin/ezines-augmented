@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win32 Viral Networking Overview",
+  "authors": "GriYo / 29A",
+  "date": "1999/06/06",
+  "historical_context": "This article was written during the rise of computer viruses and worms, particularly in the Windows environment, highlighting the techniques used for virus propagation over networks.",
+  "target_audience": "Hackers, security researchers, malware analysts.",
+  "short_summary": "The article provides an in-depth look at various techniques for creating and propagating Win32 viruses over local and wide area networks, including the use of threading, email propagation, and socket programming.",
+  "summary": "In 'Win32 Viral Networking Overview', GriYo delves into the intricacies of virus creation and propagation within the Win32 environment. The article begins by discussing the fundamental operations of a virus, emphasizing the need for stealth and speed in executing network functions to avoid detection. It outlines various methods for executing network operations, such as creating new processes or threads, and highlights the advantages and disadvantages of each approach. The author also explores local area networks (LANs) as fertile ground for rapid infection, detailing techniques for enumerating drives and exploiting network connections to spread malware effectively. \n\nThe article further extends its focus to the Internet, presenting strategies for email-based virus propagation using MAPI and custom SMTP engines. GriYo provides code snippets demonstrating how to build and send emails with attachments, emphasizing the importance of stealth in crafting messages that appear legitimate. Additionally, the article discusses the use of Winsock for socket programming, enabling the virus to connect to servers, send commands, and even establish remote control capabilities. Overall, this comprehensive overview serves as a technical guide for understanding the mechanics of viral networking, showcasing the creativity and technical prowess of malware developers in the late 1990s."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 28, File #10 of 12",
+  "title": "Grand Jury Indicts Student For Crippling Nationwide Computer Network",
+  "authors": "John Markoff",
+  "date": "October 7, 1989",
+  "historical_context": "This article discusses the indictment of Robert Tappan Morris, the creator of the first computer worm, which caused significant disruption to a nationwide network in 1988. This case marked a pivotal moment in the legal landscape surrounding computer crimes.",
+  "target_audience": "Security professionals, hackers, computer scientists, legal experts",
+  "short_summary": "The article covers the indictment of Robert Tappan Morris for creating a computer worm that disrupted a national network. It highlights the legal implications of computer crimes and the challenges of prosecuting such cases under existing laws.",
+  "summary": "The article provides a detailed account of the events leading to Morris's indictment, including the technical aspects of the worm's operation and the legal challenges faced by prosecutors. It discusses the implications of the case for future computer crime legislation, as well as the broader societal concerns regarding computer security. Legal experts debated the necessity of a strong response to deter similar incidents, while some argued that Morris's actions highlighted the vulnerabilities in the nation's computer systems. The article serves as a critical reflection on the intersection of technology, law, and ethics in the context of computer security, making it a relevant read for anyone interested in the history of hacking and cybersecurity legislation."
+}

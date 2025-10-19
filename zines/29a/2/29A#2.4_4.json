@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Zombie.1922",
+  "authors": "Z0MBiE, Igor Daniloff",
+  "date": "1997",
+  "historical_context": "This article discusses the Zombie.1922 virus, a notable DOS virus that utilizes advanced techniques for its time, including ShadowRAM, making it difficult to detect and remove.",
+  "target_audience": "Security professionals, malware analysts, and enthusiasts of computer virus history.",
+  "short_summary": "Zombie.1922 is a destructive resident encrypted virus that operates independently after being created by Win95.Z0MBiE. It uses ShadowRAM to remain resident in memory, making it difficult to eradicate through conventional means.",
+  "summary": "The Zombie.1922 virus is a significant development in the realm of malware, being the first to employ ShadowRAM technology to maintain its presence in system memory. Once activated by the Win95.Z0MBiE virus, it drops a file named ZSetUP.EXE in the root directory of infected drives. Upon execution, the virus attempts to write to ShadowRAM, effectively locking its code and making it inaccessible through standard methods. This innovative approach allows the virus to evade detection and removal, as it can only be accessed during its infection routines triggered by specific interrupts (Int 13h and Int 21h). The article details the virus's infection mechanism, which includes modifying the original Int 13h handler to redirect control to its own code, thereby infecting executable files as they are accessed. Furthermore, it highlights the virus's ability to obscure the presence of certain files, rendering them invisible to the operating system by altering their attributes.",
+  "additional_notes": "The article includes technical details on compiling the virus code and its operational mechanics, making it a valuable resource for those studying malware development and detection techniques."
+}

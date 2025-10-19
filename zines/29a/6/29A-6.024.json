@@ -1,0 +1,25 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #6 of 11",
+      "title": "Impersonation, your friend.",
+      "authors": "Ratter/29A",
+      "date": "",
+      "historical_context": "This article reflects the early understanding of Windows security mechanisms and the exploitation of impersonation techniques, which remain relevant in discussions of privilege escalation.",
+      "target_audience": "Hackers, security professionals, malware developers.",
+      "short_summary": "The article discusses the concept of impersonation in Windows, detailing how a non-admin user can execute actions with admin privileges by leveraging specific Windows API functions.",
+      "summary": "In this article, Ratter/29A introduces the concept of impersonation within the Windows operating system, explaining how it allows a thread to execute with different security credentials than those of the process that owns it. The author outlines the necessary privileges required for impersonation, including SeTcbPrivilege and SeAssignPrimaryTokenPrivilege, and provides code snippets demonstrating how to check if a process is running under an admin account, log in as an admin user, and create processes under an impersonated security context. The article emphasizes the power of impersonation for executing administrative tasks while running under a standard user account, highlighting its potential for malicious use if combined with techniques like trojan horses to capture admin passwords.",
+      "closing": "Ratter concludes by noting the potency of impersonation as a technique, while also pointing out that the security of such methods heavily relies on the strength of user passwords."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #7 of 11",
+      "title": "Gaining important datas from PEB under NT boxes.",
+      "authors": "Ratter/29A",
+      "date": "",
+      "historical_context": "This article showcases early techniques for extracting information from the Process Environment Block (PEB) in Windows, which is crucial for understanding the operating system's internals and is still relevant for reverse engineering.",
+      "target_audience": "Hackers, reverse engineers, malware developers.",
+      "short_summary": "The article explains how to access and utilize the Process Environment Block (PEB) and Thread Environment Block (TEB) in Windows to extract useful information about processes and their environment.",
+      "summary": "Ratter/29A delves into the structures of the Thread Environment Block (TEB) and Process Environment Block (PEB) in Windows NT, illustrating their significance in accessing critical process information. The article provides detailed code snippets to demonstrate how to differentiate between Windows operating system families based on PEB addresses, retrieve the base address of kernel32.dll, and obtain the current directory from the RTL_USER_PROCESS_PARAMETERS structure. By exploring these structures, the author encourages readers to engage in reverse engineering to uncover further insights into the Windows API and its interactions with these data structures. Ratter concludes by urging readers to continue exploring the PEB and TEB for more valuable information, emphasizing the importance of understanding these components in the context of system security and malware development."
+    }
+  ]
+}

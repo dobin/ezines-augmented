@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x02 of 0x11",
+  "title": "Phrack Prophile on pipacs",
+  "authors": "pipacs",
+  "date": "Not specified",
+  "historical_context": "This article provides insights into the life and work of pipacs, a member of the PaX Team, known for their contributions to security enhancements in operating systems.",
+  "target_audience": "Security researchers, hackers, and those interested in operating system security.",
+  "short_summary": "This article profiles pipacs, a key figure in the PaX Team, detailing their journey through computer security, their work on PaX, and thoughts on the future of security enhancements.",
+  "summary": "The article presents a detailed profile of pipacs, a prominent member of the PaX Team, who has been involved in security research for over 15 years. It chronicles their early experiences with computers behind the Iron Curtain, their journey into low-level programming, and the development of the PaX project, which aims to enhance the security of operating systems. Pipacs reflects on their motivations, the challenges faced during the development of PaX, and the decision to release it as open-source software, emphasizing the importance of community and collaboration in security research.\n\nPipacs also shares insights into the future of security enhancements, predicting an increase in kernel and hypervisor-level protections, as well as the need for more robust client-side security measures. They express concerns about the evolving landscape of the underground hacking community and the barriers to entry for new hackers, while also advocating for the preservation of independent thought and exploration in security research. Overall, this article serves as both a personal narrative and a commentary on the state of computer security, making it a valuable read for anyone interested in the history and future of hacking and security practices."
+}

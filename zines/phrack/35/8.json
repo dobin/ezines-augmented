@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-five, File 8 of 13",
+  "title": "A Beginners Guide to Novell Netware 386",
+  "authors": "The Butler",
+  "date": "Not specified",
+  "historical_context": "This article provides foundational knowledge about Novell Netware, a popular network operating system during the early 1990s, which was widely used in corporate environments.",
+  "target_audience": "Network administrators, IT professionals, and individuals interested in understanding Novell Netware.",
+  "short_summary": "This guide introduces Novell Netware 386, covering basic concepts, terminology, and security practices. It details network setup variations, user rights, and common utilities, making it a practical resource for beginners.",
+  "summary": "The article serves as a comprehensive introduction to Novell Netware 386, aimed at users with some prior knowledge of networking. It outlines the fundamental components of a Netware network, including file servers, workstations, and the Netware operating system itself. The guide emphasizes the importance of understanding network setups, which can vary significantly between installations, and introduces essential terminology such as bindery, console, and login scripts. The author also discusses the structure of the Netware environment, detailing directories and their purposes, which is crucial for effective network management.\n\nIn addition to foundational knowledge, the article addresses security concerns, highlighting potential vulnerabilities in the system. It explains how to disable password encryption, which could allow unauthorized access to sensitive information. The guide also mentions specific tools and programs that can assist in network management and security, such as THIEFNOV and NETCRACK, which are designed for capturing usernames and passwords. Overall, this article is a valuable resource for anyone looking to understand the intricacies of Novell Netware and its operational environment."
+}

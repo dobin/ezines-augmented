@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "TBSCAN.SIG Infection",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article discusses techniques for modifying antivirus signature files, specifically focusing on TBSCAN.SIG, which was relevant during the early days of malware development and antivirus software.",
+  "target_audience": "Malware researchers, security professionals, and hackers interested in virus creation and detection evasion techniques.",
+  "short_summary": "The article provides a detailed guide on how to modify the TBSCAN.SIG file used by the TBAV antivirus software to insert custom detection routines for polymorphic viruses. It includes technical specifications and a sample program for creating these modifications.",
+  "summary": "In 'TBSCAN.SIG Infection', the author delves into the inner workings of the TBSCAN.SIG file, which is utilized by the TBAV antivirus software to detect viruses. The article explains the structure of the signature file, including the header and the placement of AVRs (Antivirus Routines) that allow for the detection of polymorphic viruses. The author provides a step-by-step guide on how to trojanize the TBSCAN.SIG file by inserting custom AVR code, which can be used to evade detection by the antivirus software. This is particularly relevant for those studying malware development and antivirus evasion techniques.\n\nThe article also includes a Pascal program named IAVR, which automates the process of modifying the TBSCAN.SIG file. The program allows users to insert their own AVR code and associate it with a virus name. The author emphasizes the importance of understanding the AVR code structure, including how to encrypt the new code and update the signature file's header accordingly. This technical insight into malware creation and the manipulation of antivirus detection mechanisms provides valuable knowledge for security researchers and hackers alike."
+}

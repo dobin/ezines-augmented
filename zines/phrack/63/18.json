@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x12 of 0x14",
+  "title": "hiding processes  ( understanding the linux scheduler )",
+  "authors": "ubra from PHI Group",
+  "date": "17 October 2004",
+  "historical_context": "This article discusses techniques for hiding processes in Linux, reflecting the growing sophistication of rootkits and kernel-level manipulation techniques in the early 2000s.",
+  "target_audience": "hackers, security researchers, kernel developers",
+  "short_summary": "The article explores methods for hiding processes in Linux by manipulating the kernel scheduler and task structures. It covers various techniques, including unlinking processes from task lists and altering process IDs.",
+  "summary": "In this article, ubra from the PHI Group delves into the intricacies of the Linux scheduler and the methods hackers can employ to hide processes from system monitoring tools. The author begins by discussing the evolution of process hiding techniques, moving from simple name changes to more complex kernel manipulations. The article provides a detailed examination of the Linux kernel's task structures and scheduling mechanisms, highlighting how processes can be made invisible by unlinking them from the linked list and hash tables used by the kernel. Techniques such as zeroing out process IDs and modifying the scheduler to bypass checks are also discussed, showcasing the author's deep understanding of kernel internals.\n\nThe article is not just theoretical; it includes practical code examples and methods for implementing these techniques, making it a valuable resource for those interested in kernel hacking and process manipulation. Additionally, it addresses countermeasures that can be taken to detect hidden processes, emphasizing the ongoing cat-and-mouse game between attackers and defenders in the realm of computer security. Overall, this piece serves as both a historical document and a technical guide for understanding the complexities of process management in Linux."
+}

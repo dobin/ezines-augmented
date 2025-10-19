@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #4 of 9",
+  "title": "The Reality of the Myth",
+  "authors": "Taran King",
+  "date": "",
+  "historical_context": "This article discusses the REMOBS system, a remote observation tool used in telecommunications, which was often misunderstood in hacker culture.",
+  "target_audience": "Hackers, telecommunications professionals, security researchers",
+  "short_summary": "The article clarifies misconceptions surrounding the REMOBS system, detailing its features, capabilities, and operational mechanics in monitoring telecommunications networks.",
+  "summary": "In 'The Reality of the Myth', Taran King delves into the REMOBS (Remote Observation System) manufactured by Teltone, dispelling common myths and misconceptions about its functionality. The REMOBS system is designed for the impartial evaluation of equipment and employee performance by monitoring subscriber lines and various types of trunks within a telecommunications network. It boasts compatibility with multiple switching systems and can observe up to 500 circuits simultaneously through its remote terminals and observer consoles. The system is not merely a simple dial-up tool; it offers a comprehensive monitoring solution that provides both visual and audible information about call progress and circuit status.\n\nKing emphasizes the technical intricacies of the REMOBS system, explaining how it operates through a network of remote terminals and central consoles. The article highlights the system's ability to provide detailed statistics and service level indices, which are crucial for maintaining quality in telecommunications. By contrasting REMOBS with other systems like 4Tel, King illustrates the unique capabilities of REMOBS, reinforcing its significance in the realm of telecommunications monitoring and the importance of understanding its true nature in hacker culture."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Seven, File 9 of 14",
+  "title": "THE COMPUSERVE CASE",
+  "authors": "Mike Godwin, Danny Weitzner",
+  "date": "October 29, 1991",
+  "historical_context": "This article discusses a landmark legal case that set important precedents for online service providers regarding liability for user-generated content, which is particularly relevant in the context of the evolving internet landscape of the early 1990s.",
+  "target_audience": "Legal professionals, online service providers, digital rights advocates, and those interested in First Amendment issues.",
+  "short_summary": "The article analyzes the Cubby, Inc. v. CompuServe case, which established that online service providers are not liable for defamatory content posted by users. This decision is significant for First Amendment protections in the digital age.",
+  "summary": "In the landmark case of Cubby, Inc. v. CompuServe, the court ruled that CompuServe should not be held liable for defamatory statements made by a third-party user in a forum it hosted. The decision draws a crucial distinction between publishers, who are expected to review content prior to publication, and service providers like CompuServe, which function more like bookstores that do not pre-screen materials. This ruling is pivotal as it aligns with First Amendment protections, suggesting that imposing liability on online services could inhibit free expression and the dissemination of information. \n\nThe article further emphasizes that the implications of this case extend beyond defamation to obscenity law, reinforcing the notion that service providers should not be burdened with the responsibility of monitoring user-generated content. By establishing a standard of liability based on knowledge of defamatory content, the ruling provides clarity for sysops and online service providers regarding their legal obligations. This case is a foundational moment in the ongoing discourse about free speech and responsibility in the digital realm."
+}

@@ -1,0 +1,20 @@
+{
+  "reference": "Volume Three, Issue Thirty-Three, File 12 of 13",
+  "title": "Legion of Doom Goes Corporate",
+  "authors": "Michael Alexander",
+  "date": "June 24, 1991",
+  "historical_context": "This article discusses the transition of members of the notorious hacker group Legion of Doom into legitimate business, reflecting the evolving perception of hackers in the early 1990s.",
+  "target_audience": "Hackers, security professionals, and those interested in hacker culture history.",
+  "short_summary": "The article covers the founding of Comsec Data Security by former members of the Legion of Doom, highlighting their efforts to shift from hacking to providing security services for corporations, amidst skepticism from the industry.",
+  "summary": "In this article, Michael Alexander details the transformation of three members of the infamous Legion of Doom into legitimate business owners with the establishment of Comsec Data Security, Inc. The founders, including Scott Chasin (Doc Holiday), aim to leverage their extensive knowledge of hacking to help corporations bolster their security measures. They offer services such as penetration testing and security audits, claiming to possess insights into hacker motivations that traditional security firms lack. Despite their intentions, the article reveals a significant skepticism from the corporate world regarding the credibility of former hackers as security consultants. Industry experts express concerns about hiring individuals with a history of hacking, questioning their reliability and ethical standing in the security field. The article captures the tension between the hacker community and corporate America during a pivotal time in the evolution of computer security.",
+  "additional_articles": [
+    {
+      "title": "An Offer You Could Refuse?",
+      "summary": "Tom Peletier, a security specialist, expresses his reluctance to hire Comsec Data Security, while Chris Goggans offers a free penetration test to prove their legitimacy."
+    },
+    {
+      "title": "Group Dupes Security Experts",
+      "summary": "Comsec Data Security successfully uses social engineering tactics to gather sensitive information from security consultants, raising ethical concerns in the industry."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x43, Phile #0x09 of 0x10",
+  "title": "A Eulogy for Format Strings",
+  "authors": "Captain Planet",
+  "date": "",
+  "historical_context": "This article discusses the decline of format string vulnerabilities in the context of modern security mechanisms like glibc's FORTIFY_SOURCE, reflecting on the past when such vulnerabilities were rampant.",
+  "target_audience": "Hackers, security researchers, and those interested in exploitation techniques.",
+  "short_summary": "The article explores the evolution of format string vulnerabilities, detailing the protective measures introduced by glibc's FORTIFY_SOURCE and how they can be bypassed. It includes practical examples of exploitation, particularly focusing on a real-world vulnerability in CUPS.",
+  "summary": "In 'A Eulogy for Format Strings', Captain Planet reflects on the once-prevalent format string vulnerabilities that allowed attackers to exploit both read and write primitives in applications. With the introduction of glibc's FORTIFY_SOURCE, these vulnerabilities have been significantly mitigated, as the patch prevents format strings containing the %n specifier from being located in writable memory areas and enforces stricter argument consumption rules. However, the author argues that these protections are more of a nuisance than a complete solution, as they do not entirely eliminate the potential for information leaks or exploitation. \n\nThe article provides a detailed examination of how to bypass these protections, using a combination of integer overflows and careful manipulation of stack memory. It illustrates these techniques through a dummy program and a real-world exploit targeting the CUPS lppasswd utility, which was found to be vulnerable due to its use of user-defined locales. The author concludes with a call to action for the hacking community to continue exploring these vulnerabilities, despite the challenges posed by modern security measures."
+}

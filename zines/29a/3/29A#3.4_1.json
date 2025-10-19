@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "[BONK] Resident NE infector",
+  "authors": "Vecna",
+  "date": "1998",
+  "historical_context": "This article discusses a virus targeting Windows 3.1x, a significant platform during the late 1990s. It reflects the early days of malware development and the techniques used by virus authors.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the design and functionality of a resident New Exe (NE) virus for Windows 3.1x. It explains how the virus infects executable files and remains memory resident, utilizing DPMI calls to bypass Windows mediation.",
+  "summary": "Vecna's article serves as a technical manual for understanding the inner workings of a resident NE virus. It meticulously describes the steps taken by the virus to infect a host file, including the use of DPMI calls to allocate memory and the manipulation of executable headers to embed the virus code. The virus is designed to remain memory resident, allowing it to intercept file executions and further propagate itself. The author provides assembly code snippets that illustrate the virus's functionality, making the article a rich resource for malware researchers and security professionals interested in the historical context of virus development and the techniques that were prevalent during the late 1990s."
+}

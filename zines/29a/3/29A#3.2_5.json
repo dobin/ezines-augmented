@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The VxDCall backdoor",
+  "authors": "GriYo / 29A",
+  "date": "Not specified",
+  "historical_context": "This article discusses techniques for exploiting the VxDCall API in Windows 95/98, a significant topic in the context of early Windows security vulnerabilities and malware development.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article explores the VxDCall API in Windows 95/98, detailing how it can be exploited for creating backdoors and viruses. It covers the transition from user mode to supervisor mode, the functionality of VxD's, and specific techniques for manipulating memory and system calls.",
+  "summary": "In 'The VxDCall backdoor', GriYo delves into the intricacies of Windows 95/98's VxDCall API, which allows user applications to access services running at the highest privilege level (ring-0). The article begins by explaining the distinction between user mode and supervisor mode, emphasizing the challenges malware faces when operating under user mode restrictions. GriYo outlines several methods for achieving ring-0 access, including exploiting vulnerabilities and utilizing existing VxD files. The core of the article focuses on the undocumented VxDCall API, which serves as a bridge between user applications and VxD services, enabling powerful operations that can be leveraged for malicious purposes.\n\nThe author provides detailed examples of how to use VxDCall to manipulate memory and system calls, including allocating shared memory and hooking into system interrupts. By tracing calls to KERNEL32.DLL and examining the services exported by system VxD's, GriYo illustrates how a virus can monitor file access and perform stealth operations. The article concludes with a demonstration of the HPS virus, showcasing practical applications of the discussed techniques. This work serves as a critical resource for understanding early Windows security flaws and the methods used by malware authors to exploit them."
+}

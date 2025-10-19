@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 4, Phile #4 of 11",
+  "title": "CheckAv PD War Collection Program 3",
+  "authors": "Dark Angel",
+  "date": "",
+  "historical_context": "This article is part of the early hacking culture where tools for virus detection and manipulation were being shared among enthusiasts. The use of PKZIP and similar utilities reflects the software environment of the early 1990s.",
+  "target_audience": "Hackers, security researchers, and enthusiasts interested in early virus detection methods.",
+  "short_summary": "The article introduces CheckAv, a simple program designed to log serial numbers from files using PKZIP and related utilities. While not sophisticated, it serves a practical purpose in the realm of virus detection.",
+  "summary": "In this article, Dark Angel presents CheckAv, a basic utility aimed at logging serial numbers from files. The program utilizes PKZIP and PKUNZIP to compress and decompress test files, specifically targeting the logging of serial numbers for virus detection. Although the program is described as crude and hastily developed, it provides a glimpse into the tools available for virus analysis during the early days of computer security. The author suggests running the program in a RAM disk for improved performance, highlighting practical considerations for users at the time.\n\nThe CheckAv program reflects the ongoing battle against viruses and malware, a concern that was becoming increasingly relevant in the early 1990s. By sharing such tools, the hacking community fostered a collaborative environment where knowledge and resources were exchanged freely. This article serves as a historical artifact, showcasing the evolution of security tools and the mindset of early hackers who were navigating the complexities of computer security."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0f, Issue 0x45, Phile #0x09 of 0x10",
+  "title": "Modern Objective-C Exploitation Techniques",
+  "authors": "nemo",
+  "date": "Not specified",
+  "historical_context": "This article builds on previous work published in Phrack 0x42, focusing on modern exploitation techniques for Objective-C vulnerabilities.",
+  "target_audience": "Security researchers, exploit developers, and those interested in Objective-C memory corruption vulnerabilities.",
+  "short_summary": "The article discusses advanced techniques for exploiting Objective-C vulnerabilities, particularly focusing on memory corruption and method call manipulation. It covers both 32-bit and 64-bit exploitation strategies, including the use of dangling method calls and ROP chains.",
+  "summary": "In this comprehensive exploration of Objective-C exploitation techniques, the author nemo delves into the evolution of exploitation methods, emphasizing the need to adapt to modern memory protection mechanisms like NX and ASLR. The paper revisits the concept of dangling Objective-C method calls, detailing how attackers can manipulate the ISA pointer to control execution flow. It provides a detailed breakdown of the exploitation process for both 32-bit and 64-bit architectures, highlighting the differences in runtime behavior and memory layout. The author illustrates how to create fake caches and utilize ROP chains to bypass security measures, ultimately demonstrating the potential for executing arbitrary code through carefully crafted exploits.\n\nThe article also introduces the concept of tagged pointers and their implications for exploitation, showcasing how they can be leveraged to create information leaks or control execution paths. By providing practical examples and code snippets, the author equips readers with the knowledge necessary to understand and potentially exploit vulnerabilities in Objective-C applications. The discussion of blocks and their unique properties further enriches the content, making it a valuable resource for those looking to deepen their understanding of Objective-C exploitation techniques."
+}

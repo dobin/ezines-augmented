@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "In-Memory PE EXE Execution",
+  "authors": "Unknown",
+  "date": "Not specified",
+  "historical_context": "This article reflects early techniques in malware development and evasion strategies, particularly relevant during the rise of remote exploitation methods in the late 1990s.",
+  "target_audience": "Hackers, security researchers, malware analysts",
+  "short_summary": "The article discusses a method for executing PE (Portable Executable) files in memory to avoid detection. It outlines the use of encryption for secure transfer and describes the InMem Client, which facilitates this execution without leaving traces on disk.",
+  "summary": "In this article, the author presents a technique for executing PE files directly in memory to minimize the risk of detection by security tools. The approach involves encrypting the executable during transfer to a remote machine and using a specialized client, InMem Client, to handle the execution. This method is particularly useful for malicious actors who wish to maintain stealth while performing operations on compromised systems. The author emphasizes the importance of avoiding disk writes, as these can be analyzed post-exploitation, potentially revealing the presence of malicious software.",
+  "summary_details": "The InMem Client connects to a ZFTP server to download the main PE executable and executes it within its own process context. This method allows the executable to remain in memory, thus reducing the chances of it being discovered through traditional file system analysis. The article also highlights potential pitfalls, such as memory dumps and debugging tools that could expose the in-memory executable. The author provides a brief guide on testing the InMem Client, illustrating its functionality and the unique way it processes PE structures, which may not be compatible with all executables. Overall, this article serves as a technical exploration of stealth techniques in the realm of remote exploitation."
+}

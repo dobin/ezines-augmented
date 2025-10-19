@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Five, File 23 of 28",
+  "title": "AN INTRODUCTION TO OCTELS AUTOMATIC SPEECH EXCHANGE NETWORK",
+  "authors": "OPTIK NERVE",
+  "date": "",
+  "historical_context": "This article provides an overview of the ASPEN system, a voice processing technology relevant to telecommunications and PBX systems, during a time when such technologies were evolving rapidly.",
+  "target_audience": "Telecommunications engineers, hackers interested in voice processing systems, security professionals.",
+  "short_summary": "This article introduces the Automatic Speech Exchange Network (ASPEN), detailing its hardware components and operational processes. It serves as a foundational overview for understanding how ASPEN systems function within telecommunications.",
+  "summary": "The article by OPTIK NERVE presents a comprehensive introduction to the Automatic Speech Exchange Network (ASPEN), a sophisticated voice processing system that integrates with various PBX and Central Office equipment. It details the system's architecture, including the main components such as the CPU board, line boards, and telephone interface cards (TICs). Each component's role is explained, emphasizing the communication protocols and data handling processes that enable ASPEN to manage voice calls efficiently. The article also outlines the call processing sequence, illustrating how incoming calls are handled, voice prompts are delivered, and messages are recorded and stored. Although the author clarifies that the information is not intended for illegal use, it caters to those with a keen interest in telecommunications technology and its inner workings. The article concludes with a nod to the hacker community, inviting further exploration into the nuances of telco systems."
+}

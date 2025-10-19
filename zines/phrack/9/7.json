@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Nine, Phile #7 of 10",
+  "title": "A Multi-User Chat Program for DEC-10s",
+  "authors": "TTY-Man, +++The Mentor+++",
+  "date": "October 6th, 1986",
+  "historical_context": "This article reflects the early days of computer networking and communication, particularly on DEC-10 systems, which were prevalent in academic and research environments during the 1980s.",
+  "target_audience": "Hackers, programmers, and enthusiasts of vintage computing.",
+  "short_summary": "The article presents a multi-user chat program designed for DEC-10 systems, enabling users to communicate more conveniently than traditional methods. It includes detailed instructions on how to set up and use the program effectively.",
+  "summary": "In this article, TTY-Man introduces a multi-user chat program tailored for DEC-10 systems, addressing the lack of user-friendly communication tools available on these machines compared to their VAX counterparts. The program utilizes the MIC file type, allowing users to initiate a chat conference by specifying terminal numbers of participants. The author provides a step-by-step guide on how to implement the program, including commands for sending messages, listing connected users, and managing chat sessions. Notably, the program includes features to mute annoying users and even a recursive MIC function that can send repeated messages to a specified terminal, showcasing the playful yet disruptive potential of early hacking culture.\n\nThe article serves as both a practical guide and a reflection of the hacker ethos of the time, emphasizing creativity and resourcefulness in overcoming technical limitations. It invites readers to experiment with the program and encourages a sense of community among users, while also playfully acknowledging the potential interest from law enforcement. Overall, this piece is a fascinating glimpse into the early days of online communication and the innovative spirit of the hacker community."
+}

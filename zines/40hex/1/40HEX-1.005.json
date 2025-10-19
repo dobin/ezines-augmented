@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 1, Phile #1 of 1",
+  "title": "1992 VIRUS",
+  "authors": "SKISM",
+  "date": "1992",
+  "historical_context": "This article discusses one of the early computer viruses, marking a significant moment in the history of malware as it showcases the evolution of virus design and behavior.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of computer history.",
+  "short_summary": "The article introduces the 1992 virus, a non-resident DOS virus that infects EXE files in a specific directory structure and displays a colorful message at the end of each month.",
+  "summary": "The 1992 virus, crafted by SKISM, represents an early example of malware that specifically targets DOS systems. It operates by infecting executable files located in the second directory from the root, demonstrating a methodical approach to spreading through directory structures. The virus is designed to be non-resident, meaning it does not remain in memory after execution, which was a common characteristic of early viruses. Instead, it infects files sequentially, ensuring that it jumps from directory to directory until it finds an uninfected EXE file to compromise. This behavior highlights the virus's strategic design aimed at maximizing its reach within the filesystem.\n\nAdditionally, the virus features a unique graphical display that activates on the last Friday of each month, showcasing a full-color message to users. This not only serves as a signature of the virus but also as a psychological tactic to instill fear or curiosity among users. The article provides the necessary code to create the virus, reflecting the hacker culture of the time, where sharing such information was common among enthusiasts. Overall, the 1992 virus is a notable entry in the history of computer security, illustrating the early days of malware development and the ongoing battle between security measures and malicious software."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 19 of 27",
+  "title": "Northern Telecom Meridian SL-1",
+  "authors": "Iceman",
+  "date": "",
+  "historical_context": "This article provides insights into the Meridian SL-1 switches developed by Northern Telecom, which were widely used in business communications during the late 20th century.",
+  "target_audience": "Hackers, telecommunications professionals, security researchers.",
+  "short_summary": "This article introduces the Northern Telecom Meridian SL-1 switches, detailing their history, technical specifications, and programming methods. It serves as a guide for those interested in understanding and potentially exploiting these systems.",
+  "summary": "The article begins with an overview of the Northern Telecom Meridian SL-1, a digital PBX system designed for business communications. Developed in the early 1970s, the SL-1 was engineered to be a versatile and cost-effective solution for managing up to 7600 stations. The author explains the architecture of the SL-1, which consists of common equipment, peripheral equipment, and power supplies, emphasizing its digital switching capabilities and various features such as call waiting, direct inward dialing, and remote administration. The SL-1's ability to conduct audio digitally and its reliance on overlay programs for configuration are also highlighted.\n\nIceman provides detailed instructions on how to access and program the SL-1 system, including the necessary login procedures and the use of overlay programs to modify system settings. The article serves as both a historical document and a practical guide for security researchers and hackers interested in telecommunications systems. It underscores the importance of understanding legacy systems like the SL-1, which may still be in use today, and the potential for exploiting vulnerabilities within them."
+}

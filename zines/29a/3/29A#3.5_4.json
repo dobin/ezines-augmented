@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "KUARAHY Virus",
+  "authors": "Int13h of IKX Virus Group",
+  "date": "Not specified",
+  "historical_context": "The KUARAHY virus is a notable example of early malware that targeted DOS systems, showcasing the creativity and technical prowess of virus authors during the late 1980s and early 1990s.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The KUARAHY virus is a multipartite malware that infects various file types including COM, EXE, ARJ, and RAR. It employs stealth techniques and has a unique payload that activates on specific dates.",
+  "summary": "The KUARAHY virus, developed by Int13h of the IKX Virus Group, is a sophisticated multipartite malware capable of infecting multiple file types such as COM, EXE, ARJ, and RAR. This virus operates by dropping itself in an encrypted form within infected files and utilizes advanced techniques like tunneling and stealth to evade detection by antivirus software. It hooks into the DOS interrupt 21h to manipulate file operations and can infect the Master Boot Record (MBR) directly, showcasing its capability to spread across different storage mediums. The virus also features a payload that activates on the 13th day of the month, altering the default text mode character set and formatting an extra track on floppy disks, which adds a layer of mischief to its functionality.\n\nThe technical implementation of KUARAHY is notable for its use of encryption and various infection strategies, including direct writing to hard disk ports and the ability to delete antivirus checksum files. The virus is designed to be resilient against certain antivirus measures, such as those employed by CPAV, and includes routines to ensure its persistence in memory. This article serves as a historical document reflecting the ingenuity of early virus authors and the ongoing cat-and-mouse game between malware creators and security professionals."
+}

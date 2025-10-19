@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Lizard",
+  "authors": "Reptile/29A",
+  "date": "Not specified",
+  "historical_context": "This article discusses a Windows 95 virus that utilizes a VxD (Virtual Device Driver) to infect executable files, showcasing early malware techniques.",
+  "target_audience": "Malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the creation of an encrypted VxD DOS executable infector for Windows 95, which employs anti-heuristic techniques to evade detection by antivirus software.",
+  "summary": "In this article, Reptile/29A presents 'Lizard', an encrypted VxD direct action DOS executable infector designed for Windows 95. The virus operates by decrypting itself upon execution, dropping a VxD file into one of three system directories, and hooking into the V86 interrupt chain to infect all DOS executables in the current directory. The author emphasizes the virus's high infectivity and its ability to evade detection by popular antivirus programs of the time, such as Findvirus and AVP, due to its anti-heuristic measures. The article includes detailed assembly code snippets that illustrate the virus's functionality and installation process, providing insights into the technical aspects of malware development during the era of Windows 95.",
+  "additional_notes": "The article also contains playful remarks and acknowledgments to fellow hackers, reflecting the culture of collaboration and competition within the hacker community."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x06 of 0x12",
+  "title": "Defeating Forensic Analysis on Unix",
+  "authors": "the grugq <grugq@anti-forensics.com>",
+  "date": "Not specified",
+  "historical_context": "This article is part of the Phrack hacking ezine, which has been influential in hacker culture and computer security discussions since its inception. It addresses the growing field of digital forensics and the corresponding rise of anti-forensics techniques.",
+  "target_audience": "Hackers, security professionals, digital forensic analysts.",
+  "short_summary": "The article discusses anti-forensics techniques aimed at thwarting digital forensic investigations on Unix systems, particularly focusing on the ext2 file system. It introduces tools and methodologies for data hiding and destruction, highlighting vulnerabilities in forensic tools.",
+  "summary": "The article begins by outlining the principles of digital forensics and the need for anti-forensics strategies to counteract forensic investigations. It emphasizes the importance of understanding Unix file systems, particularly the ext2 file system, to effectively implement anti-forensic techniques. The author presents various methods for hiding and destroying data, including the use of the Defiler's Toolkit, which provides tools like necrofile and klismafile for erasing evidence from inodes and directory entries. The article also critiques existing forensic tools, pointing out their flaws and vulnerabilities that can be exploited by anti-forensics agents. The discussion culminates in a call for the security community to develop better tools to combat these anti-forensic techniques, emphasizing the need for proactive measures in digital investigations."
+}

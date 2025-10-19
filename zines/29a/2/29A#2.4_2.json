@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Dementia.4207",
+  "authors": "Darkman/29A",
+  "date": "1993",
+  "historical_context": "This article discusses a parasitic virus that infects COM, EXE, and ZIP files, showcasing techniques that were prevalent in early computer virus development.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "Dementia.4207 is a 4207-byte parasitic virus that infects COM, EXE, and ZIP files by appending itself to them. It employs a unique method of file infection and includes an error handler and encryption.",
+  "summary": "Dementia.4207 is a sophisticated 4207-byte parasitic virus that targets COM, EXE, and ZIP files. The virus operates by hooking into the INT 21h interrupt, allowing it to infect files upon execution or opening. It appends its code to the end of the infected files and can also infect ZIP archives by parsing the internal ZIP format directly, rather than relying on external utilities like PKZIP or PKUNZIP. This method allows it to remain stealthy and effective in spreading without detection.\n\nThe virus includes a mechanism to search for specific files listed in a REQUEST.IVA file, encrypting and saving them into a RECEIPT.IVA file within the ZIP archive. It utilizes a 16-bit XOR encryption method for its payload, which adds a layer of complexity to its detection and analysis. The article provides detailed assembly code for the virus, illustrating its functionality and the techniques used in its design, making it a valuable resource for those studying malware development and computer security."
+}

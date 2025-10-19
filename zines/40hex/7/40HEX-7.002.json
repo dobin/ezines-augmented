@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 3, Phile #2 of 11",
+  "title": "Code Concealment",
+  "authors": "Demogorgon/PHALCON/SKISM",
+  "date": "",
+  "historical_context": "This article is part of a series on code protection techniques, reflecting the concerns of programmers in the early 1990s about software piracy and reverse engineering.",
+  "target_audience": "Hackers, programmers, security professionals",
+  "short_summary": "The article discusses various techniques for concealing code from debuggers, including manipulating interrupt handlers and the prefetch queue to prevent tracing and reverse engineering.",
+  "summary": "The article serves as a guide for programmers looking to protect their software from reverse engineering and debugging. By leveraging low-level programming techniques, such as interrupt handling and prefetch manipulation, the author provides readers with tools to enhance the security of their code. The discussion is technical and assumes familiarity with assembly language and debugging concepts, making it particularly relevant for those involved in software development and security research. The insights shared in this article remain applicable today as software protection continues to be a critical concern in the digital landscape."
+}

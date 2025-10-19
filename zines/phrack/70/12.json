@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x10, Issue 0x46, Phile #0x0c of 0x0f",
+  "title": "The Bear in the Arena",
+  "authors": "xerub",
+  "date": "2021",
+  "historical_context": "This article not only documents a specific vulnerability but also serves as a case study in the evolution of exploit techniques and the ongoing challenges in securing complex software systems.",
+  "target_audience": "Security researchers, exploit developers, and those interested in ASN.1 vulnerabilities.",
+  "short_summary": "The article dissects CVE-2016-1950, detailing the ASN.1 parser's vulnerabilities in Mozilla NSS used by Apple products. It covers exploit techniques, memory management issues, and the implications of these vulnerabilities in real-world scenarios.",
+  "summary": "In 'The Bear in the Arena', the author xerub provides an in-depth analysis of CVE-2016-1950, a memory corruption vulnerability in the ASN.1 parser of Mozilla NSS, which affects various Apple products. The article begins with an introduction to ASN.1 and its encoding rules, particularly focusing on BER (Basic Encoding Rules). It then delves into the specifics of the vulnerability, detailing how the ASN.1 decoder's memory allocator can lead to out-of-bounds writes and potential code execution. The author meticulously outlines the exploit techniques, including the manipulation of the state machine and the use of crafted ASN.1 structures to achieve arbitrary code execution in affected daemons. The discussion emphasizes the importance of understanding memory management and the pitfalls of using arena allocators in security-sensitive contexts. The article concludes by reflecting on the lessons learned from the vulnerability and the broader implications for software security."
+}

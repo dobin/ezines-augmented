@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Back to the Binary: Revisiting Similarities of Android Apps",
+  "authors": "Jakob Bleier & Martina Lindorfer",
+  "date": "2025",
+  "short_summary": "This article revisits the concept of app similarity in Android applications, focusing on the challenges posed by modern optimizations and obfuscation techniques. The authors propose a new method for analyzing app binaries to calculate similarities, leveraging tools like BinDiff and providing a proof of concept for faster analysis.",
+  "summary": "In this article, Bleier and Lindorfer explore the evolution of Android app development and the implications for detecting app similarities. They highlight the challenges introduced by optimizations and obfuscation techniques that make traditional similarity detection tools ineffective. The authors discuss the historical context of app development, from the early days of Java and Dalvik to the current state with ART and OAT files. They emphasize the need for a new approach that treats apps as binaries rather than relying on bytecode, which has become increasingly complex and obfuscated over time.\n\nThe authors present a proof of concept that demonstrates how to convert APKs into binary ELF files and use these for similarity calculations. They detail the process of using tools like BinDiff to analyze app binaries, providing insights into how this method can uncover similarities between apps, including potential clones and malicious variants. The article concludes with a discussion on the future of app similarity detection, emphasizing the need for scalable solutions that can keep pace with the rapid evolution of Android applications."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 28, File #4 of 12",
+  "title": "Network Miscellany",
+  "authors": "Taran King",
+  "date": "June 1, 1989",
+  "historical_context": "This article provides insights into the early days of electronic mail systems and networking, highlighting various services and their interconnections during a time when the internet was still in its infancy.",
+  "target_audience": "Hackers, network engineers, security professionals, and anyone interested in the history of computer networking.",
+  "short_summary": "The article discusses various electronic mail systems and their interconnections, including AT&T Mail, CMR, CompuServe, and others. It provides details on how to use these services, their costs, and the technical specifications for sending messages across different networks.",
+  "summary": "In 'Network Miscellany', Taran King explores the landscape of electronic mail systems in 1989, detailing how various services like AT&T Mail, CMR, and CompuServe operate and interconnect. The article outlines the complexities of sending messages across different networks, including the costs associated with international mail and the technical requirements for addressing messages correctly. King emphasizes the importance of understanding these systems for effective communication in a rapidly evolving digital landscape.\n\nThe piece serves as a guide for users navigating the intricacies of early electronic mail, providing practical examples of how to format addresses and utilize gateways. It highlights the challenges faced by users, such as the costs incurred for international messaging and the need for proper routing through various nodes. Overall, this article is a valuable snapshot of the networking environment of the late 1980s, showcasing the foundational technologies that paved the way for modern email systems."
+}

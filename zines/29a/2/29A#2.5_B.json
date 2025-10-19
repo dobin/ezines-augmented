@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "RedCode Virus",
+  "authors": "Wintermute/29A",
+  "date": "Not specified",
+  "historical_context": "This article discusses the creation of a virus inspired by the CoreWars game, reflecting the hacker culture of the late 90s and early 2000s.",
+  "target_audience": "Hackers, virus writers, security researchers",
+  "short_summary": "The article details the creation of the RedCode virus, which simulates a game of CoreWars on a computer. It includes a destructive payload but allows users to avoid damage. The virus is described as a 'joke virus' with humorous elements.",
+  "summary": "In this article, Wintermute introduces the RedCode virus, a playful yet destructive piece of malware inspired by the CoreWars programming game. The virus operates as a TSR (Terminate and Stay Resident) COM infector, infecting files upon closing and disinfecting them upon opening. The payload is designed to create a visual game-like experience on the user's screen, where two programs battle against each other, reminiscent of the CoreWars concept. Users can avoid damage by not pressing 'enter' when prompted, showcasing a blend of humor and technical prowess in its design.\n\nThe article also delves into the technical aspects of the virus, including its infection mechanism, payload execution, and self-disinfection capabilities. It highlights the author's intention to create a light-hearted virus that, while destructive, offers users a chance to escape its effects. The writing reflects the hacker ethos of the time, combining technical skill with a playful attitude towards malware development, making it a noteworthy read for those interested in the history of computer viruses and hacker culture."
+}

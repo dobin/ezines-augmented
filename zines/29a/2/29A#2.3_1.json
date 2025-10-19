@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "PE infection under Win32",
+  "authors": "Mister Sandman, Jacky Qwerty, GriYo",
+  "date": "",
+  "historical_context": "This article marks a significant shift in the evolution of computer viruses, focusing on the transition from DOS to Windows 95 and NT, highlighting the emergence of 32-bit viruses.",
+  "target_audience": "Hackers, virus coders, security researchers",
+  "short_summary": "The article provides a theoretical tutorial on writing 32-bit viruses for Windows platforms, emphasizing the importance of using APIs and introducing the '29A technique' for PE file infection.",
+  "summary": "In 'PE infection under Win32', the authors explore the evolution of computer viruses as they adapt to new operating systems, particularly the transition from DOS to Windows 95 and NT. The article introduces the '29A technique', a method for writing compatible 32-bit viruses that utilize APIs, which are crucial for ensuring that the viruses can operate across different Windows platforms. The authors argue that while Windows 95 may be seen as inferior, it serves as a testing ground for new viral techniques. They emphasize the importance of API usage to maintain compatibility and avoid reliance on outdated DOS functions.\n\nThe tutorial delves into key concepts such as locating KERNEL32.dll, using the GetModuleHandle and GetProcAddress APIs to dynamically access functions, and employing file mapping for easier PE file manipulation. The authors present a more sophisticated method for infecting PE files by appending viral code to the last section of the PE header, making detection more challenging. They also hint at advanced techniques like Structure Exception Handling (SEH) and polymorphism, which will be elaborated in future issues. Overall, this article serves as a foundational guide for those interested in the emerging field of 32-bit virus development."
+}

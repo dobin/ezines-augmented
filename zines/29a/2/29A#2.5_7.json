@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Orgasmatron",
+  "authors": "Vecna/29A",
+  "date": "",
+  "historical_context": "This article discusses the development of the Orgasmatron boot virus, notable for being the first to utilize 386+ protected mode features, marking a significant advancement in virus technology during the early 1990s.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "The Orgasmatron is a pioneering boot virus that operates in protected mode without hooking the traditional interrupt 13h, making it stealthier and more advanced than its predecessors. It infects floppy and hard drives by manipulating hardware debug breakpoints.",
+  "summary": "The Orgasmatron virus, created by Vecna/29A, represents a significant leap in boot virus technology by leveraging the protected mode features of 386+ processors. Unlike traditional boot viruses that hook interrupt 13h to infect systems, Orgasmatron hooks interrupt 1 and uses interrupt 8 to monitor changes, allowing it to stealthily infect systems without detection. This approach not only enhances its stealth capabilities but also ensures compatibility with various floppy sizes and hard drives by storing the original boot sector in a way that allows it to be restored later. \n\nThe article details the technical workings of the virus, including how it checks for compatible hardware and manages debug breakpoints to avoid detection by debuggers and other software. The use of hardware debug breakpoints is particularly noteworthy, as it allows the virus to operate without interference from common debugging tools, making it a formidable piece of malware for its time. Overall, Orgasmatron is a crucial study for anyone interested in the evolution of computer viruses and the techniques used to evade detection."
+}

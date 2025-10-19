@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x10, Issue 0x47, Phile #0x0A of 0x11",
+  "title": "Allocating new exploits",
+  "authors": "r3tr074",
+  "date": "2024",
+  "short_summary": "This article delves into exploiting a heap overflow vulnerability in the Blink engine of Chromium-based browsers, focusing on the intricacies of memory allocation and exploitation techniques.",
+  "summary": "The article explores a heap overflow vulnerability (CVE-2024-1283) in the Blink engine, specifically when decoding BMP images. It provides a detailed analysis of the Chromium rendering engine and the PartitionAlloc memory allocator, highlighting how to transform a restricted bug into arbitrary code execution. The author discusses the exploitation process, including the use of advanced techniques like 'double-free2arbitrary-allocation' and 'cross-bucket overflow', which can weaponize seemingly minor bugs. The article emphasizes the importance of understanding memory allocator behavior in high-performance software like browsers, where security measures can be bypassed once memory corruption is achieved.\n\nThe author meticulously breaks down the exploitation steps, from identifying the vulnerability to crafting a payload that manipulates memory layout and control flow. By leveraging the characteristics of PartitionAlloc, the article illustrates how to create a stable memory layout for exploitation, demonstrating the potential for arbitrary code execution through careful manipulation of JavaScript objects and memory allocation patterns. This comprehensive guide serves as a crucial resource for security researchers and exploit developers interested in modern browser vulnerabilities."
+}

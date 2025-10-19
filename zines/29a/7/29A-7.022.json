@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The ELF Virus Writing HOWTO",
+  "authors": "Bartolich",
+  "date": "",
+  "historical_context": "This article is part of the early exploration of Linux executable formats and the burgeoning interest in virus creation during the late 1990s.",
+  "target_audience": "hackers, malware researchers, security professionals",
+  "short_summary": "This article provides a comprehensive guide on writing ELF (Executable and Linkable Format) viruses, detailing the necessary steps and considerations for creating malicious software on Linux systems.",
+  "summary": "In 'The ELF Virus Writing HOWTO', Bartolich delves into the intricacies of crafting viruses specifically for the ELF format, which is prevalent in Linux operating systems. The article outlines the foundational knowledge required, including an understanding of the ELF structure, assembly language, and the Linux operating system's behavior. It serves as a technical manual for those interested in the mechanics of virus creation, emphasizing the importance of ethical considerations and the potential consequences of such activities. The guide is not just a how-to but also a reflection on the hacker ethos of the time, encouraging readers to explore the boundaries of software manipulation while being mindful of the legal implications involved in creating and distributing malware. The article is a significant piece for anyone studying the evolution of malware in the Linux environment and the hacker culture surrounding it."
+}

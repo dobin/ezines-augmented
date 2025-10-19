@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 2, Issue 2, File 000",
+  "title": "40 Hex Mag Issue 6",
+  "authors": "GHeap",
+  "date": "April 1992",
+  "historical_context": "This issue reflects the early 1990s hacker culture, particularly the burgeoning interest in computer viruses and the community's response to criticism from within and outside the virus scene.",
+  "target_audience": "Hackers, virus programmers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "This issue of 40 Hex includes a variety of articles focused on computer viruses, including methods for finding anti-viral programs, code concealing techniques, and a spotlight on the Creeping Death virus. It also addresses community dynamics and criticisms faced by the magazine's contributors.",
+  "summary": "In this April 1992 issue of 40 Hex, the editor, GHeap, welcomes readers and encourages newcomers to explore earlier issues for foundational knowledge. The magazine features a Virus Spotlite on the Creeping Death virus, which is presented in a fully commented format, diverging from the usual Hex Dump style. The issue also discusses the temporary downtime of the Landfill system and addresses recent criticisms from members of the virus community, emphasizing that the magazine does not endorse all methods discussed in its articles. Instead, it aims to educate aspiring virus programmers and hackers.",
+  "summary_details": "The issue contains several articles, including 'Finding anti-viral programs in memory' and 'Code Concealing: Part I,' which delve into practical techniques for virus programmers. The article 'NoLite Utility' simplifies the process of handling infected files, while 'The Truth Behind Virus Scanners' critiques the effectiveness of existing virus detection tools. Additionally, the magazine provides updates on legal issues faced by virus authors and highlights notable incidents involving virus-related busts. Overall, this issue serves as both an educational resource and a commentary on the evolving landscape of computer viruses and the hacker community's response to external pressures."
+}

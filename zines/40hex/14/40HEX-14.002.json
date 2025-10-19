@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #2 of 11",
+  "title": "KILLSMEG",
+  "authors": "Stormbringer of Phalcon/Skism",
+  "date": "1994",
+  "historical_context": "This article discusses the KILLSMEG program, an update to an earlier virus detection and disinfection tool, KILLQUEEG. It reflects the early 1990s landscape of computer viruses and the need for effective antivirus solutions.",
+  "target_audience": "Security professionals, virus researchers, and hobbyist programmers interested in antivirus development.",
+  "short_summary": "KILLSMEG is a utility designed to detect and disinfect the SMEG viruses, specifically Pathogen and Queeg. The article details the program's functionality, including its detection methods and limitations.",
+  "summary": "KILLSMEG is a command-line utility created to address the shortcomings of its predecessor, KILLQUEEG, which struggled with the SMEG.Pathogen virus. This updated tool effectively scans and disinfects both SMEG viruses, providing a reliable solution for users facing these threats. The program operates by checking file timestamps, identifying executable formats, and tracing program execution to detect infections. Users are prompted to disinfect infected files, although the disinfection process may leave residual data due to the way the viruses pad their host files.\n\nThe article emphasizes the importance of using the program with caution, as the author disclaims any liability for potential damage. It also highlights the lack of existing shareware or freeware capable of handling these polymorphic viruses at the time, showcasing the need for community-driven solutions in the evolving landscape of computer security. The source code is provided, allowing users to examine and modify the program as needed, which was a common practice in the hacker culture of the era."
+}

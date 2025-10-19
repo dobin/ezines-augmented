@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x03 of 0x12",
+  "title": "Line Noise",
+  "authors": "phrackstaff",
+  "date": "",
+  "short_summary": "This article serves as an addendum to a previous piece on configuring Cisco IOS for SSH. It discusses the updates in SSH support within IOS, the vulnerabilities of SSH protocol version 1, and provides a detailed configuration guide for setting up SSH on Cisco routers.",
+  "summary": "In this article, the authors address the need for an addendum to their earlier work on building bastion routers using Cisco IOS, specifically focusing on the implementation of SSH. With the release of IOS version 12.1(1)T, SSH support has expanded to most platforms, but the authors caution that users may need to upgrade their hardware. They emphasize the importance of using the 3DES version of SSH due to the vulnerabilities associated with the older DES encryption. The article outlines the steps required to configure SSH on Cisco routers, including setting the hostname and domain name, generating RSA keys, and disabling TELNET access to enhance security. The authors also highlight the limitations of Cisco's SSH implementation, particularly its reliance on the outdated SSH protocol version 1, which is known to have multiple vulnerabilities. They recommend using IPsec as an alternative for secure communications, given Cisco's lack of plans to support SSH protocol version 2.",
+  "historical_context": "This article reflects the state of network security practices in the early 2000s, particularly regarding the adoption of SSH for secure remote access to network devices. It highlights the transition from older security protocols to more robust solutions as the security landscape evolved.",
+  "target_audience": "Network administrators, security professionals, and hackers interested in network security and Cisco IOS configurations."
+}

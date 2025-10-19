@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Random Decoding Algorithm Engine demo",
+  "authors": "Darkman/29A",
+  "date": "Not specified",
+  "historical_context": "This article showcases an early example of a COM virus, illustrating the techniques used in malware development during the late 1980s and early 1990s.",
+  "target_audience": "Hackers, malware researchers, security professionals",
+  "short_summary": "The article presents a demonstration of a COM virus called the Random Decoding Algorithm Engine (RDAE), which infects files in the current directory and utilizes a random decoding algorithm for encryption and decryption.",
+  "summary": "The Random Decoding Algorithm Engine demo is a compact 866-byte COM virus that infects executable files in the current directory. It employs a unique Random Decoding Algorithm Engine (RDAE) version 1.00, which features an error handler and a destructive payload. The virus is designed to append itself to other files, showcasing the techniques of file infection and payload delivery common in early malware. The article provides detailed assembly code, demonstrating how the virus operates, including its methods for file handling and infection logic.\n\nThe RDAE utilizes a series of encryption and decryption algorithms, allowing it to obfuscate its code and evade detection. The author outlines the calling parameters and various encryption levels, ranging from low security with high speed to the highest security with the lowest speed. This article serves as a historical reference for understanding the evolution of malware techniques and the mindset of early hackers, providing insights into the methods used to create and deploy malicious software."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Virus: V.6000 (aka NoKernel aka Mammoth.6000)",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "historical_context": "This article discusses a highly sophisticated virus from the early 1990s, notable for its polymorphic and stealth capabilities.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The V.6000 virus is a dangerous polymorphic and multipartite malware that can remain resident after a cold reboot, posing significant risks to systems. It features advanced evasion techniques and can infect both hard drives and floppy disks.",
+  "summary": "The V.6000 virus, also known as NoKernel or Mammoth.6000, is a sophisticated piece of malware that showcases advanced techniques for evasion and persistence. It is polymorphic, meaning it can change its code to avoid detection by antivirus software. This virus is multipartite, capable of infecting both executable files and the Master Boot Record (MBR) of hard drives. One of its most alarming features is its ability to remain resident in memory even after a system reboot, allowing it to execute its payload without needing to be reloaded from disk. The virus employs tunneling techniques to bypass security measures, making it particularly dangerous for users and organizations alike.\n\nThe article provides a detailed assembly code analysis of the virus, outlining its structure and the methods it uses to infect systems. It discusses the virus's ability to manipulate CMOS settings and its stealth capabilities, which allow it to hide its presence from users and security software. The technical depth of the article makes it a valuable resource for security researchers looking to understand the evolution of malware and the techniques employed by early viruses. Overall, the V.6000 virus serves as a historical example of the challenges faced in computer security during the early days of widespread personal computing."
+}

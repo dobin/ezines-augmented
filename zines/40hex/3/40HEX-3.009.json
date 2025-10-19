@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Tiny-F Virus",
+  "authors": "Dark Angel",
+  "date": "10-19-91",
+  "historical_context": "This article discusses the development of the Tiny-F virus, a notable example of early computer viruses during the early 1990s, a time when malware was becoming increasingly sophisticated.",
+  "target_audience": "hackers, malware researchers, security professionals",
+  "short_summary": "The Tiny-F virus is an evolution of the earlier Tiny-B virus, showcasing improved encryption and infection techniques. Authored by Dark Angel, it highlights the ongoing development in virus creation during the early 90s.",
+  "summary": "In this article, Dark Angel presents the Tiny-F virus, a refined version of the previously introduced Tiny-B virus. After initial struggles, Psyco-genius handed over the project to Dark Angel, who implemented significant modifications to enhance its functionality. The article includes the complete assembly code for the virus, which demonstrates a more efficient encryption mechanism compared to its predecessor. The Tiny-F virus is designed to infect .COM files, utilizing a stealthy approach to evade detection while executing its payload.",
+  "summary_details": "The Tiny-F virus operates by first encrypting its code and then searching for .COM files to infect. The code includes routines for file handling, encryption, and infection logic, showcasing techniques such as direct DOS interrupts for file operations. Dark Angel emphasizes the importance of compact code and efficient resource management, which were critical for the virus's stealth and effectiveness. The article serves as both a technical guide for aspiring virus writers and a historical document reflecting the hacker culture of the time, where the creation and sharing of malware were seen as a form of digital art and challenge."
+}

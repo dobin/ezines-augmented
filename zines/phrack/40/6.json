@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty, File 6 of 14",
+  "title": "Cellular Telephony Part II",
+  "authors": "Brian Oblivion",
+  "date": "June 1, 1992",
+  "historical_context": "This article is part of a series that explores the technical aspects of cellular telephony, a burgeoning technology in the early 1990s.",
+  "target_audience": "Hackers, security professionals, telecommunications enthusiasts",
+  "short_summary": "This article delves into the call processing sequences for both land-originated and mobile-originated calls in cellular networks, detailing the signaling formats and technical specifications involved.",
+  "summary": "In this second part of the series on cellular telephony, Brian Oblivion provides an in-depth examination of the call processing sequences for both land-originated and mobile-originated calls. The article outlines the intricate signaling formats that govern how mobile units interact with cell sites and the Mobile Telephone Switching Office (MTSO). Oblivion emphasizes the importance of understanding these processes for anyone interested in the technical workings of cellular networks, as they form the backbone of mobile communication. The detailed descriptions of the sequences highlight the complexity and precision required in modern telecommunications, showcasing the standards set by industry bodies like EIA/TIA and the FCC.\n\nThe article also discusses frequency allocations for wireline and non-wireline systems, explaining how different carriers utilize specific slices of the electromagnetic spectrum. Oblivion provides a comprehensive overview of the data streams used in cellular communication, including the encoding methods and the significance of control channels. This technical exposition not only serves as a guide for hobbyists monitoring cellular communications but also sheds light on the evolution of mobile technology, making it a relevant read for those interested in the history and future of telecommunications."
+}

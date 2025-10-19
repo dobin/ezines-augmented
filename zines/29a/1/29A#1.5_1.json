@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Torero",
+  "authors": "Mister Sandman/29A",
+  "date": "",
+  "historical_context": "This article discusses a novel virus technique during the early days of computer viruses, showcasing the creativity and technical prowess of hackers in the late 1980s.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in historical virus development techniques.",
+  "short_summary": "The article introduces 'Torero', a simple virus that utilizes an innovative technique to store the original header of infected files in unused bytes of the directory entry, complicating disinfection efforts.",
+  "summary": "In 'Torero', Mister Sandman presents a novel viral technique that aims to enhance the stealth and resilience of computer viruses against antivirus software. Unlike traditional viruses that embed their code directly into infected files, Torero cleverly stores the original file header in ten unused bytes within the directory entry. This approach complicates the disinfection process, as antivirus companies would need to develop specific routines to target this unique storage method. The article emphasizes the importance of stealth in virus design, highlighting how this technique could evade detection by conventional antivirus measures.\n\nThe author also discusses the limitations of this method, noting that any manipulation of the infected file—such as copying or compressing—would alter the directory entry, making it impossible to restore the original header. To add a touch of humor, the virus displays a message stating, 'This program requires Microsoft Windows' if the original header cannot be found. The article concludes with technical details on compiling the virus, showcasing the author's technical expertise and the playful spirit of hacker culture at the time."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 24, File 4 of 13",
+  "title": "Beyond Bitnet Lies Infinity",
+  "authors": "Knight Lightning",
+  "date": "February 12, 1989",
+  "historical_context": "This article is part of 'The Future Transcendent Saga' and provides insights into the early networks that formed the backbone of the internet.",
+  "target_audience": "Hackers, network enthusiasts, security professionals, and historians of technology.",
+  "short_summary": "This article serves as a directory of various networks beyond Bitnet, including ARPANET, MILNET, and NSFnet, detailing their functionalities and historical significance.",
+  "summary": "In 'Beyond Bitnet Lies Infinity', Knight Lightning presents a comprehensive overview of several key networks that were operational in the late 1980s, including ARPANET, MILNET, and NSFnet. The article outlines the origins and purposes of these networks, emphasizing their roles in government and academic research. It highlights the technological advancements that enabled these networks to function, such as the TCP/IP protocols and the various services they provided, including remote login and file transfer. The author notes the limitations of ARPANET, which was restricted to government and research use, contrasting it with the more open nature of networks like CSNET and UUCP.\n\nThe article also touches on the evolution of these networks, discussing the transition from older protocols to TCP/IP and the implications for future networking. Lightning's narrative is infused with a sense of wonder about the potential of these interconnected systems, suggesting that the future of networking is limitless. This piece not only serves as a historical document but also as a reflection on the foundational technologies that would shape the internet as we know it today."
+}

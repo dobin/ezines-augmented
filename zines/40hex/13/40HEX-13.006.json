@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 4, Issue 1, Phile #6 of 11",
+  "title": "Shifting Objective Virus 3.0",
+  "authors": "Stormbringer [Phalcon/Skism]",
+  "date": "1994",
+  "historical_context": "This article discusses a novel approach to virus creation during the early days of computer viruses, showcasing techniques that were innovative for the time.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article presents the Shifting Objective Virus 3.0, a memory-resident virus that infects .OBJ files. It details the virus's mechanism of infection and provides assembly code for implementation.",
+  "summary": "In 'Shifting Objective Virus 3.0', Stormbringer introduces a sophisticated memory-resident virus that targets .OBJ files, allowing it to evade detection by traditional antivirus software. The virus operates by manipulating the memory layout of the infected files, shifting the original code to accommodate its own insertion at the beginning of the file. This clever technique ensures that when the host file is executed, the virus remains undetected while still being able to execute its payload. The article includes detailed assembly code that illustrates the virus's functionality, including how it hooks into system interrupts to maintain its presence in memory and infect other files during execution. \n\nThe author also provides insights into the structure of .OBJ files, explaining how the virus modifies key fields to ensure successful infection and execution. The technical depth of the article makes it a valuable resource for those studying malware development and the evolution of computer viruses. Stormbringer acknowledges contributions from peers in the viral community, highlighting the collaborative nature of early hacking culture."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 1, Phile #1 of 5",
+  "title": "40H Vmag",
+  "authors": "Hellraiser, Bionic Slasher",
+  "date": "1992",
+  "historical_context": "This article is part of the early hacker culture that explored virus creation and modification, reflecting the mindset of the time when computer viruses were becoming more prevalent.",
+  "target_audience": "Hackers, virus developers, security researchers",
+  "short_summary": "This zine provides practical examples and code for writing computer viruses, including techniques for modifying them to evade detection by antivirus software.",
+  "summary": "40H Vmag serves as a gritty introduction to the world of virus creation, aimed at those who are unafraid of the implications of their work. The zine includes a variety of topics, such as the 'Tiny virus' and methods for modifying existing viruses to bypass antivirus scans. It emphasizes a hands-on approach, encouraging readers to compile and experiment with the provided code. The tone is unapologetic, addressing those who may be hesitant about the ethical implications of virus development. The zine also touches on encryption techniques and specific viruses like 'Leprosy-B', showcasing the technical depth and creativity involved in virus programming during the early 1990s. Overall, it reflects a rebellious spirit and a desire to push the boundaries of computer security."
+}

@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Five, Issue Forty-Six, File 4 of 28",
+  "title": "Old Shit That Still Works",
+  "authors": "Various",
+  "date": "July 1994",
+  "short_summary": "This article discusses various security vulnerabilities in UNIX systems and provides code snippets to exploit them. It serves as a reminder of the importance of security awareness and the need for system administrators to patch known vulnerabilities.",
+  "summary": "The article 'Old Shit That Still Works' presents a collection of UNIX security vulnerabilities that, despite being well-known, remain exploitable due to lack of proper patching or awareness. It includes detailed descriptions of various exploits, such as the vulnerabilities in the 'autoreply' and 'lpr' commands, which allow unauthorized users to gain root access or overwrite critical system files. The author emphasizes the importance of understanding these vulnerabilities for both ethical hacking and system administration purposes.\n\nAdditionally, the article provides practical code snippets that demonstrate how these vulnerabilities can be exploited. For instance, it outlines how to manipulate the 'autoreply' command to create root-owned files and how to exploit the 'lpr' command to overwrite sensitive files like '/etc/passwd'. The tone is both instructional and cautionary, reminding readers that while knowledge of these exploits can be used for malicious purposes, it is crucial for security professionals to understand them to better protect systems against such attacks."
+}

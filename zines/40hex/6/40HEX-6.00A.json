@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 2, Phile #6 of 11",
+  "title": "Creeping Death Virus Analysis",
+  "authors": "Dark Angel, GHeap",
+  "date": "1991",
+  "historical_context": "This article discusses one of the early computer viruses, 'Creeping Death', which was notable for its complexity and the emerging culture of virus creation during the early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in virus development.",
+  "short_summary": "The article provides an in-depth analysis of the 'Creeping Death' virus, including its functionality and the challenges faced in understanding its source code. Dark Angel's commentary highlights the dedication involved in dissecting the virus.",
+  "summary": "In this article, the author presents a detailed examination of the 'Creeping Death' virus, a notable creation from VirusSoft Corp. The analysis reveals the intricate workings of the virus, which is designed to infect DOS systems. The source code, while lacking comments, is meticulously annotated by Dark Angel, who expresses a deep admiration for the virus's design and functionality. The article emphasizes the challenges of understanding such complex malware, particularly when the original code is poorly documented. Dark Angel's passion for the subject shines through, as he dedicates significant time to dissecting the virus's operations and implications for system security.\n\nThe article serves as both a technical breakdown and a cultural commentary on the hacker community's fascination with virus creation during the early 1990s. It reflects the growing interest in malware analysis and the ethical considerations surrounding the development and dissemination of such software. The insights provided are valuable for anyone looking to understand the evolution of computer viruses and the mindset of early hackers who contributed to this field."
+}

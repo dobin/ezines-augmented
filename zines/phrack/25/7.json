@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 25, File 7 of 11",
+  "title": "The Blue Box And Ma Bell",
+  "authors": "The Noid",
+  "date": "",
+  "historical_context": "This article discusses the Blue Box technology used for phone phreaking during the era before the breakup of AT&T, highlighting the underground culture of making free and untraceable calls.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts, and security professionals.",
+  "short_summary": "The article explores the Blue Box, a device used to make free long-distance calls by exploiting the telephone system's internal signaling. It details how the technology worked, its impact on revenue for AT&T, and the subsequent efforts by the company to suppress knowledge of its existence.",
+  "summary": "In 'The Blue Box And Ma Bell,' The Noid delves into the underground world of phone phreaking, specifically focusing on the Blue Box, a device that allowed users to make free and untraceable long-distance calls by manipulating the internal signaling of the telephone network. The article explains the technical workings of the Blue Box, including the use of CCITT tones and the Automatic Message Accounting (AMA) machine, which tracked call data but was kept secret by AT&T to avoid public backlash over billing transparency. The Noid recounts how the Blue Box was used by various individuals, from college students to organized crime, to bypass the traditional billing system, leading to significant revenue losses for Ma Bell, estimated in the millions. The article also highlights the company's attempts to suppress information about the Blue Box and the lengths they went to protect their interests, including intimidation tactics against journalists and potential legal repercussions for users. Ultimately, the piece serves as a historical account of a pivotal moment in telecommunications and hacker culture, illustrating the cat-and-mouse game between corporate interests and the ingenuity of hackers."
+}

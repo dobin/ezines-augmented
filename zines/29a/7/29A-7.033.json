@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": ".NtVDM under WinNT/2k/XP.",
+  "authors": "Ratter/29A",
+  "date": "",
+  "historical_context": "This article discusses the NTVDM subsystem, which was crucial for running legacy DOS and 16-bit Windows applications on NT-based systems, reflecting the challenges of maintaining compatibility in a more secure operating environment.",
+  "target_audience": "Hackers, security professionals, and developers interested in operating system internals and legacy software compatibility.",
+  "short_summary": "The article provides an in-depth look at the NTVDM subsystem in NT-based operating systems, explaining how it allows the execution of DOS and 16-bit Windows applications while maintaining system security. It covers the architecture, components, and potential hooks for developers and malware authors.",
+  "summary": "In this article, Ratter/29A delves into the workings of the NT Virtual DOS Machine (NTVDM), a subsystem designed to run DOS and 16-bit Windows applications on NT-based operating systems like Windows NT, 2000, and XP. The author explains that NTVDM operates by creating a virtual environment that isolates these legacy applications from the underlying system, thus upholding the security principles of NT. The article breaks down the architecture into kernel mode, user mode, and V86 mode components, detailing how they interact to execute legacy software while preventing direct hardware access that could compromise system integrity.\n\nThe author also highlights specific functions and mechanisms within NTVDM, such as the NtVdmControl API and the role of the Monitor (ntvdm.exe) in managing virtual tasks. Notably, Ratter discusses the implications for malware developers, particularly in how to hook into NTVDM functions like VdmQueryDirectoryFile to manipulate file visibility for DOS applications. This insight is valuable for both security researchers and those interested in the intricacies of operating system design, as it reveals the balance between compatibility and security in modern computing environments."
+}

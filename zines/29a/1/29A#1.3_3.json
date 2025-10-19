@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "TBAV: keys",
+  "authors": "Plof",
+  "date": "9-feb-96",
+  "historical_context": "This article was written during a time when software piracy was rampant, and many users sought ways to bypass software registration and licensing restrictions.",
+  "target_audience": "Hackers, software pirates, and those interested in reverse engineering.",
+  "short_summary": "The article presents a key generator for the TBAV antivirus software, allowing users to bypass registration requirements. It includes assembly code for creating a valid registration key.",
+  "summary": "In 'TBAV: keys', Plof discusses the creation of a registration key generator for the TBAV antivirus software, specifically version 7.04. The article begins with a tongue-in-cheek acknowledgment of the software's perceived shortcomings, while simultaneously highlighting the utility of the key generator. The assembly code provided in the article is designed to prompt the user for a name and generate a corresponding key that can be used to register the software without paying for it. The author notes that the encryption schemes used by TBAV have remained consistent across versions, making this generator applicable to earlier and future iterations as well.\n\nThe assembly code is detailed and includes various subroutines for manipulating the input name, modifying specific bytes in the TBAV executable, and writing the generated key to a file. Plof's writing style is informal and humorous, reflecting the hacker culture of the time, where sharing such tools was common among peers. The article serves as both a practical guide for those looking to bypass software restrictions and a commentary on the broader issues of software licensing and user rights in the digital age."
+}

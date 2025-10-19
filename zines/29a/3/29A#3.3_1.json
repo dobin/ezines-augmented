@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "$pirit's Universal Polymorphic Device v2.2",
+  "authors": "Nigh$piri",
+  "date": "1996",
+  "historical_context": "This article discusses a polymorphic device designed for obfuscating code, a technique that was particularly relevant during the rise of malware and virus development in the 1990s.",
+  "target_audience": "Security researchers, malware analysts, and hackers interested in code obfuscation techniques.",
+  "short_summary": "The article presents a universal polymorphic device that generates polymorphic code to evade detection by antivirus software. It details the implementation in assembly language and discusses the underlying principles of polymorphism.",
+  "summary": "In '$pirit's Universal Polymorphic Device v2.2', Nigh$piri introduces a sophisticated method for creating polymorphic code, which is crucial for malware authors seeking to avoid detection by antivirus solutions. The device operates by generating code that changes its appearance while maintaining the same functionality, thus complicating static analysis and signature-based detection methods. The article provides a detailed assembly code implementation, showcasing various functions such as randomization and encryption techniques that contribute to the polymorphic nature of the generated code. The author emphasizes the importance of understanding these techniques for both offensive and defensive security strategies, making it a valuable read for anyone involved in cybersecurity."
+}

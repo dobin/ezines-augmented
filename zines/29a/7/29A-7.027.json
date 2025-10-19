@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Solving Plain Strings Problem In HLL (VIRSTR library)",
+  "authors": "Z0MBiE",
+  "date": "2002",
+  "historical_context": "This article reflects the early 2000s hacker culture, focusing on techniques to obfuscate code and evade antivirus detection, which was a significant concern for malware developers at the time.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article introduces the VIRSTR library, which provides methods to obfuscate strings in high-level languages (HLL) using inline assembly. It discusses techniques for hiding strings in executables to evade antivirus detection and includes code examples demonstrating these methods.",
+  "summary": "In 'Solving Plain Strings Problem In HLL', Z0MBiE presents the VIRSTR library, a toolkit designed to help developers hide strings in their code to avoid detection by antivirus software. The article begins with a critique of existing antivirus solutions and introduces the concept of encrypting strings during compilation, which can then be decrypted at runtime without additional tools. The author emphasizes the use of the BCC32 compiler for its ease of inline assembly syntax, making it suitable for this purpose.\n\nThe article provides several code examples demonstrating how to implement string obfuscation techniques using the VIRSTR library. These include methods for storing plain strings, calculating hash values, and XORing strings to create encrypted versions that can be decrypted based on user input. The author also discusses the potential for these techniques to be used in creating polymorphic or metamorphic code, which can further complicate reverse engineering efforts. Overall, the article serves as a practical guide for those looking to enhance their malware's stealth capabilities."
+}

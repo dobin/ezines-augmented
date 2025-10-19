@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Necromantic Mutation Engine (NME)",
+  "authors": "Wintermute/29A",
+  "date": "",
+  "historical_context": "This article discusses the design and implementation of a polymorphic engine used in the Zohra virus, showcasing techniques that were advanced for its time in the realm of malware development.",
+  "target_audience": "Malware developers, security researchers, and those interested in the evolution of virus techniques.",
+  "short_summary": "The article details the construction and functionality of the Necromantic Mutation Engine (NME), a polymorphic engine used in the Zohra virus. It explains how the engine generates complex decryptor routines to evade detection by antivirus software.",
+  "summary": "In 'The Necromantic Mutation Engine (NME)', Wintermute provides an in-depth look at the architecture of a polymorphic engine designed to enhance the stealth of the Zohra virus. The article begins by outlining the essential components of a robust polymorphic engine, emphasizing the need for varied instruction sets to avoid detection. It describes how the engine organizes instructions into blocks and fills gaps with random bytes to obscure the true nature of the code. This technique complicates the analysis for antivirus software, which typically relies on signature-based detection methods.\n\nThe author elaborates on the engine's operational mechanics, detailing how it generates and modifies decryptor instructions dynamically. By employing anti-debugging and anti-spectral routines, the NME aims to thwart common detection strategies used by antivirus programs. The article serves as both a technical guide for aspiring malware developers and a historical document illustrating the sophistication of early virus creation techniques, reflecting the ongoing cat-and-mouse game between malware authors and security professionals."
+}

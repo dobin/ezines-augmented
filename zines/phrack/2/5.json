@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Two, Phile 5 of 9",
+  "title": "Tac Dialups taken from Arpanet",
+  "authors": "Phantom Phreaker",
+  "date": "November 26, 1985",
+  "historical_context": "This article provides a list of telephone dial-up numbers for accessing military and government TAC (Terminal Access Controller) systems over Arpanet, which was a precursor to the modern internet. The information reflects the early days of computer networking and the interest in accessing these systems for various purposes, including hacking and phreaking.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts, and security researchers.",
+  "short_summary": "The article lists various TAC dial-up numbers sorted by location, providing access points to military and government systems over Arpanet. It includes details on baud rates and specific dialing instructions for certain locations.",
+  "summary": "In this article, Phantom Phreaker compiles a comprehensive list of TAC dial-up numbers from various military and government locations across the United States and abroad. The list is meticulously organized by state and includes both 300 baud and 1200 baud access numbers, along with specific instructions for connecting to certain systems. For example, accessing the Anniston Army Depot requires entering a specific command sequence before gaining access. The article serves as a valuable resource for those interested in exploring the early networking landscape, particularly for individuals engaged in hacking and phreaking activities during the mid-1980s.\n\nThis document not only highlights the technical aspects of dialing into these systems but also reflects the hacker culture of the time, where individuals sought to uncover and utilize the resources available on government networks. The inclusion of baud rates and modem compatibility indicates the technical knowledge expected from readers, making it a significant piece for anyone studying the evolution of computer security and telecommunications."
+}

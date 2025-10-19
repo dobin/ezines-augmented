@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue One, Phile 2 of 8",
+  "title": "Hacking SAM - A Description Of The Dial-Up Security System",
+  "authors": "Spitfire Hacker",
+  "date": "",
+  "historical_context": "This article is one of the earliest discussions on dial-up security systems, reflecting the security practices of the late 1980s and early 1990s.",
+  "target_audience": "Hackers, security enthusiasts, and those interested in early computer security systems.",
+  "short_summary": "The article describes the SAM dial-back security system used in colleges, detailing how it functions and how it can be bypassed. It provides insights into early security measures and hacking techniques.",
+  "summary": "In this article, Spitfire Hacker introduces the SAM (Security Access Management) system, a dial-back security feature employed by various colleges to prevent unauthorized access. The system requires users to dial a specific number and enter a Login Identification Number (LIN) that combines a prefix with the last four digits of the user's phone number. Depending on the validity of the LIN, SAM responds with different tones, indicating whether access is granted or if all lines are busy. The article outlines the steps necessary to intercept the call made by SAM to the valid user's phone, allowing an unauthorized user to gain access to the system by responding correctly to the prompts.\n\nThe piece serves as a practical guide for hackers interested in understanding and exploiting dial-up security systems. It highlights the vulnerabilities inherent in such systems, particularly the reliance on telephone lines and the simplicity of the dial-back mechanism. By detailing the process of gaining unauthorized access, the article not only sheds light on the technical aspects of the SAM system but also reflects the hacker ethos of the time, emphasizing curiosity and the pursuit of knowledge in the realm of computer security."
+}

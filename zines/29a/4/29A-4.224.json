@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "EXPLORER *in-memory* infection",
+  "authors": "GriYo / 29A",
+  "date": "29A",
+  "historical_context": "This article discusses techniques for creating in-memory viruses specifically targeting the Windows operating system, highlighting methods that were relevant during the late 1990s and early 2000s.",
+  "target_audience": "Malware developers, security researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article details a technique for creating a virus that infects the EXPLORER.EXE process in memory, allowing it to persist even after the original application has terminated. It outlines the steps for memory allocation, process manipulation, and code injection.",
+  "summary": "In this article, GriYo from the 29A group presents a method for achieving in-memory infection of the EXPLORER.EXE process on Windows systems. The author begins by discussing the challenges of maintaining virus residency in memory after the host application terminates. Various strategies are proposed, including using memory-mapped files and injecting code into the EXPLORER.EXE process. The article provides detailed code snippets and explanations of Windows API functions such as CreateFileMappingA and MapViewOfFile, which are essential for memory manipulation. The author emphasizes the importance of finding suitable sections within the EXPLORER.EXE executable to inject the virus code, ensuring it can execute when specific APIs are called.\n\nThe article culminates in a comprehensive explanation of how to set up hooks in the EXPLORER.EXE process to redirect API calls to the injected virus code. This allows the virus to access its own memory space, ensuring its persistence as long as EXPLORER.EXE remains active. GriYo's writing is technical and assumes a foundational understanding of assembly language and Windows internals, making it a valuable resource for those studying malware development and the evolution of computer viruses."
+}

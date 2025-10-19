@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Cross Infection Tutorial for Office'97 PART II",
+  "authors": "VicodinES",
+  "date": "",
+  "historical_context": "This article discusses the Shiver macro virus, which was part of a wave of macro viruses that exploited Microsoft Office applications in the late 1990s. It highlights the use of Dynamic Data Exchange (DDE) for cross-infection between Word and Excel.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in virus development.",
+  "short_summary": "The article provides an in-depth analysis of the Shiver macro virus, detailing its mechanisms for cross-infection between Microsoft Word and Excel using Dynamic Data Exchange (DDE). It explains the virus's structure, functionality, and the technical steps involved in its operation.",
+  "summary": "In this tutorial, VicodinES delves into the workings of the Shiver macro virus, which employs Dynamic Data Exchange (DDE) to facilitate cross-infection between Microsoft Word and Excel. The article begins with a brief introduction to DDE, explaining how it allows applications to communicate and share data. Shiver leverages this capability to infect Excel from Word by initializing a DDE channel, executing commands to create a new macro sheet, and inserting its malicious code. The author meticulously outlines the steps taken by Shiver, including registry checks and the use of Excel 4 macro commands, to ensure successful infection without detection.\n\nThe tutorial further explores how Shiver can reverse the process, infecting Word from Excel, and highlights the complexities involved in creating a dual-function virus. VicodinES emphasizes the importance of understanding DDE and macro commands for anyone interested in virus development. The article serves as both a technical guide and a historical account of macro virus evolution, providing valuable insights into the methods used by malware authors during this era. The author concludes with a personal note on his future endeavors in the field of virus writing and tutorials."
+}

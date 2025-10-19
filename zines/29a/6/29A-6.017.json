@@ -1,0 +1,25 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #6 of 11",
+      "title": "Some Practice Technics",
+      "authors": "PetiK",
+      "date": "02/10/2002",
+      "historical_context": "This article reflects the early 2000s hacker culture, focusing on worm development techniques.",
+      "target_audience": "Aspiring malware developers, security researchers, and those interested in the evolution of malware techniques.",
+      "short_summary": "PetiK shares techniques for creating and spreading worms, including hiding copies and extracting APIs from KERNEL32.DLL.",
+      "summary": "In 'Some Practice Technics', PetiK outlines several methods for developing and spreading computer worms. The article is divided into three main sections: hiding a worm's copy, spreading it across different drives, and extracting APIs from the KERNEL32.DLL library. PetiK emphasizes the importance of using dynamic naming conventions for worm files to evade detection, suggesting that random names can complicate removal efforts. The code snippets provided illustrate how to implement these techniques in practice, showcasing a blend of creativity and technical skill in malware development. The article serves as a practical guide for those looking to understand the mechanics behind worm propagation and evasion strategies.",
+      "conclusion": "PetiK invites readers to reach out with questions or suggestions, reflecting the collaborative spirit of the hacker community."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #7 of 11",
+      "title": "How to spread a worm?",
+      "authors": "PetiK",
+      "date": "09/17/2001",
+      "historical_context": "This article is set against the backdrop of increasing concerns about email-based malware in the early 2000s.",
+      "target_audience": "Malware developers, cybersecurity professionals, and those studying email security.",
+      "short_summary": "PetiK discusses techniques for spreading worms via email, including methods for extracting email addresses from various file types.",
+      "summary": "In 'How to spread a worm?', PetiK delves into the intricacies of worm propagation through email. The article outlines various file types that can be exploited to extract email addresses, such as Windows Address Book files, HTML files, and Outlook Express email files. PetiK provides a detailed explanation of how to craft an email with an embedded worm, emphasizing the importance of manipulating the MIME structure to include malicious attachments. The techniques described highlight the challenges of email security during this period, as well as the innovative approaches taken by malware authors to bypass detection. This article serves as a valuable resource for understanding the tactics used in early email-based malware campaigns."
+    }
+  ]
+}

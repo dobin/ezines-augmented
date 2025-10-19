@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Sexy virus",
+  "authors": "Super/29A",
+  "date": "Not specified",
+  "historical_context": "This article is from the early days of computer viruses, showcasing techniques that were novel at the time. It reflects the hacker culture's experimentation with low-level programming and system manipulation.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in the history of viruses and low-level programming.",
+  "short_summary": "The article presents a detailed assembly code for a ring0 virus, demonstrating how to manipulate system calls and install hooks in the Windows operating system. It serves as both a technical guide and a historical artifact of early virus development.",
+  "summary": "In 'Sexy virus', Super/29A provides a comprehensive assembly language code for creating a ring0 virus, which operates at the highest privilege level in the Windows operating system. The article outlines the use of VxD (Virtual Device Driver) calls to manipulate file operations and install API hooks, allowing the virus to intercept and modify file I/O operations. The code is meticulously annotated, explaining each step of the process, from memory allocation to hooking into the file system's API chain. This technical exploration not only serves as a tutorial for aspiring virus writers but also highlights the creativity and technical prowess of early hackers in manipulating system internals.\n\nThe article is significant for its historical context, as it captures a time when computer viruses were a burgeoning area of exploration within the hacker community. It reflects the ethos of the era, where the creation of such software was often seen as a challenge or a form of art rather than a malicious act. The detailed breakdown of the code and its functions provides valuable insights into the techniques used in early malware development, making it a relevant read for those studying the evolution of computer security and the ongoing battle against malicious software."
+}

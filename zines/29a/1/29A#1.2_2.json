@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Encryption: practice",
+  "authors": "Blade Runner",
+  "date": "2019",
+  "historical_context": "This article is part of a series that discusses various computer viruses and their decryption methods, reflecting the early days of virus research and analysis in the hacking community.",
+  "target_audience": "Security professionals, malware analysts, and hackers interested in virus decryption techniques.",
+  "short_summary": "The article presents a detailed examination of various computer viruses, focusing on their decryption routines and how to analyze them using debugging tools. It aims to provide insights for beginners in malware analysis.",
+  "summary": "In this article, Blade Runner introduces readers to the fascinating world of computer viruses, specifically focusing on their decryption routines. The author emphasizes the importance of understanding these routines for anyone interested in malware analysis. The article lists several viruses, such as ABR-1171.COM and AC-255.COM, detailing their characteristics and the methods used to decrypt them. Each virus is dissected with code snippets and explanations, making it accessible for beginners while still providing valuable insights for more experienced readers.\n\nThe author encourages the use of debugging tools, particularly DOS's debug, to analyze the viruses. By walking through the decryption process step-by-step, Blade Runner demystifies the complexities of malware analysis. The article serves as a foundational piece for those looking to delve deeper into the world of computer security, highlighting the need for vigilance and understanding in an era where viruses were becoming increasingly prevalent."
+}

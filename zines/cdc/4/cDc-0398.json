@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "How to Create Very Small Win32 Executables",
+  "authors": "Sir Dystic",
+  "date": "10/14/2004",
+  "historical_context": "This article reflects the hacker ethos of optimizing code and minimizing resource usage, a common practice in the early days of computing and still relevant in certain programming circles today.",
+  "target_audience": "Hackers, software developers, security professionals, and anyone interested in low-level programming.",
+  "short_summary": "This article provides a detailed guide on creating minimal-sized Win32 executables by avoiding unnecessary libraries and optimizing linker settings. It covers techniques such as defining macros, managing entry points, and using intrinsic functions to reduce overhead.",
+  "summary": "In 'How to Create Very Small Win32 Executables', Sir Dystic outlines a methodical approach to crafting minimal Win32 executables by stripping away unnecessary components. The article begins by emphasizing the importance of starting with an empty executable and only including essential code. By defining the macro 'WIN32_LEAN_AND_MEAN' and avoiding the standard C library (clib), developers can significantly reduce the size of their executables. The author explains how to set up a custom entry point and manage linker settings to eliminate default libraries that bloat the executable size. Techniques such as adjusting file alignment and enabling dead code elimination are also discussed to further minimize the final output size. \n\nThe article goes on to detail the importance of understanding the Win32 API, as developers will need to replace clib functions with their API equivalents. Sir Dystic provides practical examples and insights into compiler options that can help achieve a smaller executable size. Ultimately, the article serves as a valuable resource for programmers looking to optimize their applications, reflecting a culture of efficiency and resourcefulness that resonates with the hacker community."
+}

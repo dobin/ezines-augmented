@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3a, Phile #0x09 of 0x0e",
+  "title": "RPC without borders (surfing USA ...)",
+  "authors": "stealth",
+  "date": "",
+  "historical_context": "This article discusses the vulnerabilities in remote procedure call (RPC) technologies, particularly focusing on SOAP, during a time when web services were becoming increasingly popular.",
+  "target_audience": "Security professionals, developers, and hackers interested in web services and RPC vulnerabilities.",
+  "short_summary": "The article explores the weaknesses in SOAP implementations, particularly in Perl, and demonstrates how these vulnerabilities can be exploited to call unintended functions, highlighting the need for better security practices in RPC technologies.",
+  "summary": "In 'RPC without borders', the author, stealth, delves into the vulnerabilities present in modern remote object access technologies, particularly SOAP (Simple Object Access Protocol). The article begins by outlining the evolution of RPCs and the introduction of XML-RPC and SOAP as solutions for remote method invocation in web applications. The author emphasizes the ease of use that SOAP provides for developers, but warns of the inherent security risks that come with its flexibility. By focusing on Perl implementations, the article illustrates how SOAP's design allows for indirect function calls, which can lead to unauthorized access to sensitive functions within the application. \n\nThe author provides practical examples demonstrating how an attacker could exploit these vulnerabilities by manipulating function names and arguments sent to the SOAP server. The discussion highlights the importance of implementing strict access controls and input validation to mitigate these risks. The article concludes with recommendations for securing SOAP services, such as restricting callable functions and implementing proper error handling, underscoring the necessity for developers to be aware of the security implications of their choices in RPC technologies."
+}

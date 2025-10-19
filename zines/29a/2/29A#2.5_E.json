@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Insert v 2.0",
+  "authors": "Darkman/29A",
+  "date": "",
+  "historical_context": "This article discusses a parasitic resident COM infector from the early days of computer viruses, showcasing the techniques used in malware development during the late 1980s.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "Insert v 2.0 is a 292-byte parasitic resident COM infector that utilizes an 8-bit XOR encryption method. The article provides the assembly code for the virus and explains its infection mechanism.",
+  "summary": "Insert v 2.0 is a compact 292-byte virus that infects COM files by prepending itself to the infected file upon write operations. The virus employs an 8-bit XOR encryption technique to obscure its code, making it a classic example of early malware. The article includes detailed assembly code, demonstrating how the virus operates and how it integrates itself into the system's file handling processes. It highlights the use of interrupt vectors to hook into the file writing mechanism, allowing the virus to infect other files seamlessly.\n\nThe code provided is intended for compilation with Turbo Assembler and illustrates key concepts in virus development, such as memory management, file control blocks, and the manipulation of system interrupts. The author emphasizes the importance of understanding these techniques for both malware analysis and the development of effective countermeasures. This article serves as a historical reference for those studying the evolution of computer viruses and the methods used by early malware authors."
+}

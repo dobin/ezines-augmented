@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 21, File 6 of 11",
+  "title": "Organizations Supporting The Telecommunications Network Operations",
+  "authors": "Knight Lightning & Taran King",
+  "date": "August 9, 1988",
+  "historical_context": "This article provides insights into the telecommunications network management practices of the late 1980s, a period marked by the transition from analog to digital systems and the increasing complexity of network operations.",
+  "target_audience": "Telecommunications professionals, network engineers, security researchers, and those interested in the history of network management.",
+  "short_summary": "The article describes the role and functions of the Network Management Center (NMC) in maintaining optimal performance of telecommunications networks, especially during peak loads or failures. It outlines principles of network management and the importance of real-time monitoring and control.",
+  "summary": "In this article, Knight Lightning and Taran King delve into the critical functions of the Network Management Center (NMC) within the telecommunications infrastructure. The NMC is responsible for ensuring that the network operates efficiently, particularly during periods of high demand or equipment malfunctions. The authors explain how the NMC employs various strategies to manage network congestion, optimize trunk usage, and prioritize call completions, all aimed at enhancing customer satisfaction and maximizing revenue for service providers. They emphasize the importance of real-time data and control mechanisms in achieving these objectives.\n\nThe article further elaborates on the principles guiding network management operations, such as inhibiting switching congestion and utilizing all available trunks. It highlights the NMC's role in providing centralized surveillance, identifying abnormal network situations, and ensuring national security and emergency preparedness. By detailing the operational framework and responsibilities of the NMC, the authors provide valuable insights into the complexities of managing telecommunications networks, which remain relevant in today's digital landscape."
+}

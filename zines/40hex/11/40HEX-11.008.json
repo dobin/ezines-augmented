@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 3, Issue 2, File 008",
+  "title": "Predator",
+  "authors": "Priest",
+  "date": "March 1993",
+  "historical_context": "This article discusses the Predator virus, a notable example of early computer viruses that employed stealth techniques to evade detection. It reflects the growing complexity of malware during the early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "Predator is a stealth virus that infects COM files, utilizing a unique technique to mark infected files by altering their date to 100 years in the future. The article includes the source code and a detailed explanation of its functionality.",
+  "summary": "The Predator virus, crafted by Priest of the Phalcon/Skism group, is a sophisticated piece of malware designed to infect COM files. It employs a stealth mechanism that modifies the file's date to 100 years in the future, a technique referred to as the 'Century' method. This approach not only marks the file as infected but also helps the virus avoid detection by users and antivirus software. The article provides a comprehensive source code listing, illustrating the technical intricacies involved in its design and functionality. Key operations include checking for existing infections, managing file attributes, and executing stealthy file manipulations to conceal its presence. The Predator virus exemplifies the evolving landscape of computer viruses during the early 1990s, showcasing the increasing sophistication of malware tactics.",
+  "additional_notes": "The source code provided is a valuable resource for understanding early virus development techniques and the mindset of hackers during this era."
+}

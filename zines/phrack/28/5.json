@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 28, File #5 of 12",
+  "title": "A Real Functioning PEARL BOX Schematic",
+  "authors": "Dispater",
+  "date": "July 1, 1989",
+  "historical_context": "The Pearl Box is a tone-generating device popular among phreakers in the late 1980s, used for manipulating phone systems.",
+  "target_audience": "Hackers, phreakers, electronics enthusiasts",
+  "short_summary": "This article provides a detailed schematic and instructions for building a Pearl Box, a device used to generate specific tones for phone manipulation. It includes a parts list and modifications for enhanced functionality.",
+  "summary": "In this article, Dispater presents a straightforward approach to constructing a Pearl Box, a device that generates various tones useful for phreaking activities. The author critiques previous designs, asserting that his version is simpler and more cost-effective, utilizing common components. The Pearl Box can be modified to create a Blue Box by combining two units, allowing for even greater versatility in tone generation. The article includes a comprehensive parts list, ensuring that readers can easily gather the necessary materials from their own homes.\n\nDispater elaborates on the schematic, explaining how to connect the components to achieve desired tones. He emphasizes the importance of having a tone sweep option, which can be instrumental in detecting phone tapping devices. The instructions are clear and accessible, making it easy for readers to replicate the design. Overall, this article serves as a practical guide for those interested in exploring the world of phone phreaking and electronics, encouraging experimentation and creativity in modifying the Pearl Box for personal use."
+}

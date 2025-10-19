@@ -1,0 +1,266 @@
+                              ==Phrack Magazine==
+
+                 Volume Five, Issue Forty-Five, File 17 of 28
+
+****************************************************************************
+
+
+[While scouring through the fire hazard I call a bedroom, I stumbled upon
+this piece of history.  I don't know how many of you will remember this,
+or moreover, how many of you will appreciate it, but here it is
+anyway.]
+
+---------------------------------------------------------------------------
+(From Video Games, No. 16, January 1984)
+
+Hollywood-Style Bits and Bytes
+
+Whiz Kids' Executive Producer Phil DeGuere Takes You Behind the Scenes
+of His Hit TV Series
+
+by Richard Goodwin
+
+"I want to overcome what appears to be peoples' innate fear of computers
+at an early age to that they won't have any fear nor will be
+particularly in awe of them," says Executive Producer Phil DeGuere of
+his new TV series "Whiz Kids."
+
+At the time he was speaking, it was January and CBS had just given him
+the go-ahead to prepare a pilot.  After the pilot was delivered in
+April, the network gave him a series commitment to produce the
+successive episodes.
+
+It wasn't until this past June that "WarGames" opened and DeGuere, who
+wasn't overly thrilled with the summer smash, goes to great length to
+make people aware that there are no similarities.  In fact, he says, the
+idea was hatched more like a year-and-a-half ago, before WarGames even
+went into production.  DeGuere, a large, slightly rumpled appearing
+Californian, is one of Universal's most successful television producers.
+He has been with the giant studio for nearly a decade and has had a
+string of popular series including "Baa Baa Black Sheep" and the
+current hit, "Simon and Simon."  A long time fan of science fiction,
+DeGuere feels the new series, now seen on Wednesday evenings is living
+up to the original meaning of science fiction.  He's taking today's
+technology and expanding upon it in fictionalized settings.
+
+"The important thing is versilitude and not accuracy," he says while
+seated in his large office.  "You should feel when watching it that it's
+the real thing.  I think we've succeeded in that because consistently,
+computer professionals have enjoyed the pilot and even though they know
+better than anybody that there are impossible things being done in that
+pilot.  It's not like having a Volkswagon fly...it's not that
+impossible."
+
+Computer fans will find many identifiable machines on the show with
+most of the major companies represented in one way or another.  "I've
+got to differentiate between what are essentially props on the one hand
+and working gadgets on the other," DeGuere explains.  "In terms of
+props, you're going to see things like Apples and Ataris.  We have been
+using some Aquariuses from Mattel and if Coleco ever comes up with ADAM,
+I'm sure we'll use that too.
+
+"On the higher tech side, we'll have some of the hot portable computers
+like Gavilan and Compass, all of which basically are things people sit
+at.  There may not be any systems functioning during the course of the
+show.
+
+"When it comes to real working gadgets, it appears that we have
+worked out an arrangement with Xerox to use what is probably the most
+sophisticated personal computer in existence, the Xerox 1100, which is
+such an expensive machine and was responsible for some super-high
+resolution graphics in the pilot.  After some modifications to the
+machine it will be capable of generating some great graphic material."
+
+DeGuere shifts a bit in his chair, runs a hand through his tousled hair
+and adds, "We're into some robots.  We're using one called RB5.  They're
+pretty amazing machines.  RB5 is like an R2D2.  We're planning to
+incorporate it into some classroom situations."
+
+The computer whiz and focal point of the series centers around Richie,
+the "hacker" played by Matthew Laborteaux.  He's surrounded by three
+friends with varying degrees of interest in computers but all love the
+adventures.  There's Hamilton Parker (Todd Porter), the freshman class
+president; Jeremy (Jeffrey Jacquet), the resident jock and Alice (Andrea
+Elson) who wants to belong to the gang.  Richie is also forced to deal
+with a younger sister (Melanie Gaffin) who wants to be in on the action
+but is either too scared or perhaps intimidated a bit by Richie.
+
+The youngsters go to a progressive California high school with a full
+complement of computers and an exasperated teacher who is always bested
+by Richie.  When danger lurks, though, the kids turn to Farley (Max
+Gail, best remembered as Wojo on "Barney Miller"), the crime reporter
+for the local paper.
+
+Originally, the kids were teamed with a younger reporter, but CBS
+decided a more adult, experienced role model was needed to offset the
+youthful exuberance of the stars.  Also representing the adult world is
+a cop named Quinn, played by A. Martinez.  And to keep things
+interesting, the cool and dapper Quinn dislikes Farley, a Damon
+Runyeonesque-type of guy.
+
+As seen in the pilot, the adults do not appear to be the brightest of
+people and DeGuere explains it's done on purpose.  The focus of the
+show is on the kids.  We want them, the underdogs, to succeed.  In order
+for that to happen the adults have to tune them out," he defends.  The
+first story has Richie and the gang bringing down an overambitious
+vice-president of a mammoth conglomerate.  They story, while amusing,
+raised the ire of critics by the cavalier actions of the kids.
+
+At a promotional meeting held early this summer, DeGuere defended his
+show with characteristic bluntness.  "I insulted them personally and I
+insulted their family and I insulted their heritage, their future
+generations, their profession and just about anything else I could think
+up.  The major attention being an attempt to get them off this idea that
+they have uncovered some horrible sin.  I think we were very successful
+in doing that."
+
+DeGuere says his series won't show the kids breaking into computers and
+invading peoples' privacy.  Rather, the repercussions of such actions
+will form the core of some segments.  "We were responsible on those
+subjects from the very beginning," he points out.  "There is something
+synergistic about a computer program.  A computer program does things
+that a computer designer does not always intend.  Even if you sat down
+from scratch.  If the armed forces came to you and said, 'Here's all the
+money and time in the world.  You're going to start from scratch with
+the hardware and software.  Build us a network that is totally secure.'
+I don't think it could be done.  That's one of the things that's so
+fascinating about computers--the program ends up being more than the sum
+of its parts.  Even though, in most states, there are statutes which
+state that accessing another computer system without permission is
+against the law."
+
+"Whiz Kids" will benefit from the experience of two consultants, adding
+a level of technical accuracy other films and television programs have
+missed.  David Gunn worked on the pilot and was signed on by DeGuere for
+the duration of the series.  "He's very knowledgeable in the field of
+microcomputers and I'm fairly knowledgeable myself," he says.  "We have a
+technical advisor on the show who is an investigator for the District
+Attorney's office and is a peace officer who has specialized in computer
+crimes for years.  So, when it comes to areas of legality on the one
+hand and technical accuracy on the other, we go to him.  This is a very
+tiny portion of what's going on in the series.  I personally would
+prefer the technological aspects to be handled as accurately as possible
+and I would rather have it believable than sound stupid.
+
+"In many cases we will have characters spewing a lot of jargon and it
+happens to be true but it's not intended to be something the audience
+has to follow.  It's like medical shows where the doctors are talking
+about this and that," DeGuere explains.
+
+The series will be a fast-paced mixture of adventure and intrigue that
+usually has the kids stumbling upon a problem and then acting quickly to
+stop the crime or criminals without getting caught or killed.  Added to
+the stories will be glimpses of their home lives and interrelationships.
+DeGuere repeats his hope that the show catches on and finds an audience
+so he can have the kids grow and develop, something fairly unique to
+series television.  "If the show clicks, we have it cast in a way that
+allows us to follow them right on through college," he optimistically
+offers.
+
+When not in school, the kids will be clustered around Richie's home
+computer and trying to crack cases.  Richie has built a complicated
+system that would be any hacker's dream including a voice activated
+system named RALF complete with camera and robot appendages (This way
+Richie can eat a sandwich while using both hands to manipulate the
+keyboard).
+
+DeGuere offers some upcoming storylines as examples of the broad mixture
+of the series.  "Richie has a friend who he met at the computer store,
+who happens to be a data processing manager for a local chemical
+company.  As it happens, they have just installed a new computer
+security program and he thinks the best way to test the program is to
+have a hacker like Richie try and break it.  He hires Richie who breaks
+into the system and discovers a Trojan Horse buried in the computer.
+There's a program running inside the computer, developed by a bunch of
+unscrupulous people working at the company.  These people are in the
+process of doing chemical biological warfare of their own, for sale to
+unfriendly third world nations.
+
+"Needless to say, the project manager quickly disappears and Richie is
+the only one who knows he's in trouble.  He doesn't know why but he
+knows his friend is gone.  The kids unravel the mystery."  The show will
+also feature a guest appearance by "Simon and Simon's" Jameson Parker in
+a bid by DeGuere to help link together the two CBS series.  Later in the
+season when the Simons need some computer expertise, they will approach
+Richie.
+
+"Or," DeGuere offers, "There is a computer used in the San Fernando
+Valley linking all the policemen to the department's computer.  It's
+been the subject of a lot of articles because of cost overruns.  Our
+story suggests that a clever criminal can figure out how to emulate one
+of the Mobile Data Terminals or the host computer.  These are a bunch of
+bank robbers who figure out hat with come high tech stuff, they need
+only 15 minutes to get into the banks, get the money and leave.  All you
+have to is make sure all the local police units in the area that could
+respond to the call are unavoidably detained for 15 minutes.
+
+"That's what they're doing at the start of the story.  Everyone thinks
+it's a matter of computer error until Richie says, 'There's no such
+thing as computer error.  It's people error.'  They go on to prove that
+by stumbling on to the criminals."
+
+During the conversation, held long before the series finally premiered
+on October 5, DeGuere points out things are still developing.  "We are,
+at the moment, waiting to see how several different approaches to
+storytelling turn out on film.  Right now, I'm just seeing the rough cut
+of the first episode after the pilot.  So I'd say we're in the gestation
+period right now.  We are not one hundred percent sure of what mutations
+are going to be appropriate for this particular child.  None of the
+things are quite formulated yet.
+
+"We're trying to inject and build into the scripts as many solid
+entertainment values as we can.  We want to have characters you care
+about, relationships that feel real and a general sense of fun rather
+than try and throw everything about computers into it.  We're trying to
+make it high tech on a lot of different levels, not just computers.
+
+"What happens on a new show, based on past experience, is that you don't
+know what is really working.  I don't know until I get a chance to go
+home on Wednesday night and watch the evening news, watch the promos.  I
+like to see how it leads into the movie and by that time, I will have
+begun to have an impression of what we're doing right and what we're
+doing wrong.  Most series hit their peak, in terms of quality, in the
+middle of their second year.  It's true of "Simon and Simon" and it's
+true of almost every other show I've worked on."
+
+The show was originally scheduled to air on Saturday nights but over the
+summer CBS switched it to Wednesday explaining that it would be a better
+opportunity to attract the youthful audience a show like "Whiz Kids"
+needs as a base.  There are more TV sets in use on a Wednesday and the
+competition is diffuse with ABC offering "The Fall Guy" and NBC serving
+up more "Real People."  This gives the show a better chance than if it
+was put up against "Different Strokes," "Silver Spoons" and "T.J.
+Hooker."
+
+"My personal feeling is that the show will be given a reasonable chance
+to succeed.  It will probably mean two or three weeks after the World
+Series and if, by then, it has not established an audience, I do not
+anticipate it will be moved around--I don't know where they could move
+it to, frankly."
+
+As a result of researching the series, DeGuere who owns an Apple at home
+and has an office automation system in place, feels that he is fed up
+with computers.  He complains of not being able to find the interest in
+running programs on his personal computer and has spent weeks getting
+the office system to work properly.  Between that, researching the
+series, watching the critics nitpick "WarGames" apart and the press
+reporting every move made by the nation's hackers (most notably the 414
+gang) he's fed up.  "People are being bombarded about computers
+everywhere they turn.  They take five steps and somewhere you'll be hit
+by the subject.  Consequently, there may be an overkill factor involved.
+The best of all possible ways our series can benefit from "WarGames" is
+if a large number of our potential audience think that "WarGames" was a
+movie they might have wanted to see if they wanted to go to the movies."
+
+Fact or fiction, reality or overkill, Phil DeGuere is hoping that his
+series, co-created with producer Robert Shayne, will find a place in the
+prime-time sweepstakes.  The idea is certainly unique and he is
+fortunate enough to have had the show in development when the rest of
+the world was just beginning to understand the important impact
+computers are having on our lives.  Now, the question remains, do people
+care enough to tune in once a week and watch a group of students battle
+for truth, justice and the American Way using microchips, floppy disks
+and modems instead of guns, badges and sirens!
+
+--------------------------------------------------------------------------
+

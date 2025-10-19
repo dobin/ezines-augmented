@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "PM.Wanderer",
+  "authors": "Tcp/29A",
+  "date": "1997",
+  "historical_context": "PM.Wanderer is notable for being one of the first DOS viruses to effectively utilize protected mode, a significant advancement in virus design during the early days of personal computing.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of computer history.",
+  "short_summary": "PM.Wanderer is a polymorphic DOS virus that operates in protected mode, utilizing advanced techniques for infection and evasion. It demonstrates the evolution of malware capabilities in the early 1990s.",
+  "summary": "PM.Wanderer, a polymorphic virus disassembled by Tcp/29A, marks a significant milestone in the evolution of malware, being one of the first to effectively utilize the protected mode of the i386 processor. The virus employs a polymorphic engine that encrypts its code, making detection challenging for antivirus solutions of the time. It installs itself as a resident virus, toggling the processor to protected mode using the Virtual Control Program Interface (VCPI) and interacting with other programs without causing conflicts, a feat not previously achieved by other viruses. The virus's ability to infect both COM and EXE files showcases its versatility and adaptability in various computing environments.\n\nThe article provides a detailed analysis of PM.Wanderer's installation process, memory management, and infection techniques, including its method of intercepting DOS interrupts to facilitate file infection. It also discusses the virus's payload, which includes modifications to the integrity checker ADinf, and outlines the challenges in detecting the virus due to its operation in protected mode. The disassembly includes technical details on the virus's structure, memory allocation, and the use of breakpoints for maintaining control over infected systems. Overall, PM.Wanderer exemplifies the increasing complexity of malware during the early days of personal computing, reflecting the ongoing cat-and-mouse game between virus authors and antivirus developers."
+}

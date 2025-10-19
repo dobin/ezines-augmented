@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Directory of Cellular Modification: Mitsubishi 800",
+  "authors": "Video Vindicator",
+  "date": "12/30/1993",
+  "historical_context": "This article is part of the early hacking culture focused on cellular technology, particularly in the 1990s when cellular phones were becoming more widespread and modifiable.",
+  "target_audience": "Hackers, phreakers, security professionals, and enthusiasts of cellular technology.",
+  "short_summary": "This article provides a detailed guide on modifying the Mitsubishi 800 cellular phone, including hardware disassembly, software modification, and programming the phone's NAM. It discusses the implications of these modifications and includes technical specifications.",
+  "summary": "In this comprehensive guide, Video Vindicator delves into the world of cellular modification, specifically targeting the Mitsubishi 800 phone. The article begins with an introduction to the phone's architecture and the necessary tools for disassembly. Vindicator explains how to access and modify the ESN (Electronic Serial Number) and NAM (Number Assignment Module) through straightforward hardware changes and software updates. The author emphasizes the ease of modification, requiring minimal soldering and basic tools, making it accessible for hackers and enthusiasts alike.\n\nThe article further elaborates on the implications of these modifications, such as the ability to clone phones and bypass validation checks, allowing users to make calls without proper registration. Vindicator provides detailed instructions on programming the phone, including specific hex locations for software changes and the importance of security settings. The guide concludes with a call to action for readers to explore the potential of cellular technology while maintaining a humorous and irreverent tone, characteristic of the hacker culture of the time."
+}

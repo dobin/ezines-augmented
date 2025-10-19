@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 54, Phile #12 of 12",
+  "title": "Phrack Magazine Extraction Utility",
+  "authors": "Phrack Staff",
+  "date": "Dec 25th, 1998",
+  "historical_context": "This article is part of the Phrack Magazine, a well-known hacking zine that has been influential in hacker culture since its inception. The extraction utility is a tool designed to facilitate the extraction of source code from Phrack articles.",
+  "target_audience": "Hackers, security researchers, and developers interested in extracting and organizing code from Phrack Magazine.",
+  "short_summary": "The article introduces the Phrack Magazine Extraction Utility, a tool that extracts text files from specially tagged flat files into a hierarchical directory structure. It includes various implementations in C, Perl, AWK, and shell scripting.",
+  "summary": "The Phrack Magazine Extraction Utility is a versatile tool designed to extract source code from articles in Phrack Magazine. The utility works by identifying specially tagged sections within flat files, allowing users to organize extracted content into a structured directory format. The article provides several implementations of the extraction utility, including versions in C, Perl, AWK, and shell scripting, catering to different user preferences and environments. Each implementation showcases the flexibility of the extraction process, allowing users to adapt the tool to their specific needs.\n\nThe utility's design emphasizes ease of use and adaptability, with features such as support for file globs and the ability to handle input from standard input. The article also highlights the importance of maintaining a clean directory structure for better organization of extracted files. Overall, this utility serves as a practical resource for anyone looking to delve into the wealth of information contained within Phrack Magazine, making it easier to access and utilize the source code shared in its articles."
+}

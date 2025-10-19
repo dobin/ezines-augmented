@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 15 of 27",
+  "title": "A Guide to Data General Corporation's AOS/VS System PART II",
+  "authors": "Herd Beast",
+  "date": "",
+  "short_summary": "This article provides a detailed guide to the AOS/VS system, focusing on command-line interface (CLI) commands and their functionalities. It covers commands for file management, process handling, and system logging, making it a valuable resource for users and administrators of the AOS/VS environment.",
+  "summary": "In this comprehensive guide, Herd Beast delves into the intricacies of the AOS/VS system, particularly its command-line interface (CLI). The article outlines various commands such as CONINFO, CREATE, DELETE, and LOAD, detailing their syntax and operational parameters. For instance, the CREATE command allows users to create files with specific formats and attributes, while the DELETE command provides a straightforward method for file removal. The guide also introduces the FED (File Editor Utility) and SED (Stream Editor), which are essential tools for file manipulation within the AOS/VS environment.\n\nFurthermore, the article discusses the EXEC program, which manages user logins and batch processing in a multiuser setting. It highlights the importance of privileges and access control in executing commands, emphasizing the need for proper user permissions. The networking capabilities of AOS/VS are also touched upon, showcasing its compatibility with various protocols like TCP/IP and X.25. Overall, this article serves as an essential reference for anyone looking to understand or work with the AOS/VS system, providing both foundational knowledge and practical command usage."
+}

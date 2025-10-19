@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 5, Issue 1, Phile #011 of 011",
+  "title": "The JUMP Virus DEBUG Script",
+  "authors": "Stormbringer",
+  "date": "Summer 1994",
+  "historical_context": "This article reflects the early days of computer viruses, showcasing the creativity and technical skills of hackers in the 1990s. The JUMP virus is an example of the evolving landscape of malware during this period.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in the history of computer viruses.",
+  "short_summary": "The article presents a DEBUG script for the JUMP virus, a memory-resident .com infector created by the author in the summer of 1994. It highlights the author's intention to showcase the virus's unique characteristics through its coding structure.",
+  "summary": "In this article, Stormbringer shares a DEBUG script for the JUMP virus, which he developed out of boredom and a desire to innovate within the realm of computer viruses. Unlike typical DEBUG scripts that follow a standard format, this script is designed to be more transparent, allowing readers to understand the origin of the virus's name. The script itself is a memory-resident appending .com infector, demonstrating the author's technical prowess and creativity in virus design. The article serves as both a technical reference and a historical artifact from the early days of malware development.\n\nThe JUMP virus script is a fascinating example of how hackers in the 1990s approached virus creation. By providing a detailed breakdown of the script, Stormbringer invites readers to explore the intricacies of the virus's functionality. The use of various jump commands illustrates the complexity of the virus's operation, showcasing the author's skill in manipulating assembly language. This article not only serves as a technical guide but also as a reminder of the hacker culture's innovative spirit during a pivotal time in computer security history."
+}

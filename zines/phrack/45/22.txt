@@ -1,0 +1,25 @@
+                              ==Phrack Magazine==
+
+                 Volume Five, Issue Forty-Five, File 22 of 28
+
+****************************************************************************
+ 
+BOX.EXE - Submitted to Phrack Magazine for your amusement.
+ 
+by The Fixer / 604
+ 
+This is a tiny, minimalist demonstration of several types of box tones.
+No cosmetic bullshit, no command line parameters and no config files.
+ 
+You just type BOX.
+ 
+The only requirements for this program are an IBM PC or compatible and
+an Adlib Music Card or one of its many successors (including all Sound
+Blaster types).  You may need to turn the volume up a bit as the pure
+sinewaves tend to be quieter than other Adlib waveforms.
+ 
+There are keystroke menus in the program.  If you need more help than
+that, you shouldn't be running it.
+ 
+-=( The Fixer of 604 )=-
+ 

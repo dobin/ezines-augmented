@@ -1,0 +1,3301 @@
+                            ==Phrack Inc.==
+
+               Volume 0x10, Issue 0x46, Phile #0x0a of 0x0f
+
+|=-----------------------------------------------------------------------=|
+|=----------------------=[ Hypervisor Necromancy; ]=---------------------=|
+|=----------------=[ Reanimating Kernel Protectors, or ]=----------------=|
+|=-----------------------------------------------------------------------=|
+|=--------=[ On emulating hypervisors; a Samsung RKP case study ]=-------=|
+|=-----------------------------------------------------------------------=|
+|=---------------------------=[ Aris Thallas ]=--------------------------=|
+|=--------------------=[ athallas.phrack@gmail.com ]=--------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+--[ Table of Contents
+
+0 - Introduction
+1 - Overview
+    1.1 - ARM Architecture & Virtualization Extensions
+    1.2 - Samsung Hypervisor
+    1.3 - Workspace Environment
+2 - Framework Implementation & RKP Analysis
+    2.1 - System Bootstrap
+        2.1.1 - EL1
+    2.2 - EL2 Bootstrap
+        2.2.1 - Stage 2 translation & Concatenated tables
+        2.2.2 - EL2 bootstrap termination and EL1 physical address
+    2.3 - RKP Initialization Functions
+        2.3.1 - RKP Exception Handlers
+        2.3.2 - RKP Initialization
+        2.3.3 - RKP Deferred Initialization
+        2.3.4 - Miscellaneous Initializations
+    2.4 - Final Notes
+3 - Fuzzing
+    3.1 - Dummy fuzzer
+        3.1.1 - Handling Aborts
+        3.1.2 - Handling Hangs
+    3.2 - AFL with QEMU full system emulation
+        3.2.1 - Introduction
+        3.2.2 - Implementation
+            3.3.2.1 - QEMU patches
+            3.3.2.2 - Framework support
+            3.3.2.3 - Handling parent translations
+            3.3.2.4 - Handling hangs and aborts
+            3.3.2.5 - Demonstration
+    3.4 - Final Comments
+4 - Conclusions
+5 - Thanks
+6 - References
+7 - Source code
+
+
+
+--[ 0 - Introduction
+
+Until recently, to compromise an entire system during runtime attackers
+found and exploited kernel vulnerabilities. This allowed them to perform a
+variety of actions; executing malicious code in the context of the kernel,
+modify kernel data structures to elevate privileges, access protected data,
+etc. Various mitigations have been introduced to protect against such
+actions and hypervisors have also been utilized, appart from their
+traditional usage for virtualization support, towards this goal. In the
+Android ecosystem this has been facilitated by ARM virtualization
+extensions, which allowed vendors/OEMs to implement their own protection
+functionalities/logic.
+
+On the other hand, Android devices have been universally a major PITA to
+debug due to the large diversity of OEMs and vendors that introduced
+endless customizations, the lack of public tools, debug interfaces etc. To
+the author's understanding, setting up a proper debug environment is
+usually one of the most important and time consuming tasks and can make a
+world of difference in understanding the under examination system or
+application in depth (especially true if no source code is available),
+identifying 0day vulnerabilities and exploiting them.
+
+In this (rather long) article we will be investigating methods to emulate
+proprietary hypervisors under QEMU, which will allow researchers to
+interact with them in a controlled manner and debug them. Specifically, we
+will be presenting a minimal framework developed to bootstrap Samsung S8+
+proprietary hypervisor as a demonstration, providing details and insights
+on key concepts on ARM low level development and virtualization extensions
+for interested readers to create their own frameworks and Actually Compile
+And Boot them ;). Finally, we will be investigating fuzzing implementations
+under this setup.
+
+The article is organized as follows. The first section provides background
+information on ARM, Samsung hypervisors and QEMU to properly define our
+development setup. Next, we will elaborate on the framework implementation
+while dealing with the various ARM virtualization and Samsung
+implementation nuances. We will continue by demonstrating how to implement
+custom dummy fuzzers under this setup and finally for more intelligent
+fuzzing incorporate AFL a.k.a. "NFL or something by some chap called
+Cameltuft" :p
+
+On a final note, any code snippets, memory offsets or other information
+presented throughout this article refer to Samsung version G955FXXU4CRJ5,
+QEMU version 4.1.0 and AFL version 2.56b.
+
+
+--[ 1 - Overview
+
+----[ 1.1 - ARM Architecture & Virtualization Extensions
+
+As stated in "Arm Architecture Reference Manual Armv8, for Armv8-A
+architecture profile - Issue E.a" (AARM), Armv8 defines a set of Exception
+Levels (EL, also referred to as Execution Levels) EL0 to EL3 and two
+security states Secure and Non-secure aka Normal World. The higher the
+exception level, the higher the software execution privilege. EL3
+represents the highest execution/privilege level and provides support for
+switching between the two security states and can access all system
+resources for all ELs in both security states. EL2 provides support for
+virtualization and in the latest version Armv8.5 support for Secure World
+EL2 was introduced. EL1 is the Operating System kernel EL typically
+described as _privileged_ and EL0 is the EL of userland applications called
+_unprivileged_.
+
+
+---------------------------------------------------
+|              Secure Monitor (EL3)               |
+---------------------------------------------------
+|   Hypervisor (EL2)*   |  Sec Hypervisor (sEL2)  |
+---------------------------------------------------
+|        OS (EL1)       |    Trusted OS (sEL1)    |
+---------------------------------------------------
+|   Userland App (EL0)  |    Secure App (sEL0)    |
+---------------------------------------------------
+       Normal World             Secure World
+
+
+Switching between ELs is only allowed via taking an exception or returning
+from one. Taking an exception leads to a higher or the same EL while
+returning from one (via `eret`) to lower or the same EL. To invoke EL1,
+`svc` (SuperVisor Call) command is used which triggers a synchronous
+exception which is then handled by the corresponding OS kernel exception
+vector entry. Similarly, EL2 is invoked via the `hvc` (HyperVisor Call)
+command and EL3 via the `smc` (Secure Monitor Call) command. Switching
+between security states is only done by EL3.
+
+When a hypervisor is present in the system it can control various aspects
+of EL1 behavior, such as trapping certain operations traditionally handled
+by EL1 to the hypervisor allowing the latter to decide how to handle the
+operation. Hypervisor Configuration Register (HCR_EL2) is the system
+register the allows hypervisors to define which of these behaviors they
+would like to enable.
+
+Last but not least, a core feature of the virtualization extensions is the
+Stage 2 (S2) translation. As depicted below, this feature splits the
+standard translation process into two steps. First, using the EL1
+translation tables (stored at Translation Table Base Register TTBRn_EL1)
+which are controlled by EL1, the Virtual Address (VA) is translated to an
+Intermediate Physical Address (IPA), instead of a Physical Address (PA) of
+the standard process. The IPA is then translated to a PA by the hypervisor
+using the Stage 2 translation table (stored at Virtual Translation Table
+Base Register VTTBR_EL2) which is fully controlled by EL2 and not
+accessible by EL1. Note that once S2 translation is enabled, EL1 does not
+access physical memory immediately and every IPA must always be translated
+via S2 tables for the actual PA access.
+
+Of course, EL2 and EL3 maintain their own Stage 1 translation tables for
+their code and data VAs, which perform the traditional VA to PA mapping.
+
+
+                                                Intermediate
+  Virtual Memory Map                            Guest Physical
+  Guest OS                                      Memory Map
+                                                 (IPA)
+ +----------------+                            +-------------+
+ | +------------+ |                            | +---------+ |
+ | |  OS (EL 1) | |   +--------------------+   | |  Flash  | |
+ | +------------+ |   | Guest OS           |   | +---------+ |
+ |                +-->+ Translation Tables +-->+             |
+ | +------------+ |   | TTBRn_EL1          |   | +---------+ |
+ | | APP (EL 0) | |   +--------------------+   | |   RAM   | |
+ | +------------+ |                            | +---------+ |
+ +----------------+                            +-------------+
+                                                      |
+        +---------------------------------------------+
+        |
+        |                                      +-------------+
+        v                        Real Physical | +---------+ |
+ +------+-------------+          Memory Map    | |  Flash  | |
+ | Translation tables |                        | +---------+ |
+ | VTTBR_EL2          +----------------------->+             |
+ +--------------------+                        | +---------+ |
+                                +------------->+ |   RAM   | |
+                                |              | +---------+ |
+ +----------------+   +---------+----------+   +-------------+
+ | +------------+ |   | Hypervisor         |
+ | | Hyp (EL 2) | +-->+ Translation Tables |
+ | +------------+ |   | TTBR0_EL2          |
+ +----------------+   +--------------------+
+
+
+In this article we will be focusing on Normal World, implementing the EL3
+and EL1 framework to bootstrap a proprietary EL2 implementation.
+
+
+----[ 1.2 - Samsung Hypervisor
+
+As part of its ecosystem Samsung implements a security platform named
+Samsung Knox [01] which among others comprises a hypervisor implementation
+called Real-Time Kernel Protection (RKP). RKP aims to achieve various
+security features [02], such as the prevention of unauthorized privileged
+code execution, the protection of critical kernel data (i.e. process
+credentials) etc.
+
+Previous versions of the Samsung hypervisor have been targeted before, with
+[03] being the most notable exemplar. There, Samsung S7 hypervisor was
+analyzed in great detail and the article provided valuable information.
+Moreover, Samsung S8+ hypervisor is stripped and strings are obfuscated
+whereas S7 is not, providing a valuable resource for binary diffing and
+string comparison. Finally, the under examination S8+ hypervisor shares
+many similarities regarding the system architecture which have slowly begun
+disappearing in the latest models such as Samsung S10.
+
+One of the most obvious differences is the location of the binary and the
+bootstrap process. In sum, for S8+ the hypervisor binary is embedded in the
+kernel image and the precompiled binary can be found in the kernel source
+tree under init/vmm.elf (the kernel sources are available at [04]). The
+kernel is also responsible for bootstrapping and initializing RKP. On the
+other hand, the S10+ hypervisor binary resides in a separate partition, is
+bootstrapped by the bootloader and then initialized by the kernel. We will
+provide more details in the corresponding sections that follow.
+
+All these reasons contributed to the selection of the S8 hypervisor as the
+target binary, as they ease the analysis process, remove undesired
+complexity from secondary features/functionalities and allow focusing on
+the core required knowledge for our demonstration. Ultimately, though, it
+was an arbitrary decision and other hypervisors could have been selected.
+
+
+----[ 1.3 - Workspace Environment
+
+As aforementioned the targeted Samsung version is G955FXXU4CRJ5 and QEMU
+version is 4.1.0. Both the hypervisor and our framework are 64-bit ARM
+binaries. QEMU was configured to only support AArch64 targets and built
+with gcc version 7.4.0, while the framework was built with
+aarch64-linux-gnu-gcc version 8.3.0. For debugging purposes we used
+aarch64-eabi-linux-gdb version 7.11.
+
+$ git clone git://git.qemu-project.org/qemu.git
+$ cd qemu
+$ git checkout v4.1.0
+$ ./configure --target-list=aarch64-softmmu --enable-debug
+$ make -j8
+
+AFL version is 2.56b and is also compiled with gcc version 7.4.0.
+
+$ git clone https://github.com/google/afl
+$ cd afl
+$ git checkout v2.56b
+$ make
+
+
+--[ 2 - Framework Implementation & RKP Analysis
+
+The first important thing to mention regarding the framework is that it is
+compiled as an ELF AArch64 executable and treated as a kernel image, since
+QEMU allows to boot directly from ELF kernel images in EL3 and handles the
+image loading process. This greatly simplifies the boot process as we are
+not required to implement separate firmware binary to handle image loading.
+Function `_reset()` found in framework/boot64.S is the starting execution
+function and its physical address is 0x80000000 (as specified in the linker
+script framework/kernel.ld) instead of the default value of 0x40000000 for
+our QEMU setup (the reasoning behind this is explained later when the
+framework physical memory layout is discussed).
+
+We are now ready to start executing and debugging the framework which is
+contained in the compilation output kernel.elf. We use the virt platform,
+cortex-a57 cpu with a single core, 3GB of RAM (the reason for this size is
+clarified during the memory layout discussion later), with Secure mode
+(EL3) and virtualization mode (EL2) enabled and wait for gdb to attach.
+
+
+$ qemu-system-aarch64            \
+    -machine virt                \
+    -cpu cortex-a57              \
+    -smp 1                       \
+    -m 3G                        \
+    -kernel kernel.elf           \
+    -machine gic-version=3       \
+    -machine secure=true         \
+    -machine virtualization=true \
+    -nographic                   \
+    -S -s
+
+$ aarch64-eabi-linux-gdb kernel.elf -q
+    Reading symbols from kernel.elf...done.
+    (gdb) target remote :1234
+    Remote debugging using :1234
+    _Reset () at boot64.S:15
+    15          ldr x30, =stack_top_el3
+    (gdb) disassemble
+    Dump of assembler code for function _Reset:
+    => 0x0000000080000000 <+0>:     ldr     x30, 0x80040000
+       0x0000000080000004 <+4>:     mov     sp, x30
+    ...
+
+
+The framework boot sequence is presented below. We will explain the
+individual steps in the following sections. Note that we will not be
+following the graph in a linear manner.
+
+
+        +-------+                  +-------+                  +-------+
+        |  EL3  |                  |  EL2  |                  |  EL1  |
+        +-------+                  +-------+                  +-------+
+            |                          .                          .
+         _reset                        .                          .
+            |                          .                          .
+        copy_vmm                       .                          .
+            |                          .                          .
+          eret  ------------------------------------------->  start_el1
+            |                          .                          |
+            |                          .                    __enable_mmu
+            |                          .                          |
+    handle_interrupt_el3  <---------------------------  smc(CINT_VMM_INIT)
+            |                          .                          |
+      _vmm_init_el3                    .                          |
+            |                          .                          |
+      eret(0xb0101000)  ---------->  start                        |
+            |                          |                          |
+            |                          |                          |
+    handle_interrupt_el3  <--- smc(0xc2000401)                    |
+            |                          |                          |
+ _reset_and_drop_el1_main              |                          |
+            |                          |                          |
+          eret -------------------------------------------->  _el1_main
+            |                          |                          |
+            |                          |                       el1_main
+            |                          |                          |
+            |                          |                       rkp_init
+            |                          |                          |
+            |                          |                       rkp_call
+            |                          |                          |
+            |                    vmm_dispatch  <----------  hvc(RKP_INIT)
+            |                          |                          |
+            |               vmm_synchronous_handler               |
+            |                          |                          |
+            |                      rkp_main                       |
+            |                          |                          |
+            |                 my_handle_cmd_init                  |
+            |                          |                          |
+            |               various init functions...             |
+            |                          |                          |
+            |                  rkp_paging_init                    |
+            |                          |                          |
+            |                process el1 page tables              |
+            |                          |                          |
+            |                        eret  ----------------->  el1_main
+            |                          |                          |
+            |                          |                          +---+
+            |                          |                          |   |
+            |                          |                          |<--+
+
+
+
+----[ 2.1 - System Bootstrap
+
+The first thing to do after a reset is to define the stack pointers and
+exception vectors. Since EL2 system register values are handled by RKP
+during its initialization, we will be skipping EL2 registers to avoid
+affecting RKP configurations, except for any required reserved values as
+dictated by AARM. Moreover, various available oracles which will be
+discussed later can be examined to verify the validity of the system
+configuration after initializations are complete.
+
+Stack pointers (SP_ELn) are set to predefined regions, arbitrarily sized
+8kB each. Vector tables in AArch64 comprise 16 entries of 0x80 bytes each,
+must be 2kB aligned and are set in VBAR_ELx system configuration registers
+where x denotes the EL (for details refer to AARM section "D1.10 Exception
+entry" and "Bare-metal Boot Code for ARMv8-A Processors").
+
+
+| Exception taken from EL  | Synchronous | IRQ   | FIQ   | SError |
+-------------------------------------------------------------------
+| Current EL (SP_EL0)      | 0x000       | 0x080 | 0x100 | 0x180  |
+| Current EL (SP_ELx, x>0) | 0x200       | 0x280 | 0x300 | 0x380  |
+| Lower EL AArch64         | 0x400       | 0x480 | 0x500 | 0x580  |
+| Lower EL AArch32         | 0x600       | 0x680 | 0x700 | 0x780  |
+
+
+In our minimal implementation we will not be enabling IRQs or FIQs.
+Moreover, we will not be implementing any EL0 applications or performing
+`svc` calls from our kernel and as a result all VBAR_EL1 entries are set to
+lead to system hangs (infinite loops). Similarly, for EL3 we only expect
+synchronous exceptions from lower level AArch64 modes. As a result only the
+corresponding `vectors_el3` entry (+0x400) is set and all others lead to
+system hang as with EL1 vectors. The exception handler saves the current
+processor state (general purpose and state registers) and invokes the
+second stage handler. We follow the `smc` calling convention [05], storing
+the function identifier in W0 register and arguments in registers X1-X6
+(even though we only use one argument). If the function identifier is
+unknown, then the system hangs, a decision of importance in the fuzzing
+setup.
+
+
+// framework/vectors.S
+
+.align 11
+.global vectors
+vectors:
+    /*
+     * Current EL with SP0
+     */
+    .align 7
+    b       .          /* Synchronous */
+    .align 7
+    b       .          /* IRQ/vIRQ */
+    ...
+
+.align 11
+.global vectors_el3
+vectors_el3:
+    ...
+
+    /*
+     * Lower EL, aarch64
+     */
+    .align 7
+    b el3_synch_low_64
+...
+
+el3_synch_low_64:
+    build_exception_frame
+
+    bl  handle_interrupt_el3
+
+    cmp x0, #0
+    b.eq 1f
+    b .
+1:
+    restore_exception_frame
+    eret
+...
+
+
+Processors enter EL3 after reset and in order to drop to a lower ELs we
+must initialize the execution state of the desired EL and control registers
+and construct a fake state in the desired EL to return to via `eret`. Even
+though we will be dropping from EL3 directly to EL1 to allow the
+proprietary EL2 implementation to define its own state, we still have to
+set some EL2 state registers values to initialize EL1 execution state.
+Failure to comply with the minimal configuration results in `eret`
+invocation to have no effect on the executing exception level (at least in
+QEMU), in other words we can not drop to lower ELs.
+
+In detail, to drop from EL3 to EL2 we have to define EL2 state in Secure
+Configuration Register (SCR_EL3). We set SCR_EL3.NS (bit 0) to specify that
+we are in Normal World, SCR_EL3.RW (bit 10) to specify that EL2 is AArch64
+and any required reserved bits. Additionally, we set SCR_EL3.HCE (bit 8) to
+enable the `hvc` instruction here, although this could also be performed at
+later steps. Next, to be able to drop to EL1 we modify Hypervisor
+Configuration Register (HCR_EL2) to set HCR_EL2.RW (bit 31) and specify
+that EL1 is AArch64 and any other required reserved bits. To be as close as
+possible to the original setup we set some more bits here, such as
+HCR_EL2.SWIO (bit 1) which dictates the cache invalidation behavior. These
+additional values are available to us via the aforementioned oracles which
+will be presented later in the article.
+
+
+// framework/boot64.S
+
+.global _reset
+_reset:
+    // setup EL3 stack
+    ldr x30, =stack_top_el3
+    mov sp, x30
+
+    // setup EL1 stack
+    ldr x30, =stack_top_el1
+    msr sp_el1, x30
+
+    ...
+
+    // Setup exception vectors for EL1 and EL3 (EL2 is setup by vmm)
+    ldr x1, = vectors
+    msr vbar_el1, x1
+    ldr x1, = vectors_el3
+    msr vbar_el3, x1
+
+    ...
+
+    // Initialize EL3 register values
+    ldr   x0, =AARCH64_SCR_EL3_BOOT_VAL
+    msr   scr_el3, x0
+
+    // Initialize required EL2 register values
+    mov   x0, #( AARCH64_HCR_EL2_RW )
+    orr   x0, x0,#( AARCH64_HCR_EL2_SWIO )
+    msr   hcr_el2, x0
+
+    ...
+
+    /*
+     * DROP TO EL1
+     */
+    mov   x0, #( AARCH64_SPSR_FROM_AARCH64 | AARCH64_SPSR_MODE_EL1 | \
+                 AARCH64_SPSR_SP_SEL_N)
+    msr   spsr_el3, x0
+
+
+    // drop to function start_el1
+    adr   x0, start_el1
+    msr   elr_el3, x0
+    eret
+
+
+For the fake lower level state, Exception Link Register (ELR_EL3) holds the
+exception return address, therefore we set it to the desired function
+(`start_el1()`). Saved Process Status Register (SPSR_EL3) holds the
+processor state (PSTATE) value before the exception, so we set its values
+so that the fake exception came from EL1 (SPSR_EL3.M bits[3:0]), using
+SP_EL1 (SPSR_EL3.M bit 0) and executing in AArch64 mode (SPSR_EL3.M bit 4).
+`eret` takes us to `start_el1()` in EL1. The final register related to
+exceptions is Exception Syndrome Register (ESR_ELx) which holds information
+regarding the nature of the exception (syndrome information) and as such it
+has no value to the returning EL and can be ignored.
+
+
+------[ 2.1.1 - EL1
+
+As aforementioned our goal is to provide a minimal setup. Considering this,
+there is also the need to be as close as possible to the original setup.
+Our EL1 configuration is defined with those requirements in mind and to
+achieve this we used system configuration register values from both the
+kernel source and the EL2 oracles that will be presented in the following
+sections, but for now we can safely assume these are arbitrarily chosen
+values. We will be presenting details regarding some critical system
+register values but for detailed descriptions please refer to AARM section
+"D13.2 General system control registers".
+
+
+start_el1:
+    // initialize EL1 required register values
+
+    ldr x0, =AARCH64_TCR_EL1_BOOT_VAL
+    msr tcr_el1, x0
+
+    ldr x0, =AARCH64_SCTLR_EL1_BOOT_VAL
+    msr sctlr_el1, x0
+    ...
+
+
+#define AARCH64_TCR_EL1_BOOT_VAL (                                \
+  ( AARCH64_TCR_IPS_1TB        << AARCH64_TCR_EL1_IPS_SHIFT   ) | \
+  ( AARCH64_TCR_TG1_4KB        << AARCH64_TCR_EL1_TG1_SHIFT   ) | \
+  ( AARCH64_TCR_TSZ_512G       << AARCH64_TCR_EL1_T1SZ_SHIFT  ) | \
+  ( AARCH64_TCR_TG0_4KB        << AARCH64_TCR_EL1_TG0_SHIFT   ) | \
+  ( AARCH64_TCR_TSZ_512G       << AARCH64_TCR_EL1_T0SZ_SHIFT  ) | \
+  ...
+  )
+
+
+As Translation Control Register (TCR_EL1) values suggest, we use a 40-bit
+1TB sized Intermediate Physical Address space (TCR_EL1.IPS bits[34:32]),
+for both TTBR0_EL1 and TTBR1_EL1 4kB Translation Granule size (TCR_EL1.TG1
+bits [31:30] and TCR_EL1.TG0 [15:14] respectively) and 25 size offset which
+means that there is a 64-25=39 bit or 512GB region of input VAs for each
+TTBRn_EL1 (TCR_EL1.T1SZ bits[21:16] and TCR_EL1.T0SZ bits[5:0]).
+
+By using 4kB Granularity each translation table size is 4kB and each entry
+is a 64-bit descriptor, hence 512 entries per table. So at Level 3 we have
+512 entries each pointing to a 4kB page or in other words we can map a 2MB
+space. Similarly, Level 2 has 512 entries each pointing to a 2MB space
+summing up to a 1GB address space and Level 1 entries point to 1GB spaces
+summing up to a 512GB address space. In this setup where there are 39bit
+input VAs we do not require a Level 0 table as shown from the translation
+graph. For more details refer to AARM section "D5.2 The VMSAv8-64 address
+translation system".
+
+
++---------+---------+---------+-----------+
+| [38:30] | [29:21] | [20:12] |  [11:0]   | VA segmentation with
+|         |         |         |           | 4kB Translation Granule
+| Level 1 | Level 2 | Level 3 | Block off | 512GB input address space
++---------+---------+---------+-----------+
+
+
+                                         Physical Address
+                             +-------------------------+-----------+
+ VA Translation              |          [39:12]        |  [11:0]   |
+ demonstration with          +-------------------------+-----------+
+ 4kB Granule,                               ^                 ^
+ 512GB Input VA Space                       |                 |
+ 1TB IPS                                    |                 +----------+
+                                            +-------------------------+  |
+                                                                      |  |
+                Level 1 tlb          Level 2 tlb        Level 3 tlb   |  |
+    +--------> +-----------+   +--->+-----------+  +-->+-----------+  |  |
+    |          |           |   |    |           |  |   |           |  |  |
+    |          +-----------+   |    +-----------+  |   |           |  |  |
+    |          | 1GB block |   |    | 2MB block |  |   |           |  |  |
+    |          |   entry   |   |    |   entry   |  |   |           |  |  |
+    |          +-----------+   |    +-----------+  |   |           |  |  |
+    |          |           |   |    |           |  |   |           |  |  |
+    |          +-----------+   |    |           |  |   |           |  |  |
+    |      +-->+ Tbl entry +---+    |           |  |   |           |  |  |
++---+---+  |   +-----------+        +-----------+  |   |           |  |  |
+| TTBRn |  |   |           |    +-->+ Tbl entry +--+   +-----------+  |  |
++---+---+  |   |           |    |   +-----------+   +->+ Pg entry  +--+  |
+    ^      |   |           |    |   |           |   |  +-----------+     |
+    |      |   |           |    |   |           |   |  |           |     |
+    +--+   |   +-----------+    |   +-----------+   |  +-----------+     |
+       |   |                    +------+            |                    |
+       |   +----+ Index +----+         |         +--+        +-----------+
+       |                     |         |         |           |
++----+-+-+----+---------+----+----+----+----+----+----+------+----+
+|    |   |    | Level 0 | Level 1 | Level 2 | Level 3 | PA offset | VA
++----+---+----+---------+---------+---------+---------+-----------+
+      [55]      [47:39]   [38:30]   [29:21]   [20:12]     [11:0]
+  TTBRn Select
+
+
+For Levels 1 and 2 every entry can either point to the next translation
+table level (table entry) or to the actual physical address (block entry)
+effectively ending translation. The entry type is defined in bits[1:0],
+where bit 0 identifies whether the descriptor is valid (1 denotes a valid
+descriptor) and bit 1 identifies the type, value 0 being used for block
+entries and 1 for table entries. As a result entry type value 3 identifies
+table entries and value 1 block entries. Level 1 block entries point to 1GB
+memory regions with VA bits[29:0] being used as the PA offset and Level 2
+block entries point to 2MB regions with bits[20:0] used as the offset. Last
+but not least, Level 3 translation tables can only have page entries
+(similar to block entries but with descriptor type value 3, as previous
+level table entries).
+
+
+61          51                             11         2  1:0
++------------+-----------------------------+----------+------+ Block Entry
+| Upper Attr |           ...               | Low Attr | Type | Stage 1
++------------+-----------------------------+----------+------+ Translation
+
+| bits | Attr      | Description                  |
+---------------------------------------------------
+| 4:2  | AttrIndex | MAIR_EL1 index               |
+| 7:6  | AP        | Access permissions           |
+| 53   | PXN       | Privileged execute never     |
+| 54   | (U)XN     | (Unprivileged) execute never |
+                                                    Block entry attributes
+| AP | EL0 Access  | EL1/2/3 Access |               for Stage 1 translation
+-------------------------------------
+| 00 | None        |   Read Write   |
+| 01 | Read Write  |   Read Write   |
+| 10 | None        |   Read Only    |
+| 11 | Read Only   |   Read Only    |
+
+
+
+61      59                                            2  1:0
++--------+--------------------------------------------+------+ Table Entry
+|  Attr  |                     ...                    | Type | Stage 1
++--------+--------------------------------------------+------+ Translation
+
+| bits  | Attr | Description                |
+---------------------------------------------
+| 59    | PXN  | Privileged execute never   |
+| 60    | U/XN | Unprivileged execute never |
+| 62:61 | AP   | Access permissions         |
+                                                Table entry attributes
+| AP | Effect in subsequent lookup levels |     for Stage 1 translation
+-------------------------------------------
+| 00 | No effect                          |
+| 01 | EL0 access not permitted           |
+| 10 | Write disabled                     |
+| 11 | Write disabled, EL0 Read disabled  |
+
+
+In our setup we use 2MB regions to map the kernel and create two mappings.
+Firstly, an identity mapping (VAs are equal to the PAs they are mapped to)
+set to TTBR0_EL1 and used mainly when the system transitions from not using
+the MMU to enabling it. Secondly, the TTBR1_EL1 mapping where PAs are
+mapped to VA_OFFSET + PA, which means that getting the PA from a TTBR1_EL1
+VA or vice versa is simply done by subtracting or adding the VA_OFFSET
+correspondingly. This will be of importance during the RKP initialization.
+
+
+#define VA_OFFSET 0xffffff8000000000
+
+#define __pa(x) ((uint64_t)x - VA_OFFSET)
+#define __va(x) ((uint64_t)x + VA_OFFSET)
+
+
+The code to create the page tables and enable the MMU borrows heavily from
+the Linux kernel implementation. We use one Level 1 entry and the required
+amount of Level 2 block entries with the two tables residing in contiguous
+preallocated (defined in the linker script) physical pages. The Level 1
+entry is evaluated by macro `create_table_entry`. First, the entry index is
+extracted from VA bits[38:30]. The entry value is the next Level table PA
+ORed with the valid table entry value. This also implicitly defines the
+table entry attributes, where (U)XN is disabled, Access Permissions (AP)
+have no effect in subsequent levels of lookup. For additional details
+regarding the memory attributes and their hierarchical control over memory
+accesses refer to AARM section "D5.3.3 Memory attribute fields in the
+VMSAv8-64 translation table format descriptors".
+
+A similar process is followed for Level 2 but in a loop to map all required
+VAs in macro `create_block_map`. The entry value is the PA we want to map
+ORed with block entry attribute values defined by AARCH64_BLOCK_DEF_FLAGS.
+The flag value used denotes a non-secure memory region, (U/P)XN disabled,
+Normal memory as defined in Memory Attribute Indirection Register
+(MAIR_EL1) and Access Permissions (AP) that allow Read/Write to EL1 and no
+access to EL0. As with table entries, for detailed description refer to
+AARM section "D5.3.3". Finally, MAIR_ELx serves as a table holding
+information/attributes of memory regions and readers may refer to AARM
+section "B2.7 Memory types and attributes" for more information.
+
+
+// framework/aarch64.h
+
+/*
+ * Block default flags for initial MMU setup
+ *
+ * block entry
+ * attr index 4
+ * NS = 0
+ * AP = 0 (EL0 no access, EL1 rw)
+ * (U/P)XN disabled
+ */
+#define AARCH64_BLOCK_DEF_FLAGS (                          \
+  AARCH64_PGTBL_BLK_ENTRY                                | \
+  0x4 << AARCH64_PGTBL_BLK_ENT_STAGE1_LOW_ATTR_IDX_SHIFT | \
+  AARCH64_PGTBL_BLK_ENT_STAGE1_LOW_ATTR_AP_RW_ELHIGH <<    \
+      AARCH64_PGTBL_BLK_ENT_STAGE1_LOW_ATTR_AP_SHIFT     | \
+  AARCH64_PGTBL_BLK_ENT_STAGE1_LOW_ATTR_SH_INN_SH    <<    \
+      AARCH64_PGTBL_BLK_ENT_STAGE1_LOW_ATTR_SH_SHIFT     | \
+  1 << AARCH64_PGTBL_BLK_ENT_STAGE1_LOW_ATTR_AF_SHIFT      \
+  )
+
+
+// framework/mmu.S
+
+__enable_mmu:
+    ...
+
+    bl __create_page_tables
+
+    isb
+    mrs x0, sctlr_el1
+    orr x0, x0, #(AARCH64_SCTLR_EL1_M)
+    msr sctlr_el1, x0
+...
+
+__create_page_tables:
+
+    mov x7, AARCH64_BLOCK_DEF_FLAGS
+    ...
+
+    // x25 = swapper_pg_dir
+    u/ x20 = VA_OFFSET
+    mov x0, x25
+    adrp x1, _text
+    add x1, x1, x20
+    create_table_entry x0, x1, #(LEVEL1_4K_INDEX_SHIFT), \
+                        #(PGTBL_ENTRIES), x4, x5
+
+    adrp x1, _text
+    add x2, x20, x1
+    adrp x3, _etext
+    add x3, x3, x20
+    create_block_map x0, x7, x1, x2, x3
+...
+
+.macro create_table_entry, tbl, virt, shift, ptrs, tmp1, tmp2
+    lsr \tmp1, \virt, \shift
+    and \tmp1, \tmp1, \ptrs - 1                // table entry index
+    add \tmp2, \tbl, #PAGE_SIZE                // next page table PA
+    orr \tmp2, \tmp2, #AARCH64_PGTBL_TBL_ENTRY // valid table entry
+    str \tmp2, [\tbl, \tmp1, lsl #3]           // store new entry
+    add \tbl, \tbl, #PAGE_SIZE                 // next level table page
+.endm
+
+.macro  create_block_map, tbl, flags, phys, start, end
+    lsr     \phys, \phys, #LEVEL2_4K_INDEX_SHIFT
+    lsr     \start, \start, #LEVEL2_4K_INDEX_SHIFT
+    and     \start, \start, #LEVEL_4K_INDEX_MASK     // table index
+    orr     \phys, \flags, \phys, lsl #LEVEL2_4K_INDEX_SHIFT // table entry
+    lsr     \end, \end, #LEVEL2_4K_INDEX_SHIFT     // block entries counter
+    and     \end, \end, #LEVEL_4K_INDEX_MASK       // table end index
+    1:   str     \phys, [\tbl, \start, lsl #3]  // store the entry
+    add     \start, \start, #1                     // next entry
+    add     \phys, \phys, #LEVEL2_4K_BLK_SIZE      // next block
+    cmp     \start, \end
+    b.ls    1b
+.endm
+
+...
+
+
+As a demonstration we perform a manual table walk for VA 0xffffff8080000000
+which should be the TTBR1_EL1 VA of function `_reset()`. The Level 1 table
+index (1) is 2 and the entry value is 0x8008a003 which denotes a valid
+table descriptor at PA 0x8008a000. The Level 2 entry index (2) is 0 and
+value of the entry is 0x80000711 which denotes a block entry at physical
+address 0x80000000. The remaining VA bits setting the PA offset are zero
+and examining the resulting PA is of course the start of function
+`_reset()`. Note that since we have not yet enabled the MMU (as shown in
+the disassembly this is performed in the next instructions), all memory
+accesses with gdb refer to PAs that is why we can directly examine the page
+tables and resulting PA. In our setup that would be true even with MMU
+enabled due to the identity mapping, however, this should not be assumed to
+apply to every system.
+
+
+(gdb) disas
+Dump of assembler code for function __enable_mmu:
+   0x00000000800401a0 <+0>:     mov     x28, x30
+   0x00000000800401a4 <+4>:     adrp    x25, 0x80089000 // TTBR1_EL1
+   0x00000000800401a8 <+8>:     adrp    x26, 0x8008c000
+   0x00000000800401ac <+12>:    bl      0x80040058 <__create_page_tables>
+=> 0x00000000800401b0 <+16>:    isb
+   0x00000000800401b4 <+20>:    mrs     x0, sctlr_el1
+   0x00000000800401b8 <+24>:    orr     x0, x0, #0x1
+End of assembler dump.
+
+(gdb)  p/x ((0xffffff8000000000 + 0x80000000) >> 30) & 0x1ff      /* (1) */
+$19 = 0x2
+
+(gdb)  x/gx ($TTBR1_EL1 + 2*8)
+0x80089010:     0x000000008008a003
+
+(gdb)  p/x ((0xffffff8000000000 + 0x80000000) >> 21) & 0x1ff      /* (2) */
+$20 = 0x0
+
+(gdb)  x/gx 0x000000008008a000
+0x8008a000:     0x0000000080000711
+
+(gdb)  x/10i 0x0000000080000000
+   0x80000000 <_reset>: ldr     x30, 0x80040000
+   0x80000004 <_reset+4>:       mov     sp, x30
+   0x80000008 <_reset+8>:       mrs     x0, currentel
+
+
+Finally, with the MMU enabled we are ready to enable RKP. Since the EL2
+exception vector tables are not set, the only way to do that is to drop to
+EL2 from EL3 as we did for EL1. We invoke `smc` with function identifier
+CINT_VMM_INIT which the EL3 interrupt handler redirects to function
+`_vmm_init_el3()`.
+
+
+----[ 2.2 - EL2 Bootstrap
+
+RKP binary is embedded in our kernel image using the `incbin` assembler
+directive as shown below and before dropping to EL2 we must place the
+binary in its expected physical address. Since RKP is an ELF file, we can
+easily obtain the PA and entry point which for this specific RKP version
+are 0xb0100000 and 0xb0101000 respectively. `copy_vmm()` function copies
+the binary from its kernel position to the expected PA during the system
+initialization in function `_reset()`.
+
+
+// framework/boot64.S
+...
+
+.global _svmm
+_svmm:
+.incbin "vmm-G955FXXU4CRJ5.elf"
+.global _evmm
+_evmm:
+...
+
+
+$ readelf -l vmm-G955FXXU4CRJ5.elf
+
+Elf file type is EXEC (Executable file)
+Entry point 0xb0101000
+There are 2 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  LOAD           0x0000000000000000 0x00000000b0100000 0x00000000b0100000
+                 0x000000000003e2e0 0x000000000003e6c0  RWE    0x10000
+  ...
+
+
+At long last we are ready to drop to EL2. Similarly to dropping to EL1, we
+set ELR_EL3 to the RKP entry point and SPSR_EL3 so that the fake exception
+came from EL2 executing in AArch64 mode. We additionally set X0 and X1 to
+to RKP start PA and reserved size. These values are dictated by the Samsung
+kernel implementation and the oracles and required by the EL2
+implementation which will be explained shortly. Readers interested in the
+Samsung kernel implementation can refer to kernel function `vmm_init()` at
+kernel/init/vmm.c which is called during the kernel initialization in
+function `start_kernel()`.
+
+
+// framework/boot64.S
+
+.global _vmm_init_el3
+.align 2
+_vmm_init_el3:
+    // return to vmm.elf entry (RKP_VMM_START + 0x1000)
+    mov   x0, #RKP_VMM_START
+    add   x0, x0, #0x1000
+    msr   elr_el3, x0
+    mov   x0, #(AARCH64_SPSR_FROM_AARCH64 | AARCH64_SPSR_MODE_EL2 | \
+                AARCH64_SPSR_SP_SEL_N)
+    msr   spsr_el3, x0
+
+    // these are required for the correct hypervisor setup
+    mov   x0, #RKP_VMM_START
+    mov   x1, #RKP_VMM_SIZE
+    eret
+    .inst       0xdeadc0de //crash for sure
+ENDPROC(_vmm_init_el3)
+
+
+One valuable source of information at this point is the Linux kernel procfs
+entry /proc/sec_log as it provides information about the aforementioned
+values during Samsung kernel `vmm_init()` invocation. This procfs entry is
+part of the Exynos-SnapShot debugging framework and more information can be
+found in the kernel source at kernel/drivers/trace/exynos-ss.c. A sample
+output with RKP related values is displayed below. Apart from the RKP
+related values we can see the kernel memory layout which will be helpful in
+creating our framework memory layout to satisfy the plethora of criteria
+introduced by RKP which will be presented later.
+
+
+RKP: rkp_reserve_mem, base:0xaf400000, size:0x600000
+RKP: rkp_reserve_mem, base:0xafc00000, size:0x500000
+RKP: rkp_reserve_mem, base:0xb0100000, size:0x100000
+RKP: rkp_reserve_mem, base:0xb0200000, size:0x40000
+RKP: rkp_reserve_mem, base:0xb0400000, size:0x7000
+RKP: rkp_reserve_mem, base:0xb0407000, size:0x1000
+RKP: rkp_reserve_mem, base:0xb0408000, size:0x7f8000
+software IO TLB [mem 0x8f9680000-0x8f9a80000] (4MB) mapped at
+    [ffffffc879680000-ffffffc879a7ffff] Memory: 3343540K/4136960K available
+    (11496K kernel code, 3529K rwdata, 7424K rodata, 6360K init, 8406K bss,
+    637772K reserved, 155648K cma-reserved)
+Virtual kernel memory layout:
+    modules : 0xffffff8000000000 - 0xffffff8008000000   (   128 MB)
+    vmalloc : 0xffffff8008000000 - 0xffffffbdbfff0000   (   246 GB)
+      .init : 0xffffff8009373000 - 0xffffff80099a9000   (  6360 KB)
+      .text : 0xffffff80080f4000 - 0xffffff8008c2f000   ( 11500 KB)
+    .rodata : 0xffffff8008c2f000 - 0xffffff8009373000   (  7440 KB)
+      .data : 0xffffff80099a9000 - 0xffffff8009d1b5d8   (  3530 KB)
+    vmemmap : 0xffffffbdc0000000 - 0xffffffbfc0000000   (     8 GB maximum)
+              0xffffffbdc0000000 - 0xffffffbde2000000   (   544 MB actual)
+SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=8, Nodes=1
+RKP: vmm_reserved
+  .base=ffffffc030100000 .size=1048576
+  .bss=ffffffc03013e2e0 .bss_size=992
+  .text_head=ffffffc030101000 .text_head_size=192
+RKP: vmm_kimage
+.base=ffffff8009375a10  .size=255184
+RKP: vmm_start=b0100000, vmm_size=1048576
+RKP: entry point=00000000b0101000
+RKP: status=0
+in rkp_init, swapper_pg_dir : ffffff800a554000
+
+
+The entry point eventually leads to RKP function `vmm_main()` (0xb0101818).
+The function initially checks whether RKP has already been initialized (3)
+and if true it returns, or else proceeds with the initialization and sets
+the initialization flag. Immediately after this, `memory_init()` function
+(0xb0101f24) is called where a flag is set indicating that memory is active
+and a 0x1f000 sized buffer at 0xb0220000 is initialized to zero.
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+int64_t vmm_main(int64_t hyp_base_arg, int64_t hyp_size_arg, char **stacks)
+{
+    ...
+
+    if ( !initialized_ptr )                                       /* (3) */
+    {
+        initialized_ptr = 1;
+        memory_init();
+
+        log_message("RKP_cdb5900c %sRKP_b826bc5a %s\n",
+                                    "Jul 11 2018", "11:19:43");
+
+        /* various log messages and misc initializations */
+
+        heap_init(base, size);
+        stacks = memalign(8, 0x10000) + 0x2000;
+
+        vmm_init();
+        ...
+
+        if (hyp_base_arg != 0xB0100000)
+            return -1;
+        ...
+
+        set_ttbr0_el2(&_static_s1_page_tables_start___ptr);
+        s1_enable();
+
+        set_vttbr_el2(&_static_s2_page_tables_start___ptr);
+        s2_enable();
+    }
+    ...
+
+    return result;
+}
+
+
+This buffer is the RKP log and along with RKP debug log at 0xb0200000,
+which will be presented later, they comprise the EL2 oracles. Both of them
+are made available via procfs entry /proc/rkp_log and interested readers
+can check kernel/drivers/rkp/rkp_debug_log.c for more information from the
+kernel perspective. RKP log is written to by `log_message()` function
+(0xb0102e94) among others and an edited sample output from `vmm_main()`
+with deobfuscated strings as comments with the help of S7 hypervisor binary
+as mentioned before.
+
+
+RKP_1f22e931 0xb0100000 RKP_dd15365a 40880   // file base: %p size %s
+RKP_be7bb431 0xb0100000 RKP_dd15365a 100000  // region base: %p size %s
+RKP_2db69dc3 0xb0220000 RKP_dd15365a 1f000   // memory log base: %p size %s
+RKP_2c60d5a7 0xb0141000 RKP_dd15365a bf000   // heap base: %p size %s
+
+
+During the initialization the heap is initialized and memory is allocated
+for the stack which has been temporarily set to a reserved region during
+compilation. Next, in `vmm_init()` (0xb0109758) two critical actions are
+performed. First, the EL2 exception vector table (0xb010b800) is set in
+VBAR_EL2 enabling us to invoke RKP from EL1 via `hvc`. Finally, HCR_EL2.TVM
+(bit 26) is set trapping EL1 writes to virtual memory control registers
+(SCTLR_EL1, TTBRnRL1, TCR_EL1, etc) to EL2 with Syndrome Exception Class
+(ESR_EL2.EC bits [31:26]) value 0x18 (more on this while discussing the EL2
+synchronous exception handler).
+
+At this point we clarify one the aforementioned constrains; that of the RKP
+bootstrap arguments. The RKP PA is compared at this point with hardcoded
+value 0xb0100000 and if there's a mismatch the bootstrap process terminates
+and -1 is returned denoting failure. Furthermore, the PA is stored and used
+later during the paging initialization, also discussed later.
+
+If the RKP PA check is satisfied, the final bootstrap steps comprise the
+MMU and memory translations enabling. First, EL2 Stage 1 translations are
+enabled. TTBR0_EL2 is set to predefined static tables at 0xb011a000 and
+`s1_enable()` (0xb0103dcc) function is called. First, MAIR_EL2 is set to
+define two memory attributes (one for normal memory and one for device
+memory). Next, TCR_EL2 is ORed with 0x23518 which defines a 40 bits or 1TB
+Physical Address Size (TCR_EL2.PS bits[18:16]), a 4kB Granule size
+(TCR_EL2.TG0 bits[15:14]) and 24 size offset (TCR_EL2.T0SZ bits[5:0]) which
+corresponds to a 64-24=40 bit or 1TB input address space for TTBR0_EL2. To
+conclude `s1_enable()` SCTLR_EL2 is set with the important values being
+SCTLR_EL2.WNX (bit 19) which enables the behavior where write permission
+implies XN and SCTLR_EL2.M (bit 0) which enables the MMU.
+
+Last but not least, Stage 2 translation is enabled. VTTBR_EL2 which holds
+the Stage 2 translation tables is set to the predefined static tables at
+0xb012a000. Next, Virtual Translation Control Register (VTCR_EL2) is set
+which as the name dictates, controls the Stage 2 translation process
+similarly to TCR_ELx for Stage 1 translations. Its value defines a 40 bits
+or 1TB Physical Address Size (VTCR_EL2.PS bits[18:16]), a 4kB Granule size
+(TCR_EL2.TG0 bits[15:14]), and 24 size offset (TCR_EL2.T0SZ bits[5:0])
+which corresponds to a 64-24=40 bit or 1TB input address space for
+VTTBR0_EL2. Moreover, Starting Level of Stage 2 translation controlled by
+VTCR_EL2.SL0 (bits[7:6]) is set to 1 and since TCR_EL2.TG0 is set to 4kB
+Stage 2 translations start at Level 1 with concatenated tables which will
+be explained in detail next. Finally, HCR_EL2.VM (bit 0) is set to enable
+Stage 2 translation.
+
+
+------[ 2.2.1 - Stage 2 translation & Concatenated tables
+
+As AARM states "for a Stage 2 translation, up to 16 translation tables can
+be concatenated at the initial lookup level. For certain input address
+sizes, concatenating tables in this way means that the lookup starts at a
+lower level than would otherwise be the case". We are going to demonstrate
+this in our current setup but for more details refer to section "D5.2.6
+Overview of the VMSAv8-64 address translation stages" of AARM.
+
+Since we have a 40 bit input address range only bit 39 of the input VA
+is used to index translation table at Level 0 and as a result only two
+Level 1 tables exist. Instead of the default setup, ARM allows to
+concatenate the two tables in contiguous physical pages and start
+translation in Level 1. To index the Level 1 tables, IPA bits[39:30] are
+used instead of the traditional bits[38:30].
+
++---------+---------+---------+---------+-----------+ Default approach
+|   39    | [38:30] | [29:21] | [20:12] |  [11:0]   | Stage 2 translation
+|         |         |         |         |           | IPA segmentation
+| Level 0 | Level 1 | Level 2 | Level 3 | Block off | 4kB Granule
++---------+---------+---------+---------+-----------+ 40-bit IPS
+
++-------------+---------+---------+-----------+ Concatenated Tables
+|   [39:30]   | [29:21] | [20:12] |  [11:0]   | IPA segmentation
+|             |         |         |           | 4kB Granule
+|   Level 1   | Level 2 | Level 3 | Block off | 40-bit IPS
++-------------+---------+---------+-----------+ VTCR_EL2.SL0 = 1
+
+
+We have included a gdb script to dump the Stage 2 translation tables based
+on tools from [03] and [06]. The script reads the table PA from VTTBR_EL2
+and is configured for our setup only and not the generic approach.
+Moreover, it needs to be called from EL2 or EL3, for which `switchel <#>`
+command can be used. Finally, our analysis indicates that there is a 1:1
+mapping between IPAs and PAs.
+
+
+(gdb) switchel
+$cpsr = 0x5 (EL1)
+
+(gdb)  switchel 2
+Moving to EL2
+$cpsr = 0x9
+
+(gdb) pagewalk
+
+################################################
+#     Dump Second Stage Translation Tables     #
+################################################
+PA Size: 40-bits
+Starting Level: 1
+IPA range: 0x000000ffffffffff
+Page Size: 4KB
+
+...
+Third level: 0x1c07d000-0x1c07e000: S2AP=11, XN=10
+Third level: 0x1c07e000-0x1c07f000: S2AP=11, XN=10
+...
+second level block: 0xbfc00000-0xbfe00000: S2AP=11, XN=0
+second level block: 0xbfe00000-0xc0000000: S2AP=11, XN=0
+first level block: 0xc0000000-0x100000000: S2AP=11, XN=0
+first level block: 0x880000000-0x8c0000000: S2AP=11, XN=0
+...
+
+(gdb) switchel 1
+Moving to EL1
+$cpsr = 0x5 (EL1)
+
+
+------[ 2.2.2 - EL2 bootstrap termination and EL1 physical address
+
+Now that the hypervisor is setup we can resume with the framework setup.
+The bootstrap process terminates via an `smc` command thus returning to
+EL3. X0 holds the special value 0xc2000401 and X1 the return value of the
+operation (zero denoting success). If the bootstrap process fails,
+`handle_interrupt_el3()` fails (5) and the system hangs (4).
+
+
+// framework/vectors.S
+
+el3_synch_low_64:
+    build_exception_frame
+
+    bl  handle_interrupt_el3
+
+    cmp x0, #0                                                    /* (4) */
+    b.eq 1f
+    b .
+1:
+    restore_exception_frame
+    eret
+...
+
+// framework/interrupt-handler.c
+
+int handle_interrupt_el3(uint64_t value, uint64_t status)
+{
+    int ret = 0;
+    switch (value) {
+        case 0xc2000401: // special return value from vmm initialization
+            if (status == 0) {
+                _reset_and_drop_el1_main();
+            } else {
+                ret = -1;                                         /* (5) */
+            }
+     ...
+}
+
+
+Careful readers might have noticed that the EL2 `smc` invocation causes a
+new exception frame to be stored in EL3 and in order to return to EL1 we
+must properly restore the state. Well, due to the framework minimal nature
+no information needs to be saved before or after EL2 bootstrap. As a result
+we simply reset the state (i.e. stack pointers) and drop to EL1 function
+`_el1_main()` which in turn leads to `el1_main()`.
+
+
+// framework/boot64.S
+
+...
+
+_reset_and_drop_el1_main:
+    /*
+     * We have initialized vmm. Jump to EL1 main since HVC is now enabled,
+     * and EL1 does not require EL3 to interact with hypervisor
+     */
+    // setup EL3 stack
+    ldr x30, =stack_top_el3
+    mov sp, x30
+
+    // setup EL1 stack
+    ldr x30, =stack_top_el1
+    msr sp_el1, x30
+
+    mov   x0, #(AARCH64_SPSR_FROM_AARCH64 | AARCH64_SPSR_MODE_EL1 | \
+                AARCH64_SPSR_SP_SEL_N)
+    msr   spsr_el3, x0
+
+
+    // drop to function _el1_main
+    adr   x0, _el1_main
+    msr   elr_el3, x0
+    eret                                                          /* (6) */
+...
+
+_el1_main:
+    mov x20, #-1
+    lsl x20, x20, #VA_BITS
+    adr x0, el1_main
+    add x0, x0, x20
+
+    blr x0
+...
+
+
+Here we explain another system constrain. Our framework was arbitrarily
+placed at PA 0x80000000. The reason should by now be obvious. After
+enabling Stage 2 translation, every EL1 IPA is translated through Stage 2
+tables to find the PA. Examining the hypervisor static maps reveals region
+starting at 0x80000000 to satisfy the criteria required for lower level
+execution. Specifically, eXecute Never (XN) field is unset and there is no
+write permissions. Should the kernel be placed in an unmapped or non
+executable for Stage 2 translation region during framework initialization,
+then returning from EL3 to EL1 (6) results in a translation error.
+
+
+(gdb) pagewalk
+
+################################################
+#     Dump Second Stage Translation Tables     #
+################################################
+...
+Third level: 0x1c07e000-0x1c07f000: S2AP=11, XN=10
+Third level: 0x1c07f000-0x1c080000: S2AP=11, XN=10
+Third level: 0x80000000-0x80001000: S2AP=1, XN=0
+Third level: 0x80001000-0x80002000: S2AP=1, XN=0
+...
+
+
+54          51                             10         2  1:0
++------------+-----------------------------+----------+------+ Block Entry
+| Upper Attr |           ....              | Low Attr | Type | Stage 2
++------------+-----------------------------+----------+------+ Translation
+
+
+| bits  | Attr      | Description        |
+------------------------------------------
+| 5:2   | AttrIndex | MAIR_EL2 index     |
+| 7:6   | S2AP      | Access permissions |
+| 53:54 | XN        | Execute never      |
+                                                  Block entry attributes
+| S2AP | EL1/EL0 Access |  | XN | Allow Exec  |   for Stage 2 translation
+-------------------------  --------------------
+| 00   | None           |  | 00 | EL0/EL1     |
+| 01   | Read Only      |  | 01 | EL0 not EL1 |
+| 10   | Write Only     |  | 10 | None        |
+| 11   | Read Write     |  | 11 | EL1 not EL0 |
+
+
+
+----[ 2.3 - RKP Initialization Functions
+
+The first thing performed in `el1_main()` is to initialize RKP. There are
+numerous steps that comprise RKP initialization and we will present them in
+the following sections. Before explaining the initialization process though
+we will describe the RKP exception handlers.
+
+
+------[ 2.3.1 - RKP Synchronous Handler
+
+As explained during the EL2 bootstrap VBAR_EL2 is set at 0xb010b800 where
+each handler first creates the exception frame storing all generic
+registers and then calls function `vmm_dispatch()` (0x0b010aa44) with the
+three arguments being the offset indicating the EL from which the exception
+was taken, the exception type and the exception frame address respectively.
+`vmm_dispatch()` is designed to only handle synchronous exceptions and
+simply returns otherwise. Function `vmm_synchronous_handler()` (0xb010a678)
+handles as the name suggests the synchronous exceptions and only the
+exception frame (third) argument is of importance.
+
+
+stp    X1, X0, [SP,#exception_frame]!
+...
+mov    X0, #0x400       // Lower AArch64
+mov    X1, #0           // Synchronous Exception
+mov    X2, SP           // Exception frame, holding args from EL1
+
+bl     vmm_dispatch
+...
+ldp    X1, X0, [SP+0x10+exception_frame],#0x10
+clrex
+eret
+
+
+As shown from the following snippet the handler first evaluates ESR_EL2.EC.
+Data and Instruction Aborts from the current EL (ECs 0x21 and 0x25) are not
+recoverable and the handler calls `vmm_panic()` function (0xb010a4cc) which
+leads to system hang. Data and Instruction Aborts from lower EL (ECs 0x20
+and 0x24) are handled directly by the handler. Furthermore, as mentioned
+before, by setting HCR_EL2.TVM during the RKP bootstrap, EL1 writes to
+virtual memory control registers are trapped to EL2 with EC 0x18 and here
+handled by function `other_msr_mrs_system()` (0xb010a24c). `hvc` commands
+either from AArch32 or AArch64 (ECs 0x12 and 0x16) are our main focus and
+will be explained shortly. Finally, any other ECs return -1 which leads
+`vmm_dispatch()` to `vmm_panic()`.
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+int64_t vmm_synchronous_handler(int64_t from_el_offset,
+                int64_t exception_type, exception_frame *exception_frame) {
+
+    esr_el2 = get_esr_el2();
+    ...
+
+    switch ( esr_el2 >> 26 )   /* Exception Class */
+    {
+        case 0x12:        /* HVC from AArch32 */
+        case 0x16:        /* HVC from AArch64 */
+
+
+            if ((exception_frame->x0 & 0xFFF00000) == 0x83800000) /* (7) */
+                rkp_main(exception_frame->x0, exception_frame);
+            ...
+            return 0;
+
+
+        case 0x18:   /* Trapped MSR, MRS or System instruction execution */
+            v7 = other_msr_mrs_system(exception_frame);
+            ...
+
+        case 0x20:     /* Instruction Abort from a lower Exception level */
+            ...
+
+        case 0x21:          /* Instruction Abort Current Exception Level */
+            vmm_panic(from_el_offset, exception_type, ...);
+
+        case 0x24:            /* Data Abort from a lower Exception level */
+            ...
+
+        case 0x25:                 /* Data Abort Current Exception Level */
+            vmm_panic(from_el_offset, exception_type, ...);
+
+        default:
+            return -1;
+    }
+}
+
+
+Before moving to `hvc` we will be briefly introducing `msr`/`mrs` handling
+(for details regarding the values of ESR_EL2 discussed here refer to AARM
+section "D13.2.37"). First, the operation direction is checked via the
+ESR_EL2.ISS bit 0. As mentioned only writes are supposed to be trapped
+(direction bit value must be 0) and if somehow a read was trapped, handler
+ends up in `vmm_panic()`. The general purpose register used for the
+transfer is discovered from the value of ESR_EL2.ISS.Rt (bits [9:5]). The
+rest of ESR_EL2.ISS values are used to identify the system register
+accessed by `msr` and in RKP each system register is handled differently.
+For example SCTLR_EL1 handler does not allow to disable the MMU or change
+endianess and TCR_EL1 handler does not allow modification of the Granule
+size. We will not be examining every case in this (already long) article,
+but interested readers should by now have more than enough information to
+start investigating function `other_msr_mrs_system()`.
+
+RKP `hvc` invocation's first argument (X0) is the function identifier and
+as shown in (7) must abide by a specific format for function `rkp_main()`
+(0xb010d000) which is the `hvc` handler to be invoked. Specifically, each
+command is expected to have a prefix value of 0x83800000. Furthermore, to
+form the command, command indices are shifted by 12 and then ORed with the
+prefix (readers may also refer to kernel/include/linux/rkp.h). This format
+is also expected by `rkp_main()` as explained next.
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+void rkp_main(unsigned int64_t command, exception_frame *exception_frame)
+{
+
+    hvc_cmd = (command >> 12) & 0xFF;                             /* (8) */
+
+    if ( hvc_cmd && !is_rkp_activated )                           /* (9) */
+        lead_to_policy_violation(hvc_cmd);
+    ...
+
+    my_check_hvc_command(hvc_cmd);
+    switch ( hvc_cmd )
+    {
+        case 0:
+            ...
+
+            if ( is_rkp_activated )                              /* (10) */
+                rkp_policy_violation(2, 0, 0, 0);
+
+            rkp_init(exception_frame);
+            ...
+
+            break;
+...
+
+
+void my_check_hvc_command(unsigned int64_t cmd_index)
+{
+    if ( cmd_index > 0x9F )
+        rkp_policy_violation(3, cmd_index, 0, 0);
+
+    prev_counter = my_cmd_counter[cmd_index];
+
+    if ( prev_counter != 0xFF )
+    {
+        cur_counter = (prev_counter - 1);
+
+        if ( cur_counter > 1 )
+            rkp_policy_violation(3, cmd_index, prev_counter, 0);
+
+        my_cmd_counter[cmd_index] = cur_counter;
+    }
+}
+
+
+`rkp_main()` first extracts the command index (8) and then calls function
+`my_check_hvc_command()` (0xb0113510). Two things are happening there.
+First, the index must be smaller than 0x9f. Second, RKP maintains an array
+with command counters. The counter for RKP initialization command is 1
+during the array definition and is set again along with all other values at
+runtime in function `my_initialize_hvc_cmd_counter()` (0xb011342c) during
+the initialization. If any of these checks fails, `rkp_policy_violation()`
+(0xb010dba4) is called which can be considered as an assertion error and
+leads to system hang. Finally, before allowing any command invocation
+except for the initialization, a global flag indicating whether RKP is
+initialized is checked (9). This flag is obviously set after a successful
+initialization as explained in the following section.
+
+Before continuing with the initialization process we will present some
+commands as examples to better demonstrate their usage. The first
+initialization function (presented next) is `rkp_init()` with command id 0
+which corresponds to command 0x83800000. During definition, as mentioned
+above, its counter is set to 1 so that it can be called once before
+invoking `my_initialize_hvc_cmd_counter()`. Similarly, command id 1
+corresponds to deferred initialization function (also presented next), can
+be reached with command 0x83801000 and since its counter is set to 1 which
+means it can only be called once. Commands with counter value -1 as the
+ones shown in the table below for handling page tables (commands 0x21 and
+0x22 for level 1 and 2 correspondingly) can be called arbitrary number of
+times.
+
+
+| Function     | ID   | Command    | Counter |
+----------------------------------------------
+| rkp_init     | 0x0  | 0x83800000 |       0 |
+| rkp_def_init | 0x1  | 0x83801000 |       1 |
+...
+| rkp_pgd_set  | 0x21 | 0x83821000 |      -1 |
+| rkp_pmd_set  | 0x22 | 0x83822000 |      -1 |
+...
+
+
+------[ 2.3.2 - RKP Initialization
+
+With this information, we are now ready to initialize RKP. In the snippet
+below we demonstrate the framework process to initialize the RKP (with RKP
+command id 0). We also show the `rkp_init_t` struct values used in the
+framework during the invocation and we will be elaborating more on them
+while examining the RKP initialization function `rkp_init()` (0xb0112f40).
+Interested readers can also study and compare `framework_rkp_init()`
+function with Samsung kernel function `rkp_init()` in kernel/init/main.c
+and the initialization values presented here against some of the values
+from the sample sec_log output above.
+
+
+// framework/main.c
+
+void el1_main(void) {
+    framework_rkp_init();
+    ...
+}
+
+// framework/vmm.h
+
+#define RKP_PREFIX  (0x83800000)
+#define RKP_CMDID(CMD_ID)  (((CMD_ID) << 12 ) | RKP_PREFIX)
+
+#define RKP_INIT                RKP_CMDID(0x0)
+...
+
+// framework/vmm.c
+
+void framework_rkp_init(void)
+{
+    struct rkp_init_t init;
+    init.magic = RKP_INIT_MAGIC;
+    init._text = (uint64_t)__va(&_text);
+    init._etext = (uint64_t)__va(&_etext);
+    init.rkp_pgt_bitmap = (uint64_t)&rkp_pgt_bitmap;
+    init.rkp_dbl_bitmap = (uint64_t)&rkp_map_bitmap;
+    init.rkp_bitmap_size = 0x20000;
+
+    init.vmalloc_start = (uint64_t)__va(&_text);
+    init.vmalloc_end = (uint64_t)__va(&_etext+0x1000);
+    init.init_mm_pgd = (uint64_t)&swapper_pg_dir;
+    init.id_map_pgd = (uint64_t)&id_pg_dir;
+    init.zero_pg_addr = (uint64_t)&zero_page;
+    init.extra_memory_addr = RKP_EXTRA_MEM_START;
+    init.extra_memory_size = RKP_EXTRA_MEM_SIZE;
+    init._srodata = (uint64_t)__va(&_srodata);
+    init._erodata = (uint64_t)__va(&_erodata);
+
+    rkp_call(RKP_INIT, &init, (uint64_t)VA_OFFSET, 0, 0, 0);
+}
+
+// framework/util.S
+
+rkp_call:
+    hvc #0
+    ret
+ENDPROC(rkp_call)
+
+
+magic           : 0x000000005afe0001
+vmalloc_start   : 0xffffff8080000000
+vmalloc_end     : 0xffffff8080086000
+init_mm_pgd     : 0x0000000080088000
+id_map_pgd      : 0x000000008008b000
+zero_pg_addr    : 0x000000008008e000
+rkp_pgt_bitmap  : 0x0000000080044000
+rkp_dbl_bitmap  : 0x0000000080064000
+rkp_bitmap_size : 0x0000000000020000
+_text           : 0xffffff8080000000
+_etext          : 0xffffff8080085000
+extra_mem_addr  : 0x00000000af400000
+extra_mem_size  : 0x0000000000600000
+physmap_addr    : 0x0000000000000000
+_srodata        : 0xffffff8080085000
+_erodata        : 0xffffff8080086000
+large_memory    : 0x0000000000000000
+fimc_phys_addr  : 0x00000008fa080000
+fimc_size       : 0x0000000000780000
+tramp_pgd       : 0x0000000000000000
+
+
+Before everything else, the debug log at 0xb0200000 is initialized (11).
+This is the second EL2 oracle and we will be discussing it shortly as it
+will provide valuable information to help create correct memory mapping for
+the initialization to be successful.
+
+Evidently, there are two modes of RKP operation which are decided upon
+during the initialization; normal and test mode. Test mode disables some of
+the aforementioned `hvc` command invocation counters and enables some
+command indices/functions. As the name suggests these are used for testing
+purposes and while these may assist and ease the reversing process, we will
+not be analyzing them in depth, because the are not encountered in real
+world setups. The mode is selected by the struct magic field, whose value
+can either be 0x5afe0001 (normal mode) or 0x5afe0002 (test mode).
+
+It would be possible to change to test mode via a second `rkp_init()`
+invocation while hoping not to break any other configurations, however this
+is not possible via normal system interaction. As shown in (12) after a
+successful initialization, global flag `is_rkp_activated` is set. This flag
+is then checked (10) before calling `rkp_init()` in `rkp_main()` function
+as demonstrated in the previously presented snippet.
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+void rkp_init(exception_frame *exception_frame)
+{
+    ...
+
+    rkp_init_values = maybe_rkp_get_pa(exception_frame->x1);
+
+    rkp_debug_log_init();                                        /* (11) */
+    ...
+
+    if ( rkp_init_values->magic - 0x5AFE0001 <= 1 ){
+
+        if ( rkp_init_values->magic == 0x5AFE0002 )
+        {
+            /* enable test mode */
+        }
+
+        /* store all rkp_init_t struct values */
+
+        rkp_physmap_init();
+
+        ...
+
+        if ( rkp_bitmap_init() )
+        {
+            /* misc initializations and debug logs */
+
+            rkp_debug_log("RKP_6398d0cb", hcr_el2,
+                             sctlr_el2, rkp_init_values->magic);
+
+            /* more debug logs */
+
+            if ( rkp_paging_init() )
+            {
+                is_rkp_activated = 1;                            /* (12) */
+                ...
+
+                my_initialize_hvc_cmd_counter();
+                ...
+            }
+        }
+        ...
+    }
+    ...
+}
+
+
+RKP maintains a struct storing all required information. During
+initialization in RKP function `rkp_init()`, values passed via `rkp_init_t`
+struct along with the VA_OFFSET are stored there to be used later. Next,
+various memory regions such as physmap and bitmaps are initialized. We are
+not going to be expanding on those regions since they are implementation
+specific, but due to their heavy usage by RKP (especially physmap) we are
+going to briefly explain them. Physmap contains information about physical
+regions, such as whether this is an EL2 or EL1 region etc., is set to a
+predefined EL2 only accessible region as explained next and RKP uses this
+information to decide if certain actions are allowed on specific regions.
+
+Two bitmaps exist in this specific RKP implementation; rkp_pgt_bitmap and
+rkp_dbl_bitmap and their physical regions are provided by EL1 kernel. They
+are both written to by RKP. rkp_pgt_bitmap provides information to EL1 on
+whether addresses are protected by S2 mappings and as such accesses should
+be handled by RKP. rkp_dbl_bitmap is used to track and prevent unauthorized
+mappings from being used for page tables. The `rkp_bitmap_init()` success
+requires only the pointers to not be zero, however additional restrictions
+are defined during `rkp_paging_init()` function (0xb010e4c4) later.
+
+Next, we see the RKP debug log being used, dumping system registers thus
+providing important information regarding the system state/configuration,
+which has helped us understand the system and configure the framework.
+Below a (processed) sample output is displayed with the various registers
+annotated. Finally, Samsung allows OEM unlock for the under examination
+device model, which allows us to patch vmm.elf, build and boot the kernel
+with the patched RKP and retrieve additional information. The final snippet
+line contains the debug log from a separate execution, where MAIR_ELn
+registers were replaced with SCTLR_EL1 and VTCR_EL2 respectively. How to
+build a custom kernel and boot a Samsung device with it is left as exercise
+to the reader.
+
+
+0000000000000000    neoswbuilder-DeskTop RKP64_01aa4702
+0000000000000000    Jul 11 2018
+0000000000000000    11:19:42
+
+/* hcr_el2 */      /* sctlr_el2 */
+  84000003          30cd1835           5afe0001  RKP_6398d0cb
+
+/* tcr_el2 */      /* tcr_el1 */
+  80823518          32b5593519         5afe0001  RKP_64996474
+
+/* mair_el2 */     /* mair_el1 */
+21432b2f914000ff  0000bbff440c0400     5afe0001  RKP_bd1f621f
+...
+
+
+/* sctlr_el1 */    /* vtcr_el2 */
+   34d5591d           80023f58         5afe0001  RKP_patched
+
+
+Finally, one of the most important functions in RKP initialization follows;
+`rkp_paging_init()`. Numerous checks are performed in this function and the
+system memory layout must satisfy them all for RKP to by initialized
+successfully. Furthermore, physmap, bitmaps and EL2 Stage 1 and 2 tables
+are set or processed. We will be explaining some key points but will not go
+over every trivial check. Finally, we must ensure that any RKP required
+regions are reserved. The physical memory layout used in the framework
+aiming to satisfy the minimum requirements to achieve proper RKP
+initialization is shown below. Obviously, more complex layouts can be used
+to implement more feature rich frameworks.
+
+The graph also explains the previously presented size selection of 3GBs for
+the emulation system RAM. This size ensures that the framework has a
+sufficiently large PA space to position executables in their expected PAs.
+
+
+  +---------+ 0x80000000  text, vmalloc
+  |         |
+  |         |
+  |         |
+  |         |
+  +---------+ 0x80044000  rkp_pgt_bitmap
+  |         |
+  |         |
+  +---------+ 0x80064000  rkp_map_bitmap
+  |         |
+  |         |
+  +---------+ 0x80085000  _etext, srodata
+  |         |
+  +---------+ 0x80086000  _erodata, vmalloc_end
+  |         |
+  |         |
+  +---------+ 0x80088000  swapper_pg_dir
+  |         |
+  |         |
+  +---------+ 0x8008b000  id_pg_dir
+  |         |
+  |         |
+  +---------+ 0x8008e000  zero_page
+  |         |
+      ...
+  |         |
+  +---------+ 0xaf400000 rkp_extra_mem_start
+  |         |
+  |         |
+  +---------+ 0xafa00000 rkp_extra_mem_end
+  |         |
+  +---------+ 0xafc00000 rkp_phys_map_start
+  |         |
+  |         |
+  +---------+ 0xb0100000 rkp_phys_map_end, hyp_base
+
+
+To sum up the process, after alignment and layout checks, the EL1 kernel
+region is set in physmap (13) and mapped in EL2 Stage 1 translation tables
+(14). The two bitmap regions are checked (15) and if they are not
+incorporated in the kernel text, their Stage 2 (S2) entries are changed to
+Read-Only and not executable (16) and finally physmap is updated with the
+two bitmap regions. FIMC region, which will be discussed shortly, is
+processed next (17) in function `my_process_fimc_region()` (0xb0112df0).
+Continuing, kernel text is set as RWX in S2 translation tables (18) which
+will change later during the initialization to read-only. Last but not
+least, physmap and extra memory address are unmapped from S2 (19) and (21)
+rendering them inaccessible from EL1 and their physmap regions are set (20)
+and (22).
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+int64_t rkp_paging_init(void)
+{
+    /* alignment checks */
+
+
+    v2 = my_rkp_physmap_set_region(text_pa, etext - text, 4);    /* (13) */
+    if ( !v2 ) return v2;
+
+    /* alignment checks */
+
+
+    res = s1_map(text_pa, etext_pa - text_pa, 9);                /* (14) */
+    ...
+
+    /*
+     * bitmap alignment checks                                   /* (15) */
+     * might lead to label do_not_process_bitmap_regions
+     */
+
+
+    res = rkp_s2_change_range_permission(rkp_pgt_bitmap,         /* (16) */
+            bitmap_size + rkp_pgt_bitmap, 0x80, 0, 1); // RO, XN
+    ...
+
+    res = rkp_s2_change_range_permission(rkp_map_bitmap,
+                                            bitmap_size + rkp_map_bitmap,
+                                            0x80, 0, 1); // RO, XN
+    ...
+
+do_not_process_bitmap_regions:
+
+    if ( !my_rkp_physmap_set_region(rkp_pgt_bitmap, bitmap_size, 4) )
+        return 0;
+
+    res = my_rkp_physmap_set_region(rkp_map_bitmap, bitmap_size, 4);
+    if ( res )
+    {
+        res = my_process_fimc_region();                          /* (17) */
+        if ( res )
+        {
+            res = rkp_s2_change_range_permission(                /* (18) */
+                                            text_pa, etext_pa,
+                                            0, 1, 1);  // RW, X
+            ...
+
+                                                                 /* (19) */
+            res = maybe_s2_unmap(physmap_addr, physmap_size + 0x100000);
+            ...
+
+            res = my_rkp_physmap_set_region(physmap_addr,        /* (20) */
+                                            physmap_size + 0x100000, 8);
+            ...
+
+                                                                 /* (21) */
+            res = maybe_s2_unmap(extra_memory_addr, extra_memory_size);
+            ...
+
+            res = my_rkp_physmap_set_region(extra_memory_addr,   /* (22) */
+                                                extra_memory_size, 8);
+            ...
+        }
+    }
+    return res;
+}
+
+
+FIMC refers to Samsung SoC Camera Subsystem and during the kernel
+initialization, regions are allocated and binaries are loaded from the
+disk. There is only one relevant `hvc` call, related to the FIMC binaries
+verification (command id 0x71). RKP modifies the related memory regions
+permissions and then invokes EL3 to handle the verification in function
+`sub_B0101BFC()`. Since we are implementing our own EL3 and are interested
+in EL2 functionality we will be ignoring this region. However, we still
+reserve it for completeness reasons and function `my_process_fimc_region()`
+simply processes the S2 mappings for this region. By invoking `hvc` with
+command id 0x71, even if every other condition is met and `smc` is reached,
+as discussed above EL3 will hang because there is no handler for `smc`
+command id 0xc200101d in our setup.
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+sub_B0101BFC
+
+...
+mov  X0, #0xC200101D
+mov  X1, #0xC
+mov  X2, X19  // holds info about fimc address, size, etc.
+mov  X3, #0
+dsb  SY
+smc  #0
+...
+
+
+Although, as mentioned, simply reserving the region will suffice for this
+specific combination of hypervisor and subsystem, it is indicative of the
+considerations needed when examining hypervisors, even if more complex
+actions are required by other hypervisors and/or subsystems. For example
+the verification might have been incorporated in the initialization
+procedure, in which case this could be handled by our framework EL3
+component.
+
+At this step we have performed the first step of RKP initialization
+successfully. After some tasks such as the `hvc` command counters
+initialization and the `is_rkp_activated` global flag setting `rkp_init()`
+returns. We can now invoke other `hvc` commands.
+
+
+------[ 2.3.3 - RKP Deferred Initialization
+
+The next step is the deferred initialization which is handled by function
+`rkp_def_init()` (0xb01131dc) and its main purpose is to set the kernel
+S2 translation permissions.
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+void rkp_def_init(void)
+{
+    ...
+
+    if ( srodata_pa >= etext_pa )
+    {
+        if (!rkp_s2_change_range_permission(text_pa, etext_pa, 0x80, 1, 1))
+            // Failed to make Kernel range ROX
+            rkp_debug_log("RKP_ab1e86d9", 0, 0, 0);
+    }
+    else
+    {
+        res = rkp_s2_change_range_permission(text_pa, srodata_pa,
+                                             0x80, 1, 1)) // RO, X
+        ...
+
+        res = rkp_s2_change_range_permission(srodata_pa, etext_pa,
+                                             0x80, 0, 1)) // RO, XN
+        ...
+    }
+
+    rkp_l1pgt_process_table(swapper_pg_dir, 1, 1);
+    RKP_DISALLOW_DEBUG = 1;
+    rkp_debug_log("RKP_8bf62beb", 0, 0, 0);
+}
+
+
+As demonstrated below after `rkp_s2_change_range_permission()` invocation
+the kernel region is set to read only. Finally, in
+`rkp_l1pgt_process_table()` swapper_pg_dir (TTBR1_EL1) and its subtables
+are set to read-only and not-executable.
+
+
+// EL1 text before rkp_s2_change_range_permission()
+Third level: 0x80000000-0x80001000: S2AP=11, XN=0
+...
+// EL1 text after rkp_s2_change_range_permission()
+Third level: 0x80000000-0x80001000: S2AP=1, XN=0
+...
+
+// swapper_pg_dir before rkp_l1pgt_process_table()
+Third level: 0x80088000-0x80089000: S2AP=11, XN=0
+Third level: 0x80089000-0x8008a000: S2AP=11, XN=0
+...
+// swapper_pg_dir after rkp_l1pgt_process_table()
+Third level: 0x80088000-0x80089000: S2AP=1, XN=10
+Third level: 0x80089000-0x8008a000: S2AP=1, XN=10
+...
+
+
+------[ 2.3.4 - Miscellaneous Initializations
+
+In our approach, we have not followed the original kernel initialization to
+the letter. Specifically, we skip various routines initializing values
+regarding kernel structs such as credentials, etc., which are void of
+meaning in our minimal framework. Moreover, these are application specific
+and do not provide any valuable information required by the ARM
+architecture to properly define the EL2 state. However, we will be briefly
+presenting them here for completeness reasons, and as our system
+understanding improves and the framework supported functionality
+requirements increase (for example to improve fuzzing discussed next) they
+can be incorporated in the framework.
+
+Command 0x40 is used to pass information about cred and task structs
+offsets and then command 0x42 for cred sizes during the credential
+initialization in kernel's `cred_init()` function. Next, in `mnt_init()`
+command 0x41 is used to inform EL2 about vfsmount struct offsets and then
+when rootfs is mounted in `init_mount_tree()` information regarding the
+vfsmount are sent via command 0x55. This command is also used later for the
+/system partition mount. These commands can only be called once (with the
+exception of command 0x55 whose counter is 2) and as mentioned above are
+used in the original kernel initialization process. Incorporating them to
+the framework requires understanding of their usage from both the kernel
+and the hypervisor perspective which will be left as an exercise to the
+reader who can start by studying the various `rkp_call()` kernel
+invocations.
+
+
+----[ 2.4 - Final Notes
+
+At this point we have performed most of the expected RKP initialization
+routines. We now have a fully functional minimal framework which can be
+easily edited to test and study the RKP hypervisor behavior.
+
+More importantly we have introduced fundamental concepts for readers to
+implement their own setups and reach the current system state which allows
+us to interact with it and start investigating fuzzing implementations.
+
+On a final note, some of the original kernel initialization routines were
+omitted since their action lack meaning in our framework. They were briefly
+introduced and interested readers can study the various `rkp_call()` kernel
+invocations and alter the framework state at will. Additionally, this
+allows the fuzzers to investigate various configuration scenarios not
+restricted by our own assumptions.
+
+
+--[ 3 - Fuzzing
+
+In this section we will be describing our approaches towards setting up
+fuzzing campaigns under the setup presented above. We will begin with a
+naive setup aiming to introduce system concepts we need to be aware and an
+initial interaction with QEMU source code and functionality. We will then
+be expanding on this knowledge, incorporating AFL in our setup for more
+intelligent fuzzing.
+
+To verify the validity of the fuzzing setups presented here we evidently
+require a bug that would crash the system. For this purpose we will be
+relying on a hidden RKP command with id 0x9b. This command leads to
+function `sub_B0113AA8()` which, as shown in the snippet, adds our second
+argument (register X1) to value 0x4080000000 and uses the result as an
+address to store a QWORD. As you might be imagining, simply passing 0 as
+our second argument results in a data abort ;)
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+int64_t sub_B0113AA8(exception_frame *exc_frame)
+{
+    *(exc_frame->x1 + 0x4080000000) = qword_B013E6B0;
+    rkp_debug_log("RKP_5675678c", qword_B013E6B0, 0, 0);
+    return 0;
+}
+
+
+To demonstrate the framework usage we are going to trigger this exception
+with a debugger attached. We start the framework and set a breakpoint in
+the handler from `hvc` command 0x9b at the instruction writing the QWORD to
+the evaluated address. Single stepping from there causes an exception,
+which combined with the previous information about RKP exception handlers,
+we can see is a synchronous exception from the same EL. Continuing
+execution from there we end up in the synchronous handler for data aborts
+(EC 0x25) which leads to `vmm_panic()` :)
+
+
+(gdb) target remote :1234
+_reset () at boot64.S:15
+15          ldr x30, =stack_top_el3
+
+(gdb) continue
+...
+Breakpoint 1, 0x00000000b0113ac4 in ?? ()
+(gdb) x/4i $pc-0x8
+   0xb0113abc:  mov     x0, #0x80000000
+   0xb0113ac0:  movk    x0, #0x40, lsl #32
+=> 0xb0113ac4:  str     x1, [x2,x0]
+   0xb0113ac8:  adrp    x0, 0xb0116000
+(gdb) info registers x0 x1 x2
+x0             0x4080000000     277025390592
+x1             0x0      0
+x2             0x1      1
+
+
+(gdb) stepi
+0x00000000b010c1f4 in ?? ()
+
+(gdb) x/20i $pc
+=> 0xb010c1f4:  stp     x1, x0, [sp,#-16]!
+   ...
+   0xb010c234:  mov     x0, #0x200    // Current EL
+   0xb010c238:  mov     x1, #0x0      // Synchronous
+   0xb010c23c:  mov     x2, sp
+   0xb010c240:  bl      0xb010aa44    // vmm_dispatch
+
+(gdb) continue
+Continuing.
+
+
+Breakpoint 5, 0x00000000b010a80c in ?? ()  // EC 0x25 handler
+(gdb) x/7i $pc
+=> 0xb010a80c:  mov     x0, x22
+   0xb010a810:  mov     x1, x21
+   0xb010a814:  mov     x2, x19
+   0xb010a818:  adrp    x3, 0xb0115000
+   0xb010a81c:  add     x3, x3, #0x4d0
+   0xb010a820:  bl      0xb010a4cc    // vmm_panic
+
+
+----[ 3.1 - Dummy fuzzer
+
+To implement the dummy fuzzer we decided to abuse `brk` instruction, which
+generates a Breakpoint Instruction exception. The exception is recorded in
+in ESR_ELx and the value of the immediate argument in the instruction
+specific syndrome field (ESR_ELx.ISS, bits[24:0]). In QEMU, this
+information is stored in `CPUARMStame.exception` structure as shown in the
+following snippet.
+
+
+// qemu/target/arm/cpu.h
+
+typedef struct CPUARMState {
+    ...
+
+    /* Regs for A64 mode.  */
+    uint64_t xregs[32];
+
+    ...
+
+    /* Information associated with an exception about to be taken:
+     * code which raises an exception must set cs->exception_index and
+     * the relevant parts of this structure; the cpu_do_interrupt function
+     * will then set the guest-visible registers as part of the exception
+     * entry process.
+     */
+    struct {
+        uint32_t syndrome; /* AArch64 format syndrome register */
+        ...
+    } exception;
+    ...
+}
+
+
+`arm_cpu_do_interrupt()` function handles the exceptions in QEMU and we can
+intercept the `brk` invocation by checking `CPUState.exception_index`
+variable as shown in (23). There we can introduce our fuzzing logic and
+setup the system state with our fuzzed values for the guest to access as
+discussed next. Finally, to avoid actually handling the exception (calling
+the exception vector handle, changing ELs etc.) which would disrupt our
+program flow, we simply advance `pc` to the next instruction and return
+from the function. This effectively turns `brk` into a fuzzing instruction.
+
+
+// qemu/target/arm/helper.c
+
+/* Handle a CPU exception for A and R profile CPUs.
+   ...
+ */
+void arm_cpu_do_interrupt(CPUState *cs)
+{
+    ARMCPU *cpu = ARM_CPU(cs);
+    CPUARMState *env = &cpu->env;
+    ...
+
+    // Handle the break instruction
+    if (cs->exception_index == EXCP_BKPT) {                      /* (23) */
+
+        handle_brk(cs, env);
+
+        env->pc += 4;
+        return;
+    }
+    ...
+
+    arm_cpu_do_interrupt_aarch64(cs);
+    ...
+}
+
+We utilize syndrome field as a function identifier and specifically
+immediate value 0x1 is used to call the dummy fuzzing functionality. There
+are numerous different harnesses that can be implemented here. In our demo
+approach we only use a single argument (via X0) which points to a guest
+buffer where fuzzed data could be placed. The framework registers, hence
+arguments which will be passed to EL2 by `rkp_call_fuzz` after calling
+`__break_fuzz()` are set by our harness in function `handle_brk()`.
+
+
+// framework/main.c
+
+void el1_main(void) {
+    framework_rkp_init();
+    rkp_call(RKP_DEF_INIT, 0, 0, 0, 0, 0);
+
+    for(; ;){ // fuzzing loop
+        __break_fuzz(); // create fuzzed values
+        rkp_call_fuzz(); // invoke RKP
+    }
+}
+
+// framework/util.S
+
+__break_fuzz:
+    ldr x0, =rand_buf
+    brk #1
+    ret
+ENDPROC(__break_fuzz)
+
+rkp_call_fuzz:
+    hvc #0
+    ret
+ENDPROC(rkp_call_fuzz)
+
+
+We will not be presenting complex harnesses here since this is beyond the
+scope of this article and will be left as exercise for the reader. We will,
+however, be describing a simple harness to fuzz RKP commands. Moreover,
+since most RKP handlers expect the second argument (X1 register) to point
+to a valid buffer we will be using `rand_buf` pointer as shown above for
+that purpose.
+
+The logic should be rather straightforward. We get a random byte (24), at
+the end place it in X0 (25) and as a result will be used as the RKP command
+index. Next, we read a page of random data and copy it to the guest buffer
+`rand_buf` (using function `cpu_memory_rw_debug()`) and use it as the
+second argument by placing the buffer address in X1 (26).
+
+
+// qemu/target/arm/patch.c
+
+int handle_brk(CPUState *cs, CPUARMState *env)
+{
+    uint8_t syndrome = env->exception.syndrome & 0xFF;
+    int l = 0x1000;
+    uint8_t buf[l];
+
+    switch (syndrome) {
+        case 0: // break to gdb
+            if (gdbserver_running()) {
+                qemu_log_mask(CPU_LOG_INT, "[!] breaking to gdb\n");
+                vm_stop(RUN_STATE_DEBUG);
+            }
+            break;
+        case 1: ; // dummy fuzz
+            uint8_t cmd = random() & 0xFF;                       /* (24) */
+
+            /* write random data to buffer buf */
+
+            /*
+             * Write host buffer buf to guest buffer pointed to
+             * by register X0 during brk invocation
+             */
+            if (cpu_memory_rw_debug(cs, env->xregs[0], buf, l, 1) < 0) {
+                fprintf(stderr, " Cannot access memory\n");
+                return -1;
+            }
+
+            fuzz_cpu_state.xregs[0] = 0x83800000 | (cmd << 12);
+            fuzz_cpu_state.xregs[1] = env->xregs[0];
+
+
+            env->xregs[0] = fuzz_cpu_state.xregs[0];             /* (25) */
+            env->xregs[1] = fuzz_cpu_state.xregs[1];             /* (26) */
+            break;
+        default:
+            ;
+    }
+    return 0;
+}
+
+
+As you might expect after compiling the modified QEMU and executing the
+fuzzer, nothing happens! We elaborate more on this next.
+
+
+------[ 3.1.1 - Handling Aborts
+
+Since this is a bare metal implementation there is nothing to "crash". Once
+an abort happens, the abort exception handler is invoked and both our
+framework and RKP ends up in an infinite loop. To identify aborts we simply
+intercept them in `arm_cpu_do_interrupt()` similarly with `brk`.
+
+
+// qemu/target/arm/helper.c
+
+void arm_cpu_do_interrupt(CPUState *cs)
+{
+    ...
+
+    // Handle the instruction or data abort
+    if (cs->exception_index == EXCP_PREFETCH_ABORT ||
+          cs->exception_index == EXCP_DATA_ABORT ) {
+
+        if(handle_abort(cs, env) == -1) {
+            qemu_system_shutdown_request(SHUTDOWN_CAUSE_HOST_ERROR);
+        }
+        // reset system
+        qemu_system_reset_request(SHUTDOWN_CAUSE_HOST_QMP_SYSTEM_RESET);
+    }
+    ...
+}
+
+
+When a data or instruction abort exception is generated, we create a crash
+log in `handle_abort()` and then request QEMU to either reset and restart
+fuzzing or terminate if `handle_abort()` fails which essentially terminates
+fuzzing as we can not handle aborts. We use QEMU functions to dump the
+system state such as the faulting addresses, system registers, and memory
+dumps in text log files located in directory crashes/.
+
+
+int handle_abort(CPUState *cs, CPUARMState *env)
+{
+    FILE* dump_file;
+
+    if (open_crash_log(&dump_file) == -1) return -1;
+
+
+    const char *fmt_str = "********* Data\\Instruction abort! *********\n"
+                          "FAR = 0x%llx\t ELR = 0x%llx\n"
+                          "Fuzz x0 = 0x%llx\t Fuzz x1 = 0x%llx\n";
+
+    fprintf(dump_file, fmt_str, env->exception.vaddress,
+                                env->pc,
+                                fuzz_cpu_state.xregs[0],
+                                fuzz_cpu_state.xregs[1]);
+
+    fprintf(dump_file, "\n********** CPU State **********\n");
+    cpu_dump_state(cs, dump_file, CPU_DUMP_CODE);
+    fprintf(dump_file, "\n********** Disassembly **********\n");
+    target_disas(dump_file, cs, env->pc-0x20, 0x40);
+    fprintf(dump_file, "\n********** Memory Dump **********\n");
+    dump_extra_reg_data(cs, env, dump_file);
+
+    fprintf(dump_file, "\n********** End of report **********\n");
+
+    fclose(dump_file);
+
+    return 0;
+}
+
+
+A sample trimmed crash log is presented below. We can see that the faulting
+command is 0x8389b000 (or command index 0x9b ;) the faulting address and
+the code were the abort happened. You can create your own logs by
+executing the dummy fuzzer ;)
+
+
+********** Data\Instruction abort! **********
+FAR = 0x41000c5000       ELR = 0xb0113ac4
+Fuzz x0 = 0x8389b000     Fuzz x1 = 0x800c5000
+
+********** CPU State **********
+ PC=00000000b0113ac4 X00=0000004080000000 X01=0000000000000000
+X02=00000000800c5000 X03=0000000000000000 X04=0000000000000000
+....
+X29=00000000b0142e70 X30=00000000b010d294  SP=00000000b0142e70
+PSTATE=600003c9 -ZC- NS EL2h
+
+********** Disassembly **********
+0xb0113abc:  d2b00000  movz     x0, #0x8000, lsl #16
+0xb0113ac0:  f2c00800  movk     x0, #0x40, lsl #32
+0xb0113ac4:  f8206841  str      x1, [x2, x0]
+0xb0113ac8:  f0000000  adrp     x0, #0xb0116000
+0xb0113acc:  911ac000  add      x0, x0, #0x6b0
+
+********** Memory Dump **********
+...
+X00: 0x0000004080000000
+000000407fffff60: Cannot access memory
+
+...
+
+X02: 0x00000000800c5000
+...
+00000000800c4fe0: 0x0000000000000000 0x0000000000000000
+00000000800c4ff0: 0x0000000000000000 0x0000000000000000
+00000000800c5000: 0x21969a71a5b30938 0xc6d843c68f2f38be
+00000000800c5010: 0xd7a1a2d7948ffd7e 0x42793a9f98647619
+00000000800c5020: 0x87c01b08bb98d031 0x1949658c38220d4d
+
+...
+
+********** End of report **********
+
+
+------[ 3.1.2 - Handling Hangs
+
+RKP has two functions that lead to system hangs; `rkp_policy_violation()`
+and `vmm_panic()`. The former is used when RKP unsupported exceptions or
+exception classes are triggered, while the latter aligns better with the
+`assert()` function logic.
+
+Since there are only two functions with these characteristics we can simply
+reset the system if they are ever executed. This is done in QEMU function
+`cpu_tb_exec()` which is responsible for emulating the execution of a
+single basic block. When they are identified via their address, the system
+is reset as with the abort case presented above, without however creating a
+crash log file.
+
+Evidently, this is not an optimal approach and does not scale well. We
+will be providing a better solution in the setup with AFL described next.
+
+
+// qemu/accel/tcg/cpu-exec.c
+
+/* Execute a TB, and fix up the CPU state afterwards if necessary */
+static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu,
+                                           TranslationBlock *itb)
+{
+    CPUArchState *env = cpu->env_ptr;
+    ...
+
+    if (env->pc == 0xB010DBA4) { // rkp_policy_violation
+        qemu_log("[!] POLICY VIOLATION!!! System Reset!\n");
+        qemu_system_reset_request(SHUTDOWN_CAUSE_HOST_QMP_SYSTEM_RESET);
+    }
+
+    if (env->pc == 0xB010A4CC) { // vmm_panic
+        qemu_log("[!] VMM PANIC!!! We should not be here!!!\n");
+        qemu_system_reset_request(SHUTDOWN_CAUSE_HOST_QMP_SYSTEM_RESET);
+    }
+
+    ...
+}
+
+
+----[ 3.2 - AFL with QEMU full system emulation
+
+One of the major problems encountered during this work was QEMU changing
+rapidly. This caused various tools to become obsolete, unless teams were
+dedicated porting them to newer versions fixing various problems introduced
+by the modified QEMU code. With this in mind, we will first introduce
+problems stemming from this situation and previous work on full system
+emulation. We will then proceed with the proposed solution.
+
+
+------[ 3.2.1 - Introduction
+
+As mentioned before, we chose the latest stable QEMU v4.1.0 and AFL v2.56b.
+The first step was to port AFL to the target QEMU version. The patch
+itself is rather straightforward, so we will not be presenting details
+here. Refer to the attached afl-2.56-qemu-4.1.0-port/readme for more
+details. Note that to remove the QEMU directory from the AFL subfolder, we
+included in AFL header files config.h and afl-types.h in the patch. As a
+result, to avoid any unexpected behaviors theses files must be kept in sync
+between AFL and QEMU.
+
+After applying the patches and building QEMU and copying the resulting
+binary in AFL directory as `afl-qemu-trace`, we invoke AFL with QEMU in the
+old fashioned way:
+
+$ ./afl-fuzz -Q -i in -o out /usr/bin/readelf -a @@
+
+
+We will briefly explain some QEMU/AFL key points to help understand the
+modified version. With QEMU the forkserver practically runs inside QEMU,
+starts when the ELF entry point is encountered and is kept in sync with AFL
+via pipes. When AFL instructs forkserver to run once, the forkserver
+(parent) clones itself, writes the QEMU child (child) pid to AFL and allows
+the child to execute free. AFL sets a child execution watchdog which will
+terminate the child if triggered. While the child runs it updates the AFL
+bitmap (`afl_maybe_log()`) and reports blocks that have not been translated
+yet back to the parent (`afl_request_tsl()`) who waits in a read loop
+(`afl_wait_tsl()`). Once a new block is encountered the parent mirrors the
+translation and avoid re-translation for future children which
+significantly improves fuzzing performance (interested readers can also
+check [07]). Upon termination/crash/exit of the child, parent exits the
+wait loop, reports back to AFL and awaits AFL to order a new execution.
+
+
+   +-------+              +-------------+            +------------+
+   |  AFL  |              | Qemu Parent |            | Qemu Child |
+   +-------+              +-------------+            +------------+
+       |                          .                        .
+ init_forkserver                  .                        .
+       |                          .                        .
+   fork/exec  ------------>  afl_setup                     .
+       |                   (entry point)                   .
+   setitimer                      |                        .
+       |                          |                        .
+     read    <----+               |                        .
+    (block)       |        afl_forkserver                  .
+       |          |               |                        .
+       |          +--unblock--- write                      .
+       |                          |    <-------------------------------+
+  run_target          +-------> read                       .           |
+       |              |        (block)                     .           |
+       |              |           |                        .           |
+     write --unblock--+           |                        .           |
+       |                          |                        .           |
+     read    <----+             fork  ----------------->  run          |
+    (block)       |               |                        | <------+  |
+       |          |               |                        |        |  |
+       |          +--unblock--- write                afl_maybe_log  |  |
+   setitimer                 (child pid)                   |        |  |
+       |                          |                        |        |  |
+     read   <-----+               |                        |        |  |
+    (block)       |               |                        |        |  |
+       |          |       afl_wait_tsl/read  <----- afl_request_tsl |  |
+       |          |         (loop block)                 write      |  |
+       |          |               |                        |        |  |
+    do stuff      |               |                        +--------+  |
+       |          |           waitpid() <---+              |           |
+       |          |               |         |          terminate       |
+       |          |               |         +-----------  exit         |
+       |          |               |                      crash         |
+       |          +--unblock--- write                                  |
+       |                   (child status)                              |
+       |                          |                                    |
+       |                          +--------------repeat----------------+
+
+
+Our approach is based on TriforceAFL [08] whose goal was to fuzz the Linux
+kernel. We are going to provide a brief overview but skip various details,
+because as aforementioned TriforceAFL is based on old QEMU (2.3.0) and AFL
+(2.06b) versions, currently does not build and the project seems to be
+abandoned. Furthermore, Linux kernel is vastly more complex compared to our
+framework and the targeted hypervisor and for this reason different hashing
+algorithm for the bitmap was used, which is not required here.
+Additionally, the target in this article is an ARM binary and executes on
+different level (EL2) from the Linux kernel (EL1). Nonetheless, interested
+readers may refer to the project source code, documentation [09] and slides
+for additional details.
+
+In short, they introduced an instruction as a handler to dispatch
+operations to 4 different functions called "hypercalls", all handled by
+QEMU. The parent executes normally and boots the VM until the first
+hypercall `startForkServer` is encountered which causes the forkserver to
+be instantiated. The parent/forkserver the spawns a child guest which then
+invokes hypercall `getWork` to fetch the new testcase from the host to the
+guest VM and then hypercall `startWork` to enable tracing and set the
+address region to be traced. If the child does not crash, it terminates by
+calling hypercall `endWork` to force the child QEMU to exit. These
+"hypercalls" are invoked from a custom Linux kernel driver.
+
+As stated in TriforceAFL, getting forkserver to work was one of the most
+difficult parts. QEMU full system emulation uses 3 threads; CPU, IO and
+RCU. Their solution was to have `startForkServer` hypercall set a flag
+which causes CPU thread (vCPU) to exit the CPU loop, save some state
+information, notify the IO thread and exit. IO thread then receives the
+notification and starts the forkserver by forking itself. The child IO
+thread then spawns a new vCPU thread which restores its state from the
+previous vCPU saved information and continues execution cleanly from
+`startForkServer`. Basically, the forkserver is the IO thread (whose vCPU
+thread has now terminated) and each new fork child spawns a new vCPU thread
+(with information from the parent vCPU saved state) to do the CPU
+emulation.
+
+Finally, AFL was edited to increase the QEMU parent/child memory limit
+MEM_LIMIT_QEMU because full system emulation has larger memory requirements
+compared to user mode emulation, especially for emulating Linux kernel.
+Furthermore, during the AFL `init_forkserver()` fork, a timer controlled by
+FORK_WAIT_MULT defined value is set in AFL to avoid blocking in read
+indefinitely in case forkserver in parent fails. This value was increased,
+because during this step the parent initializes the guest VM until
+`startForkServer` hypercall is reached, which might be time consuming. Last
+but not least, mode enabled by argument -QQ was introduced to allow user to
+specify the QEMU binary path instead of using `afl-qemu-trace`.
+
+Our approach relies heavily on TriforceAFL as mentioned before. We decided
+to skip the TriforceAFL implementation details due to the vast QEMU
+differences, however we recommend readers to study the TriforceAFL [08]
+implementation and documentation.
+
+
+------[ 3.2.2 - Implementation
+
+First we are going to go over the AFL diff which is the most brief since we
+only modified afl-fuzz.c and config.h and we do not deviate much from
+TriforceAFL. The QEMU parent/child memory limits have been commented out
+since our framework emulation has much larger memory requirements in
+comparison. Secondly, to disable QEMU chaining feature which affects AFL
+stability, AFL normally sets environmental variable "QEMU_LOG" to "nochain"
+(see qemu/linux-user/main.c for details) before invoking QEMU in user mode.
+This option however is not honored in full system emulation and as a result
+QEMU option `-d nochain` _must_ be specified during QEMU full system
+emulation invocation. Lastly, users must set the various system
+configurations AFL requires such as disabling the CPU frequency scaling and
+external core dump handling utilities. We invoke the fuzzer with our setup
+as:
+
+
+$ AFL_SKIP_CPUFREQ=1 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
+    ./afl-fuzz -QQ -i in -o out                              \
+      <path-to-qemu>/aarch64-softmmu/qemu-system-aarch64     \
+        -machine virt                                        \
+        -cpu cortex-a57                                      \
+        -smp 1                                               \
+        -m 3G                                                \
+        -kernel kernel.elf                                   \
+        -machine gic-version=3                               \
+        -machine secure=true                                 \
+        -machine virtualization=true                         \
+        -nographic                                           \
+        -d nochain                                           \
+        -afl_file @@
+
+
+--------[ 3.3.2.1 - QEMU patches
+
+At this point we will be providing details regarding the QEMU patches to
+support full system AFL fuzzing since as mentioned before, even though the
+main idea persists, there are many differences compared to the original
+TriforceAFL implementation mainly due to vast QEMU differences between the
+versions. The first difference is that we utilized `brk` to introduce
+hypercalls instead of introducing a new instruction.
+
+
+// qemu/target/arm/patch.c
+
+int handle_brk(CPUState *cs, CPUARMState *env)
+{
+    ...
+
+    switch (syndrome) {
+        ...
+
+        case 3:
+            return start_forkserver(cs, env, env->xregs[0]);
+        case 4:
+            return get_work(cs, env, env->xregs[0], env->xregs[1]);
+        case 5:
+            return start_work(cs, env, env->xregs[0], env->xregs[1]);
+        case 6:
+            return done_work(env->xregs[0]);
+        default:
+            ;
+    }
+    return 0;
+}
+
+
+To better demonstrate the setup we provide the following diagram and each
+step will be explained next. Readers are also advised to compare this with
+the original AFL/QEMU diagram presented previously.
+
+
+    +-------------+       +-------------+   +------------+  +-------------+
+    | Qemu Parent |       | Qemu Parent |   | Qemu Child |  | Qemu  Child |
+    |  IO thread  |       | vCPU thread |   |  IO thread |  | vCPU thread |
+    +-------------+       +-------------+   +------------+  +-------------+
+           |                     .                .               .
+       initialize                .                .               .
+          QEMU                   .                .               .
+           |                     .                .               .
+  (27) start vCPU -----> thread entry point       .               .
+           |                     |                .               .
+        do stuff <-+   tcg_register_thread (28)   .               .
+           |       |             |                .               .
+           +-------+             |                .               .
+           |             main execution loop      .               .
+           |              execute guest VM        .               .
+           |            until start_forkserver    .               .
+           |                    (29)              .               .
+           |                     |                .               .
+           |                     |                .               .
+           |              start_forkserver        .               .
+           |                     |                .               .
+           |           set afl_wants_cpu_to_stop  .               .
+           |                    (30)              .               .
+           |                     |                .               .
+           |              save vCPU state         .               .
+           |                    (31)              .               .
+           |                     |                .               .
+           |               +-- notify             .               .
+           |               | IO thread            .               .
+           |               |    (32)              .               .
+           |               |     |                .               .
+  got_pipe_notification <--+   exit               .               .
+           |                     |                .               .
+    afl_forkserver (33)          X                .               .
+           |                                      .               .
+    write(unblock AFL)                            .               .
+           |                                      .               .
+ +-> read(from AFL, block)                        .               .
+ |         |                                      .               .
+ |       fork --------------------------> restore vCPU state      .
+ |         |                                     (34)             .
+ |         |                                      |               .
+ |         |                                   start --> thread entry point
+ |         |                                  vCPU (35)           |
+ |         |                                      |               |
+ |         |                                      |     tcg_register_thread
+ |         |                                      |             (36)
+ |         |                                      |               |
+ |       write                                    |            getWork
+ |  (child pid to AFL)                            |               |
+ |         |                              +--> do stuff           |
+ repeat   ...                             |       |           startWork
+ |         |                              +-------+               |
+ |         |                                                      |
+ |    afl_wait_tsl  <-----------------+                      afl_maybe_log
+ |       (37)                         |                           |
+ |         |                          |                           |
+ |         |                          +-------------------  afl_request_tsl
+ |      waitpid <-----------+                                   (38)
+ |         |                |                                     |
+ |         |                |                                     |
+ |       write              |                                   crash
+ | (child status to AFL)    +--------------------------------  endWork
+ |         |
+ +---------+
+
+
+During system initialization, vCPU is instantiated (27) by IO thread in a
+manner dependent on the system configuration. Our setup uses Multithread
+Tiny Coge Generator (MTTCG) which allows the host to run one host thread
+per guest vCPU. Note that we are using a single core/thread and as a result
+there is a single vCPU thread in our setup.
+
+The vCPU thread entry point for MTTCG configuration is function
+`qemu_tcg_cpu_thread_fn()` under qemu/cpus.c where, after some
+initializations, vCPU enters its main execution loop (29)-(40). In
+a high level of abstraction, execution loop comprises two steps;
+translating basic blocks (function `tb_find()`) and executing them
+(function `cpu_tb_exec()`).
+
+As mentioned before, we allow the QEMU parent to execute free and
+initialize the guest VM until `start_forkserver` hypercall is invoked. As a
+result, each forkserver child will start with a _fully initialized VM_
+right before the targeted functionality significantly improving fuzzing
+performance.
+
+
+// qemu/cpus.c
+
+/* Multi-threaded TCG
+ *
+ * In the multi-threaded case each vCPU has its own thread. The TLS
+ * variable current_cpu can be used deep in the code to find the
+ * current CPUState for a given thread.
+ */
+
+static void *qemu_tcg_cpu_thread_fn(void *arg)
+{
+    CPUState *cpu = arg;
+
+    ...
+
+    tcg_register_thread();                                       /* (39) */
+
+    do {
+        ...
+
+        r = tcg_cpu_exec(cpu);                                   /* (40) */
+
+        ...
+
+    } while ((!cpu->unplug || cpu_can_run(cpu))                  /* (41) */
+               && !afl_wants_cpu_to_stop);
+
+    if(afl_wants_cpu_to_stop) {
+        ...
+
+        if(write(afl_qemuloop_pipe[1], "FORK", 4) != 4)          /* (42) */
+            perror("write afl_qemuloop_pip");
+        ...
+
+        restart_cpu = (&cpus)->tqh_first;                        /* (43) */
+
+        ...
+    }
+    ...
+
+    return NULL;
+}
+
+
+When during the execution `start_forkserver()` hypercall is invoked, global
+flag `afl_wants_cpu_to_stop` is set (30)-(44) ultimately breaking the vCPU
+main execution loop. There are various reasons that could cause the system
+to reach this state so after the main loop we check flag
+`afl_wants_cpu_to_stop` to decide whether vCPU must terminate (41).
+Finally we save the vCPU state (31)-(43), notify IO thread (32)-(42) and
+terminate the vCPU thread.
+
+
+// qemu/target/arm/patch.c
+
+target_ulong start_forkserver(CPUState* cs, CPUARMState *env, ...)
+{
+    ...
+
+    /*
+     * we're running in a cpu thread. we'll exit the cpu thread
+     * and notify the iothread. The iothread will run the forkserver
+     * and in the child will restart the cpu thread which will continue
+     * execution.
+     */
+    afl_wants_cpu_to_stop = 1;                                   /* (44) */
+
+    return 0;
+}
+
+
+Parent IO thread becomes the forkserver in the notification handling
+function `got_pipe_notification()` (33)-(45). In the fork child (which is
+the child QEMU IO thread) we reset the vCPU state (34)-(46) and start a new
+vCPU thread for the child process (35)-(47). (don't forget to comment out
+the `madvise(..., DONTFORK)` invocation ;)
+
+
+// qemu/cpus.c
+
+static void got_pipe_notification(void *ctx)
+{
+    ...
+
+    afl_forkserver(restart_cpu);                                 /* (45) */
+
+
+    /* we're now in the child! */
+    (&cpus)->tqh_first = restart_cpu;                            /* (46) */
+
+    qemu_tcg_init_vcpu(restart_cpu);                             /* (47) */
+}
+
+
+Finally, for MTTCG all TCG threads must register their context before
+starting translation (36)-(39) as part of their initialization process
+mentioned before. As shown next, each thread registers its context in
+`tcg_ctxs` array in an incremental fashion and assigns it to thread local
+variable `tcg_ctx`. It is obvious that the system was not designed with a
+forkserver in mind, where vCPU thread is respawned and trying to register a
+new context for the forkserver children will fail. However, since we
+use a single thread and we can simply bypass this by patching function
+`tcg_register_thread()` to always set `tcg_ctx` to the first array entry
+after the first invocation.
+
+
+// qemu/tcg/translate-all.c
+
+__thread TCGContext *tcg_ctx;
+
+
+// qemu/tcg/tcg.c
+
+void tcg_register_thread(void)
+{
+    static bool first = true;
+    if (!first) {
+        tcg_ctx = tcg_ctxs[0];
+        return;
+    }
+    first = false;
+
+    ...
+
+    *s = tcg_init_ctx;
+
+    ...
+
+    /* Claim an entry in tcg_ctxs */
+    n = atomic_fetch_inc(&n_tcg_ctxs);
+    g_assert(n < ms->smp.max_cpus);
+    atomic_set(&tcg_ctxs[n], s);
+
+    tcg_ctx = s;
+
+    ...
+}
+
+
+--------[ 3.3.2.2 - Framework support
+
+Let's now demonstrate how to reach the state where forkserver is up and
+running via the framework. After the framework initialization we call
+`__break_start_forkserver()` from EL1 (48) which in turn calls `brk` with
+instruction specific syndrome 3 which corresponds to the `start_forkserver`
+hypercall. This eventually causes the forkserver to be started in the
+parent QEMU process as discussed above.
+
+Each new child QEMU process, will resume guest VM execution in its vCPU at
+the instruction immediately following `__break_start_forkserver()` in a
+guest VM state identical to the one the parent process had before
+instantiating the forkserver. For example, in our setup the child will
+continue in (49) invoking the `get_work` hypercall to fetch the test case
+from the host (technically it will resume from `ret` instruction after
+`brk #3` in `__break_start_forkserver()` function but you get the idea ;).
+
+
+// framework/main.c
+
+void el1_main(void) {
+    framework_rkp_init();
+
+    rkp_call(RKP_DEF_INIT, 0, 0, 0, 0, 0);
+
+
+    __break_start_forkserver(0);                                 /* (48) */
+
+    /* fuzzing loop */
+    for(; ;){
+        __break_get_work();                                      /* (49) */
+        __break_start_work();
+
+        rkp_call_fuzz_afl((*(uint64_t*)(&rand_buf)), &rand_buf); /* (50) */
+
+        __break_end_work(0);
+    }
+}
+
+
+// framework/afl.S
+
+__break_start_forkserver:
+    brk #3
+    ret
+ENDPROC(__break_start_forkserver)
+
+__break_get_work:
+    ldr x0, =rand_buf
+    mov x1, 0x1000
+    brk #4
+    ret
+ENDPROC(__break_get_work)
+
+__break_start_work:
+    mov   x0, #RKP_VMM_START
+    add   x1, x0, #RKP_VMM_SIZE
+    brk #5
+    ret
+ENDPROC(__break_start_work)
+
+rkp_call_fuzz_afl:
+    hvc #0
+    ret
+ENDPROC(rkp_call_fuzz_afl)
+
+__break_end_work:
+    // x0 is the exit value
+    brk #6
+    ret
+ENDPROC(__break_end_work)
+
+
+For demonstration purposes and to verify that the fuzzer works as expected,
+we will be using the same fuzzing harness as with the dummy fuzzer to fuzz
+the `hvc` command ids. If everything works as expected we should have at
+least one crash by invoking command 0x9b.
+
+As mentioned above, framework function `__break_get_work()` (49) invokes
+qemu `get_work` hypercall (51). There, the child QEMU reads the AFL
+created test case and copies its contents in guest VM `rand_buf`. In the
+next step, `__break_start_work()` framework function invokes `start_work`
+hypercall (52) which sets the child process to only track and edit the
+AFL bitmap for addresses in the RKP range.
+
+
+// qemu/target/arm/patch.c
+
+static target_ulong get_work(CPUState *cs, CPUARMState *env,     /* (51) */
+                             target_ulong guest_ptr, target_ulong sz)
+{
+    int l = 0x1000;
+    uint8_t buf[l];
+
+    assert(afl_start == 0);
+    fp = fopen(afl_file, "rb");
+    if(!fp) {
+         perror(afl_file);
+         return -1;
+    }
+
+    fread(buf, l, 1, fp); // must add checks
+
+    if (cpu_memory_rw_debug(cs, guest_ptr, buf, l, 1) < 0) {
+        fprintf(stderr, " Cannot access memory\n");
+        return -1;
+    }
+
+
+    fclose(fp);
+    return retsz;
+}
+
+
+static target_ulong start_work(CPUState *cs, CPUArchState *env,  /* (52) */
+                               target_ulong start, target_ulong end)
+{
+    afl_start_code = start;
+    afl_end_code   = end;
+    afl_start = 1;
+    return 0;
+}
+
+
+The initial testcase provided to AFL must execute without crashing. For
+that we use command id 0x98 which as shown in the snippet simply writes in
+the debug log and exits. At long last, we can invoke and fuzz the `hvc`
+handler. We read the first QWORD (50) from the provided test case as the
+command id and simply use `rand_buf` as the second argument as discussed in
+the dummy fuzzer harness.
+
+
+// vmm-G955FXXU4CRJ5.elf
+
+void rkp_main(uint64_t command, exception_frame *exception_frame)
+{
+  ...
+
+  switch ( hvc_cmd )
+  {
+    ...
+
+    case 0x98:
+      rkp_debug_log("RKP_a3d40901", 0, 0, 0); // CFP_JOPP_INIT
+      break;
+...
+
+
+However, not long after the `hvc` invocation our system crashes. The
+problem lies in the basic block translations performed by the QEMU parent
+process as we elaborate on in the next section.
+
+
+--------[ 3.3.2.3 - Handling parent translations
+
+For QEMU to perform basic block translations for ARM architectures, it uses
+`mmu_idx` to distinguish translation regimes, such as Non-Secure EL1 Stage
+1, Non-Secure EL1 Stage 2 etc. (for more details refer to ARMMMUIdx enum
+definition under qemu/target/arm/cpu.h). As shown below, to evaluate the
+current `mmu_idx` it relies on the current CPU PSTATE register (53). This
+process is normally performed by the vCPU thread during the guest VM
+emulation.
+
+
+// qemu/target/arm/helper.c
+
+int cpu_mmu_index(CPUARMState *env, bool ifetch)
+{
+    return arm_to_core_mmu_idx(arm_mmu_idx(env));
+}
+
+ARMMMUIdx arm_mmu_idx(CPUARMState *env)
+{
+    int el;
+    ...
+
+    el = arm_current_el(env);
+    if (el < 2 && arm_is_secure_below_el3(env)) {
+        return ARMMMUIdx_S1SE0 + el;
+    } else {
+        return ARMMMUIdx_S12NSE0 + el;
+    }
+}
+
+
+// qemu/target/arm/cpu.h
+
+static inline int arm_current_el(CPUARMState *env)
+{
+    ...
+
+    if (is_a64(env)) {
+        return extract32(env->pstate, 2, 2);                     /* (53) */
+    }
+    ...
+}
+
+
+As earlier discussed, in QEMU/AFL when a child process encounters a basic
+block previously not translated, it instructs (38)-(55) the parent to
+mirror the basic block translation process (37)-(57) so that next
+children will have cached copies to avoid re-translation and improve
+performance [07]. To achieve this, the child sends (55) the current pc
+address along with other information for the parent to perform the
+translation (57) _within its own CPU state_. Moreover, in our setup the
+parent translation is performed by the IO thread because vCPU thread is
+terminated during the forkserver instantiation. The problem of course lies
+in a state inconsistency between the child and the parent.
+
+We will demonstrate the state inconsistency via an example. When the parent
+becomes the forkserver in our setup/framework it is executing in EL1.
+While the child process executes, its vCPU will emulate the `hvc`
+invocation, change its state to EL2 to continue with the emulation of the
+hypervisor code and almost certainly encounter new basic blocks. As
+mentioned above, it will instruct the parent to do the translation as well.
+As there is no way for the parent to be aware of the child state changes it
+will remain in EL1. It should be obvious now that when the parent tries to
+translate the EL2 basic blocks while being in EL1 will fail.
+
+So the child must also send its PSTATE (54) which the parent uses to set
+its own PSTATE (56) and then perform the translation correctly.
+
+
+// qemu/accel/tcg/cpu-exec.c
+
+static inline TranslationBlock *tb_find(CPUState *cpu, ...)
+{
+    ...
+
+    if (tb == NULL) {
+        ...
+
+        CPUArchState *env = (CPUArchState *)cpu->env_ptr;        /* (54) */
+        pstate = env->pstate;
+
+        /*
+         * AFL_QEMU_CPU_SNIPPET1 is a macro for
+         * afl_request_tsl(pc, cs_base, flags, cf_mask, pstate);
+         */
+        AFL_QEMU_CPU_SNIPPET1;                                   /* (55) */
+        ...
+    }
+    ...
+}
+
+
+// qemu/afl-qemu-cpu-inc.h
+
+void afl_wait_tsl(CPUState *cpu, int fd) {
+  ...
+
+  CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+
+  while (1) { // loop until child terminates
+    ...
+
+    env->pstate = t.pstate;                                      /* (56) */
+    tb = tb_htable_lookup(cpu, t.pc, t.cs_base,
+                              t.flags, t.cf_mask);               /* (57) */
+    ...
+  }
+  ...
+}
+
+
+Furthermore, as stated above the parent process is originally in EL1 during
+the forkserver instantiation. However, the child can terminate (hopefully)
+during execution in other ELs. In this case, the parent might be left in
+the EL the child was during the crash (if new basic blocks were encountered
+before crashing) and consequently the next fork child will also be in that
+EL. However, as previously discussed each child resumes execution right
+after `__break_start_forkserver()` in EL1 and as a result of being in a
+different EL, translations will fail causing the child to crash. For this
+reason, we save the original state before the forkserver initialization
+(58) and restore it before forking the each next child (59).
+
+
+void afl_forkserver(CPUState *cpu) {
+  ...
+
+  CPUArchState *env = (CPUArchState *)cpu->env_ptr;
+  afl_fork_pstate = env->pstate;                                 /* (58) */
+  ...
+
+  /* forkserver loop */
+  while (1) {
+    env->pstate = afl_fork_pstate;                               /* (59) */
+    ...
+
+    child_pid = fork();
+    ...
+
+    if (!child_pid) {
+      /* Child process */
+      ...
+    }
+    /* Parent */
+    ...
+
+    afl_wait_tsl(cpu, t_fd[0]);
+    ...
+  }
+}
+
+
+Before executing we need to address some issues previously encountered,
+namely how to handle aborts, policy violations etc.
+
+
+--------[ 3.3.2.4 - Handling hangs and aborts
+
+As shown next, if an abort exception is triggered (60) we terminate child
+process with exit status -1, which AFL is modified to treat as a crash
+(62). Additionally, we skip the crash logging function to avoid cluttering
+the system with logs due to high execution speeds as shown next.
+
+
+// qemu/target/arm/helper.c
+
+/* Handle a CPU exception for A and R profile CPUs.
+   ...
+ */
+void arm_cpu_do_interrupt(CPUState *cs)
+{
+    ...
+
+    // Handle the instruction or data abort
+    if (cs->exception_index == EXCP_PREFETCH_ABORT ||            /* (60) */
+          cs->exception_index == EXCP_DATA_ABORT ) {
+
+        /*
+         * since we are executing in afl, avoid flooding system with crash
+         * logs and instead terminate here
+         *
+         * comment out to see abort logs
+         */
+        exit(-1);
+
+        if(handle_abort(cs, env) == -1) {
+        }
+        ...
+        exit(-1);
+    }
+    ...
+}
+
+
+// afl/afl-fuzz.c
+
+static u8 run_target(char** argv, u32 timeout) {
+    ...
+
+    /*
+     *  Policy violation (type of assertion), treat as hang
+     */
+    if(qemu_mode > 1 && WEXITSTATUS(status) == 32) {
+        return FAULT_TMOUT;                                      /* (61) */
+    }
+
+    /* treat all non-zero return values from qemu system as a crash */
+    if(qemu_mode > 1 && WEXITSTATUS(status) != 0) {
+        return FAULT_CRASH;                                      /* (62) */
+    }
+
+}
+
+
+Furthermore, we chose to treat `rkp_policy_violation()` as a system hang by
+terminating the child with status 32 (63) which is then identified by AFL
+(61). Additionally, `vmm_panic()` (64) is treated as a crash. As we
+previously said, this solution does not scale well because of systems where
+not all possible hangs can be identified. However, AFL sets watchdog timers
+for each child execution and if the timer is triggered, the child is
+terminated. This is the reason we chose to have unhandled `smc` invocations
+and other unexpected exceptions to loop indefinitely. They might have a
+small impact in fuzzing performance (loop until timer is triggered) but
+otherwise allow for a stable system setup.
+
+In essence this setup allows for flexibility regarding the way we handle
+aborts, hangs and generally all erroneous system states, with a failsafe
+mechanism that guarantees the fuzzing setup robustness even when not all
+system behavior corner cases have been accounted for. As our understanding
+of the system improves, more of theses conditions can be incorporated in
+the fuzzing logic.
+
+
+// qemu/accel/tcg/cpu-exec.c
+
+static inline TranslationBlock *tb_find(CPUState *cpu, ...)
+{
+    ...
+
+    if (pc == 0xB010DBA4) { // rkp_policy_violation
+        qemu_log("[!] POLICY VIOLATION!!! System Reset!\n");
+        exit(32);                                                /* (63) */
+    }
+
+    if (pc == 0xB010A4CC) { // vmm_panic
+        qemu_log("[!] VMM PANIC!!! We should not be here!!!\n"); /* (64) */
+        exit(-1);
+    }
+    ...
+}
+
+
+--------[ 3.3.2.5 - Demonstration
+
+We illustrate (show off ;) below an execution snapshot. We can see the
+fuzzer operating on average at 350-400 executions per second, identifying
+new paths and crashes, even with our naive fuzzing harness. Lastly, reading
+one of the crashes reveals the faulting command id 0x9b ;)
+
+
+         american fuzzy lop 2.56b-athallas (qemu-system-aarch64)
+
+-- process timing ---------------------------------- overall results -----
+|        run time : 0 days, 0 hrs, 0 min, 38 sec  |  cycles done : 0     |
+|   last new path : 0 days, 0 hrs, 0 min, 2 sec   |  total paths : 22    |
+| last uniq crash : 0 days, 0 hrs, 0 min, 24 sec  | uniq crashes : 4     |
+|  last uniq hang : 0 days, 0 hrs, 0 min, 13 sec  |   uniq hangs : 5     |
+|- cycle progress ----------------- map coverage ------------------------|
+|  now processing : 7 (31.82%)   |    map density : 0.44% / 0.67%        |
+| paths timed out : 0 (0.00%)    | count coverage : 1.49 bits/tuple      |
+|- stage progress ----------------- findings in depth -------------------|
+|  now trying : havoc            | favored paths : 13 (59.09%)           |
+| stage execs : 630/2048 (30.76%)|  new edges on : 15 (68.18%)           |
+| total execs : 13.3k            | total crashes : 134 (4 unique)        |
+|  exec speed : 375.3/sec        |  total tmouts : 835 (5 unique)        |
+|- fuzzing strategy yields ------------------------ path geometry -------|
+|   bit flips : 7/256, 6/248, 3/232              |    levels : 4         |
+|  byte flips : 0/32, 0/24, 0/8                  |   pending : 15        |
+| arithmetics : 5/1790, 1/373, 0/35              |  pend fav : 7         |
+|  known ints : 2/155, 0/570, 0/331              | own finds : 20        |
+|  dictionary : 0/0, 0/0, 0/0                    |  imported : n/a       |
+|       havoc : 0/8448, 0/0                      | stability : 100.00%   |
+|        trim : 98.77%/13, 0.00%                 |------------------------
+--------------------------------------------------          [cpu000:109%]
+
+
+$ xxd -e -g4 out/crashes/id:000000,sig:00,src:000000,op:flip2,pos:1
+
+00000000: 8389b000
+
+
+----[ 3.4 - Final Comments
+
+Using the proposed framework, we have demonstrated a naive fuzzing setup
+and an advanced setup employing AFL based on TriforceAFL while elaborating
+on QEMU internals.
+
+The proposed solutions can be easily modified to support other setups with
+full system emulation and in different ELs or security states as well. For
+example, let's assume the desired target is an EL3 implementation and we
+wish to fuzz early initialization functionality before interaction with
+other components or ELs. We can achieve this by identifying the desired
+location by address similarly to `rkp_policy_violation` and injecting the
+`start_forkserver` and any other required functionality to that specific
+location. This is similarly true for trusted OSs and applications.
+
+Finally, one of the AFL limitations is the lack of state awareness. After
+each testcase the framework/guest VM state is reset for the new testcase to
+be executed. This of course prevents us from finding bugs which depend on
+more than one `hvc` invocations. A possible solution could be to build
+harnesses that support such functionality, even though this is not the
+intended AFL usage and as such it is not guaranteed to have good results.
+It remains to be verified and other fuzzing solutions could also be
+examined for state aware fuzzing.
+
+
+--[ 4 - Conclusions
+
+The author hopes that this article has been useful to readers who dedicated
+the time to read it, did not lose motivation despite its size and of course
+maintained their sanity :) Even though though we attempted to make this
+(very long) article as complete as possible, there is always room for
+improvement of both the presented solutions and new features or supported
+functionalities, as is true with every similar project. Readers are welcome
+and encouraged to extend/improve the proposed solution or, using the newly
+found knowledge, develop their own and publish their results.
+
+
+--[ 5 - Thanks
+
+First of all, I would like to thank the Phrack Staff for being very
+accommodating with my various requests and for continuing to deliver such
+awesome material! This work would have been very different without huku's
+insightful comments, his very helpful review and him being available to
+bounce ideas off of. Thanks to argp as well for his helpful review and
+assistance with various procedural issues. Also, cheers to friends from
+CENSUS and finally to the many other friends who helped me one way or
+another through this very demanding journey.
+
+Remember, support your local artists, beat your (not only) local fascists,
+stand in solidarity with the oppressed. Take care.
+
+
+--[ 6 - References
+
+[01] https://www.samsungknox.com/en
+
+[02] https://www.samsungknox.com/en/blog/real-time-kernel-protection-rkp
+
+[03] https://googleprojectzero.blogspot.com/2017/02/
+        lifting-hyper-visor-bypassing-samsungs.html
+
+[04] https://opensource.samsung.com/
+
+[05] http://infocenter.arm.com/help/
+        index.jsp?topic=/com.arm.doc.den0028b/index.html
+
+[06] https://hernan.de/blog/2018/10/30/
+        super-hexagon-a-journey-from-el0-to-s-el3/
+
+[07] https://github.com/google/AFL/
+        blob/v2.56b/docs/technical_details.txt#L516
+
+[08] https://github.com/nccgroup/TriforceAFL
+
+[09] https://github.com/nccgroup/TriforceAFL/
+        blob/master/docs/triforce_internals.txt
+
+--[ 7 - Source code
+
+|=[ EOF ]=---------------------------------------------------------------=|

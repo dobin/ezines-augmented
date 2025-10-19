@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "TBAV: signatures",
+  "authors": "Tcp",
+  "date": "",
+  "historical_context": "This article discusses modifications to TBAV, a virus scanner, and its signature handling, reflecting the evolving landscape of malware detection during the early 1990s.",
+  "target_audience": "Security professionals, malware researchers, and hackers interested in virus detection techniques.",
+  "short_summary": "The article details modifications made to the TBAV virus scanner's signature handling, including changes to its encryption and file size limitations. It provides insights into the wildcards used in TBAV's search strings and how to utilize a new signature extraction program.",
+  "summary": "In this article, Tcp presents a modified version of the TBAV virus scanner, specifically addressing its signature handling capabilities. The author explains that the signature leaker from Virogen was adapted for TBAV version 7.04, revealing that the TBSCAN.SIG file employed different encryption methods across versions. Tcp also highlights a significant limitation in earlier versions where the program could not handle files larger than f000h bytes, which has been rectified in the new version. The article includes a program for extracting signatures, which can be run in the TBAV directory to dump all signatures into a specified file.\n\nThe author elaborates on the wildcards used in TBAV's search strings, providing a detailed breakdown of their functions. For instance, the wildcards allow for jumping over bytes and performing CRC checks, which are crucial for effective virus detection. Tcp encourages readers to reach out for further information on calculating CRC values, fostering a sense of community among those interested in malware analysis. This article serves as a practical guide for those looking to enhance their understanding of TBAV's signature processing and the underlying techniques used in virus detection."
+}

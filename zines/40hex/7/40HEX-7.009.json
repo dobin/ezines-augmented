@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 3, Phile #009 of 11",
+  "title": "Pogue Mahone!",
+  "authors": "Patti Hoffman",
+  "date": "January, 1992",
+  "historical_context": "The Pogue virus emerged during a time when computer viruses were becoming more prevalent, particularly in the early 1990s. This period saw a rise in the sophistication of malware, with viruses beginning to employ encryption and other techniques to evade detection.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of computer virus history.",
+  "short_summary": "The article discusses the Pogue virus, a memory-resident .COM file infector discovered in January 1992. It details its symptoms, detection methods, and removal instructions, highlighting its complex encryption mechanism and origins from Bulgaria.",
+  "summary": "The Pogue virus is a parasitic resident virus that infects .COM files, discovered in January 1992. Originating from Bulgaria, it is notable for its memory-resident behavior and the ability to infect files without altering their timestamps. The virus increases the size of infected files by 2,973 to 3,850 bytes and employs a sophisticated encryption mechanism that complicates detection. It is designed to avoid infecting files with base names starting with 'COM', thus protecting critical system files like COMMAND.COM. The virus also has a unique feature of playing music through the system speaker during specific hours, adding a quirky characteristic to its malicious behavior. Detection requires advanced scanning techniques due to its encryption, and removal is straightforward: simply delete the infected files. The article serves as a historical snapshot of early malware and its evolving complexity, making it a relevant read for those interested in the evolution of computer security threats."
+}

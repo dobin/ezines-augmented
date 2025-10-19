@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Ten, Phile #5 of 9",
+  "title": "Circuit Switched Digital Capability (CSDC) - Part I",
+  "authors": "The Executioner",
+  "date": "1986",
+  "historical_context": "This article discusses the CSDC feature, which was a significant advancement in telecommunications technology during the 1980s, allowing for simultaneous voice and data transmission.",
+  "target_audience": "Telecommunications engineers, hackers interested in telephony, security professionals.",
+  "short_summary": "This article introduces the Circuit Switched Digital Capability (CSDC), detailing its functionality for simultaneous voice and data transmission at 56 kb/s. It covers the technical aspects of the CSDC feature, including network requirements, user perspectives, and potential applications.",
+  "summary": "The Circuit Switched Digital Capability (CSDC) is a telecommunications feature that enables the end-to-end digital transmission of data at 56 kb/s while also allowing for analog voice signals. This article outlines the technical specifications and operational requirements for utilizing CSDC, including the necessary network channel terminating equipment and the types of calls that can be made. The CSDC feature was previously known as Public Switched Digital Capability (PSDC) and is compatible with various telecommunication systems, enhancing the versatility of voice and data communication. Applications for CSDC include audiographic teleconferencing, secure voice communication, and facsimile transmission.\n\nThe article further elaborates on the user experience when establishing a CSDC call, detailing the dialing formats and the process for switching between voice and data modes during a call. It also discusses the role of various switching systems, such as the Remote Switching System (RSS) and Centrex/ESSX-1, in facilitating CSDC services. The CSDC feature represents a significant step forward in telecommunications, providing users with the ability to seamlessly transition between voice and data communication, thereby enhancing the overall functionality of telephony systems."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Eight, File 14 of 15",
+  "title": "What's Wrong With The Computer Crime Statute?",
+  "authors": "Thomas A. Guidoboni",
+  "date": "February 17, 1992",
+  "historical_context": "This article discusses the flaws in the 1986 Computer Fraud and Abuse Act, particularly in light of its application in the prosecution of Robert T. Morris, the creator of the first computer worm.",
+  "target_audience": "Legal professionals, policymakers, security researchers, and hackers interested in the evolution of computer crime legislation.",
+  "short_summary": "The article critiques the 1986 Computer Fraud and Abuse Act, arguing for necessary amendments to clarify vague terms and differentiate between malicious and unintentional intrusions. It warns against expanding federal jurisdiction over computer crimes.",
+  "summary": "In this insightful piece, Thomas A. Guidoboni addresses the inadequacies of the 1986 Computer Fraud and Abuse Act, which has been a focal point for discussions on computer crime legislation since its inception. He highlights the law's vague definitions of 'authorized' and 'unauthorized access,' which leave individuals uncertain about what constitutes illegal conduct. Guidoboni argues that precise definitions are essential to provide fair warning and ensure that individuals are not unjustly prosecuted for actions that may not clearly violate the law. \n\nFurthermore, the article advocates for a distinction between malicious intruders and those who cause unintentional harm, emphasizing that intent should play a crucial role in determining culpability. Guidoboni also critiques the broad categorization of unauthorized access to medical records as felonious conduct, suggesting that such actions should be treated as misdemeanors unless they involve intentional harm. He concludes that while amendments to the law are warranted, a broadening of its scope could stifle innovation and infringe on privacy rights, urging lawmakers to tread carefully in their revisions."
+}

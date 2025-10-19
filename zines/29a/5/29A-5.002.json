@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Bumblebee's guide to Simple Mail Transfer Protocol",
+  "authors": "Bumblebee",
+  "date": "Not specified",
+  "historical_context": "This article provides foundational knowledge about the Simple Mail Transfer Protocol (SMTP), which is crucial for email communication. It reflects the early days of internet communication protocols and the hacker culture's interest in understanding and manipulating these systems.",
+  "target_audience": "Hackers, security professionals, and anyone interested in email protocols.",
+  "short_summary": "This guide offers a practical introduction to the Simple Mail Transfer Protocol (SMTP), detailing client and server messages, syntax, and practical exercises for sending emails. It emphasizes the importance of understanding the protocol for effective communication and potential exploitation.",
+  "summary": "Bumblebee's guide to SMTP serves as a comprehensive introduction to the protocol that underpins email communication. The article outlines the necessary syntax for client and server messages, explaining commands like HELO, MAIL FROM, RCPT TO, DATA, and QUIT. Each command is accompanied by expected server responses, providing readers with a clear understanding of how to interact with SMTP servers. The guide also highlights the importance of adhering to the correct syntax to avoid issues with older server implementations, which may be less forgiving of errors. \n\nIn addition to the technical details, the article encourages hands-on practice using a telnet client to connect to SMTP servers, illustrating a sample session to demonstrate the process of sending an email. Bumblebee shares valuable insights from experience, such as the reliability of server reply codes and the nuances of different server implementations. The guide concludes with practical tips for coding an SMTP client, emphasizing the need for compatibility and awareness of potential pitfalls. Overall, this article is a valuable resource for anyone looking to deepen their understanding of email protocols and their underlying mechanics."
+}

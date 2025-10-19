@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Tequila Virus Source",
+  "authors": "N/A",
+  "date": "December 1991",
+  "historical_context": "The Tequila Virus is one of the early examples of a computer virus that spread through infected executable files. It highlights the growing concerns about malware during the early 1990s.",
+  "target_audience": "Security researchers, malware analysts, and programmers interested in historical malware.",
+  "short_summary": "This article provides the source code for the Tequila Virus, a notable early computer virus. It includes instructions for recompiling the virus and details about its functionality.",
+  "summary": "The Tequila Virus Source article presents the complete assembly code for the Tequila Virus, which was designed to infect COM files. The virus is notable for its self-replicating capabilities and its method of infection, which involves modifying the partition table of the host system. The author provides detailed instructions on how to recompile the virus using the A86 assembler, while also noting the necessary modifications for compatibility with MASM. The article serves as a technical reference for understanding the inner workings of this early malware, including its infection routines and the various interrupts it utilizes to execute its payload. The source code is presented in a clear format, allowing readers to analyze and learn from the techniques used in this early example of computer virus development."
+}

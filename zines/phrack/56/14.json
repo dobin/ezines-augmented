@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0xa Issue 0x38, Phile #6 of 11",
+  "title": "Taking Advantage of Non-Terminated Adjacent Memory Spaces",
+  "authors": "twitch <twitch@vicar.org>",
+  "date": "05.01.2000",
+  "historical_context": "This article was published during a time when buffer overflow vulnerabilities were becoming increasingly recognized as a significant security risk in software development.",
+  "target_audience": "Hackers, security professionals, and programmers interested in understanding buffer overflow vulnerabilities.",
+  "short_summary": "The article explores the security implications of non-terminated adjacent memory spaces in C programming, detailing how they can lead to exploitable buffer overflow vulnerabilities. It provides examples and a demonstration exploit to illustrate the concept.",
+  "summary": "In this article, twitch discusses the often-overlooked issue of non-terminated strings in C programming, particularly focusing on how they can lead to buffer overflow vulnerabilities. The author explains that many functions, such as strncpy(), do not automatically null-terminate strings, which can result in unexpected behavior when adjacent buffers are involved. This oversight can lead to program redirection and other security issues, especially when user input is involved. The article provides a detailed example of how this vulnerability can manifest in real-world applications, using FreeBSD as a reference point.\n\nThe author also presents an example exploit that demonstrates how to leverage these vulnerabilities for malicious purposes. By carefully crafting input to manipulate adjacent buffers, an attacker can redirect program execution to their own shellcode. The article emphasizes the importance of understanding the implications of buffer management in C programming, urging developers to take precautions and properly handle user input to prevent such vulnerabilities. Overall, this piece serves as both an educational resource and a cautionary tale for programmers and security professionals alike."
+}

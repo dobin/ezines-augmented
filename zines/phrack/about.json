@@ -1,0 +1,9 @@
+{
+    "name": "Phrack",
+    "topic": "Hacking, phreaking, computer security, and underground culture",
+    "date": "1985 – present",
+    "impact": "The most influential hacker ezine in history; defined the tone, language, and technical depth of hacker publications for decades. Phrack articles became reference material for early exploit development and hacker philosophy.",
+    "description": "An electronic magazine originally focused on phone phreaking and hacking, later evolving into deep technical research and hacker manifestos.",
+    "essential": "Serves as the foundation of hacker literature; a primary source for both technical learning and cultural insight within the hacker community.",
+    "inside": "Detailed exploit walkthroughs, low-level programming and reverse engineering tutorials, philosophical essays (like The Hacker Manifesto), and historical pieces on the evolution of hacking."
+}

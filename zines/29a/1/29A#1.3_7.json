@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "AVP 2.2 naked",
+  "authors": "Mister Sandman",
+  "date": "",
+  "historical_context": "This article discusses vulnerabilities in the AVP antivirus software, highlighting techniques for exploiting these weaknesses. It reflects the hacker culture of the early 1990s, where reverse engineering and exploiting software flaws were common practices.",
+  "target_audience": "Hackers, security researchers, antivirus developers",
+  "short_summary": "The article reveals vulnerabilities in AVP 2.2 antivirus software, demonstrating how to exploit its weaknesses to bypass detection. It discusses various methods, including modifying configuration files and executable code.",
+  "summary": "In 'AVP 2.2 naked', Mister Sandman exposes critical vulnerabilities in the AVP antivirus software, arguing that despite its reputation as a leading antivirus solution, it is not invulnerable. The article details several methods to exploit AVP's weaknesses, such as manipulating its configuration file (AVP.SET) to disable its kernel database (KERNEL.AVB), effectively rendering the antivirus useless. By simply commenting out the kernel entry, AVP loses its ability to detect viruses, showcasing a fundamental flaw in its design. The author also describes how to intercept and modify system calls to further evade detection, emphasizing the ease with which these exploits can be executed by those with a basic understanding of assembly language and system internals.\n\nAdditionally, the article discusses the use of trojans and other creative methods to disrupt AVP's scanning processes. Sandman humorously notes the challenges posed by AVP's protective measures but ultimately demonstrates that with a little ingenuity, even these can be circumvented. The piece serves as both a technical guide and a commentary on the state of antivirus software at the time, highlighting the ongoing cat-and-mouse game between virus creators and antivirus developers. Sandman's insights into AVP's architecture and vulnerabilities provide valuable lessons for both hackers and security professionals alike."
+}

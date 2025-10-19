@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-one, Phile #3 of 10",
+  "title": "Hacking Rolm's CBXII/9000",
+  "authors": "DH",
+  "date": "05/24/90",
+  "historical_context": "This article was published during a time when PBX systems were becoming increasingly common in organizations, and hacking them was a niche area of interest among phone phreakers and hackers.",
+  "target_audience": "Hackers, phreakers, telecommunications professionals",
+  "short_summary": "This article provides a practical guide on how to hack into IBM Rolm's CBXII/9000 PBX systems, detailing methods for obtaining dial-up access and exploiting default accounts to gain control over the system.",
+  "summary": "In 'Hacking Rolm's CBXII/9000', the author outlines the process of gaining unauthorized access to IBM Rolm's CBXII/9000 PBX systems. The article begins by discussing the significance of controlling a PBX environment, emphasizing that obtaining dial-up information is the most challenging step. The author suggests various methods to discover dial-ups, particularly in university and hospital settings, and highlights the importance of knowing the default accounts that come with these machines, which often remain unchanged. The default superuser account, with username 'SU' and password 'SUPER', is a critical vulnerability that hackers can exploit to gain administrative access to the system. \n\nOnce access is obtained, the article details the commands and utilities available within the CBXII/9000 environment. The Interactive Configuration Interface (ICI) allows for immediate changes to the system, including creating and modifying user accounts with superuser privileges. The author also discusses the monitoring capabilities of the system, enabling hackers to observe call activities and manipulate extensions for various purposes. The article serves as a comprehensive guide for those interested in exploiting PBX systems, showcasing the potential for manipulation and control over telecommunications infrastructure."
+}

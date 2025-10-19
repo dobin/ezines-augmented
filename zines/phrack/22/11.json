@@ -1,0 +1,32 @@
+{
+  "reference": "Volume Two, Issue 22, File 11 of 12",
+  "title": "Computer Break-In",
+  "authors": "Special Agent Mike Forche, AFOSI Computer Crime Investigator",
+  "date": "November 11, 1988",
+  "historical_context": "This article discusses a significant security breach in a military computer system during a time when computer security was becoming increasingly critical.",
+  "target_audience": "Security professionals, hackers, and those interested in computer crime investigations.",
+  "short_summary": "The article details a computer break-in at an Air Force facility, where a hacker gained unauthorized access to a Sperry 1160 computer system. The investigation revealed the hacker's use of familiar USERIDs and easily guessable passwords, highlighting vulnerabilities in military computer security.",
+  "summary": "In November 1988, a hacker infiltrated an Air Force Sperry 1160 computer system, exploiting weak security protocols. The breach was detected by vigilant operators who promptly alerted the database administrator. The investigation revealed that the hacker, an authorized user, had gained system administrator access using familiar USERIDs and passwords derived from the names of system monitors. This incident underscores the importance of robust password policies and the dangers of reusing USERIDs across different bases. The hacker's actions led to a federal investigation for multiple violations of computer crime laws, emphasizing the growing concern over cybersecurity in military operations.",
+  "additional_articles": [
+    {
+      "reference": "Volume Two, Issue 22, File 11 of 12",
+      "title": "\"Big Brotherish\" FBI Data Base Assailed",
+      "authors": "Knight-Ridder Newspapers",
+      "date": "November 21, 1988",
+      "historical_context": "This article reflects the growing tension between civil liberties and government surveillance during the late 1980s.",
+      "target_audience": "Civil libertarians, computer professionals, and those interested in privacy rights.",
+      "short_summary": "Civil libertarians and computer professionals unite to challenge the FBI's expansion of its data collection practices, fearing a breach of privacy rights.",
+      "summary": "In a significant pushback against government surveillance, civil libertarians and computer professionals convened to oppose the FBI's plans to expand its data collection capabilities. The Computer Professionals for Social Responsibility played a pivotal role in advocating for citizen rights, emphasizing the need for oversight in the FBI's operations. The article highlights the historical context of privacy concerns stemming from past government actions, such as the monitoring of war protesters in the 1970s. The collaboration between civil rights advocates and tech experts marks a critical moment in the ongoing debate over privacy and government surveillance, as they seek to ensure that the FBI acts responsibly in its data collection efforts."
+    },
+    {
+      "reference": "Volume Two, Issue 22, File 11 of 12",
+      "title": "Big Guns Take Aim At Virus",
+      "authors": "Government Computer News",
+      "date": "November 21, 1988",
+      "historical_context": "This article discusses the response to a significant computer virus outbreak affecting military networks, highlighting the early days of virus awareness.",
+      "target_audience": "Security professionals, IT administrators, and those interested in cybersecurity.",
+      "short_summary": "Following a virus outbreak in military networks, officials from the Defense Department and NIST convene to discuss strategies for preventing future infections.",
+      "summary": "In the wake of a computer virus that disrupted the Defense Data Network and Arpanet, officials from the Defense Department and the National Institute of Standards and Technology (NIST) gathered to address the growing threat of malware. The meetings aimed to formulate a response to the virus, which had clogged networks and caused significant operational slowdowns. NIST's Stuart Katzke proposed the establishment of a federal center for anti-virus efforts to centralize information on threats and coordinate responses. This article illustrates the early recognition of computer viruses as a serious security concern and the need for collaborative efforts to enhance cybersecurity measures across government networks."
+    }
+  ]
+}

@@ -1,0 +1,937 @@
+                             ===Phrack Inc.==
+
+		Volume 0x0e, Issue 0x43, Phile #0x0a of 0x10
+
+|=----------------------------------------------------------------------=|
+|=-------=[ Dynamic Program Analysis and Software Exploitation ]=-------=|
+|=---------------=[ From the crash to the exploit code ]=---------------=|
+|=----------------------------------------------------------------------=|
+|=----------------------------------------------------------------------=|
+|=---------------=[ By BSDaemon                              ]=---------=|
+|=---------------=[ <bsdaemon *noSPAM* risesecurity_org>     ]=---------=|
+|=----------------------------------------------------------------------=|
+|=-------------------------=[ August 14 2010  ]=------------------------=|
+|=----------------------------------------------------------------------=|
+
+					"Don't matter what do you beleive
+happens when someone dies, the life always continues through the others who
+remember."
+				Md. Sergio da Silva Branco
+				Beloved father and my hero.  God bless
+you!
+
+
+------[  Index
+
+  0 - Abstract
+    0.1 - Keywords
+
+  1 - Introduction
+    1.1 - Paper structure
+
+  2 - Concepts and Additions 
+    2.1 - Taint Analysis
+	2.1.1 - Taint Sources
+	2.1.2 - Intermediate Languages and Tainted Sources
+	2.1.3 - Explosion of watched data
+    2.2 - Backward Taint Analysis
+	2.2.1 - From the crash to the exploit
+
+  3 - Existent solutions and comparisions
+
+  4 - Future and other uses
+
+  5 - Acknowledgements
+
+  6 - References
+
+  7 - Sources 
+
+------[ 0 - Abstract
+
+This article provides a compilation of the state of the art in program
+analysis, a real implementation based on an extension to the Microsoft 
+Debugger for tracing and a GUI application to actually do such 
+analysis and help determine not just if something is exploitable, but
+actually to guide you in such exploitation process.  It uses backward taint
+analysis to map from the crash back to the original data and define what 
+part of the data crashed the application, and how such data was transformed
+during the execution.
+
+It does not discuss how to create a Microsoft Debugger extension, and is not 
+even going to citate anything related to that.  It is all about software 
+exploitation, so I completely ignore other motivations for program analysis 
+(although I know those motivations are really important too).  A deep
+understanding of software exploitation is required in order to really take 
+advantage of such tool.
+
+
+------[ 0.1 - Keywords
+
+Dynamic Analysis, Taint Analysis, Data Flow, Intermediate Language, Reverse 
+Engineering, Software Exploitation.
+
+------[ 1 - Introduction
+
+Program Analysis is a hot topic.  Many people are discussing this subject 
+even more given the amazing numbers of crashes the fuzzers are finding
+nowadays [1] [2].
+
+This article uses program analysis as the way of making a computational
+system reason automatically (or at least with little human assistance)
+about the behavior of a program and draw conclusions that are somehow
+useful.
+
+In a world where thousands of crashes do exist and are easily found in very
+important softwares, the classification of exploitability of such bugs is 
+the first priority.  It is known that it is impossible (or inviable or 
+nobody wants to, or whatever other excuse you find to not fix your 
+software) to fix all the bugs such fuzzers are finding, so, at least, 
+companies want to fix (or exploit) the ones that are exploitables.
+
+The problem is that the only available solution to analyze such crashes are
+provided by Microsoft (named !exploitable or bang exploitable) [3][4] and 
+are not really useful to create actual exploits or to better understand the
+problem, but just to give a static classification (exploitable, probably
+exploitable, not exploitable or unknown).
+
+Even people with source code access are sometimes relying on such tools to 
+determine the exploitability of a given path (sometimes it is easier to 
+analyze a bug without getting into the messy code structure).
+
+Taint Analysis concepts and challenges are going to be explained in order 
+to determine what is being done by the proposed solution and to provide a 
+better idea of future and areas of improvements.
+
+---[ 1.1 - Paper structure
+
+In Chapter 2 I discuss about the concepts needed in the solution, like what
+is program flow analysis, taint analysis, what are the taint sources that 
+can be used and how to map between the assembly code and the taint places 
+in order to propagate the taint.  Also in this chapter I talk about the 
+explosion of watched data when you are tainting from the beginning of the 
+execution and why backward taint analysis is the solution for this problem.
+
+Chapter 3 compares the provided solution with the Microsoft !exploitable 
+software. 
+
+Chapter 4 defines the future of this area and some expected improvements in
+the future.   
+
+Chapter 5 is the acknowledgements to everybody who contributed 
+directly or indirectly to this article.  
+
+Chapter 6 includes the references and some additional references (not 
+directly cited in the article, but very useful to learn more) and, finally,
+Chapter 7 is the most juicy part and includes all the sources for two 
+different projects (the Microsoft Debugger extension which is the main 
+focus of this article and a HeapMonitor for Linux-ARM that I also comment
+in this paper).
+
+------[ 2 - Concepts and Additions
+
+This is the core of the article and will give the state-of-the-art in 
+program analysis focusing in software exploitation.  Here I discuss
+all the challenges in this area and all the concepts needed in order to
+understand the attached code (Section 7).
+
+Vulnerability exploitation experience is not required to understand this
+particular section.  Vulnerability exploitation experience is mandatory
+to actually use the offered solution, since the implementation only helps
+the analysis process and does so automating the process of validation of
+what the attacker control that influences a crash and what are the code
+traces to get to the crash point.
+
+---[ 2.1 - Taint Analysis
+
+Taint Analysis is one kind of program flow analysis and the idea behind 
+such analysis of a program flow in the context of this article is to define
+the influence of external data over the analyzed application.
+
+Since the information flows, or as usually said, is copied to or influences
+other data, there is a need to follow this influence in order to determine
+the control over specific data (registers, memory locations).  This is a
+requirement to later determine the exploitability.
+
+To follow the information flow, I need to keep track over all the taint
+sources, and propagate such tracking to influenced data.
+
+That means that when a tainted location is used in such a way that a value
+of other data is derived from the tainted data (like in mathematical
+operations, move instructions and others) I need to mark the other location
+as tainted as well.  This is called taint propagation and is defined with 
+the following transitive relation:
+
+	- If information A is used to derive information B:
+		A->t(B) -> Direct flow
+	- If B is used to derive information C: 
+		B->t(C) -> Direct flow
+	- Thus: A->t(C) -> Indirect flow
+
+These transitive steps between operations are called 'flows' and can be 
+analyzed one by one or in a block (like in the example above, A->t(C)).  
+
+A location is defined as:
+
+	- A memory address and size
+
+	- A register name (for the implementation a register is considered 
+	  entirely, not making differences regarding %eax and %al for 
+	  example). This means that, when defining a register, I set 
+	  it higher (e.g: setting %al as tainted will also taint %eax) 
+          and clearing will clear it lower.  Care must be taken, since
+	  when defining %al, %ah is not set. 
+
+To keep track over bit operations in a register, it is important to taint 
+the code-block level of a control flow graph [5].  This adds extra 
+complexity, since there is the flow graph and the data flow dependencies 
+graph.  The dependencies graph represents the influence of a source data
+to the operation been performed.
+
+In the implementation provided with this article, the WinDBG extension will
+normalize the operations, saving the used values for later inspection by 
+the GUI application.  This provides a great view over the tainted data.
+
+
+---[ 2.1.1 - Taint Sources
+
+Any information that is considered untrusted is tainted.
+
+Untrusted, for the scope of this article, is the information considered in
+control of the attacker.  There is also a transitive relation when dealing
+with tainted data, where any untainted data that receives values from tainted 
+source, becomes tainted. 
+
+This includes information received from the network, or readed from the 
+disk (in case of client-side exploits, for example).
+
+The more tainted information, the bigger the propagation and the required
+resources in order to keep track of that.  In fuzzing situations, where
+taint data is used to feedback the program behavior, even server-side
+configurations can be marked as tainted (in order to avoid the need to test
+server software with multiple different configurations [22]).
+
+Tainted information is just deleted when it receives an assignment from an
+untainted source or and assignment from a taint source resulting in a constant
+value not controlled by the attacker.  Most instructions in a program will not
+untaint the data, thus usually the number of tainted data grows during the
+program analysis.
+
+The example above is an explicit flow, since the defined value will receive
+the used tainted value independently of any conditions.
+
+When there are conditions for the flow, this is called an implicit flow,
+like in the following example:
+
+	if (x == 1) y=0;
+
+As I'll analyze in section 2.2, conditional statements needs a special analysis
+approach, and in the offered tool this is done in the analysis part 
+(the WinDBG extension). 
+
+Two special situations to track are partial tainting (when the untrusted 
+source doesn't completely control the tainted data) and tainting merge 
+(when there are two different untrusted sources being used to derive some
+data).  In a merge, the result is tainted. 
+
+A data area is 'used' when it is referenced by an operation and is
+'defined' when the data is modified.  
+
+Instructions that are pure assignments are easy to track, since if a 
+tainted location is used to define another location, this new location will
+also be tainted.
+
+Operations over strings are tainted when:
+
+	- They are used to calculate string sizes using a tainted location
+		E.g:  a = strlen(tainted(string));
+
+		Since string is tainted, I assume the attacker also controls
+		the value of a.  
+
+	- Search for some specific char using a tainted location, defining
+	  a flag if found or not found. 
+
+		E.g.:	pointer = strchr(tainted(string), some_char);
+	
+			if (pointer) flag=1;
+
+		Since the string is tainted, I assume the attacker also 
+		partially controls the flag.  The same happens if the
+		attacker controls the some_char value.
+				
+Arithmetical instructions with at least one used tainted data usually 
+define tainted results, since the attacker at least partially controls the 
+result.  
+Those instructions can be simplified using intermediate languages to map to
+boolean operations, and then the following rules applies:
+
+Or truth table:
+ 
+X	Y	X or Y	   
+0	0	0	   
+0	1	1	   
+1	0	1	   
+1	1	1	
+
+
+And truth table:
+ 
+X	Y	X and Y	   
+0	0	0	   
+0	1	0	   
+1	0	0	   
+1	1	1	 
+
+Xor truth table:
+ 
+X	Y	X xor Y	   
+0	0	0	   
+0	1	1	   
+1	0	1	   
+1	1	0	 
+
+Assuming there is at least one used tainted data:
+
+	- In the situation where I have an or operand, if the used 
+	  untainted data is 1, I know that I don't define the result of the
+  	  operation, so I untaint the result.  If it is 0, I know that 
+	  whatever value I define for the tainted data, the same value will
+	  be defined for the used target of the operation, meaning that the
+	  result is tainted.
+
+	- When I have the and operation, on the other side, if the used 
+	  untainted data register is 0, I know that I can't define the 
+	  result, and hence I untaint the data.  If the used untainted data
+	  is 1, I completely define the result, so it is tainted.
+
+	- XORs have a special situation where the value is XORed with 
+	  itself. This is the only case where an used tainted data will 
+	  define an untainted result (0).
+
+It is also a good idea to keep track of the EFLAGS register when the 
+attacker is able to define the value, considering it tainted (this is later
+used to determine the influence over flow operations).
+
+Conditional branches are taken care of in the implementation using the 
+tracing analysis generated by the WinDBG plugin. Single-stepping is used for
+the tracing.  WinDBG provides the disassembled opcode for the current 
+instruction and it is parsed to keep track of the tainted data.
+
+To solve a limitation of the tool, which is to consider cases not created 
+by the original crash data, one must analyze conditional jumps and flag 
+registers carefully:
+
+	- If the attacker can define the EFLAGS, and a jump is dependent of
+	  a flag, the attacker controls the branch decision (this is 
+	  considered by !exploitable as unknown, since creates lots of 
+	  different possibilities - simply controlling EIP is not enough to
+	  define exploitability, since some control over the memory 
+	  location pointed by the EIP is also a requirement).  Ret-into-lib
+	  depends of the controls over the arguments and ROP approaches requires
+	  multiple return control to create all the required gadgets.
+
+	- control over a branch decision means tainted EIP, since the 
+	  attacker at least partially controls the flow of execution
+
+	- To consider the value of EIP, one must define:
+		* The address if the jump is taken
+		* The address of the next instruction (if the jump is not 
+	     	  taken)
+		* The value of the interesting flag register (0 or 1)
+		* Then:  %eip<-(address of the next instruction) +  value 
+		  of the flag register * (|address if the jump is taken - 
+		  address of the next instruction|)
+
+The above formula permits to extend the functionality to expand the taint 
+over code flow blocks, solving the actual limitation of defining if a 
+specific code block is under attacker control (instead of a specific 
+destination with the actual input that generates the crash), but also 
+exponentially grow the complexity of keeping track.  
+
+Researchers are creative and as so there are many other uses for taint
+analysis like identify how long sensitive data is kept in the system [6] 
+and/or formally define a secure information flow [7].
+
+
+---[ 2.1.2 - Intermediate Languages and Tainted Sources
+
+In order to keep track of the tainted sources and propagate the taint, it
+is critical to have a program analysis that will understand the target
+program language semantics.
+
+Tools exist to implement taint analysis in high-level languages, such as
+C++ and Java [7][8][9], but this article focuses on straight assembly code 
+analysis.  I also recommend reading about symbolic execution [9][10] and 
+SAT Solvers [11][12][13] since this has a close relation with the subject.
+
+The classic approach is to use an intermediate language to represent the
+program instructions.  This improves the code quality and helps in
+portability.
+
+There are many good references in that area, so I'm just going to recommend
+some [14][15][16] and say that I use the WinDBG api directly, which is not
+the best approach while thinking in portability, but was the fastest to 
+code. 
+
+The WinDBG extensions are DLLs loaded by the debugger using LoadLibrary and 
+run in the context of the debugger process.  Those extensions are trusted
+by the debugger.  The debugger tries to handle access violations, but heap
+corruptions in the extension itself will likely crash the debugger.
+
+All the debugger extensions can make calls to the Win32 API and to the
+debugger interfaces (dbgeng.dll).
+
+What is more interesting is the fact that the debugger API will try to
+abstract the type/version of the target, which means you can write
+extensions that will work on a live debugging session or in a dump file
+equally.  The same applies for user-mode/kernel-mode targets.
+
+The two main types of extensions API for WinDBG are:
+	- WdbgExts -> Old debugger extension interfaces has many
+limitations for symbol and type lookups 
+	- DbgEng -> It is the new debugger interface, which the attached
+project is based on.  Offers interface for everything that can be performed
+by the debugger
+
+DbgEng extension API is exposed through the dbgeng.dll and offers the
+capability to create new standalone tools that call the interface.  Some of
+the functionalities supported:
+	- Get current thread/process information
+	- Read/Write memory
+	- Symbol/type lookup
+
+To call the extension functions, one need to first created the debug
+interface objects and then call the interface exposed by these objects.
+
+A extension using the DbgEng must export the DebugExtensionInitialize entry
+point, and optionally export the DebugExtensionNotify and
+DebugExtensionUninitialize entry points.
+
+As previously explained, the debugger will LoadLibrary() the extension dll
+and then will use the GetProcAddress() to find the entry point.
+
+From the attached code:
+	HRESULT
+	CALLBACK
+	DebugExtensionInitialize(
+		OUT PULONG Version,
+		OUT PULONG Flags
+	)
+
+This is the mandatory entry point which will be called when the extension
+is loaded.  This function get new debugger interfaces by calling in the
+code:
+	if ((Hr = DebugCreate(__uuidof(IDebugClient)),
+				(void **)&DebugClient)) != S_OK)
+	...
+	
+	if ((Hr = DebugClient->QueryInterface(__uuidof(IDebugControl),
+				(void **)&DebugControl)) != S_OK)
+
+The optional: 
+	void
+	DebugExtensionNotify(
+		OUT ULONG Notify,
+		OUT ULONG64 Argument
+	)
+
+Is called then the target is connected/disconnected and is not used in the
+code.  The DebugExtensionUninitialize is called when the extension is
+unloaded and can perform cleanup routines.
+
+In the attached code:
+	HRESULT
+	CALLBACK
+	vdt_trace(PDEBUG_CLIENT Client, PCSTR args)
+
+Is the debugger extension (called from the debugger using !vdt_trace).  The
+args is the command line argument string passed to the extension.
+
+The API is very rich in getting process information and I strongly
+recommend the reader to have a look into the source code at this point.
+
+
+---[ 2.1.3 - Explosion of Watched Data
+
+Anybody who has worked with taint propagation knows that the biggest 
+problem is how to keep track of all the data.
+
+In this case, I need at least to:
+
+	- Identify all the instructions and their operands
+	- Define what are the source, destination and other impacted
+	  registers (some projects don't keep track of affected registers,
+	  like the comparision flags in EFLAGS [6])
+	- Mark all the tainted data
+	- Understand what each instruction does
+
+It is easy to see that keeping track over all the information is quite
+performance-intensive, even more when decisions need to be made and
+followed.
+
+There are implicit and explicit operands for instructions, and it is
+necessary to support all the situations (otherwise, the track over some 
+important tainted data is lost).
+
+A good example [5] is a simple push %eax operation:
+	
+	- Explicit operand: %eax register
+	- Implicit operands: %esp and ss
+	- Semantic:  %esp<-%esp-4	(substraction)
+		     ss:[%esp]<-%eax	(move)
+
+As explained, this is treated by the intermediate language. I need to keep
+track of the base memory areas, their size and the register names (keeping
+bitwise information - as opposed of byte-level [21] - is better to avoid false
+positives, but is prone to easily explode the amount of data collected).
+
+Boolean operations have a special treatment as well, since some boolean
+operations will provide different results when they are performed with the
+same data (or with fixed values), like a XOR of the same tainted data will
+give back untainted information (and with 0 is the same, and so on...), as 
+explained before.
+
+Instructions over strings also needs to be tainted (many integer overflows 
+happens from calculations of data sizes).  The cases of tainting operations
+over strings have been explained in the section 2.1.1.
+
+Tainted data will remain for long time, also increasing the explosion
+problem (to delete the tracking over a data, it is required that this data
+receives an uncontrolled value, or is deallocated somehow).
+
+During the tracing step (explained later) the instructions complexity are
+simplified in order to speed-up the analysis process. 
+
+Due to all the challenges faced by the taint analysis and to the lack of
+detailed information about source data for specific file-formats and protocols,
+and thus the difficulties in creating working exploits for such cases, I
+decided to use a different approach.  Such approach is very useful when you 
+already have a reproducible crash case and is named Backward Taint Analysis.
+
+---[ 2.2 - Backward Taint Analysis
+
+Backward Taint Analysis is a reverse approach to the natural taint analysis
+flow.  Basically, instead of getting all the input, mark it as tainted and 
+track it during the program execution, what I do is to get the crash,
+validate what is of interest (which led to the application crash) and trace
+back to see if it comes from input and, if so, what modifications were
+performed.
+
+This avoids the explosion of tainted data, since most of the input is
+considered not tainted (and usually it is legitimate).
+
+To do so, the process is divided in two parts:
+
+	- A trace from a good state to the crash (incrementally dumped to a
+	  file) -> Gather substantial information about the target 
+	  application when it receives the input data, which is formally 
+	  named 'analysis'
+	- Analysis of the trace file -> Formally defined as 'verification' 
+	  step, where the conclusive analysis is done
+
+The trace step stores some useful information, like effective addresses and
+data values (later used to determine what is been copied to where and how
+it is been affected). Note that:
+
+	- This is done using a WinDBG extension
+	- It only supports the basic x86 instructions (so, no MMX and SSE).
+	This limits the analysis in many cases and requires extension on
+	the supported instructions.  The project is been open-sourced here,
+	so I expect to receive patches.
+	- Simplification of the instructions to make the next step softer
+
+To provide the simplification it is necessary to deal with many specifics, 
+like in the instruction:
+
+	- CMPXCHG r/m32, r32 -> 'Compare EAX with r/m32. If equal, ZF is 
+	                         set and  r32 is loaded into r/m32. 
+				 Else, clear ZF and load r/m32 into 
+				 AL' [17]
+
+Such an instruction creates the need for conditional taints, since 
+by controlling %eax and r32 the attacker controls r/m32 too.
+
+Alternative taints are also provided, in the form of srcdep{1,2,3}.
+
+Since the trace step generates a file to be loaded by the next step, this
+file will contain:
+
+	- Mnemonic of the instruction
+	- Operands
+	- Dependences for the source operand
+
+Dependences for an operand are for example, elements of an indirectly
+addressed memory.  This will create a tree of the dataflow, with a root in
+the crash instruction.
+
+The analysis step receives the address ranges that have the attacker data 
+and then does the automatic analysis to determine the control over anything
+you want to know.
+
+	- This is done by a standalone tool (it is in the same project
+	  file), and has a GUI!
+
+Since the dataflow is available in a tree rooted in the crash instruction,
+the analysis step will just search in this tree, using a BFS [18]
+algorithm.
+
+Let's now look at some example code:
+
+	1-) mov edi, 0x1234       ; dst=edi, src=0x1234
+	2-) mov eax, [0xABCD]     ; dst=eax, src=ptr 0xABCD
+       	              		  ; Note 0xABCD is evil addr
+	3-) lea ebx, [eax+ecx*8]  ; dst=ebx, src=eax, srcdep1=ecx
+	4-) mov [edi], ebx   	  ; dst=ptr 0x1234, src=ebx
+	5-) mov esi, [edi]   	  ; dst=esi, src=ptr 0x1234, srcdep1=edi
+	6-) mov edx, [esi]   	  ; Crash!!!
+
+The tree will look like:
+
+	6-) Where does [esi] come from?
+	5-) [edi] is moved to esi, where edi comes from and what does exist
+	    in [edi]?
+	4-) [edi] receives ebx and edi is defined in 1-) from a fixed value
+	3-) ebx comes from a lea instruction that uses eax and ecx
+	2-) eax receives a value controlled by the attacker
+	... ecx is out of the scope here :)
+
+
+
+---[ 2.2.1 - From the crash to the exploit
+
+In order to compile the provided project, I use Microsoft Visual Studio 
+2008 for the GUI and the command line for the debugger extension (don't 
+forget to install the debugger extension SDK [19]).
+
+To compile the applications, go to the sources directory and open the 
+Project in Visual Studio.
+
+The GUI is compiled using the project build, the dll is compiled through 
+the command line:
+
+	- Open the DOS prompt
+	- Execute:
+
+	  Cmd.exe /k C:\WinDDK\7600.16385.0\bin\setenv.bat 	\
+	  C:\WinDDK\7600.16385.0\ chk WNET
+
+	- Then go to the directory VDT-Tracer and execute:
+
+		setpaths.cmd
+
+	- On some systems you will need to open the makefile file (just 
+	  open and close):
+
+		edit makefile
+
+	- Then, just compile:
+
+		bcz
+
+	- Copy the library from bin\i386\vdt-tracer.dll
+	  to your WinDBG extensions directory 
+
+
+Attached to the article there is an Excel file for a problem discovered by 
+accident two years ago (the problem was discovered during a Forensic 
+Analysis by a friend of mine, who after recovering an Excel Spreadsheet 
+noticed that Excel was crashing when trying to open it).  
+The name of the file is FIL573.XLS.
+
+The problem was fixed more than a year ago, but it is useful to illustrate
+the steps taken in order to use this project.  As mentioned, I'm not going 
+to discuss the analysis step, but I'll just show how to get the tool to
+work... the rest is up to you!  
+
+First, open excel, and attach to it using WinDBG [Figure 
+WinDBG_Attaching_to_Excel].  Add a breakpoint in the CreateFile [Figure 
+WinDBG_Breakpoint_CreateFile].
+
+Start the tracing process [Figure WinDBG_Trace_VDT].
+
+Open the crash file withing Excel [Figure Opening_Crash_File_Excel].  
+
+Using an hex editor (in my case I used the xvi32) open the file and try to 
+locate a string that you can search in the program's memory, to determine 
+where the file was loaded [Figure Finding_User_Input_in_Memory].
+
+Using the searching capabilities of WinDBG, locate such string in the 
+program's memory [Figure WinDBG_Finding_User_Input_in_Memory].
+
+Open the trace file in the GUI [Figure VDT_Open_Trace_File] and add a taint
+range like in [Figure VDT_Add_Taint_Range] and 
+[Figure VDT_Add_Taint_Range2].
+
+Now everything is ready, and you will have the taint analysis of the 
+instructions you are interested of, related to the range of memory you just
+specified.  
+
+Click with the right button in any instruction [Figure VDT_Check_Taint_Of],
+see the Check Taint Of option [Figure VDT_Check_Taint_Of2].  It is going to
+offer the taint information for all applicable operands 
+[VDT_Check_Taint_Of3].
+
+
+------[ 3 - Existent solutions and comparisions
+
+
+Microsoft Research released the !exploitable [3] extension for Microsoft 
+Debugger and its source code.  This is a great initiative and contributed a
+lot for the growing number of cooperation between researchers and the 
+software industry (since now the vendors can at least classify the 
+exploitability of each reported vulnerability).  Although it fails in many
+cases to classify the exploitability, it provides a good
+extensibility support and is a good start point in this initiative.  
+It is important to note as well that a good aim of the tool is to identify
+unique bugs, eliminating duplicated issues.
+
+A simple example of the problem of such approach is:
+
+_declspec(naked) int main() {
+	_asm {
+		mov eax, 0x41414141
+		call eax
+	}
+}
+
+This is incorrectly classified as EXPLOITABLE because the tool always
+assumes that the attacker has control over all the input operands
+[Figure bangexploitablefp.jpg].
+This is not the case in the example.  The provided solution in
+this article differs from that, since instead of trying to classify the
+exploitability, I try to save researcher time while analyzing
+vulnerabilities and determining exactly that limitation:  Are the input
+operands in control of the attacker?
+
+So, to resume, bang exploitable (!exploitable) objectives are:
+
+	- Classify unique issues (crashs appearing through different code
+	  paths, machines involved in testing, and in multiple different 
+	  test cases)
+	- Quickly prioritize issues (since crashes appear in thousands,
+	  while analysis capabilities are VERY limited)
+	- Grouping the crashes for analysis
+
+And the provided tool objective is:
+
+	- Helping you to create the exploit code :)
+
+Piotr Bania released a paper about an architecture for similar analysis, 
+providing more advanced cases called Spiderpig [20].  The Spiderpig project
+is not available for testing, making it impossible to create a fair comparision.
+In Piotr's paper, he explains the Virtual Code Integration (or Dynamic Binary 
+Rewriting) approach.  Some of the techniques used in the 'intermediate 
+language representation' phases are also adopted in the provided tool, in a 
+different way (there is no intermediate language, but a normalized output 
+of the execution trace).  Spiderpig has ways to solve specific conflicts 
+in partially controlled data, creating what he named a disputable object. 
+In those objects, parent objects are also available for analysis.
+After reviewing the provided algorithms in the article Spiderpig seems to be 
+much more advanced than the provided tool, but as said, is not available.
+
+Taint Check [21] is dependent of DynamicRIO or Valgrind and is an extension
+to provide taint analysis in order to detect overflow conditions in tested 
+software.  It does not help in the exploit-creation phase, neither to 
+determine the actual exploitability of an issue.  It is divided in the 
+taint-seed, taint-tracker and taint-assert, with the purpose of defining 
+original tainted values (values comming from the network for example), 
+track the propagation and alert about security violations respectively.
+Because they provide a solution for security-tests I decided to also 
+include a heap-monitoring example tool with this article.  This tool aims 
+at solving the challenge of heap tests for embedded Linux architectures 
+using ARM (much less advanced then the Valgrind Memcheck plugin,
+altought the only option for ARM as far as the author is aware).
+
+The solution provided here started when I first faced the problem of 
+exploiting a complex client-side vulnerability, involving a very complex 
+(and at that time closed) file format.  It was later expanded when I saw 
+the results of attacking scenarios against Word [1] and started to think 
+how to automate the analysis in order to determine the exploitability.
+
+My initial version was integrated with a fuzzer to provide internal 
+information and feed back the fuzzer in order to have better coverage of
+the critical parts of the software [22]. It was unix based and
+later ported to cover Solaris too, in order to exploit two vulnerabilities 
+released by Secunia [23] in the same software where RISE Security found a 
+vulnerability some months before.
+
+Because a good friend of mine was doing research in the same area, and had
+good experience with the Microsoft Debugger, we decided to integrate our
+implementations and create the final version provided here.  I keep 
+expanding this version since then and using in my work and personal 
+projects.
+
+The biggest difference here is that we provide the backward Taint Analysis 
+in order to help the exploitation process, which means we focus in 
+determining what the attacker controls from the crash back to the input 
+data.
+
+
+------[ 4 - Future and other uses
+
+I can't foresee the future.  I hope that more researchers are going to
+contribute with the project, helping it to grow and achieve maturity.
+
+The code needs immediate support for extended coverage of x86 instructions,
+speed enhancements, introduction of heuristical detection over user input 
+(so you don't need to manually specify the memory ranges to watch).
+
+I'm sure many other uses are possible, and for sure I do expect some 
+extensions to come.
+
+The original idea was based on Valgrind and REX intermediate language.  The
+available version is based on Microsoft Debugger (but really tight to it 
+due to the limited amount of time to create the project).  
+
+A limitation of such approach is the fact that you need the PoC to trace
+the execution until the crash, and then to analyzed it backwards.  If your
+PoC is not taking a specific execution path that gives you control over some
+specific memory areas, the analysis will say you don't control such memory
+areas.  The tool does not try to find other ways to get control over areas
+that you need, it only provides you the information if you control or not
+such areas based on the executed PoC.
+
+There are other areas of interest, like heap viewing [24].  A
+heap view example for linux arm is also available with the article and 
+future versions on Sourceforge [25].
+
+Also, the integration with fuzzers [22]
+is an interesting approach to provide better ways to find security
+vulnerabilities.
+
+
+------[ 5 - Acknowledgments
+A lot of people helped me in the long way for these researches that 
+resulted in something interesting (at least to me) to be published, you all
+know who you are.
+
+The biggest thanks goes to Julio Auto, for helping me with the tools and 
+for having the motivation to go present alone [26] while I was still 
+fighting to get permissions to release everything in my personal name.
+
+Special tks to the Phrack Staff for the great review of the article, giving  
+a lot of important insights about how to better structure it and giving a 
+real value to it.
+
+I'll never ever forget to say thanks to my research team and friends at
+RISE Security (http://www.risesecurity.org) for always keeping me motivated
+studying completely new things.   
+
+Conference organizers who invited me to talk about Software Exploitation, 
+even after many people already talked about the subject they trusted that my 
+talk was not more of the same. 
+
+It's impossible to not say thanks to COSEINC, an amazing place for hackers  
+to work and which provided me lots of motivation to keep my projects going  
+on my free time.
+
+A big thanks goes to Check Point Software Technologies, for paying me to 
+keep doing my hobby ;)
+
+
+------[ 6 - References
+[1] Nagy, Ben. "Finding Microsoft Vulnerabilities by Fuzzing Binary. Files 
+with Ruby - A New Fuzzing Framework"; 
+Syscan 2009
+
+[2] Miller, Charlie. "Babysitting an Army of Monkeys: An analysis of fuzzing 
+4 products with 5 lines of Python"; Cansecwest 2010
+http://securityevaluators.com/files/slides/cmiller_CSW_2010.ppt
+
+[3] Microsoft !exploitable page
+http://msecdbg.codeplex.com
+
+[4] Abouchaev, Adel; Hasse, Damian; Lambert, Scott; Wroblewski, Greg. 
+"Analyze crashes to find security vulnerabilities in your apps"
+
+[5] Barbosa, Edgar. "Taint Analysis"; H2HC 2009
+http://www.h2hc.com.br/repositorio/2009/Edgar.pdf
+
+[6] Chow, Jin. "Understanding data lifetime via whole system emulation";
+Usenix 2004
+
+[7] Denning, Dorothy; Denning, Peter. "Certification of Programs for Secure 
+Information Flow"
+
+[8] Klee Project
+http://keeda.stanford.edu/wiki/klee-install
+
+[9] Godefroid, Patrice; Levin, Michael; Molnar, David. "Automated Whitebox 
+Fuzz Testing"
+http://research.microsoft.com/en-us/projects/atg/ndss2008.pdf
+
+[10] Molnar, David; Wagner, David. "Catchconv: Symbolic execution and  
+run-time type inference for integer conversion errors"
+
+[11] Wille, Andre; Drechsler, Daniel. "Evaluation of SAT like Proof 
+Techniques for Formal Verification of Word Level Circuits
+
+[12] de Moura, Leonardo; Bjorner, Nikolaj. "Z3: An Efficient SMT Solver"
+
+[13] Z3 Project - Microsoft Research
+http://research.microsoft.com/en-us/um/redmond/projects/z3/
+
+[14] ERESI Project
+http://www.eresi-project.org/
+
+[15] Valgrind Project
+http://www.valgrind.org
+
+[16] Porst, Sebastian. "Applications of the Reverse Engineering Language 
+REIL"
+http://www.h2hc.com.br/repositorio/2009/Sebastian.pdf
+
+[17] Intel Manual 
+http://www.intel.com/software/products/documentation/vlin/mergedprojects/analyzer_ec/mergedprojects/reference_olh/mergedProjects/instructions/instruct32_hh/vc42.htm
+
+[18] BFS algorithm
+http://en.wikipedia.org/wiki/Breadth-first_search
+
+[19] Microsoft Debugger SDK
+http://www.microsoft.com/whdc/devtools/debugging/default.mspx
+
+[20] Bania, Piotr.  "Dynamic Data Flow Analysis via Virtual Code 
+Integration (aka The SpiderPig case)"
+http://piotrbania.com/all/spiderpig/pbania-spiderpig2008.pdf
+
+[21] Newsome, James; Song, Dawn. "Dynamic Taint Analysis for Automatic 
+Detection, Analysis, and Signature Generation of Exploits on Commodity
+Software"
+http://valgrind.org/docs/newsome2005.pdf
+
+[22] Branco, Rodrigo. "Letting your fuzzer know about target's internals"
+http://www.troopers10.org
+
+[23] Secunia Advisory SA32473. "Sun Solaris Sadmin Two Vulnerabilities"
+http://secunia.com/advisories/32473/
+
+[24] Core Security Technologies. "Heap Draw / Heap Tracer"
+http://oss.coresecurity.com/projects/heapdraw.html
+
+[25] JFree Project
+http://www.sf.net/projects/jfree
+
+[26] Auto, Julio. "Triaging Bugs with Dynamic
+Dataflow Analysis" .Source Barcelona 2009
+www.julioauto.com/presentations/sourcebcn09_TBwDDA.ppt
+
+
+------[ 7 - Sources [vdt_jfree.tgz]
+
+---------------------------------------------------------------------------
+Attached to the article there is:
+	- VDT Project:  The main project cited in the article, it is a 
+Microsoft Debugger extension and a GUI used to analyze crash files in order 
+to create an exploit code
+	- Jfree project:  It is a Linux-ARM Heap Monitoring System created 
+long ago and also available at [25]
+	- Images directory:  Some screenshots of the program and plugin of 
+the VDT Project.
+
+Further updates will be available in the RISE Security website at:
+	http://www.risesecurity.org
+
+For the author's public key:
+	http://www.kernelhacking.com/rodrigo/docs/public.txt
+

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue 30, File #6 of 12",
+  "title": "Decnet Hackola : Remote Turist TTY (RTT)",
+  "authors": "*Hobbit*",
+  "date": "",
+  "historical_context": "This article reflects the early days of network hacking, particularly focusing on DECnet and VMS systems, which were prevalent in academic and corporate environments during the 1980s.",
+  "target_audience": "Hackers, network security professionals, and those interested in legacy systems.",
+  "short_summary": "The article introduces a Remote Turist TTY (RTT) interface for DECnet, allowing users to connect to multiple hosts recursively. It details the functionality and potential pitfalls of the implementation, emphasizing the importance of careful configuration.",
+  "summary": "In 'Decnet Hackola: Remote Turist TTY (RTT)', the author *Hobbit* presents a novel approach to remote connections within DECnet networks. The RTT interface allows users to initiate a connection to a host and then recursively connect to additional hosts, creating a layered interaction model. This recursive feature is particularly noteworthy, as it enables complex network interactions that can be difficult to manage without careful attention to detail. The article provides a code snippet that outlines the implementation, highlighting key commands and their functions within the VMS environment. The author warns of potential timing issues and emphasizes the need for precise configuration to avoid errors during operation. \n\nThe RTT interface is described as a 'kludge,' showcasing the creative and sometimes haphazard nature of early hacking practices. The article serves as both a technical guide and a reflection of the hacker ethos of the time, where experimentation and exploration of network capabilities were paramount. By sharing this implementation, *Hobbit* contributes to the collective knowledge of the hacking community, encouraging others to explore and innovate within the constraints of existing systems."
+}

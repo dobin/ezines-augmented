@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Five, Phile #8 of 12",
+  "title": "Short-Wave Radio Hacking",
+  "authors": "The Seker",
+  "date": "",
+  "historical_context": "This article reflects the early days of radio hacking, a time when amateur radio operators were exploring the capabilities of short-wave transmissions and the information that could be intercepted.",
+  "target_audience": "Hackers, radio enthusiasts, security professionals, and amateur radio operators.",
+  "short_summary": "The article provides insights into short-wave radio hacking, detailing various transmission standards, equipment needed, and potential sources of information that can be intercepted, including news agencies and amateur radio conferences.",
+  "summary": "The Seker also highlights the potential for intercepting communications from news agencies, providing specific frequency ranges where such transmissions can be found. The article notes the repetitive nature of these broadcasts, which can help identify news agency transmissions. Furthermore, the author shares insights into amateur radio conferences and the emergence of packet radio, likening it to digital packet switching networks but at a slower pace. This piece is a fascinating glimpse into the early hacking culture surrounding radio communications, offering both technical knowledge and a sense of community among amateur radio enthusiasts."
+}

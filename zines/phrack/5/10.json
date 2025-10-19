@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Five, Phile #10 of 12",
+  "title": "Phrack Inc. Vs. Master Lock Company",
+  "authors": "Knight Lightning",
+  "date": "April 1, 1986",
+  "historical_context": "This article discusses the legal threats faced by Phrack for publishing lock-picking techniques, highlighting the tension between information dissemination and corporate interests.",
+  "target_audience": "Hackers, security professionals, legal scholars, and those interested in hacker culture.",
+  "short_summary": "This article details a legal warning sent to Phrack regarding the publication of lock-picking instructions, showcasing the conflict between information sharing and corporate protectionism.",
+  "summary": "In this article, Knight Lightning recounts the legal confrontation between Phrack and Master Lock Company, which arose after Phrack published instructions on how to pick Master locks. The law firm representing Master Lock expressed concern over the potential harm to their business reputation and demanded the cessation of such publications. Taran King, the distributor of the file, responded by arguing that the information was not new and had been circulating for years, questioning the legality of restricting such knowledge. He emphasized the importance of public access to information, even if it could be misused, and pointed out that many books on the subject were still in circulation, suggesting a broader issue of censorship in the realm of knowledge dissemination.\n\nThe article serves as a historical snapshot of the early days of hacker culture, illustrating the challenges faced by those who sought to share technical knowledge in the face of corporate pushback. It reflects the ongoing debate about the balance between security, privacy, and the right to information, a topic that remains relevant in today's digital landscape. Knight Lightning's narrative captures the spirit of defiance and the complexities of legal implications surrounding hacking and information sharing."
+}

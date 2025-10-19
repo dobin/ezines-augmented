@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Fooling F-Prot",
+  "authors": "Blade Runner",
+  "date": "1996",
+  "historical_context": "This article reflects the early days of virus detection and antivirus software, highlighting the cat-and-mouse game between virus creators and antivirus developers.",
+  "target_audience": "Hackers, security researchers, and malware developers.",
+  "short_summary": "The article provides a detailed guide on how to modify the F-Prot antivirus software to bypass its virus detection capabilities. It includes specific assembly code modifications and explains the underlying principles of the F-Prot scanning process.",
+  "summary": "In 'Fooling F-Prot', Blade Runner shares insights into the workings of the F-Prot antivirus software, particularly its file scanning mechanism using interrupt 21h. The author outlines how to intercept and modify the calls made by F-Prot to effectively disable its virus detection features. By altering specific assembly instructions, the article demonstrates how to bypass both secure scans and heuristic scanning methods employed by F-Prot. The modifications are presented in a step-by-step manner, making it accessible for readers to replicate the process themselves.\n\nThe article serves as a practical guide for those interested in understanding the vulnerabilities of antivirus software and the methods used to exploit them. Blade Runner emphasizes the simplicity of the modifications, encouraging readers to experiment with the provided code. This piece not only illustrates the technical aspects of antivirus evasion but also reflects the hacker ethos of exploration and innovation in the face of security measures."
+}

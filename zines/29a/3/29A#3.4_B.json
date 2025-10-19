@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The APPARITION for Win32",
+  "authors": "LordAsd",
+  "date": "Not specified",
+  "historical_context": "This article discusses the development of a Windows-based virus, reflecting the hacker culture of the 1990s where malware creation was often seen as a technical challenge.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "The APPARITION is a Windows-based virus that employs various techniques to infect executable files. It includes a polymorphic engine for evading detection and demonstrates methods for file processing and system interaction.",
+  "summary": "The APPARITION for Win32 is a sophisticated piece of malware designed to infect Windows executable files. The article details the implementation of a polymorphic engine, which allows the virus to change its code structure to avoid detection by antivirus software. The author, LordAsd, provides insights into the virus's architecture, including its use of Windows API calls for file handling and system interaction. The virus is capable of scanning directories, processing files, and modifying executable headers to ensure successful infection. The technical depth of the article serves as both a tutorial for aspiring malware developers and a cautionary tale for security professionals about the evolving landscape of computer threats.\n\nThe code snippets included illustrate key functionalities such as file scanning, infection routines, and the mutation engine, which generates variations of the virus code. This reflects a time when virus creation was often viewed as a form of digital artistry or intellectual challenge within hacker culture. The article not only serves as a historical document but also as a technical reference for understanding the mechanisms behind early Windows malware."
+}

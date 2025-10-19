@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 19, Phile #3 of 8",
+  "title": "Understanding the Digital Multiplexing System (Part 2)",
+  "authors": "Control C & The Tribunal Of Knowledge",
+  "date": "5-23-87",
+  "historical_context": "This article is a continuation of a previous work on Digital Multiplexing published in Phrack 10, reflecting the technological landscape of telecommunications in the late 1980s.",
+  "target_audience": "Telecommunications engineers, security professionals, hackers interested in telephony systems.",
+  "short_summary": "This article delves into the workings of Digital Multiplexing Systems (DMS), focusing on Common Channel Interoffice Signaling (CCIS) and its various implementations. It covers the evolution of DMS, signaling methods, and the implications for telecommunications services.",
+  "summary": "In this detailed exploration of Digital Multiplexing Systems (DMS), the authors provide insights into the architecture and functionality of DMS switches, which have been pivotal in modern telecommunications since their introduction in 1979. The article emphasizes the significance of Common Channel Interoffice Signaling (CCIS), particularly CCIS No. 6 and No. 7, which facilitate reliable data signaling between network components. The authors explain how these signaling methods enhance services like Automatic Calling Card Service and Billed Number Screening, showcasing the intricate interplay between technology and telecommunications services.\n\nThe article also discusses the evolution of DMS systems, including the DMS-100 and DMS-200, and their roles in providing equal access and operator services. The authors highlight the importance of these systems in managing interLATA traffic and preventing fraudulent activities in calling card services. By detailing the technical specifications and operational capabilities of DMS, the article serves as a valuable resource for professionals in the telecommunications field, illustrating the foundational technologies that continue to influence modern communication networks."
+}

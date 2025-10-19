@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "MS Project Infectors",
+  "authors": "jackie /LineZer0 /Metaphase",
+  "date": "October 29, 1999",
+  "historical_context": "This article discusses the first known resident virus for MS Project, highlighting the evolution of macro viruses in office applications.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in virus development.",
+  "short_summary": "The article presents the first resident virus for MS Project, detailing its infection mechanisms, including cross-application infection techniques and the use of VBA macros. It provides insights into the author's coding process and the challenges faced in creating the virus.",
+  "summary": "In 'MS Project Infectors', jackie introduces the first resident virus for MS Project, named 'Project.A'. The article outlines the virus's ability to infect MS Project files through the use of Visual Basic for Applications (VBA) macros, detailing the infection hooks available, such as Project_Open and Project_Close. The author explains how to disable macro virus protection and manipulate the global template to ensure the virus remains resident, effectively allowing it to spread across all open project files. The code snippets provided illustrate the step-by-step process of infection, emphasizing the importance of stealth and the challenges of accessing the global template in MS Project compared to other Office applications like Word and Excel.\n\nThe article also touches on cross-application infection, where the author describes how to modify the subroutine names for compatibility between different Office applications. This insight into the mechanics of macro viruses serves as a historical reference for the evolution of malware, showcasing the creativity and technical prowess of the hacker community at the time. Overall, the piece is a fascinating glimpse into the early days of macro viruses, reflecting the curiosity and competitive spirit of its author, while also serving as a cautionary tale about the vulnerabilities present in widely used software applications."
+}

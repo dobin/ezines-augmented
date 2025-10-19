@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 1, Issue 1, Phile #1 of 1",
+  "title": "Simple Encryption Methods",
+  "authors": "Unknown",
+  "date": "August 1990",
+  "historical_context": "This article discusses basic encryption techniques used in early computer viruses, particularly focusing on the Leprosy-B virus, which was notable in the early 1990s for its use of simple XOR encryption.",
+  "target_audience": "Hackers, malware developers, security professionals, and those interested in virus creation techniques.",
+  "short_summary": "The article explains simple encryption methods, particularly the XOR technique, used in virus development. It includes a detailed example of the Leprosy-B virus source code, demonstrating how encryption is applied to conceal malicious payloads.",
+  "summary": "In this article, the author introduces readers to basic encryption methods that are crucial for writing computer viruses. The XOR method is highlighted as a straightforward technique for encrypting and decrypting data using the same key. An example is provided, illustrating how the XOR function can transform data to obscure its content, which is essential for maintaining the stealth of a virus. The article emphasizes that if a virus displays a message, the infected files should not contain that message, hence the need for encryption.\n\nThe article further delves into the Leprosy-B virus, providing its source code as a case study. This virus employs the XOR encryption technique to protect its payload, showcasing how the code is structured to infect executable files while remaining hidden. The author warns about the potential dangers of running such code and stresses the importance of responsible handling of malware. Overall, this piece serves as a foundational guide for those interested in the mechanics of virus creation and the role of encryption in malware development."
+}

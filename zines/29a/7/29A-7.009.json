@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The Ins and Outs of JunkMail",
+  "authors": "roy g biv / defjam, RT Fishel / defjam",
+  "date": "May 2002",
+  "historical_context": "This article discusses advanced techniques for email-based malware propagation, reflecting the evolving landscape of computer viruses in the early 2000s.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in virus development.",
+  "short_summary": "The article presents innovative techniques for obfuscating email headers to bypass antivirus scanners, along with methods for creating self-replicating viruses using MIME types and adaptive compression.",
+  "summary": "In 'The Ins and Outs of JunkMail', authors roy g biv and RT Fishel delve into the intricacies of email-based malware distribution. They explore how to manipulate MIME headers by using comments to obfuscate the true nature of the email, thereby evading detection by antivirus software. The article provides practical examples of how to craft emails that appear innocuous while carrying malicious payloads, including various MIME content types that can execute automatically. This is particularly relevant for those looking to understand the mechanics behind email viruses and the techniques employed to bypass security measures.\n\nThe authors also introduce an adaptive 4/5-bit text compression method to conceal email text, showcasing a blend of creativity and technical prowess in virus design. They detail the challenges faced in developing a base64 decoder without a character dictionary, emphasizing the complexity of writing malware that adheres to various standards. The article serves as both a technical guide and a historical snapshot of the malware landscape, illustrating the lengths to which developers will go to ensure their creations remain undetected in a rapidly evolving digital environment."
+}

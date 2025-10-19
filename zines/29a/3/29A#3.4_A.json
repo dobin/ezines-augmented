@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win95/98.Yabram",
+  "authors": "SoPinKy",
+  "date": "Not specified",
+  "historical_context": "This article discusses a Windows 95/98 virus, reflecting the early days of malware development during the late 1990s, a time when personal computing was becoming widespread and security measures were still in their infancy.",
+  "target_audience": "Malware developers, security researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the creation of a Windows 95/98 virus named Yabram, which uses a technique to gain Ring 0 access and infect PE files. It includes technical descriptions of its structure and functionality.",
+  "summary": "In 'Win95/98.Yabram', SoPinKy presents a detailed account of a virus designed for Windows 95/98 systems. The virus employs a method known as 'The CallGate' to transition from user mode to kernel mode (Ring 0), allowing it to manipulate system functions and install itself as a File System Device (FSD). The article outlines the steps involved in this process, including modifying the Global Descriptor Table (GDT) and hooking interrupt vectors to maintain control over system operations. The virus is designed to infect Portable Executable (PE) files, and while the author mentions plans for stealth capabilities, the final version lacks these features due to time constraints. The code is presented in assembly language, showcasing the author's technical skills and understanding of low-level programming and operating system architecture. The article serves as both a technical guide and a historical artifact from the early days of malware development."
+}

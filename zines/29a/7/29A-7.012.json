@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "INJECTED EVIL (executable files infection)",
+  "authors": "Z0MBiE/29A",
+  "date": "2002",
+  "historical_context": "This article discusses techniques for injecting code into executable files, a method that has been relevant in the context of malware development and reverse engineering.",
+  "target_audience": "Security researchers, malware analysts, and hackers interested in executable file manipulation.",
+  "short_summary": "The article details a method for injecting trojan code into executable files by utilizing free alignment areas between subroutines. It introduces the INFELF tool designed for this purpose, explaining the algorithms for finding alignment areas and injecting code snippets.",
+  "summary": "The article 'INJECTED EVIL' explores a sophisticated method for infecting executable files by injecting trojan code into free alignment areas between subroutines. The author explains that executable files, particularly ELF files for the x86 platform, often contain unused bytes due to compiler alignment, which can be exploited for code injection. The process involves parsing the executable to identify these free areas and then carefully inserting instructions while ensuring that control flow remains intact. The author provides specific algorithms for both parsing executable files and finding suitable alignment areas, emphasizing the need for careful manipulation of instruction lengths and offsets to maintain functionality after injection.\n\nAdditionally, the article introduces the INFELF tool, which automates the process of injecting code snippets into ELF files. It outlines the tool's capabilities, including how it identifies function offsets and allows users to specify injection points. The author also discusses the structure of code snippets required for successful injection, detailing necessary signatures and the handling of original bytes from the executable. This article serves as a technical guide for those interested in the intricacies of executable file infection, providing both theoretical insights and practical tools for implementation."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 24, File 10 of 13",
+  "title": "Network Progression",
+  "authors": "Dedicated Link",
+  "date": "January 1989",
+  "historical_context": "This article was written during a time when networking technology was rapidly evolving, transitioning from traditional phone lines to more advanced digital systems.",
+  "target_audience": "Network engineers, IT professionals, hackers interested in networking technologies.",
+  "short_summary": "This article provides an overview of the evolution of networking technologies, detailing the transition from phone lines to T1 lines and discussing various methods of data transmission, including multiplexing and packet switching.",
+  "summary": "In 'Network Progression', Dedicated Link outlines the significant advancements in networking technologies from the era of traditional phone lines to the more sophisticated T1 lines. The article emphasizes the importance of optimizing voice and data transmission, highlighting the shift from AT&T's switching facilities to the implementation of Private Branch Exchanges (PBX) and Local Area Networks (LAN). This transition allowed organizations to manage their own local calls and even lease excess transmission capacity to other companies, marking a pivotal moment in network evolution.\n\nThe piece delves into the technical aspects of data transmission, explaining the advantages of T1 lines, which operate at 1.544 megabits per second, and the role of multiplexing in enhancing transmission capacity. Dedicated Link describes both time-division and frequency-division multiplexing, as well as the necessity of standard protocols like ASCII for effective communication between computers. The article also touches on encryption for security and the importance of Automatic Route Selection (ARS) in determining the most efficient data paths. Overall, this article serves as a foundational overview of networking principles that remain relevant in today's digital landscape."
+}

@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "WinHelp Virus Programmers Reference",
+  "authors": "Darkman/29A",
+  "date": "",
+  "historical_context": "This article provides a comprehensive guide to the WinHelp macros, which were widely used in Windows applications for help documentation. It reflects the early days of computer security where understanding software vulnerabilities was crucial for developers.",
+  "target_audience": "Security researchers, software developers, and those interested in historical computer security practices.",
+  "short_summary": "The article serves as a reference for programmers working with WinHelp, detailing various macros and their usage, which can be leveraged for both legitimate help documentation and potentially malicious purposes.",
+  "summary": "The 'WinHelp Virus Programmers Reference' compiled by Darkman/29A is an extensive guide that outlines the various macros available in WinHelp, a help system used in Windows applications. The article details the syntax, parameters, and examples for each macro, providing a valuable resource for developers looking to implement help features in their applications. It emphasizes the importance of understanding these macros not only for legitimate purposes but also for recognizing potential vulnerabilities that could be exploited by malicious actors. The guide covers a range of macros from basic commands like displaying help topics to more complex functions that allow for the execution of external programs, highlighting the dual-use nature of such tools in the context of software security.",
+  "additional_notes": "This article is particularly relevant for those studying the history of computer security and the evolution of software vulnerabilities, as it illustrates how help systems can be manipulated for malicious intent."
+}

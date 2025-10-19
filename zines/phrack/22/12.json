@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 22, File 12 of 12",
+  "title": "Networks Of Computers At Risk From Invaders",
+  "authors": "John Markoff",
+  "date": "December 3, 1988",
+  "historical_context": "This article discusses the vulnerabilities in computer networks during a time when incidents of unauthorized access were becoming more common, particularly in military and commercial systems.",
+  "target_audience": "Security professionals, system designers, hackers, and anyone interested in computer security.",
+  "short_summary": "The article highlights the widespread vulnerabilities in computer networks, particularly those used for critical operations like air traffic control and military systems. It discusses recent incidents of unauthorized access and the fundamental design flaws that contribute to these security issues.",
+  "summary": "In this article, John Markoff outlines the alarming state of computer security in 1988, emphasizing that basic security flaws are prevalent and often ignored by system designers. He references recent breaches in military networks and the potential for catastrophic consequences in civilian systems, such as air traffic control. Markoff notes that many systems lack proper encryption and compartmentalization, making them susceptible to unauthorized access and data tampering. The article serves as a wake-up call for the industry, urging a reevaluation of security practices and the implementation of more robust protective measures.",
+  "additional_notes": "Markoff's insights are particularly relevant today, as the issues of network security and the need for encryption remain critical in the face of evolving cyber threats."
+}

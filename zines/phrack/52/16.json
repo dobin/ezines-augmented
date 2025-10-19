@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 52, Phile #16 of 20",
+  "title": "Piercing Firewalls",
+  "authors": "bishnu@hotmail.com",
+  "date": "January 26, 1998",
+  "historical_context": "This article was written during a time when firewalls were becoming common in network security, and the need for users to bypass these restrictions was a growing concern among hackers and security enthusiasts.",
+  "target_audience": "Hackers, security professionals, network administrators",
+  "short_summary": "The article presents a method for bypassing firewalls using two programs, 'tunnel' and 'portal', which allow users to establish TCP connections through a firewall by creating a tunnel. This approach exploits the outgoing connection policy of many firewalls.",
+  "summary": "In 'Piercing Firewalls', the author discusses the limitations imposed by firewalls on user freedom and presents a solution to bypass these restrictions. The method involves two components: a 'tunnel' program running on a machine behind the firewall and a 'portal' program on an external machine. The tunnel initiates an outgoing connection to the portal, which then listens for incoming TCP traffic. This setup allows users to effectively drag a port from behind the firewall to the outside, enabling external connections to access services on the internal machine without the firewall blocking them.\n\nThe article provides detailed instructions on how to compile and run the programs, along with example scenarios demonstrating how to set up the tunnel and portal for various applications, such as X-windows. The author emphasizes the ethical implications of using this technique, warning that it violates ISP security policies and could expose users to risks if misused. The simplicity of the solution, requiring no root access on either machine, makes it an attractive option for those looking to circumvent firewall restrictions."
+}

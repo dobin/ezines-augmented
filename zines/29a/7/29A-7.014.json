@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "CROB FTP SERVER 2.50.5 BUILD 238 EXPLOIT",
+  "authors": "Vecna",
+  "date": "2003",
+  "historical_context": "This article reflects early 2000s hacking techniques, particularly focusing on exploiting vulnerabilities in FTP servers using format string exploits, which were prevalent during that time.",
+  "target_audience": "Hackers, security researchers, and those interested in exploit development.",
+  "short_summary": "The article details an exploit for the CROB FTP Server 2.50.5, utilizing format strings to execute shellcode on vulnerable Windows systems. It describes the exploit's construction and execution, highlighting the limitations of the server's printf() implementation.",
+  "summary": "In this article, Vecna presents a detailed exploit for the CROB FTP Server 2.50.5, specifically targeting its implementation of the printf() function, which is less flexible than its Unix counterparts. The exploit leverages format string vulnerabilities to write shellcode directly into the server's memory. The author outlines the steps taken to build the shellcode remotely by sending crafted USER commands that write individual bytes of the shellcode, overcoming the limitations of the server's handling of input strings. The exploit is designed to overwrite a pointer to the accept() function, allowing the attacker to bypass firewalls and gain a remote shell on the server once the exploit is successful.\n\nThe article goes into technical detail about the assembly code used in the exploit, including the construction of the shellcode and the necessary API calls to create a remote shell. Vecna provides insights into the challenges faced during the exploit's development, such as the need to carefully manage memory addresses and the constraints imposed by the server's response to malformed input. The exploit serves as a historical example of early hacking techniques and the ingenuity required to manipulate software vulnerabilities effectively."
+}

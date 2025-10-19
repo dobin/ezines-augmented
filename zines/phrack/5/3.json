@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Five, Phile #3 of 12",
+  "title": "Hacking the Dec-10 system",
+  "authors": "Carrier Culprit",
+  "date": "April, 1986",
+  "historical_context": "This article provides insights into hacking techniques for the DEC-10 system, which was widely used in academic and research environments during the 1980s. It reflects the early days of computer hacking culture.",
+  "target_audience": "Hackers, security researchers, and enthusiasts of early computing systems.",
+  "short_summary": "This article serves as a beginner's guide to hacking the DEC-10 system, detailing login procedures, command usage, and strategies for gaining unauthorized access. It includes practical examples and common passwords used by users.",
+  "summary": "In 'Hacking the Dec-10 system', Carrier Culprit introduces readers to the intricacies of accessing and navigating the DEC-10 timesharing system. The article begins with the basics of logging in, explaining the format of Project/Program Numbers (PPNs) and the significance of passwords. It emphasizes the importance of familiarizing oneself with system commands, such as '.Help' and '.Systat', which provide essential information about the system's status and available commands. The author also shares a list of common passwords that users might employ, highlighting the trial-and-error nature of early hacking attempts.\n\nAs the article progresses, it delves into more advanced techniques, including how to create directories, send mail, and even manipulate user accounts with privileges. The author encourages readers to explore the system's capabilities while maintaining a cautious approach to avoid detection by system operators. The writing reflects the playful yet serious attitude of the hacker culture at the time, showcasing the blend of technical knowledge and subversive exploration that characterized early computer hacking. Overall, this article serves as both a historical document and a practical guide for those interested in the foundational aspects of computer security and hacking."
+}

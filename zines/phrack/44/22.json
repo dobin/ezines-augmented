@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 22 of 27",
+  "title": "An Introduction to the DECserver 200",
+  "authors": "Opticon The Disassembled",
+  "date": "",
+  "historical_context": "The DECserver 200 was a widely used terminal server in the 1980s and 1990s, particularly in environments running VMS. Understanding its configuration and security implications is crucial for both historical and practical cybersecurity knowledge.",
+  "target_audience": "Hackers, security professionals, and those interested in legacy systems.",
+  "short_summary": "This article provides a detailed introduction to the DECserver 200, a terminal server used in VMS environments. It covers its configuration, security features, and potential vulnerabilities, making it relevant for understanding legacy network security.",
+  "summary": "The article serves as a comprehensive guide to the DECserver 200, a terminal server that connects multiple asynchronous terminals to hosts on an Ethernet LAN. It explains the server's configuration process, including setting up DECnet node names and addresses, and highlights the various types of passwords that protect the server's functionalities. The author emphasizes the importance of understanding these security measures, as they can be exploited if default settings are not changed. The article also discusses the server's capabilities, such as the Remote Console Facility (RCF) and the differences between privileged, non-privileged, and secured ports, which dictate the level of access users have to the server's commands and configurations.\n\nIn addition to the technical details, the author warns against misusing the server for unauthorized activities, urging readers to respect the systems they work with. The article is rich with command references and practical examples, making it a valuable resource for anyone looking to understand the intricacies of the DECserver 200 and its role in network security during its time. Overall, it blends technical instruction with a hacker ethos, encouraging responsible exploration of legacy systems."
+}

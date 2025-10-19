@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "New Idea, spreading virus via CD Room",
+  "authors": "Psychologic aka PuPpY",
+  "date": "",
+  "historical_context": "This article discusses the innovative concept of spreading computer viruses through CD-ROM technology, a method that was particularly relevant during the early 2000s when CD burning became widespread.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in virus propagation techniques.",
+  "short_summary": "The article introduces a novel method for spreading viruses via CD-ROMs, focusing on the structure of Nero burning software files. It details both overwriting and non-overwriting strategies for virus propagation, providing technical insights into file manipulation.",
+  "summary": "In this article, the author presents a groundbreaking concept for virus propagation using CD-ROMs, specifically targeting the Nero burning software. The piece begins with an introduction to the author's own creation, the I-worm.Tsunami, which is claimed to be the first virus capable of self-replication through CD technology. The author explains the structure of Nero's file types, namely NRI and NRB, and highlights security vulnerabilities that can be exploited to embed malicious code within these files. By manipulating the paths stored in these files, a virus can be spread effectively when users burn CDs containing infected files.\n\nThe article further elaborates on two strategies for virus infection: an overwriting strategy that involves replacing legitimate NRI/NRB files with infected versions, and a non-overwriting strategy that remains less defined due to the complexity of the file structures. The author encourages readers to explore these methods and improve upon them, while also acknowledging the challenges posed by the proprietary nature of the Nero software. This piece serves as both a technical guide and a call to action for those interested in advancing their skills in malware development."
+}

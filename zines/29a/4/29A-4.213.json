@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "How to k!ll some AV monitors",
+  "authors": "Benny / 29A",
+  "date": "1999",
+  "historical_context": "This article was published during a time when antivirus software was becoming more prevalent, and techniques to bypass or disable such software were of interest to the hacking community.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article provides a method for disabling antivirus monitors on Windows systems by utilizing Windows message management. It explains how to find and close the monitor's window, effectively rendering the antivirus inactive.",
+  "summary": "In this article, Benny from 29A outlines a technique for disabling antivirus monitors on Windows systems. The method leverages the Windows message management system, allowing users to send a 'close window' message to the antivirus monitor's window. This approach is presented as a straightforward solution compared to older DOS techniques, which often required undocumented interrupts and were less reliable. The author emphasizes the ease of finding the window title of the antivirus software and demonstrates how to use the FindWindowA API to obtain the window handle before sending the close message using PostMessageA. \n\nBenny also notes that this technique may not work with antivirus programs that employ more sophisticated methods, such as VxD/SyS/WdM drivers, which provide deeper integration into the operating system. The article serves as a reminder for malware developers to incorporate retro techniques, like disabling antivirus monitors, into their creations. Overall, it reflects the hacker ethos of exploring and exploiting system vulnerabilities, while also acknowledging the existence of similar content in other publications."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 1, File 003",
+  "title": "RNA Virus Source Code",
+  "authors": "Dark Angel of Phalcon/Skism",
+  "date": "",
+  "historical_context": "This article presents the source code for a primitive Pascal-based virus, illustrating early virus development techniques in the context of the 1990s hacker culture.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article provides the source code for the RNA virus, a simple Pascal virus that infects EXE files while maintaining their functionality. It serves as an educational example of a parasitic virus not written in assembly language.",
+  "summary": "The RNA virus is a primitive example of a parasitic virus written in Pascal. The source code demonstrates how the virus infects executable files while preserving their original functionality. The code includes various procedures for copying files, checking for existing infections, and replicating itself across directories. Notably, the virus uses a counter to limit the number of infections and includes a disinfection routine to remove itself from infected files after a certain number of executions. The article serves as a historical artifact, showcasing the early methods of virus creation and the mindset of hackers during the time of its writing. It provides insights into the evolution of malware and the techniques that would later become more sophisticated in the realm of computer security."
+}

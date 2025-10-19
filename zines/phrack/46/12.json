@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Five, Issue Forty-Six, File 12 of 28",
+  "title": "The fingerd trojan horse",
+  "authors": "Hitman Italy",
+  "date": "",
+  "historical_context": "This article discusses a method of maintaining unauthorized access to Unix systems through a trojanized version of the fingerd service, reflecting the hacking techniques prevalent in the early 1990s.",
+  "target_audience": "Hackers, security professionals, and those interested in historical hacking techniques.",
+  "short_summary": "The article presents a method for creating a trojan horse using the fingerd service on Unix systems, allowing hackers to maintain access without detection. It includes source code and explanations of how the trojan operates.",
+  "summary": "In this article, Hitman Italy introduces a novel approach to maintaining unauthorized access to Unix systems by exploiting the fingerd service. The fingerd service, which responds to requests for user information, can be modified to include a trojan horse that allows the hacker to execute commands remotely without raising suspicion. The author provides a compact source code that can be easily implemented, demonstrating how to check for a specific 'magic code' that activates the trojan's functionality. When the code is matched, the trojan can modify the system's password file to create a backdoor user, thereby granting the hacker persistent root access.\n\nThe article also discusses the importance of obscuring the trojan's presence through cryptographic techniques, such as XOR encryption, to prevent detection by system operators. Hitman Italy emphasizes the need for hackers to cover their tracks and suggests methods for doing so, including modifying the inetd configuration to run the fingerd service with elevated privileges. The article serves as both a technical guide and a historical snapshot of the tactics employed by hackers during this era, illustrating the cat-and-mouse game between hackers and system administrators."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x43, Phile #0x08 of 0x10",
+  "title": "The House Of Lore: Reloaded",
+  "authors": "blackngel",
+  "date": "2010",
+  "short_summary": "This article explores the 'House of Lore' technique for exploiting vulnerabilities in ptmalloc2 and ptmalloc3 memory allocators, detailing methods for heap corruption and providing practical examples and code for exploitation.",
+  "summary": "In this article, blackngel revisits the 'House of Lore' (THoL) technique, which focuses on exploiting vulnerabilities in memory allocation systems, particularly in ptmalloc2 and ptmalloc3. The author discusses the theoretical underpinnings of THoL, contrasting it with traditional heap overflow techniques. The article is structured to provide both a theoretical framework and practical examples, including code snippets that demonstrate how to trigger vulnerabilities and execute arbitrary code. The author emphasizes the importance of understanding the intricacies of memory allocation and the conditions necessary for successful exploitation, while also acknowledging the evolving landscape of security measures in modern allocators. The article concludes with a call to action for researchers and hackers to continue exploring and challenging the boundaries of memory management security.",
+  "historical_context": "The article is a continuation of discussions around memory allocation vulnerabilities that have been prevalent in hacker culture, particularly in the context of the ptmalloc allocator used in various Linux distributions. It builds on previous works like 'Malloc Maleficarum' and 'Malloc Des-Maleficarum', which laid the groundwork for understanding heap exploitation techniques.",
+  "target_audience": "Security researchers, hackers, and professionals interested in memory management vulnerabilities and exploitation techniques."
+}

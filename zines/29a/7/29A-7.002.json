@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "MSIL-PE-EXE infection strategies",
+  "authors": "Benny/29A",
+  "date": "Jan 25 2003",
+  "historical_context": "This article was written during the early days of .NET Framework, shortly after the release of Visual Studio .NET. It reflects the growing interest in malware development targeting the .NET environment.",
+  "target_audience": "Hackers, malware developers, security researchers, and those interested in .NET security vulnerabilities.",
+  "short_summary": "The article discusses techniques for creating a file infector for .NET applications, focusing on manipulating the Common Language Runtime (CLR) metadata to implant malicious code into executable files. It provides detailed code examples and insights into the CLR's architecture.",
+  "summary": "In 'MSIL-PE-EXE infection strategies', Benny/29A delves into the intricacies of infecting .NET applications by manipulating the Common Language Runtime (CLR) metadata. The author builds upon previous work, specifically the 'Donut' infector, and aims to create a more sophisticated method of infection that involves adding new viral data to the existing metadata rather than merely replacing it. The article outlines the use of various COM interfaces provided by the CLR, such as IMetaDataDispenser and IMetaDataEmit, to access and modify the metadata of .NET executables. Benny provides detailed assembly code snippets that demonstrate how to initialize COM, open metadata scopes, and define new methods within the infected executable's metadata structure. \n\nThe author emphasizes the CLR's rich interface and abstraction, which simplifies the process of manipulating executable files. By leveraging these tools, Benny illustrates how to create a functional PE file that incorporates new malicious methods while maintaining the integrity of the original application. The article serves as both a technical guide and a commentary on the potential for viral techniques within the .NET environment, suggesting that with enough time and effort, malware authors can replicate many traditional Windows viral strategies in this new framework."
+}

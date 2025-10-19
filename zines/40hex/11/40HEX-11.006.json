@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 3, Issue 2, File 006",
+  "title": "SFT's and Their Usage",
+  "authors": "Dark Angel, Phalcon/Skism",
+  "date": "",
+  "historical_context": "This article discusses techniques relevant to DOS virus writing, a topic of interest during the early days of personal computing when DOS was prevalent.",
+  "target_audience": "Hackers, virus writers, security researchers",
+  "short_summary": "The article explores the manipulation of the System File Table (SFT) in DOS as a technique for virus writing. It details the structure of SFTs and how they can be exploited to bypass security measures.",
+  "summary": "In 'SFT's and Their Usage', Dark Angel delves into the intricacies of the System File Table (SFT) in DOS, a powerful yet underutilized tool for virus authors. The article outlines the structure of SFTs, detailing their role in managing file states, including open modes and current pointer locations. By manipulating these tables, virus writers can circumvent traditional DOS interrupt routines, effectively reducing the size of their code and evading detection by TSR virus monitors. The author provides practical assembly code examples to illustrate how to access and modify SFT entries, enabling the alteration of file attributes and pointers without triggering alarms typically associated with file modifications. This technique is particularly useful for writing viruses that need to operate stealthily on DOS systems, which were widely used at the time of publication.\n\nThe article emphasizes the importance of experimentation for aspiring virus authors, encouraging them to explore the potential of SFT manipulation further. By providing a foundational understanding of SFTs and their applications, Dark Angel equips readers with the knowledge to innovate within the realm of DOS virus development. The insights shared in this piece remain relevant for those studying the evolution of malware techniques and the historical context of computer security."
+}

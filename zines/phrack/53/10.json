@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 53, Phile #10 of 15",
+  "title": "Interface Promiscuity Obscurity",
+  "authors": "apk <apk@itl.waw.pl>",
+  "date": "July 8, 1998",
+  "historical_context": "This article was published during a time when network security was becoming increasingly important, and the ability to operate undetected on a network was a key concern for hackers.",
+  "target_audience": "Hackers, security researchers, network administrators",
+  "short_summary": "The article discusses methods to obscure the promiscuous mode flag on various operating systems, allowing packet sniffers to operate without detection. It provides code examples for FreeBSD, Linux, HP-UX, IRIX, and Solaris.",
+  "summary": "In 'Interface Promiscuity Obscurity', the author apk presents techniques for manipulating the promiscuous mode flag on network interfaces across several operating systems. The article begins with an introduction to the concept of promiscuous mode, which allows a network interface to intercept and read all packets on the network segment it is connected to. However, enabling this mode typically sets a flag that can be detected by system administrators, which poses a risk for hackers who wish to remain undetected. The author provides a solution through custom modules that can clear the IFF_PROMISC flag while still allowing the interface to operate in promiscuous mode. This is particularly useful for FreeBSD, Linux, and Irix systems, where the flag can be manipulated without affecting the actual network interface status.\n\nThe article includes detailed implementation instructions and code snippets for each operating system, demonstrating how to compile and run the provided programs. The author emphasizes the importance of understanding the underlying system calls and kernel structures involved in network interface management. By obscuring the promiscuous mode flag, hackers can run packet sniffers incognito, making this article a valuable resource for those interested in network security and evasion techniques."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Five, Phile #9 of 12",
+  "title": "Mobile Telephone Communications",
+  "authors": "Phantom Phreaker",
+  "date": "4/14/86",
+  "historical_context": "This article was written during the early days of mobile telecommunications, before the widespread adoption of cellular technology. It provides insights into the technical workings of mobile telephone systems at that time.",
+  "target_audience": "Hackers, telecommunications enthusiasts, security professionals, and those interested in the history of mobile communications.",
+  "short_summary": "The article discusses the technical aspects of mobile telephone communications, contrasting it with cellular technology. It explains the operational mechanisms, signaling processes, and the evolution towards cellular systems for improved efficiency and user capacity.",
+  "summary": "In 'Mobile Telephone Communications', Phantom Phreaker delves into the intricacies of mobile telephone systems, highlighting their limitations compared to the more advanced cellular systems. The article outlines how mobile communications utilize high-power transmitters to cover areas of approximately 20-30 miles, detailing the process of call routing through fixed-position telephone systems and the role of Radio Common Carriers (RCCs). The author explains the signaling methods employed, such as in-band signaling tones, and the call completion process, which involves selecting idle channels and managing connections between mobile units and the control terminal.\n\nThe piece also introduces the concept of cellular telephony, pioneered by AT&T, which addresses the shortcomings of mobile systems by allowing for greater user capacity and seamless call hand-offs between cell sites. The article emphasizes the efficiency of cellular systems in maintaining call quality as users move through different coverage areas. Overall, this article serves as a foundational piece for understanding the evolution of mobile communications, providing valuable insights into the technical workings of the systems that laid the groundwork for modern telecommunications."
+}

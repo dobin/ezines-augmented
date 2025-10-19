@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Two, File 8 of 14",
+  "title": "The SprintNet/Telenet Directory",
+  "authors": "Skylar",
+  "date": "12/92",
+  "historical_context": "This article provides insights into accessing and utilizing the SprintNet and Telenet networks, which were significant in the early days of computer networking and online communication.",
+  "target_audience": "Hackers, network enthusiasts, security professionals, and anyone interested in the history of online networks.",
+  "short_summary": "The article serves as a guide to accessing SprintNet, detailing local access numbers, commands, and network messages. It also includes a directory of various systems connected to SprintNet, providing insights into the types of services available during that era.",
+  "summary": "In this comprehensive guide, Skylar outlines the essential steps to access SprintNet, including dialing local access numbers and logging in using specific commands. The article details various commands available to users once connected, such as 'CONNECT', 'DISCONNECT', and 'STATUS', which allow for effective navigation and management of network sessions. Additionally, it explains how to interpret network messages, including disconnect codes and diagnostic messages, which are crucial for troubleshooting connection issues. The author emphasizes the importance of understanding these commands and messages for anyone looking to utilize SprintNet effectively.\n\nThe second part of the article presents a directory of systems connected to SprintNet, categorized by state and including details such as operating systems, prompts, and access requirements. This directory not only serves as a resource for users seeking specific services but also reflects the diversity of systems and applications that were operational at the time. Overall, this article is a valuable historical document that captures the intricacies of early network access and the types of interactions users could expect on SprintNet."
+}

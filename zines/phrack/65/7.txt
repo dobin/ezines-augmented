@@ -1,0 +1,1023 @@
+                             ==Phrack Inc.==
+
+               Volume 0x0c, Issue 0x41, Phile #0x07 of 0x0f
+
+
+|=-----------------------------------------------------------------------=|
+|=-----------------=[ System Management Mode Hack    ]=------------------=|
+|=-----------------=[ Using SMM for "Other Purposes" ]=------------------=|
+|=-----------------------------------------------------------------------=|
+|=-----------------------------------------------------------------------=|
+|=---------------=[ By BSDaemon                          ]=--------------=|
+|=---------------=[ <bsdaemon *noSPAM* risesecurity_org> ]=--------------=|
+|=---------------=[                                      ]=--------------=|
+|=---------------=[    coideloko                         ]=--------------=|
+|=---------------=[ <cdlk     *noSPAM* kernelhacking_com>]=--------------=|
+|=---------------=[                                      ]=--------------=|
+|=---------------=[    D0nAnd0n                          ]=--------------=|
+|=---------------=[ <d0nand0n *noSPAM* kernelhacking.com>]=--------------=|
+|=-----------------------------------------------------------------------=|
+|=--------------------------=[ March 29 2008 ]=--------------------------=|
+|=-----------------------------------------------------------------------=|
+
+					"Very nice! How much?"
+						- Borat Sagdyiev
+
+------[  Index
+
+  1 - Introduction
+    1.1 - Paper structure
+
+  2 - System Management Mode
+    2.1 - Pentium modes of operation
+    2.2 - SMM Overview
+	2.2.1 - SMRAM
+	2.2.2 - SMI Handler
+	2.2.3 - SMI Triggering
+	2.2.4 - Duflot discovery - Exploit
+    2.3 - Duflot misses
+    	2.3.1 - PCI Configuration
+	2.3.2 - Why and when the system generates a SMI
+    2.4 - SMM Internals - Our first experiences
+	2.4.1 - Analysing the SMM registers
+	2.4.2 - SMM Details
+
+  3 - SMM for evil purposes
+    3.1 - Challenges
+        3.1.1 - Cache-originated overwrites
+        3.1.2 - SMM Locking
+        3.1.3 - Portability
+	3.1.4 - Address translation 
+    3.2 - Copying our code in the SMM space
+	3.2.1 - Testing
+	3.2.2 - Descriptor caches
+        3.2.3 - Code relocation
+
+  4 - SMM Manipulation Library
+
+  5 - Future and other uses
+
+  6 - Acknowledgements
+
+  7 - References
+
+  8 - Sources - Implementation details
+
+
+------[ 1 - Introduction
+
+This article will try to explain some details about the Intel Architecture
+[1] and how it can be manipulated by a malicious user to create a complete
+hardware-protected malware.
+
+Also, since the main focus of the article are the System Management Mode 
+[1] features, we will go into details of the Duflot [2] study and beyond,
+showing how to create a stable system running inside the SMM [3].
+
+It's important to mention that everything showed here is really
+processor-bridges-dependent (we are focusing on Intel processors [1]).
+
+Since inside the SMM a malware could manipulate the whole system memory, it
+can be used to modify kernel structures and create a powerful rootkit.
+
+
+---[ 1.1 - Paper structure
+
+The idea of this paper is to complete the studies about SMM, explaning how 
+to use it for evil purposes.
+
+For that, the paper have been structured in two important portions:
+	
+Chapter 2 will give a basic knowledge of the Pentium modes of operation
+(needed to better understand the other portions of the chapter) and them 
+will introduce what was the Duflot discoveries related to that.  After that
+the chapter will explain what Duflot missed, explaining why the system
+behaves in the way that permits our uses, and introducing the SMM internals
+and our library to manipulate the SMM.
+Chapter 3 will explain how to use the SMM for evil purposes, explaning
+the challenges to use the SMM and giving pratical samples on the use of our
+library.
+
+
+------[ 2 - System Management Mode
+
+From the Intel manuals [1]:
+	"The Intel System Management Mode (SMM) is typically used to execute
+specific routines for power management. After entering SMM, various parts 
+of a system can be shut down or disabled to minimize power consumption. SMM
+operates independently of other system software, and can be used for other
+purposes too."
+
+Everytime we read something like "and can be used for other purposes" we
+start to think: what the hell?  What kind of other purposes?
+
+It's interesting that every single sample in the Internet just points to
+energy-related uses of the SMM, and says nothing about other purposes.
+
+In 2006, Duflot and others [2] released a paper about how to use the SMM to
+circumvent operating system protections.  It was the first time that a
+misuse of the SMM was shown, and it gave some ideas (like how to put a code
+in SMM,  how to manipulate the system memory inside SMM and how to force a
+system to enter the SMM), leaving open many questions that will be answered
+here (how to create a really stable code to subvert the SMM, how to
+manipulate the SMM registers, difficulties in create a stable system
+running inside the SMM and why the system behaves in the way he just said
+in the paper).
+
+
+---[ 2.1 - Pentium modes of operation
+
+Everybody already knows about the modes of operation of the P6 family of
+processors.
+
+Real-mode is a 16-bit addressing mode, keept for legacy purposes and 
+nowadays just used in the boot process.  Protected mode is a 32-bit mode 
+and provides the protection model used by the modern operation systems.
+
+The Virtual 8086 mode have been introduced to garantee greater efficiency 
+when running programs created for older architectures (such as 8086 and 
+8088).
+
+The System Management Mode (SMM) is another mode of operation that, as 
+already said, is supposed to be used to manage power functions.
+
+Volume 3 of the Intel processor manuals [1] already explained the 
+acceptable transitions between those modes:
+
+         -------------------                    SMI (interrupt)
+      |->|Real Address Mode| -------------------------------------------|
+      |  ------------------- <----------------------------------|       |
+      |  | PE=1    ^ PE=0 (requires ring0) or                   |rsm or |
+      |  v         | reset                                      |reset  V
+      |  -------------------                                    ---------
+reset |  | Protected Mode  | -------> SMI (interrupt) ------> | SMM Mode |
+      |  ------------------- <------- rsm instruction <------   ---------
+      |  | VM=1    ^ VM=0                                       |       ^
+      |  v         |                                            |rsm    |
+      |  ------------------- <----------------------------------|       |
+      |- |Virtual 8086 Mode| -------------------------------------------|
+         -------------------                    SMI (interrupt)
+
+
+P.S.: PE and VM are flags of the CR0 (control register 0)
+
+Basically what we need to get from here is:
+	- Any mode of operation in the intel platform can make a transition to
+        the SMM mode if an SMI interrupt is issued.
+	- SMM mode will return to the previous mode by issuing a rsm
+	instruction (so the processor will read a saved-state to restore the
+	system to the previous situation before enter the SMM).
+
+---[ 2.2 - SMM Overview
+
+First of all, when the system enters the SMM mode, the whole processor 
+context must be saved in a way so that it can be restored later. By doing 
+so, the processor can enter in a special execution context and start 
+executing the SMI handler.  To return from this mode there is the special
+instruction RSM (can be used just inside the SMM itself) that will read the
+saved context and return to the previous situation).
+
+Also, in SMM the paging is disabled and you have a 16-bit mode of operation
+, but all physical memory can be addressed (more on this later).
+
+There are no restrictions to the I/O ports or memory, so we have the same
+privileges as in Ring 0 (in fact, from SMM someone can just manipulate all
+the system memory).
+
+What Duflot showed is a way to put your own SMI handler, force the 
+processor to enter the SMM mode, change the system memory to bypass a 
+security protection (in his case, the securelevel of an OpenBSD system) and
+then execute his own code changing the saved context to point to it.
+
+---[ 2.2.1 - SMRAM
+
+The System Management Mode has a dedicated memory zone called SMRAM.  It's
+located in the 0x1FFFF bytes starting at SMBASE (it may be bigger if the 
+system activates Extented SMRAM).
+
+The default value of SMBASE is 0x30000, but since modern chipsets offer
+relocation, it's commonly seen as 0xA0000 (BIOS relocates it to the same
+memory-mapped base address used by the I/O ports of the video card).
+
+As spotted by Duflot, the memory controller hub has a control register 
+called SMRAM Control Register that offers a bit (D_OPEN - bit 6) that, when
+it's set, makes all memory accesses to the address space starting at SMBASE
+be redirected to SMRAM.
+
+If the processor is not in the SMM mode and the D_OPEN bit is not set, all 
+accesses to the SMRAM memory range are forwarded to the video card (when it
+have been relocated to the shared address as said) - giving a protection to
+the SMRAM, which we will use later to protect the malware).  Else, if the 
+D_OPEN bit is set, the memory addressed will be the SMRAM.  
+
+Another important thing he showed concerning the handler is the bit number 
+4 (D_LCK) of the SMRAM Control Register, which, when set, protects the 
+SMRAM control register and thus, the SMRAM memory itself, if the D_OPEN bit
+was not set at the time the control register was locked. To change it, the
+system needs to reboot (which gives us a challenge, since most modern BIOS
+will lock it).
+
+It's well detailed in the Intel Manuals, but the fact that a super-user
+could write to it using the video device and then force a SMI to be 
+triggered was really new.
+
+When entering the SMM the processor will jump to the pysical address
+SMBASE+0x8000 (which means that the SMI handler must be located at the 
+offset 0x8000 inside the SMRAM). Since when the D_OPEN bit is set we can 
+put some code in the SMRAM, we just need to force an SMI trigger to get 
+our code executed.
+
+                 -----------------
+SMBASE+0x1FFFF  |                 |
+                |                 |
+                |                 |
+                |                 |
+SMBASE+0xFFFF    -----------------
+                |                 |
+                | State save area |
+                |                 |
+SMBASE+0xFE00    -----------------
+                |                 |
+                | Code,Heap,Stack |
+                |                 |
+SMBASE+0x8000    ----------------- ----> First SMI Handler instruction
+                |                 |
+                |                 |
+                |                 |
+SMBASE=0xA0000   -----------------
+
+
+---[ 2.2.2 - SMI handler
+
+Since we will set the D_OPEN bit we need some way to avoid the display 
+usage, since all access to the video memory will be forwarded to SMRAM and 
+not to the video card. Duflot does not explain how it is possible, since 
+his sample was for OpenBSD and it assumed there was no one using the video
+card (he showed an exploit for an OpenBSD problem but as a requisite, 
+there is no one using the X, for example).
+
+In our samples, we will also show how to manipulate the registers directly,
+but we will use the libpci [4] to guarantee no problems with this (since 
+the libpci uses the system interfaces to manipulate the PCI subsystem 
+avoiding race conditions in the resource usage).  It's also more portable,
+because libpci as we will show supports a lot of different operating 
+systems.
+
+So, to insert the handler the attacker needs to:
+	- Verify if the D_LCK bit is not set
+	- Set the D_OPEN bit
+	- Have access to the memory address space (in the sample,
+          0xA0000-0xBFFFF)
+
+To access the memory we can just mmap the memory range using the /dev/mem 
+device, because it provides access to the physical address space 
+(instead of the virtual vision provided by the /dev/kmem for example).
+
+---[ 2.2.3 - SMI Triggering
+
+Since the SMI signal is a hardware-generated interrupt there is no 
+instruction to generate it by software. The chipset may generate it, but 
+_when_ it does depends on the chipset [5][6].
+
+Duflot also already explained in his paper the SMI_EN register, where the 
+least significant bit is a global enable, specifying whether SMIs are 
+enabled or not (the other bits of SMI_EN then control which devices can 
+generate an SMI).
+
+The SMI_STS register keeps track of which device last caused an SMI.
+
+These registers can be accessed using the regular PCI mechanisms ("in" and
+"out"). The position of those register are variable, but they are in a
+relative address to PMBASE (SMI_EN=PMBASE+0x30 and SMI_STS=PMBASE+0x34).
+
+The PMBASE can be accessed using bus 0, device 0x1F, function 0 and offset 
+0x40.
+
+More details of the PCI configuration mechanisms in the section 2.3.1.
+
+
+---[ 2.2.4 - Duflot discovery - Exploit
+
+In his paper Duflot & friends showed a working exploit against OpenBSD.  
+This will be our first code to be analyzed (also attached with small 
+modifications to work on Linux).
+
+As can be seen, the code will have problems if there is an X Server running
+,since it just forwards all video memory access to the SMRAM.
+
+Since the Linux operating system (as most of unixes) provides a way to rise
+the I/O privilege level in the user-mode, the exploit is using that in a 
+way it can use the instructions in/out:
+
+        if(iopl(3) < 0) {
+
+To get access to the SMRAM, the D_OPEN bit must be set:
+	outl(data1, 0xcf8);
+        outl(data2, 0xcfc);
+
+Also here, we can easily see that, in the handler, it is doing the 
+following:
+
+        addr32 mov $test, %eax
+	mov %eax, %cs:0xfff0
+
+Here we have that the offset 0xfff0 is the saved EIP in the saved-state map
+inside the SMRAM. By doing so, it is just putting the address of a function
+in the saved-state map, so when the system triggers the rsm instruction 
+it will return to protected mode, but now executing the test() function 
+(the saved EIP).
+
+Duflot discovered that accessing the Programmed I/O Port 0xB2 with the bit 
+5 of SMI_EN set will generate an SMI:
+
+        outl(0x0000000f, 0xb2);
+
+For sure it's really funny... but what else can be done with that?
+
+
+---[ 2.3 - Duflot misses
+
+In his paper Duflot does not explain how the PCI Configuration really works
+(for example, he just pointed to use the port 0xCF8 for address and port 
+0xCFC to perform the operation itself). Also, he never said when and why 
+the system generates a SMI.  The idea of use the SMM to manipulate the 
+system memory can also be really expanded, to create a malware running 
+inside the SMM, or to bypass boot-protections and many others (like create 
+a system protection mechanism running on it).
+
+The rest of this chapter and the next one will show many details about how
+the SMM works and what we can use inside the SMM.  Also, will better
+explain how to analyse the system and create a portable library to 
+manipulate the SMM-related registers.
+
+
+---[ 2.3.1 - PCI Configuration
+
+The original PCI specification [11] defined two mechanisms for i386 PCs, 
+but later specifications deprecated one of these ways. Since this 
+specification is not free, we highly recommend you to read a book about 
+that [12].
+
+Basically, you have two I/O port ranges: one associated to the address port
+(0xCF8-0xCFB) and the other to the data port (0xCFC-0xCFF).
+
+To configure a device, you must write to the address port which device and
+register you want to access and then read/write the data from/to the data
+port.
+
+The rule about the format of the data written to the address port is as 
+following:
+
+Bits    Description
+0..1    00b (always 0)
+2..7    Which 32-bit space in the config space to access
+8..10   Device function
+11..15  Device Number
+
+A complete list of PCI vendors and devices can be found in [13].
+
+PCI devices have an address which is broken down into a PCI-bus number, a
+device number within that bus (values 0-31), and a function number within
+the device (values 0-7).
+
+Since a single sample is more valuable, to access a register REG in the 
+bus:device:function PCI space you will need to use the following address:
+	0x80000000L | ((bus & 0xFF) << 16) |
+		((((unsigned)device) & 0x1F) << 11) |
+		((((unsigned)func) & 0x07) << 8) | (REG & 0xFC);
+
+In each PCI device's configuration space there's normally one or more
+BARs (Base Address Registers), which can be used to set or find the address
+in physical memory or in I/O space of each resource the card uses.
+
+---[ 2.3.2 - When and why the system generates a SMI
+
+All memory transactions (read/write memory access) from the CPU are placed 
+on the host bus to be consumed by some device.
+
+Potentially the CPU itself would decode a range (of memory) such as the 
+Local APIC range, and the transaction would be satisfied before needing 
+to be placed on the external bus at all.
+
+If the CPU does not claim the transaction (don't decode), then it must be
+sent out.  In a typical Intel architecture, the transaction would next be 
+decoded by the MCH (Memory Controller Hub) and be either claimed as an 
+address that the MCH owns, or it's determining based on decoders that the 
+transaction is not owned by the MCH and thus should be forwarded on to the 
+next possible device in the chain.
+
+If the memory controller does not find the address to be within actual 
+DRAM, then it looks to see if it falls within one of the other I/O ranges 
+it owns (ISA, EISA, PCI).
+
+Depending on how old the system is, the memory controller may directly 
+decode PCI transactions (instead of pass that to the I/O bridges), for 
+example.
+
+If the MCH determines that the transaction does not belong to it, the
+transaction will be forwarded down to whatever I/O bridge(s) may be present
+in the system.  This process of decoding for ownership / response or 
+forwarding down if not owned repeats until the system runs out of potential
+agents.
+
+The final outcome is either an agent claims the transaction and returns
+whatever data is present at the address, or no one claims the address and
+an abort occurs to the transaction, typically resulting in 0FFFFFFFFh data
+being returned.
+
+In some situations (Duflot paper's case), some addresses (for example those
+falling within the 0A0000h - 0BFFFFh range) are owned by two different 
+devices (VGA frame buffer and system memory).  This will force the 
+architecture to send a SMI signal to satisfy the transaction.
+
+If no SMI is asserted, then the transaction is ultimately passed over by
+the memory controller, so that the VGA controller (if present) can claim 
+it.
+
+If the SMI signal is asserted when the transaction is received by the 
+memory controller, then the transaction will be forwarded to the DRAM 
+unit for fetching the data from physical memory (executing our handler).
+
+---[ 2.4 - SMM Internals - Our first experiences
+
+Here we will clarify some important details about SMM and how it works. 
+This will be important to better understand the attached library.
+
+---[ 2.4.1 - Analyzing the SMM registers
+
+Let's start by analyzing the SMM using libpci, so we can have more 
+stability doing this.
+
+The following code is known to work fine in ICH5 and ICH3M controllers.  
+
+---   code   ---
+
+#include <stdio.h>
+#include <pci/pci.h>
+#include <sys/io.h>
+
+/* Defines - bit positions (will be used in more samples) */
+#define D_OPEN_BIT      (0x01 << 6)
+#define D_CLS_BIT       (0x01 << 5)
+#define D_LCK_BIT       (0x01 << 4)
+#define G_SMRAME_BIT    (0x01 << 3)
+#define C_BASE_SEG2_BIT (0x01 << 2)
+#define C_BASE_SEG1_BIT (0x01 << 1)
+#define C_BASE_SEG0_BIT (0x01)
+
+/* Function to print SMRAM registers */
+void show_smram(struct pci_dev* SMRAM)
+{
+	u8 smram_value;
+
+	/* Provided by libpci */
+        smram_value = pci_read_byte(SMRAM, SMRAM_OFFSET);
+
+	if(smram_value & D_OPEN_BIT) {
+                printf("D_OPEN_BIT:      1\n");
+        } else {
+                printf("D_OPEN_BIT:      0\n");
+        }
+        if(smram_value & D_CLS_BIT) {
+                printf("D_CLS_BIT:       1\n");
+        } else {
+                printf("D_CLS_BIT:       0\n");
+        }
+        if(smram_value & D_LCK_BIT) {
+                printf("D_LCK_BIT:       1\n");
+        } else {
+                printf("D_LCK_BIT:       0\n");
+        }
+        if(smram_value & G_SMRAME_BIT) {
+                printf("G_SMRAME_BIT:    1\n");
+        } else {
+                printf("G_SMRAME_BIT:    0\n");
+        }
+        if(smram_value & C_BASE_SEG2_BIT) {
+                printf("C_BASE_SEG2_BIT: 1\n");
+        } else {
+                printf("C_BASE_SEG2_BIT: 0\n");
+	}
+        if(smram_value & C_BASE_SEG1_BIT) {
+                printf("C_BASE_SEG1_BIT: 1\n");
+        } else {
+                printf("C_BASE_SEG1_BIT: 0\n");
+        }
+        if(smram_value & C_BASE_SEG0_BIT) {
+                printf("C_BASE_SEG0_BIT: 1\n");
+        } else {
+                printf("C_BASE_SEG0_BIT: 0\n");
+        }
+        printf("\n");
+}
+
+int main(void) {
+        struct pci_access *pacc;
+        struct pci_dev *SMRAM;
+
+	/* Provided by libpci */
+        pacc = pci_alloc();
+        pci_init(pacc);
+
+        SMRAM = pci_get_dev(pacc, 0, 0, 0, 0);
+
+        printf("Current status of SMRAM:\n");
+        show_smram(SMRAM);
+
+        printf("Setting D_OPEN to 1\n");
+        pci_write_byte(SMRAM, SMRAM_OFFSET, 0x4a);
+        show_smram(SMRAM);
+
+        printf("Locking SMRAM\n");
+        pci_write_byte(SMRAM, SMRAM_OFFSET, 0x1a);
+        show_smram(SMRAM);
+
+        printf("Trying to set D_OPEN to 0\n");
+        pci_write_byte(SMRAM, SMRAM_OFFSET, 0x0a);
+        show_smram(SMRAM);
+
+        return 0;
+}
+
+--- end code ---
+
+Compile this using:
+	gcc -o brazil_smm1 brazil_smm1.c -lpci -lz
+
+An execution sample:
+
+rrbranco:~/Phrack# ./brazil_smm1
+Current status of SMRAM:
+D_OPEN_BIT:      0
+D_CLS_BIT:       0
+D_LCK_BIT:       0
+G_SMRAME_BIT:    0
+C_BASE_SEG2_BIT: 0
+C_BASE_SEG1_BIT: 0
+C_BASE_SEG0_BIT: 0
+
+Setting D_OPEN to 1
+D_OPEN_BIT:      1
+D_CLS_BIT:       0
+D_LCK_BIT:       0
+G_SMRAME_BIT:    0
+C_BASE_SEG2_BIT: 0
+C_BASE_SEG1_BIT: 0
+C_BASE_SEG0_BIT: 0
+
+Locking SMRAM
+D_OPEN_BIT:      1
+D_CLS_BIT:       0
+D_LCK_BIT:       1
+G_SMRAME_BIT:    0
+C_BASE_SEG2_BIT: 0
+C_BASE_SEG1_BIT: 0
+C_BASE_SEG0_BIT: 0
+
+Trying to set D_OPEN to 0
+D_OPEN_BIT:      1
+D_CLS_BIT:       0
+D_LCK_BIT:       1
+G_SMRAME_BIT:    0
+C_BASE_SEG2_BIT: 0
+C_BASE_SEG1_BIT: 0
+C_BASE_SEG0_BIT: 0
+
+
+---[ 2.4.2 - SMM Details
+
+When the processor enters the SMM mode it will signal an output pin, 
+aSMIACT#, to notify the chipset that the processor is in the SMM.
+
+The SMI interrupt itself can be triggered anytime, except while the 
+processor is already in SMM (of course). This will cause the SMM handler to
+be executed (as we already showed).
+
+Since the SMIACT# was noticed by the chipset, all further memory accesses 
+will be redirected to the SMRAM protected memory. After that, the processor
+will start to save its internal state in the saved_state map area, inside
+the SMRAM. Then, the handler starts to execute.
+
+What is the current state? The processor is in a 'real mode', with all 
+segments containing 4GB limit and being readable/writable.
+
+As said, to leave the SMM, the RSM instruction is issued by the handler, 
+and  then the processor reads the saved-state map again, performing just 
+some checks on it (that's good) restoring the system to the previouas 
+situation.
+
+SMM writes data in the saved-state map exactly in the same way as the stack
+does, from top to bottom beginning from the SMBASE register (thus, 
+permiting relocation). It's important to keep this in mind when 
+manipulating the saved-state map.
+
+If the system enters SMM by result of a halt or I/O instruction, the 
+handler can tell the system to continue the execution after that or to 
+enter the halt state just setting a flag in the saved-state map.
+
+Upon entrance in SMM the interrupts are disabled (including the 
+asyncronous NMI (Non Maskable Interrupt) and INIT), and the IDT (interrupt
+description table)  register keeps it's value. In order to service 
+interrupts inside SMM (a motivation for that will be showed),  one needs to
+setup an own interrupt vector [14] and reload the IDT with your new value,
+since the values contained in the old IDT are no longer valid in the 
+address space used by SMM.
+
+After the STI instruction, the system start to receive some interrupts 
+but will  still miss the asyncronous ones. To enable that is needed to
+issue the IRET/IRETD instructions.
+
+The big concern about re-enabling interrupts inside the SMM handler is that
+if an NMI interrupt is received while inside the handler, it will be 
+latched. So, potentially any verification done inside the SMM handler can 
+be bypassed if someone hooked the NMI handler routine (this routine would
+be executed  immediately after the RSM, before the processor starts 
+executing the code pointed by the EIP in the saved-state map).
+
+During our tests, SMM relocation gave us some problems in older machines 
+(pentium II/III).  Also, we preferred to use those machines to test our 
+things, since there is no SMM locking being done by the BIOS (generally 
+saying, BIOS older than 2 years).
+
+Apparently, those older processors had a fixed CS value point to 0x30000 
+(the default SMM position - relocated by most of modern BIOS to 0xA0000 as 
+we already said).
+
+If we enable interrupts inside the SMM, when an interrupt is invoked, it 
+will save CS:IP in the stack for further return. But it will use the fixed 
+value of CS (0x30000) instead of using the SMBASE value, not reflecting 
+the  right code segment that the SMM is actually using and, therefore, the 
+code will return to the wrong location.
+
+Also, the Intel documentation mentions alignment problems in the SMBASE 
+value in older processors (previously to PIV).
+
+------[ 3 - SMM for evil purposes
+
+As already said, the SMM can be used to modify kernel internal structures.
+
+Here we will also show some challenges and other possible uses for a 
+malware code running inside the SMM.
+
+---[ 3.1 - Challenges
+
+---[ 3.1.1 - Cache-originated overwrites
+
+When entering the SMM, the SMRAM may be overwritten by data in the cache 
+if a #FLUSH occur after the SMM entrance.
+
+To avoid that we can shadow SMRAM over non-cacheable memory or assert 
+#FLUSH simultaneously to #SMI events (#FLUSH will be served first). 
+Most BIOS mark the SMRAM range as non-cacheable for us (and also locks it, 
+since Duflot paper publication).
+
+---[ 3.1.2 - SMM Locking
+
+Most BIOS manufacturers lock the SMM nowadays. When you are inserting a
+protecting mechanism using the SMM you can just replace the system BIOS 
+for an open-source one (see LinuxBIOS [7]).
+
+When we are talking about malicious code, this cannot be done and some 
+kind of BIOS patching must take place.
+
+This article is focusing in the SMM manipulation itself, but a good 
+approach to bypass the BIOS protection is to use the TOP_SWAP [8] bit to 
+execute our code before the original BIOS code and then load our SMM 
+handler and lock it (this will prevent the original BIOS to overwrite our 
+SMM handler).
+
+Basicaly this bit is used to define if the system will use the first 64K 
+or the second one as area to load the BIOS from.  Knowing that, someone 
+can just set the TOP_SWAP bit, put own code in the second 64K area and in 
+the code jump back to the original BIOS code.  This code will be runned 
+BEFORE the BIOS.
+
+The TOP_SWAP bit exists to provide a secure way to BIOS update - the BIOS 
+code is copied to the second 64K, the TOP_SWAP bit is set, the update is 
+done and an integrity check is performed - if there is anything that makes
+the system to reboot, it will restart in the second 64K which holds a copy
+of the original BIOS without any problems.
+
+---[ 3.1.3 - Portability
+
+As said, the SMM is harware-dependent, more specifically it's 
+ICH-dependent.
+
+The attached code is know to work in ICH5 and ICH3M, tested under Linux, 
+but since it uses the libpci, it's supposed to work also in FreeBSD, 
+NetBSD, OpenBSD (also tested on it), Solaris, Aix, GNU/Hurd and Windows).
+
+To provide support to other ICHs one must edit the libSMM.h header file to 
+specify the correct location of the bus, device, function and offset and 
+then be sure the PMBASE returned by the function get_pmbase() is right 
+(comparing to the manuals).
+
+After that, verify if the SMRAM_OFFSET is correctly defined (you can get 
+that in your I8xx manuals).  If so, the bits in the SMRAM control register 
+will be correctly showed (you can easily test it using the D_LCK bit, since
+when set will not permit any other bit to be manipulated).  One can also
+test it using the dd command showed next in this article and the D_OPEN bit
+(use the open_smram function, write to the SMRAM memory mmap'ing it and 
+then dump it to verify if it's working).
+
+---[ 3.1.4 - Address translation
+
+Address translation is a great difficulty when we are inside our handler, 
+since we need the value of the CR3 register (which we can get from the 
+saved-state map) to manually parse the page tables and then perform the 
+actual translation.
+
+Another approach is to just transfer the control back to our code in the 
+same way that Duflot did, but we need to save the current processor 
+status inside SMM, so after the execution of our code (after the SMM) we 
+can transfer the control back to the process that was executing before 
+triggering the SMI (else we would have some portions of the system just 
+stopping to work after our malware get executed).
+
+This is not good... 
+
+The best thing that we can do is just have a simple handler that gives the
+biggest privilege level of execution to the calling code (i.e. the code 
+that was executing before the SMI) and then return. By doing so, we avoid 
+to stay too much time in the SMM context and don't need to care about 
+stopped OS processes.
+
+In the next sections we clarify how to put code in the SMM space, test it 
+and then an approach using the descriptor caches to provide the above 
+statement.
+
+
+---[ 3.2 - Copying our code in the SMM space
+
+---[ 3.2.1 - Testing
+
+So, the first step to put some code in the SMM is to open the SMRAM by 
+setting the D_OPEN bit.
+
+---   code   ---
+pci_write_byte(smram_dev, SMRAM_OFFSET, (current_value | D_OPEN_BIT));
+--- end code ---
+
+To close it after we finish, we will use the following:
+
+---   code   ---
+pci_write_byte(smram_dev, SMRAM_OFFSET, (current_value & ~D_OPEN_BIT));
+--- end code ---
+
+Also, after inserting our code, we want to lock SMRAM access, avoiding 
+anyone from changing the SMM-related registers.
+
+---   code   ---
+pci_write_byte(smram_dev, SMRAM_OFFSET, (current_value | D_LCK_BIT));
+--- end code ---
+
+In order to get our code inserted in the SMRAM memory, we need to map it, 
+in the same way we did in the exploit.
+
+---   code   ---
+fd = open(MEMDEV, O_RDWR);
+
+if(fd < 0) {
+	fprintf(stderr, "Opening %s failed, errno: %d\n", MEMDEV, errno);
+	return -1;
+}
+
+vidmem = mmap(NULL, MAPPEDAREASIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+		fd, SMIINSTADDRESS);
+
+if(vidmem == MAP_FAILED) {
+	fprintf(stderr, "Could not map memory area, errno: %d\n", errno);
+	return -1;
+}
+close(fd);
+
+/* Here we are copying our code to the SMRAM memory */
+if(vidmem != memcpy(vidmem, handler, endhandler-handler)) {
+	fprintf(stderr, "Could not copy asm to memory...\n");
+	return -1;
+}
+
+if(munmap(vidmem, MAPPEDAREASIZE) < 0) {
+	fprintf(stderr, "Could not release mapped area, errno: %d\n", errno);
+	return -1;
+}
+--- end code ---
+
+It's a good idea to verify if it's working properly, and also make a 
+previous copy of your SMRAM memory contents before that.
+
+So, let's do that using dd:
+	dd if=/dev/mem of=my_smram bs=1 skip=`expr 655360 - 1` count=64K
+
+P.S.:  655360 is 0xa0000 in decimal (as spotted by Duflot, SMM is commonly
+relocated to that address instead 0x30000, as in the default case)
+
+---[ 3.2.2 - Descriptor caches
+
+This idea worked in some system and not in some others, since the Intel
+documentation is not exactly clever about this subject.
+
+From the Intel manual: "Every segment register has a visible part and a 
+hidden part (The hidden part is sometimes referred to as a descriptor 
+cache or a shadow register).  When a segment selector is loaded into the 
+visible part of a segment register, the processor also loads the hidden 
+part of the segment register with the base address, segment limit, and 
+access control information from the segment descriptor pointed to by the 
+segment selector."
+
+"Access control information" is refering to the well know xPL:
+	- RPL -> Request privilege level
+	- CPL -> Current privilege level
+	- DPL -> Descriptor privilege level
+
+In the saved-state map inside the SMRAM, also according to the Intel 
+manuals, are saved the descriptor caches and the CR4 register (the manual 
+says it's not readable and write to this values will cause an 
+"unpredictable behavior").
+
+We found the following:
+
+TSS Descriptor Cache (12-bytes) - Offset: FFA7
+IDT Descriptor Cache (12-bytes) - Offset: FF9B
+GDT Descriptor Cache (12-bytes) - Offset: FF8F
+LDT Descriptor Cache (12-bytes) - Offset: FF83
+GS  Descriptor Cache (12-bytes) - Offset: FF77
+FS  Descriptor Cache (12-bytes) - Offset: FF6B
+DS  Descriptor Cache (12-bytes) - Offset: FF5F
+SS  Descriptor Cache (12-bytes) - Offset: FF53
+CS  Descriptor Cache (12-bytes) - Offset: FF47
+ES  Descriptor Cache (12-bytes) - Offset: FF3B
+
+The saved-state map is stored at SMBASE + 0xFE00 to SMBASE + 0xFFFF.
+
+Modifying the DPL field of the SS descriptor cache from 3 to 0 gives ring0
+power to our program (and a General Protection Fault in newer processors).
+
+---[ 3.2.3 - Code relocation
+
+SMM has the ability to relocate its protected memory space. The SMBASE 
+value saved in the state save map may be modified. This value is read 
+during the RSM instruction. When SMM is next entered, the SMRAM will be
+located at this new address.
+
+From our SMM handler, in the saved-state map, we can modify this value (at
+offset 0xFEF8 from SMBASE). To perform that, we must care about CS 
+adjustments inside our code.
+
+It can be used to relocate the SMRAM to memory area of our choosing and 
+trick those who try to dump the SMRAM for analysis using the standard 
+SMBASE values (anyway, since our malware is locking the SMM and clearing 
+the D_OPEN bit, we don't need to use this technique).
+
+
+------[ 4 - SMM Manipulation Library
+
+The SMM Manipulation Library attached in this article provides an easy 
+way to create portable code to manipulate the SMRAM control register.
+
+It offers the following methods:
+	u8 show_smram  (struct pci_dev* smram_dev, u8 bits_to_show)
+		It's used to test if specific bits are set or not
+		The pci_dev structure are optional, NULL can be passed.
+
+	u16 get_pmbase (void)
+		Internally used by the library to manipulate the SMI-enablement.
+		Exported by the function to turn easy to an external program
+		verify the correct offsets for the SMI_EN and SMI_STS.
+
+	u16 get_smi_en_iop (void)
+		Return the location of the SMI_EN
+
+	u16 get_smi_sts_iop (void)
+		Return the location of the SMI_STS
+
+	int enable_smi_gbl (u16 smi_en_iop)
+		Enable SMI globally
+
+	int disable_smi_gbl (u16 smi_en_iop)
+		Disable SMI globally
+
+	int enable_smi_on_apm (u16 smi_en_iop)
+		Enable SMI on APM events
+
+	int disable_smi_on_apm (u16 smi_en_iop)
+		Disable SMI on APM events
+
+	int open_smram(void)	
+		Open SMRAM for access (set D_OPEN bit)
+
+	int close_smram(void)
+		Close SMRAM for access (unset D_OPEN bit)
+
+	int lock_smram(void)
+		Lock the SMRAM (set D_LCK bit)
+
+	void write_to_apm_cnt(void)
+		Write to the APM CNT (generate a SMI)
+
+Also, the include file libSMM.h contains the valid values to be used to 
+locate related registers and bit's for the SMM manipulation, like the 
+device, function bus and offsets.  It contains specify defines for 
+interesting bits inside the SMRAM control register too, like the D_OPEN 
+and the D_LCK.
+	
+Attached to the article is also the file libSMM_test.c showing how to use 
+the SMM Manipulation Library.  This program will basically set and unset 
+all control registers that will affect the SMM manipulation.  It can be 
+used to test if the library is working propertly in your hardware and 
+since it will also test the D_LCK bit, one need to reboot after run this 
+program.
+
+The evil.c code also attached will use the SMM Manipulation Library to 
+insert a small SMM handler that freezes the processor.
+
+------[ 5 - Future and other uses
+
+We can't foresee the future, but modern rootkits are becoming much more
+targeted, so this kind of deeper hackishs will start to be more widely 
+seen.
+
+Also, with new platforms to BIOS enhancements, like the Extensible Firmware
+Interface, everything that depends on boot patching will be easier [9].
+
+Another important thing to notice is the virtualization resources that 
+exist nowadays and some possibilities of using them in implementations of 
+hardware protected integrity-check systems [10].
+
+------[ 6 - Acknowledgments
+
+A lot of people helped us in the long way these researches that resulted in
+something funny to be published, you all know who you are.
+
+Special tks to twiz and the Phrack Staff for the great review of the 
+article, giving a lot of important insights about how to better structure 
+it and giving a real value to it.
+
+Finally, big tks to Julio Auto for the review of the article drafts.
+
+BSDaemon:
+Conference organizers who invited me to talk about protection
+mechanisms using SMM (yeah, a lot of fun in completely different cultures).
+
+To my girlfriend who waited for me (alone, I suppose) during this travels.
+
+RISE Security (http://www.risesecurity.org) for always keeping me motivated
+studying completely new things.
+
+------[ 7 - References
+
+[1]  - Intel Architecture Reference Manuals
+      http://www.intel.com/products/processor/manuals/index.htm
+
+[2]  - Loic Duflot, Daniel Etiemble, Olivier Grumelard, "Using CPU System
+Management Mode to Circumvent Operating System Security Functions"
+      Proceedings of CanSecWest, 2006
+
+[3]  - Branco, Rodrigo Rubira, "KIDS - Kernel Intrusion Detection System"
+      Hackers to Hackers Conference, 2007
+
+[4]  - LibPCI for Linux
+      ftp://ftp.kernel.org/pub/software/utils/pciutils/
+
+[5]  - Intel 82801 BA-I/O Controler HUB (ICH2) Datasheet
+      http://www.intel.com/design/chipsets/datashts/290687.htm
+
+[6]  - Intel 82845 Memory Controler HUB (MCH) Datasheet
+      http://www.intel.com/design/chipsets/datashts/290725.htm
+
+[7]  - LinuxBIOS
+      http://freshmeat.net/projects/linuxbios
+
+[8]  - Bing, Sun, "BIOS Boot Hijacking By Using Intel ICHx "Top-Block Swap"
+Mode"
+      XFocus Information Security Conference, 2007
+
+[9]  - Heasman, John, "Hacking the Extensible Firmware Interface"
+      Blackhat Las Vegas Briefings, 2007
+
+[10] - Branco, Rodrigo Rubira, "StMichael Project"
+      http://stjude.sf.net
+
+[11] - PCI Specification
+      http://www.pcisig.com
+
+[12] - Shanley, Tom; Anderson, Don; "PCI System Architecture" 
+      Mindshare Inc
+      ISBN 0-201-30974-2 
+      Publisher: Addison Wesley
+
+[13] - PCI Database
+      http://www.pcidatabase.com
+
+[14] - devik & sd; "Linux on-the-fly kernel patching without LKM"
+      Phrack 58
+
+------[ 8 - Sources - Implementation details [brazil_SMM.tgz]
+
+Attached a GPLed library that will help you to manipulate the SMM-related
+features, accompanied by some programs displaying sample usage.
+
+Further updates will be available in the StMichael project website, at:
+        http://stjude.sf.net
+
+

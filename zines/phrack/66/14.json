@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x0E of 0x11",
+  "title": "Manual Binary Mangling with Radare",
+  "authors": "pancake <at> nopcode.org",
+  "date": "Not specified",
+  "historical_context": "This article is part of the Phrack hacking ezine, which has been a significant publication in hacker culture since the late 1980s, focusing on various aspects of hacking, security, and programming.",
+  "target_audience": "Hackers, security researchers, reverse engineers, and anyone interested in binary manipulation.",
+  "short_summary": "This article introduces techniques for binary manipulation using the radare framework, covering topics such as code injection, ELF manipulation, and obfuscation methods. It provides practical examples and commands for enhancing binary analysis and protection.",
+  "summary": "The article delves into the capabilities of radare, a powerful command-line tool for reverse engineering and binary analysis. It starts with an introduction to the framework and its various components, emphasizing the importance of a scriptable hexadecimal editor for binary manipulation. The author explains how to inject code into ELF binaries, resize sections, and employ various obfuscation techniques to make reverse engineering more challenging. Key concepts include identifying unused code sections, manipulating function calls, and applying checksumming for integrity verification. The article also discusses the use of external scripting languages to automate tasks and enhance the analysis process, making it a valuable resource for anyone looking to deepen their understanding of binary manipulation and reverse engineering."
+}

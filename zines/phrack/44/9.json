@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 9 of 27",
+  "title": "The Amateur Radio Packet Network",
+  "authors": "Larry Kollar, KC4WZK",
+  "date": "Not specified",
+  "historical_context": "This article discusses the development and operation of the Amateur Radio Packet Network, which emerged as an alternative to the Internet for amateur radio operators.",
+  "target_audience": "Amateur radio operators, hackers, security professionals, and technology enthusiasts.",
+  "short_summary": "The article explores the Amateur Radio Packet Network, detailing its structure, equipment requirements, and operational protocols. It highlights how amateur radio operators have created a decentralized communication network that operates independently of the Internet.",
+  "summary": "In 'The Amateur Radio Packet Network,' Larry Kollar delves into the world of amateur radio operators who have established a robust communication network known as the Amateur Radio Packet Network. Unlike the Internet, this network is accessible to anyone with a ham license and is built on volunteer efforts. The article explains the fundamental components required for participation, including radios, Terminal Node Controllers (TNCs), and terminal software, emphasizing the ease of access for licensed operators. Kollar notes that while 1200 baud is the common standard, advancements in technology are pushing for higher speeds, particularly in urban areas.\n\nThe article further elaborates on the network's operational protocols, such as AX.25 and TCP/IP, which enable users to connect and communicate over vast distances. Kollar introduces the concept of digipeating and K-nodes, which enhance the reliability of packet transmissions. He also discusses the innovative use of packet satellites, which allow amateur radio operators to send and receive data from space, showcasing the unique capabilities of this network. Overall, Kollar's piece serves as a comprehensive guide to understanding the structure and functionality of the Amateur Radio Packet Network, highlighting its significance in the realm of amateur communications."
+}

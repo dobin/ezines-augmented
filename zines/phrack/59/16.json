@@ -1,0 +1,17 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x10 of 0x12",
+  "title": "Playing with Windows /dev/(k)mem",
+  "authors": "crazylord <crazylord@minithins.net>",
+  "date": "Not specified",
+  "historical_context": "This article discusses kernel object manipulation in Windows 2000, a topic relevant to security researchers and hackers interested in low-level system access.",
+  "target_audience": "Security researchers, hackers, and developers interested in Windows kernel programming.",
+  "short_summary": "The article explores the manipulation of Windows kernel objects, specifically focusing on the /Device/PhysicalMemory object, allowing users to read and write to physical memory. It provides insights into Windows object structures, access control, and practical code examples for memory manipulation.",
+  "summary": "This article delves into the intricacies of Windows kernel object manipulation, particularly the /Device/PhysicalMemory object, which allows for direct interaction with physical memory. It begins with an introduction to Windows objects, explaining their structure and how they can be manipulated through the Windows API. The author emphasizes the differences between Linux's /dev/kmem and Windows' /Device/PhysicalMemory, clarifying that the latter maps physical memory rather than virtual memory. The article provides detailed steps for reading and writing to memory, including necessary code snippets and explanations of key concepts such as callgates, which enable executing functions at higher privilege levels without needing a driver. Furthermore, it discusses how to bypass access restrictions imposed by security software, showcasing the potential for both legitimate research and malicious exploitation. The article concludes with sample code for manipulating memory and a reminder of the risks involved in such low-level programming.",
+  "code_samples": {
+    "kmem.h": "Header file defining structures and constants used in the article.",
+    "chmod_mem.c": "Code to modify access permissions for /Device/PhysicalMemory.",
+    "winkdump.c": "Memory dumper using /Device/PhysicalMemory.",
+    "winkps.c": "Process lister that utilizes /Device/PhysicalMemory.",
+    "fun_with_ipd.c": "Demonstrates bypassing access restrictions using symbolic links."
+  }
+}

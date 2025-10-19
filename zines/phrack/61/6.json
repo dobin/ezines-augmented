@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3d, Phile #0x06 of 0x0f",
+  "title": "Advanced Doug Lea's malloc exploits",
+  "authors": "jp <jp@corest.com>",
+  "date": "Not specified",
+  "historical_context": "This article discusses advanced techniques for exploiting vulnerabilities in Doug Lea's malloc, which was widely used in Linux systems. The techniques outlined are relevant to understanding heap exploitation and memory corruption vulnerabilities.",
+  "target_audience": "Security researchers, exploit developers, and those interested in advanced memory management vulnerabilities.",
+  "short_summary": "The article presents various techniques for exploiting vulnerabilities in Doug Lea's malloc, focusing on automating the exploitation process and overcoming challenges posed by memory layout randomization. It includes proofs of concept for several techniques.",
+  "summary": "This paper delves into the exploitation of vulnerabilities in Doug Lea's malloc, particularly focusing on the ability to overwrite arbitrary memory locations. The author introduces the 'almost arbitrary 4 bytes mirrored overwrite' (aa4bmo) primitive, which serves as the foundation for higher-level exploitation techniques. The paper discusses various methods to automate the exploitation process, including crafting special chunks, analyzing heap layouts, and obtaining information from remote processes. The techniques are illustrated through proofs of concept that demonstrate how to exploit real-world vulnerabilities like the OpenSSL 'SSLv2 Malformed Client Key Buffer Overflow' and the CVS 'Directory double free' vulnerabilities without hardcoding addresses or offsets, even in the presence of randomization.\n\nThe article emphasizes the importance of understanding the malloc internals and heap layout to effectively exploit these vulnerabilities. It also highlights the challenges faced when dealing with newer versions of glibc and provides updated techniques to adapt to these changes. The author concludes that the discussed techniques enable fully automated exploitation of malloc-based vulnerabilities, making them a significant concern for security professionals."
+}

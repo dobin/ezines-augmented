@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Metamorphism",
+  "authors": "Benny / 29A",
+  "date": "1999",
+  "historical_context": "This article was written during a time when traditional antivirus (AV) solutions were becoming more sophisticated, yet polymorphic viruses were still a significant challenge. The emergence of heuristic analysis in AV software prompted the exploration of more advanced techniques like metamorphism.",
+  "target_audience": "Hackers, virus programmers, security researchers, and those interested in malware development.",
+  "short_summary": "Benny discusses the concept of metamorphism as an evolution of polymorphism in virus programming. He outlines the challenges and techniques involved in creating a metamorphic engine that can produce entirely different code while maintaining the same functionality, making it harder for antivirus software to detect.",
+  "summary": "In 'Metamorphism', Benny delves into the complexities of creating a metamorphic engine, which goes beyond traditional polymorphism by mutating entire code structures rather than just the decryption routines. He emphasizes the need for a sophisticated internal disassembler, opcode manipulation capabilities, and a robust garbage collection mechanism to ensure that the mutated code remains functional while evading detection. The article highlights the challenges of coding such an engine, including the necessity of understanding processor architecture and the intricacies of instruction sets. Benny argues that metamorphism is superior to polymorphism, as it offers a more comprehensive approach to evading detection by antivirus software, especially when combined with polymorphic techniques. He concludes with an invitation for collaboration and idea-sharing among those interested in advancing the field of virus programming."
+}

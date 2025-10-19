@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue 7, Phile 4 of 10",
+  "title": "Hacking The Chilton Corporation Credimatic",
+  "authors": "Ryche",
+  "date": "June 24, 1986",
+  "historical_context": "This article is a reflection of the early days of hacking, focusing on credit systems and the vulnerabilities present in them during the mid-1980s. It showcases the mindset and techniques of hackers at the time.",
+  "target_audience": "Hackers, security researchers, and individuals interested in the history of computer security.",
+  "short_summary": "The article provides a detailed guide on how to hack into the Chilton Corporation's credit system, outlining the steps to access sensitive personal information and the types of passwords used. It emphasizes the lack of monitoring and the potential risks involved.",
+  "summary": "In this article, Ryche presents a comprehensive tutorial on hacking into the Chilton Corporation's credit system, which was a significant player in credit reporting during the 1980s. The author describes the process of connecting to the system via a direct dial-up number and the commands needed to navigate through its interface. He explains the different classes of passwords available, their privileges, and the operational hours of the system, highlighting the limited security measures in place at the time. The article serves as both a technical guide and a cautionary tale about the implications of unauthorized access to sensitive information.\n\nRyche also discusses the potential for misuse of the information obtained through hacking, including altering credit reports, and provides insights into the ethical considerations surrounding such actions. The article reflects the hacker culture of the era, where the thrill of accessing restricted systems was often prioritized over the moral implications of such activities. Overall, it serves as a historical document that illustrates the vulnerabilities of early digital systems and the mindset of hackers during that period."
+}

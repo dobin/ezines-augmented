@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x05 of 0x14",
+  "title": "OS X heap exploitation techniques",
+  "authors": "nemo <nemo@felinemenace.org>",
+  "date": "Not specified",
+  "historical_context": "This article discusses heap exploitation techniques specific to OS X Tiger (10.4) on PPC architecture, a time when such vulnerabilities were prevalent in many applications, particularly those using the WebKit library.",
+  "target_audience": "Hackers, security researchers, and those interested in memory exploitation techniques.",
+  "short_summary": "The article provides an in-depth analysis of heap exploitation techniques on OS X, detailing the memory allocation structure and how to exploit vulnerabilities in applications like Safari. It covers various methods to manipulate memory allocation and includes practical examples.",
+  "summary": "In this article, the author shares insights from personal experiences exploiting heap overflows in OS X applications, particularly Safari. It begins with an overview of the OS X userland heap implementation, including the concepts of zones and blocks, and how they relate to memory allocation. The author explains the significance of environment variables that can be set to aid in exploitation, such as MallocStackLogging and MallocBadFreeAbort, which help in debugging and understanding memory layouts. The article then delves into practical examples of heap overflow exploitation, illustrating how to manipulate memory to execute arbitrary code by overwriting function pointers in the malloc zone structure. The author provides sample code and detailed explanations of the techniques used, emphasizing the importance of understanding the memory layout and allocation strategies to successfully exploit vulnerabilities. The article concludes with a discussion on real-world applications of these techniques, particularly in the context of WebKit vulnerabilities, and highlights the ongoing relevance of these exploitation methods in the security landscape."
+}

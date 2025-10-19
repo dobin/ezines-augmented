@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Three, File 15 of 27",
+  "title": "Physical Access & Theft of PBX Systems",
+  "authors": "CO/der DEC/oder & Cablecast 0perator",
+  "date": "1993",
+  "historical_context": "This article reflects the hacking culture of the early 1990s, focusing on physical security vulnerabilities in PBX systems, which were critical to telecommunications.",
+  "target_audience": "Hackers, security professionals, telecommunications experts",
+  "short_summary": "The article details methods for physically accessing and stealing PBX systems, emphasizing reconnaissance and extraction techniques. It provides insights into the vulnerabilities of corporate security and the value of PBX components in the grey market.",
+  "summary": "In 'Physical Access & Theft of PBX Systems,' the authors outline a two-phase approach to stealing PBX systems, starting with reconnaissance and followed by extraction. The reconnaissance phase involves identifying potential targets in office buildings, particularly those with shared spaces, and gathering information about their PBX systems. Techniques include social engineering, such as posing as a technician to gain access to restricted areas, and utilizing classified ads to find vulnerable companies. The authors emphasize the importance of confidence and appearance in successfully navigating these environments.\n\nThe extraction phase focuses on the actual theft of PBX systems, detailing various methods to bypass security measures. The authors discuss the use of tools like screwdrivers and crowbars, as well as techniques for manipulating alarms and locks. They also highlight the significance of timing, suggesting that entering during business hours and hiding until after hours can minimize risk. The article serves as a guide for those interested in exploiting physical security weaknesses in telecommunications, while also providing a glimpse into the mindset of hackers during this era."
+}

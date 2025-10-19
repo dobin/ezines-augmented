@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "WIN32.BORGES Virus",
+  "authors": "Int13h/IKX",
+  "date": "Not specified",
+  "historical_context": "This article reflects the early days of Windows malware development, showcasing the techniques used by hackers to create viruses that could navigate and infect executable files.",
+  "target_audience": "Hackers, malware researchers, security professionals, and enthusiasts of computer virus history.",
+  "short_summary": "The WIN32.BORGES virus is a Windows-based malware that mirrors executable files, navigates directories, and interacts with the clipboard. It employs Windows API calls for its operations and is dedicated to the writer Jorge Luis Borges.",
+  "summary": "The WIN32.BORGES virus, crafted by Int13h/IKX, is a notable example of early Windows malware that utilizes the Windows API for its operations. The virus is designed to navigate directories using the dot-dot method and infect executable files with a specific pattern. On September 19, it triggers a reboot of the infected machine, and on Tuesdays, it places a text in the clipboard, showcasing its ability to manipulate system resources. The author draws inspiration from Jorge Luis Borges, particularly referencing his story 'The Other' to symbolize the virus's nature of creating doppelgangers of executable files.\n\nThe code provided in the article demonstrates the virus's functionality, including how it searches for .EXE files, copies them, and modifies the clipboard content. The use of API calls such as FindFirstFileA, CopyFileA, and SetClipboardData illustrates the technical prowess required to develop such malware. This article serves as a historical artifact, shedding light on the creativity and technical skills of early virus developers, while also providing insights into the methods used to create and propagate malware in the Windows environment."
+}

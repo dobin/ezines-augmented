@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 2, Phile #6 of 11",
+  "title": "SCAN STRINGS, HOW THEY WORK, AND HOW TO AVOID THEM",
+  "authors": "Dark Angel",
+  "date": "",
+  "historical_context": "This article reflects the early 1990s hacker culture, focusing on virus creation and evasion techniques against antivirus software, a significant concern during the rise of personal computing.",
+  "target_audience": "Hackers, virus authors, security researchers, antivirus developers.",
+  "short_summary": "The article discusses scan strings used by antivirus software to detect viruses and presents various techniques for virus authors to evade detection. It covers methods such as using multiple encryption engines, minimizing scan code length, and utilizing existing decryption engines.",
+  "summary": "Dark Angel further elaborates on minimizing scan code length as an effective technique. By filling gaps in the code with dummy op-codes or changing certain bytes at intervals, virus authors can create a scenario where the scan strings are less likely to be detected. The article also discusses the potential of stealing decryption engines from shareware products, which can inadvertently aid in virus creation. Overall, the piece serves as a guide for those looking to extend the lifespan of their viruses in the wild by avoiding detection through clever coding techniques."
+}

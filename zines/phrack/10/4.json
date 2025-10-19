@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Ten, Phile #4 of 9",
+  "title": "A Beginner's Guide to: The IBM VM/370 (or what to do once you've gotten in)",
+  "authors": "Elric of Imrryr",
+  "date": "1986",
+  "historical_context": "This article was written during the early days of hacking culture, providing insights into the IBM VM/370 system, which was widely used in academic and corporate environments.",
+  "target_audience": "Hackers, security enthusiasts, and individuals interested in mainframe systems.",
+  "short_summary": "This guide serves as an introduction for hackers who have gained access to an IBM VM/370 system, detailing essential commands and functionalities to navigate and utilize the system effectively.",
+  "summary": "Elric of Imrryr's guide is a practical resource for hackers who find themselves on an IBM VM/370 system, focusing on operational basics rather than intrusion techniques. The article begins with instructions on logging in and out, emphasizing the importance of valid user IDs and passwords. It then transitions into loading the CMS (Conversational Monitor System), which is crucial for executing commands within the VM/370 environment. The guide is structured in a straightforward manner, making it accessible for beginners. It covers file management commands, including listing, copying, and editing files using the XEDIT editor, which is a key tool for manipulating text files on the system. Additionally, the guide explains how to communicate with other users through notes and messages, enhancing collaborative efforts among users on the same system. Overall, this article is a valuable resource for anyone looking to understand the operational aspects of the IBM VM/370, reflecting the hacker ethos of sharing knowledge and skills."
+}

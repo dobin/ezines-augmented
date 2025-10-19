@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Nine, Phile #4 of 10",
+  "title": "PROGRAMMING RSTS/E - File2: Editors",
+  "authors": "Solid State",
+  "date": "Oct 11, 1986",
+  "historical_context": "This article was written during a time when RSTS/E was a popular operating system for DEC systems, and TECO was a widely used text editor among hackers and programmers.",
+  "target_audience": "Hackers, programmers, and anyone interested in RSTS/E and text editing.",
+  "short_summary": "This article provides an overview of the TECO text editor used in RSTS/E systems, detailing its commands, execution, and modifiers. It serves as a guide for both novice and experienced users, emphasizing the importance of text editors in hacking.",
+  "summary": "In this article, Solid State introduces the TECO text editor, a staple for users of the RSTS/E operating system. The author explains how to invoke TECO, initialize it, and utilize various commands to edit text files effectively. The article is structured to assist both newcomers and seasoned users, offering straightforward explanations of commands like moving the text pointer, inserting and deleting text, and saving files. The author also mentions the significance of text editors in the hacker community, asserting that mastering such tools can provide a considerable advantage in programming and exploration tasks.\n\nAdditionally, the article includes an updated version of a decoy program that was previously featured, aimed at helping users gather information from potential targets. This practical example underscores the article's focus on the utility of text editors in both programming and hacking contexts. Overall, the piece serves as a valuable resource for those looking to enhance their skills with TECO and understand its relevance in the broader landscape of computer security and hacker culture."
+}

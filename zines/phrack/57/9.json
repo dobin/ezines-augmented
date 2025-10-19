@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x09 of 0x12",
+  "title": "Once upon a free()...",
+  "authors": "anonymous <d45a312a@author.phrack.org>",
+  "date": "",
+  "historical_context": "This article discusses memory management in Unix systems, particularly focusing on the malloc function and its vulnerabilities, which were highly relevant during the early days of exploiting buffer overflows.",
+  "target_audience": "hackers, security researchers, software developers",
+  "short_summary": "The article delves into the workings of the malloc function in Unix systems, detailing its structure, vulnerabilities, and how these can be exploited through buffer overflows. It provides insights into both the System V and GNU C Library implementations.",
+  "summary": "In 'Once upon a free()...', the author explores the intricacies of memory management in Unix systems, specifically through the malloc function. The article begins by explaining how malloc dynamically allocates memory and the design goals it aims to achieve, such as stability and performance. It highlights the common implementations of malloc across various operating systems, including System V and GNU C Library, and discusses the implications of storing management information in-band, which can lead to vulnerabilities. The author emphasizes how buffer overflows can be exploited to manipulate malloc's management structures, allowing attackers to gain control over process memory. \n\nThe article provides a detailed examination of the malloc implementation in both System V and GNU C Library, explaining how attackers can exploit these systems by crafting specific memory layouts that allow them to overwrite critical pointers and execute arbitrary code. The author outlines various methods of exploitation, including the creation of fake chunks and the use of unlinking techniques to manipulate memory management structures. This comprehensive analysis serves as both a technical guide for potential attackers and a cautionary tale for developers regarding the importance of secure memory management practices."
+}

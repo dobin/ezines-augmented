@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Six, Issue Forty-Seven, File 5 of 22",
+  "title": "The alt.2600/#Hack F.A.Q.",
+  "authors": "Voyager",
+  "date": "",
+  "short_summary": "This FAQ provides a comprehensive introduction to various hacking topics discussed in the alt.2600 newsgroup and #hack IRC channel, covering both computer and telephony hacking techniques.",
+  "summary": "The alt.2600/#Hack FAQ serves as a foundational document for individuals interested in hacking culture, providing insights into both computer and telephony hacking. It covers a wide range of topics, including accessing and cracking Unix and VMS passwords, understanding password shadowing, and methods for erasing presence from system logs. The FAQ also delves into telephony hacking, detailing the construction and use of Red Boxes and Blue Boxes, as well as various telephony-related queries. This document is not just a guide but a cultural artifact that reflects the ethos and practices of the hacker community during the early 1990s.\n\nThe FAQ is structured into sections that address common questions and techniques, making it a valuable resource for both novice and experienced hackers. It emphasizes the importance of understanding the underlying systems and methodologies rather than merely providing step-by-step instructions. The document also highlights the ethical considerations of hacking, encouraging readers to think critically about their actions in the digital landscape. Overall, this FAQ is a significant contribution to the hacker literature, encapsulating the spirit of exploration and subversion that defines hacker culture."
+}

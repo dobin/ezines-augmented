@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 11 Volume 3 Number 2 File 003",
+  "title": "Trigger Virus",
+  "authors": "Dark Angel",
+  "date": "1993",
+  "historical_context": "This article is from the early 1990s, a time when computer viruses were becoming more prevalent and the hacking community was exploring various methods of malware development.",
+  "target_audience": "Security researchers, malware analysts, and enthusiasts of hacker culture.",
+  "short_summary": "The Trigger Virus is a resident COM/EXE infector designed to test Dark Angel's Multiple Encryptor (DAME). It features tunneling capabilities and modifies the int 21h handler to execute its code.",
+  "summary": "The Trigger Virus, authored by Dark Angel, serves as a test virus for the DAME (Dark Angel's Multiple Encryptor). It is a resident virus that infects COM and EXE files, utilizing a sophisticated method to insert itself into the int 21h interrupt chain. Upon execution, the virus traces the int 21h chain to locate the original handler, inserting a jump to its own code while ensuring that control is returned to the original handler after processing. This technique showcases the virus's tunneling capabilities, allowing it to operate stealthily without disrupting the normal functioning of the system.\n\nThe article includes detailed assembly code for the virus, illustrating its structure and functionality. It highlights the use of various assembly language techniques to manipulate the system's interrupt handling, demonstrating the complexity and ingenuity involved in virus development during this era. The Trigger Virus not only exemplifies the technical prowess of its creator but also serves as a historical artifact reflecting the hacker culture's exploration of malware and its implications for computer security."
+}

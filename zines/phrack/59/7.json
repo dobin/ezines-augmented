@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x07 of 0x12",
+  "title": "Advances in format string exploitation",
+  "authors": "gera <gera@corest.com>, riq <riq@corest.com>",
+  "date": "",
+  "historical_context": "This article discusses advanced techniques for exploiting format string vulnerabilities, which were prevalent in the early 2000s and remain relevant due to ongoing security issues in software development.",
+  "target_audience": "Hackers, security researchers, and software developers interested in exploit development and vulnerability assessment.",
+  "short_summary": "The article explores advanced techniques for exploiting format string vulnerabilities, including bruteforcing methods and heap-based exploits. It provides practical examples and code snippets to illustrate the concepts.",
+  "summary": "In this comprehensive article, the authors delve into the intricacies of format string vulnerabilities, presenting both theoretical insights and practical techniques for exploitation. The first part focuses on bruteforcing methods to manipulate format strings effectively, introducing concepts such as jumpcodes and multiple address overwrites. The authors emphasize the importance of understanding the memory layout and how to leverage known addresses to streamline the exploitation process. They also discuss the significance of friendly functions and the potential dangers of overwriting critical stack values, providing a nuanced view of the risks involved in format string exploits.\n\nThe second part shifts focus to heap-based format string vulnerabilities, detailing the unique challenges and strategies associated with exploiting these types of bugs. The authors illustrate their points with multiple examples, demonstrating how to manipulate stack frames and utilize direct parameter access to achieve reliable exploitation. They conclude with a discussion on the reliability of these techniques and the importance of understanding the underlying architecture, highlighting that while format string vulnerabilities may seem dated, they continue to pose significant risks in modern software development."
+}

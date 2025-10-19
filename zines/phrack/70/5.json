@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x10, Issue 0x46, Phile #0x05 of 0x0f",
+  "title": "VM escape - QEMU Case Study",
+  "authors": "Mehdi Talbi, Paul Fariello",
+  "date": "",
+  "short_summary": "This article provides an in-depth analysis of two vulnerabilities in QEMU's network device emulators that allow an attacker to escape from a virtual machine (VM) and execute code on the host. The authors detail the exploitation techniques and provide working exploits for both vulnerabilities.",
+  "summary": "The article discusses the vulnerabilities CVE-2015-5165 and CVE-2015-7504 found in QEMU's network device emulators, specifically targeting the RTL8139 and PCNET network cards. The authors explain how these vulnerabilities can be exploited to leak memory and gain control over the execution flow, ultimately allowing an attacker to escape the VM environment. They provide detailed technical insights into the memory layout of QEMU, the exploitation process, and the construction of a working exploit that combines both vulnerabilities to achieve code execution on the host machine.\n\nThe authors also highlight the importance of understanding the memory management and address translation mechanisms within QEMU, as these are crucial for successfully executing the exploits. They present a comprehensive guide on setting up the environment, crafting the exploits, and the limitations encountered during testing. The paper serves as a valuable resource for security researchers and practitioners interested in virtualization security and exploit development."
+}

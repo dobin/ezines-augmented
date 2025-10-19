@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x0b of 0x12",
+  "title": "HOLISTIC APPROACHES TO ATTACK DETECTION",
+  "authors": "sasha",
+  "date": "",
+  "historical_context": "This article discusses the evolution of attack detection methods in enterprise environments, highlighting the limitations of traditional reductionist approaches and advocating for holistic methods.",
+  "target_audience": "Security professionals, researchers, and anyone interested in advanced attack detection methodologies.",
+  "short_summary": "The article explores the limitations of traditional reductionist approaches to attack detection in enterprise environments and proposes holistic methods as a complementary solution. It discusses the importance of contextual information and the need for a more integrated view of security monitoring.",
+  "summary": "In 'HOLISTIC APPROACHES TO ATTACK DETECTION', the author, sasha, delves into the complexities of modern enterprise security monitoring, emphasizing the inadequacies of traditional reductionist methods. These methods often fail to account for the vast amounts of data generated in enterprise networks, leading to a high signal-to-noise ratio and difficulties in detecting attacks. The article advocates for a holistic approach that considers the interconnectedness of events and the context in which they occur, thereby enhancing the detection of attacks that may not be apparent when viewed in isolation.\n\nThe article further outlines the distinction between reductionist and holistic methods, illustrating how the latter can provide a more comprehensive understanding of attack strategies. By leveraging knowledge structures that map to common attack methodologies, security monitoring can evolve to recognize patterns and predict potential threats more effectively. The author concludes by highlighting the growing demand for managed security services that incorporate these holistic techniques, suggesting that future security monitoring will increasingly rely on understanding the procedural interactions of attack components rather than treating them as independent events."
+}

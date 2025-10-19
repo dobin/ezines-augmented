@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Fifty, Phile #5 of 16",
+  "title": "Abuse of the Linux Kernel for Fun and Profit",
+  "authors": "halflife@infonexus.com [guild corporation]",
+  "date": "",
+  "historical_context": "This article discusses vulnerabilities in the Linux kernel related to loadable modules, a topic that remains relevant as kernel exploitation techniques evolve.",
+  "target_audience": "Hackers, security researchers, Linux developers",
+  "short_summary": "The article explores the potential for abuse of loadable kernel modules in Linux, detailing how system calls can be redirected to create a tty hijacker. It provides code examples and discusses the implications of such vulnerabilities.",
+  "summary": "In 'Abuse of the Linux Kernel for Fun and Profit', the author delves into the dark side of Linux's loadable modules, highlighting how they can be exploited for malicious purposes. The article outlines the mechanics of system calls within the kernel and demonstrates how they can be redirected to create a simplistic tty hijacker. This hijacker allows for the monitoring and logging of user keystrokes, showcasing a significant security risk inherent in the kernel's design. The author provides practical code examples, including a loadable module that can manipulate the setuid system call to grant unauthorized root access, illustrating the ease with which attackers can compromise system integrity.\n\nThe article serves as a cautionary tale for developers and system administrators, emphasizing the need for vigilance when it comes to kernel security. By exposing the vulnerabilities associated with loadable modules, the author encourages a deeper understanding of kernel operations and the potential for abuse. The techniques discussed remain relevant today, as they lay the groundwork for understanding more sophisticated exploits and the importance of securing kernel-level operations against unauthorized access."
+}

@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 1, Issue 1, Phile #1 of 1",
+  "title": "SUB-ZERO VIRUS",
+  "authors": "HR",
+  "date": "",
+  "historical_context": "This article discusses the Sub-Zero virus, a notable early computer virus that was a memory resident COM and EXE infector. It is linked to the infamous Jerusalem-B virus and is considered a precursor to other viruses like Captain Trips.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The article details the Sub-Zero virus, a memory resident virus that infects COM and EXE files. It highlights its potential to format hard drives on a specific date and its evasion of detection by popular antivirus software at the time.",
+  "summary": "The Sub-Zero virus is presented as a significant threat due to its memory-resident nature and its ability to infect both COM and EXE files. The author provides a detailed breakdown of the virus's assembly code, which can be compiled using the DEBUG command. This technical insight is valuable for those interested in understanding how early viruses operated and how they could be created without sophisticated tools. The article warns users about the virus's destructive capability, particularly its tendency to format hard drives on a specific date, which adds a layer of psychological manipulation to its threat. The mention of its undetectability by SCAN and F-Prot antivirus software underscores the challenges faced by security professionals in combating emerging malware during this era.",
+  "additional_notes": "The article serves as a historical reference for the evolution of computer viruses and the ongoing battle between malware creators and security researchers."
+}

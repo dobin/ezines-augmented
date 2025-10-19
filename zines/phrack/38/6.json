@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Eight, File 6 of 15",
+  "title": "BEATING THE RADAR RAP: Part 2 of 2 : \"The Technical Side\"",
+  "authors": "Dispater",
+  "date": "",
+  "historical_context": "This article discusses the technical aspects of police traffic RADAR technology, its inaccuracies, and the lack of regulatory standards during the 1980s.",
+  "target_audience": "Hackers, security professionals, law enforcement, and individuals interested in traffic enforcement technology.",
+  "short_summary": "This article delves into the technical workings of police traffic RADAR, highlighting common errors and the lack of government standards for accuracy. It explains the Doppler effect, various RADAR bands, and specific errors that can lead to inaccurate speed readings.",
+  "summary": "In this second part of the series, Dispater explores the technical intricacies of police traffic RADAR systems. The article begins by explaining the fundamental principle behind RADAR technology, the Doppler effect, which is crucial for understanding how speed is measured. It outlines the three main frequency bands used in traffic RADAR and discusses the inherent limitations and inaccuracies of these systems. Notably, the article points out that traffic RADAR does not adhere to any government standards, leading to widespread inaccuracies that can result in erroneous speed readings, such as the infamous case of a tree being clocked at 86 MPH.\n\nDispater further details common errors associated with traffic RADAR, including the Look-Past Error, Road Sign Error, and Double Bounce Error, among others. Each error is explained with examples, illustrating how they can mislead operators and affect enforcement outcomes. The article concludes with a technical analysis report from the National Bureau of Standards, showcasing various RADAR units and their performance issues. Overall, this piece serves as a critical examination of the reliability of traffic RADAR technology and encourages readers to be aware of its limitations, potentially aiding in legal defenses against speeding tickets."
+}

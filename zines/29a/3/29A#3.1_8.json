@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "About the viewer",
+  "authors": "Z0mbie/29A",
+  "date": "",
+  "historical_context": "This article is part of the 29A Magazine, which was known for its focus on DOS programming and hacking culture during the early 1990s.",
+  "target_audience": "Hackers, programmers, and enthusiasts of retro computing.",
+  "short_summary": "This article provides an overview of a DOS viewer created by Z0mbie for 29A Magazine issue 3, detailing its parameters and commands for user interaction.",
+  "summary": "In this article, Z0mbie introduces a DOS viewer included in the third issue of 29A Magazine. The viewer is designed to enhance user experience with various parameters that can be adjusted for different functionalities. Users can choose between continuous execution, screensaver mode, quick mode, and shadow drawing options, making it adaptable for various system capabilities. The article also mentions the absence of a screensaver in this issue due to time constraints, promising its return in future editions.",
+  "summary_details": "The viewer's commands are straightforward, allowing users to exit, toggle boss mode, switch between assembly syntax, and select different font options, including English and Russian. This flexibility caters to a range of user preferences and system performances. The article serves as a practical guide for users looking to customize their experience with the viewer, reflecting the hands-on, experimental spirit of the hacking community at the time."
+}

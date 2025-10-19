@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Seven, Issue Forty-Eight, File 11 of 18",
+  "title": "Electronic Telephone Cards: How to make your own!",
+  "authors": "Unknown",
+  "date": "Unknown",
+  "short_summary": "This article provides a detailed guide on how to create your own electronic telephone cards using a PIC microcontroller. It discusses the vulnerabilities of existing systems and offers technical instructions for emulating the cards.",
+  "summary": "The article delves into the security flaws of the Schlumberger electronic telephone card system, highlighting its vulnerabilities and the potential for exploitation. It introduces a software solution for the PIC 16C84 microcontroller, which can be used to emulate these cards. The author emphasizes the importance of understanding the card's data structure, including the first 12 bytes that contain critical information such as the card's serial number and unit count. The guide includes instructions for programming the microcontroller and constructing the necessary hardware, making it accessible for those with basic electronics knowledge.\n\nAdditionally, the article outlines the security mechanisms in place, such as the metal detector in card readers, and suggests methods to bypass these protections. The author provides detailed schematics and programming code, encouraging readers to experiment with the technology while warning of the legal implications of such actions. This piece serves as both a technical manual and a commentary on the hacker ethos of exploring and exploiting technological weaknesses."
+}

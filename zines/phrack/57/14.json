@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x39, Phile #0x0e of 0x12",
+  "title": "Architecture Spanning Shellcode",
+  "authors": "eugene@gravitino.net",
+  "date": "",
+  "historical_context": "This article was inspired by a challenge presented at Defcon 8, focusing on creating shellcode that can run on multiple architectures.",
+  "target_audience": "Hackers, security researchers, and those interested in exploit development.",
+  "short_summary": "The article discusses the creation of architecture spanning shellcode that can execute on multiple processor platforms by using specific byte sequences that behave differently on each architecture. It provides detailed examples for MIPS, Sparc, PPC, and x86 architectures.",
+  "summary": "In 'Architecture Spanning Shellcode', the author explores the concept of writing shellcode that can operate across multiple processor architectures. The core idea is to craft a sequence of bytes that can execute a jump instruction on one architecture while functioning as a nop-like instruction on another. This allows the shellcode to branch to architecture-specific code depending on the platform it is executed on. The article delves into the specifics of MIPS, Sparc, PPC, and x86 architectures, detailing their instruction formats and how to manipulate them to achieve the desired behavior. For example, the author illustrates how to distinguish between BSD and Linux systems on x86 by analyzing segment registers, and how to craft shellcode that can execute on both platforms by setting up registers and stack appropriately for each OS's syscall conventions.\n\nThe article culminates in a practical example of architecture spanning shellcode that can run on x86, MIPS, Sparc, and PPC systems. The author provides a detailed breakdown of the shellcode, explaining how each part functions on different architectures. The conclusion emphasizes the potential of such shellcode to adapt to various environments, showcasing the ingenuity required in exploit development. This work not only serves as a technical guide but also reflects the hacker culture's emphasis on creativity and problem-solving in the face of complex challenges."
+}

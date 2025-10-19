@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Multipartite PE/BOOT polymorphic mIRC spreading infector",
+  "authors": "Vecna",
+  "date": "1998",
+  "historical_context": "This article discusses the W95.Inca virus, a significant malware of its time that utilized polymorphic techniques to evade detection. It reflects the growing complexity of viruses in the late 1990s, particularly those targeting Windows systems.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The article details the W95.Inca virus, a multipartite polymorphic virus that spreads via mIRC and infects various file types, including PE files and boot sectors. It employs advanced techniques to evade detection and includes a payload that activates under specific conditions.",
+  "summary": "The W95.Inca virus, as described by Vecna, represents a sophisticated evolution in malware, characterized by its multipartite nature and polymorphic capabilities. It infects PE files by adding a new section with a random name and utilizes a polymorphic VxD-dropper to facilitate its spread. The virus targets not only executable files but also various archive formats like ARJ, ZIP, and RAR, demonstrating its versatility in infection methods. Additionally, it modifies the boot sectors of floppy disks, showcasing its potential for widespread damage.\n\nThe article elaborates on the virus's unique encryption method, which relies on swapping rather than traditional mathematical instructions, making it challenging for antivirus software to detect and disinfect. The polymorphic engine keeps track of register values, allowing it to adapt its behavior dynamically. The payload of the virus is activated through specific triggers in mIRC chat conversations, further emphasizing its design for stealth and propagation within online communities. This detailed examination of W95.Inca not only highlights the technical intricacies of the virus but also serves as a historical snapshot of the malware landscape during the late 1990s."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue Eleven, Phile #10 of 12",
+  "title": "BUSY LINE VERIFICATION",
+  "authors": "PHANTOM PHREAKER",
+  "date": "Not specified",
+  "historical_context": "This article discusses the Busy Line Verification (BLV) and Emergency Interrupt (EMER INT) processes used by telephone operators, particularly in the context of the telecommunications systems prevalent in the late 20th century.",
+  "target_audience": "Phreakers, telecommunications enthusiasts, security professionals",
+  "short_summary": "The article explains the processes of Busy Line Verification (BLV) and Emergency Interrupt (EMER INT) used by telephone operators to manage calls on busy lines. It details the technical workings of these systems and their historical context within telecommunications.",
+  "summary": "In this article, PHANTOM PHREAKER delves into the intricacies of Busy Line Verification (BLV) and Emergency Interrupt (EMER INT) as utilized by TSPS (Telephone Service Position System) operators. The author outlines how a TSPS operator verifies whether a line is busy and the subsequent steps taken to interrupt a call if necessary. The process involves a series of technical codes and protocols, including the use of a Stored Program Control System (SPCS) known as Generic 9, which has been widely adopted since its introduction in the late 1970s. The article emphasizes the importance of operator security features and the limitations imposed on verification processes, particularly concerning sensitive lines such as those used by emergency services or radio stations.\n\nThe author also provides insight into the billing structure for these services, illustrating how charges appear on customer bills. The article serves as a technical guide for those interested in the operations of telephone systems and the potential for phreaking, while also addressing the ethical considerations surrounding such practices. Overall, it is a detailed exploration of a niche aspect of telecommunications that remains relevant for understanding the evolution of phone systems and the culture of hacking and phreaking."
+}

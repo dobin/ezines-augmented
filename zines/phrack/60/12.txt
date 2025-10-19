@@ -1,0 +1,213 @@
+                             ==Phrack Inc.==
+
+               Volume 0x0b, Issue 0x3c, Phile #0x0c of 0x10
+
+|=----=[ Firewall spotting and networks analisys with a broken CRC ]=----=|
+|=-----------------------------------------------------------------------=|
+|=-----------------------------=[ Ed3f ]=--------------------------------=|
+
+
+--[ Contents
+
+  0 - School
+
+  1 - Something In The Way
+
+  2 - Come As You Are
+
+  3 - You Know You're Right
+
+  4 - Drain You
+
+  5 - Big Long Now
+
+
+--[ 0 - School
+
+    Packet filters firewall are going to be deployed more and more for the
+sense of security the word "firewall" has got on not-technical people.
+Available as commercial software, embedded device or inside opensource OS
+they work at level 3. The support for level 4 isn't complete: they filter
+ports numbers, TCP flags, seq numbers, defragmentation, but ...
+
+What about level 4 checksum?
+
+Are they checking for TCP checksum before analyze flags or port numbers?
+No.
+
+    Most developers say there would be too overhead and other think that
+the packet will be simply dropped by destination OS stack. All correct, but
+how could we take advantage of this "feature"?
+
+1) firewalls reply spotting
+2) damn 31337 MiM spotting
+3) insert invalid packets inside a network
+
+
+--[ 1 - Something In The Way
+
+    A complete network stack will drop invalid packets without response. No
+matter if that port is closed, open or whatever... But Packet Filters
+aren't so smart and they will reply.
+
+    If we want to determine if there is a packet filter between us and a
+target host we must first check if the packet filter is configured to drop
+the packets or to send back an error. For this we send a valid tcp packet
+to any port that is supposed to be filtered:
+
+# telnet www.oracle.com 31337
+Trying 148.87.9.44...
+telnet: Unable to connect to remote host: Connection refused
+
+    Good. Either the target host itself or a packet filter sends back a
+RST. Next step is to check if the RST comes from the target host or from
+a packet filter:
+
+# hping -S -c 1 -p 31337 -b www.oracle.com
+HPING www.oracle.com (rl0 148.87.9.44): S set, 40 headers + 0 data bytes
+len=46 ip=148.87.9.44 flags=RA seq=0 ttl=23 id=52897 win=512 rtt=459.8 ms
+
+    If we get a reply we know that a packet filter is in place. If we
+dont get a reply we suspect that the packet arrives unfiltered at the
+destination host and is dropped by the TCP stack (e.g. no packet filter is
+in place).
+
+    Another technique to detect the existence of a packet filter is to
+compare the TTL of a RST and a SYN (which comes directly from the target
+host). The TTL-technique fails for all packet filters in bridging mode
+or filters that do not decrease the TTL and are placed directly in front
+of the target host (normal DMZ setup). The CRC-technique as described
+above on the other hand detects a packet filtering device in both cases.
+
+
+Other example, UDP this time:
+
+# hping -2 -c 1 -p 53 -b www.redhat.com
+HPING www.redhat.com (rl0 66.187.232.56): udp mode set, 28 headers + 0 data
+ICMP Packet filtered from ip=63.146.1.74 name=UNKNOWN
+
+    Having a way to distinguish packets from the host and the firewall,
+let us use OS identification tools working only with firewall packets
+without mixing host and firewall replys. Try nmap -O.
+
+Interesting ?
+Well I made a quick patch for Nmap-3.1ALPHA4 that add 2 new type of scan:
+ -sZ BadTCP SYN stealth port scan
+ -sV BadUDP port scan
+  
+    Note that -sZ is derived by a bad drawn -sS and -sV by -sU. BadTCP scan
+uses FIN scan engine because the default behavior of a host is not to reply.
+BadUDP scan uses UDP scan engine because the default behavior of a host is
+not to reply.
+
+    I hope that Fyodor will think about a from scratch version of Nmap for
+version 4.00 that could permit to define the real and complete situation of
+host ports:
+
+- closed
+- opened
+- filtered (no reply)
+- firewalled (firewall reply)
+
+The patch is below.
+
+    How does Scanlogd work against this new type scans? Uhm, it still
+thinks that they are valid packets and it doesn't give the configuration
+options to alert for valid or invalid SYN packets.
+
+
+--[ 2 - Come As You Are
+
+    Ok, so packet filters, even the beautiful OpenBSD 3.2 PF, will have to
+calculate the checksum for every packet?  No, to avoid reply spotting they
+could check the checksum only for packets they want to reply. However it should
+be introduced an option to spot broken checksum packets and drop them.
+
+    Some tools that let you alter packets and permit MiM exist, like
+ettercap, and let your host send packets to the right box and after
+logging/altering forward them to the real destination.
+
+How could we spot the banner trick ?
+# echo "SSH-1.99" > /tmp/banner
+# hping -S -c 1 -p 22 -E /tmp/banner -d 9 -b mybox 
+If you receive a SYN+ACK you can start swearing...
+
+    Note that depends on how the MiM attack is developed. For example
+DSniff check TCP checksum because it works in proxed mode, while
+ettercap, that uses a non-proxed method, doesn't. Generally if you don't
+add such a sanity check in your tool you could be discovered.
+
+    Is this check always needed? No, it's needed if you want to alter a
+packet or you want to reply to a received packet. So if your tool simply
+sniff packets without sending/modifying them you're safe.
+
+    Ok, but if I want to safely reply-to/modify packets what is the
+solution? You have 2 solutions:
+
+1) check the checksum for every packet and work only if correct without
+   dropping it in any case; modify/reply-to using a valid checksum.
+2) using Incremental Updating of the Internet Checksum [RFC1141] for
+   packets that needs to be modified; checking the checksum for packets you
+   want to reply 
+
+    Note that incremental updating will keep a checksum broken if it was
+broken and correct if it was correct and it's really faster than
+calculating it from scratch.
+
+    Curiosity: TCP checksum of a source route packets is invalid while it's
+in flight, because it is based on the final destination IP address, which is
+altered as the source route is followed (at the destination, it will be
+correct).
+
+    Most default IDS configurations will alert about bad checksumming traffic
+but never log those packets, so the admin couldn't check the data part and what
+was going on. Generally it's possible to create a covert shell with a bad cksum
+tunnel on a r00t compromised box and connect to it without being detected.
+
+    Another type of problem could born if the code of a NAT-box/load balancer
+calculate che checksum from scratch. In this case we could bypass an IDS if
+it's placed between our box and this dumb device.
+Check this interesting example:
+                
+www.oracle.com:80
+                        
+Evil --[badSYN]--> Router --[badSYN]--> Load_Balancer --[SYN]--> WebServer 
+				|			  |
+			      NIDS1			NIDS2
+
+NIDS1 will see a TCP SYN with invalid checksum while NIDS2, if deployed, will
+see a valid and modifyed SYN. So the webserver will reply to us with a SYN+ACK,
+letting us talk with it while causing a lot of doubts to NIDS1.
+What would you think if you were the security manager and you'll find such
+different results on NIDS1 and NIDS2 ?
+
+    The solution is always Incremental Updating [RFC1141].
+
+
+--[ 3 - You Know You're Right
+
+awgn (31337 H4X0R)
+raptor & nobody (LSD project)
+batmaNAGA & ALORobin (ettercap authors)
+JWK (OpenBSD addicted)
+Daniel Hartmeier (Mr.Infinite Patience; OpenBSD PF main coder) 
+antirez (Hping author)
+Fyodor (Nmap author)
+Ed3f (15b27bed5e11fc0550d7923176dbaf81)
+
+
+--[ 4 - Drain You
+
+[1] Hping	--->	http://www.hping.org
+[2] Nmap	--->	http://www.insecure.org/nmap
+[3] Scanlogd	--->	http://www.openwall.com/scanlogd                        
+[4] OpenBSD	--->	http://www.openbsd.org
+[5] OpenBSD PF	--->	http://www.benzedrine.cx/pf.html
+[6] Ettercap    --->	http://ettercap.sourceforge.net
+[7] DSniff      --->	http://monkey.org/~dugsong/dsniff                       
+[8] RFC1141     --->	http://www.ietf.org/rfc/rfc1141.txt
+
+
+--[ 5 - Big Long Now
+
+|=[ EOF ]=---------------------------------------------------------------=|

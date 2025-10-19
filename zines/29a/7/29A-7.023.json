@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "PE Infection Tutorial for Beginner",
+  "authors": "LiTlLe VxW",
+  "date": "October 2002",
+  "historical_context": "This article reflects the early 2000s hacker culture, focusing on the creation of Windows viruses and the technical aspects of the PE file format.",
+  "target_audience": "Aspiring virus coders, security researchers, and those interested in malware development.",
+  "short_summary": "This tutorial provides a comprehensive guide for beginners on how to create a WIN32 virus, covering essential topics such as PE file format, accessing WIN32 APIs, and coding techniques. It emphasizes the importance of understanding the underlying structure of executable files and the ethical implications of virus creation.",
+  "summary": "In this tutorial, LiTlLe VxW introduces readers to the world of WIN32 virus coding, starting with the fundamental question of motivation behind creating a virus. The article outlines the necessary tools and knowledge required, including assembly language, hex editors, and virus coding resources. It delves into the PE file format, explaining its structure and how it differs from older executable formats. The author provides detailed insights into various infection methods, such as overwriting and non-overwriting viruses, and discusses the importance of understanding the WIN32 API for effective virus development.\n\nThe tutorial also covers practical coding techniques, including how to manipulate the code section to make it writable and how to use delta offsets for addressing. Additionally, it emphasizes the significance of ethical considerations in virus creation, urging readers to avoid destructive intentions. Overall, this article serves as both a technical guide and a cautionary tale for those venturing into the realm of virus coding, highlighting the balance between technical prowess and ethical responsibility."
+}

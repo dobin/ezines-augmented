@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x0b of 0x14",
+  "title": "Advanced Antiforensics : SELF",
+  "authors": "Pluf & Ripe",
+  "date": "",
+  "short_summary": "This article introduces the 'shellcode ELF loader', a sophisticated post-exploitation technique that allows the execution of binaries on a remote machine without leaving traces on the disk. It discusses the design and implementation of the loader, its components, and the concept of 'userland execve'.",
+  "summary": "The article presents a novel approach to post-exploitation techniques in the realm of computer security, focusing on the 'shellcode ELF loader' which enables the execution of ELF binaries on compromised systems without relying on traditional disk storage methods. This method circumvents the limitations imposed by modern protection systems that restrict access to the syscall execve, allowing attackers to execute binaries directly from memory or over a network socket. The authors detail the design of the loader, which consists of three main components: the lxobject, the builder, and the jumper, each serving a specific function in the execution process.\n\nThe lxobject is a self-loadable and auto-executable object that replaces the original guest process with a new binary. The builder assembles the lxobject and sends it to the target machine, while the jumper activates the incoming lxobject. The article also introduces the concept of 'multi-execution', which allows for repeated execution of binaries without the need to rebuild the lxobject, thus minimizing forensic traces. Overall, this work highlights the ongoing cat-and-mouse game between attackers and defenders in the field of cybersecurity, emphasizing the need for advanced techniques to evade detection."
+}

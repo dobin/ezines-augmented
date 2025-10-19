@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Pusher.374 (polymorphic engine)",
+  "authors": "Darkman/29A",
+  "date": "",
+  "historical_context": "This article discusses a polymorphic COM virus, Pusher.374, which was relevant during the rise of computer viruses in the late 1980s and early 1990s. It showcases early techniques in virus development and disassembly.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article provides a detailed disassembly of the Pusher.374 virus, a polymorphic COM virus that infects files upon execution. It includes assembly code and explanations of its functionality, including its polymorphic engine.",
+  "summary": "In this article, Darkman/29A presents a comprehensive disassembly of the Pusher.374 virus, a compact 374-byte resident COM virus known for its polymorphic capabilities. The virus infects files at load and execution, utilizing an internal polymorphic engine to evade detection. The author thanks Poltergeist for providing the binary, which serves as the basis for the analysis. The article includes assembly code snippets that illustrate how the virus operates, detailing its infection mechanism and the structure of its polymorphic engine.\n\nThe disassembly reveals various components of the virus, including garbage instructions and a decryptor that generates polymorphic code. The author explains how the virus modifies its own code to avoid signature detection, making it a significant study for those interested in malware development and analysis. The technical depth of the article, along with the provided assembly code, makes it a valuable resource for security professionals and researchers looking to understand the evolution of malware techniques."
+}

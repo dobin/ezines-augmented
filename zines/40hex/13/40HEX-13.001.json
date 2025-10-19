@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 4, Issue 1, File 001",
+  "title": "40Hex Number 13",
+  "authors": "DecimatoR, Chris Menegay",
+  "date": "04-30-94",
+  "historical_context": "This article reflects the early 1990s concerns about computer viruses and their potential impact on critical systems, particularly in healthcare and aviation.",
+  "target_audience": "Hackers, security professionals, virus writers, and those interested in the ethics of software development.",
+  "short_summary": "The article discusses the ethical implications of virus writing and the responsibility of creators for the consequences of their code. It includes a debate on whether virus authors should be held accountable for the misuse of their creations.",
+  "summary": "In this thought-provoking piece, DecimatoR argues against the notion that virus writers are not responsible for the potential harm caused by their creations. He draws parallels between the responsibility of gun manufacturers and virus authors, emphasizing that while the tools themselves are not inherently harmful, the intent and consequences of their use must be considered. The author highlights the increasing reliance on computer systems in critical environments, such as hospitals, where a virus could lead to dire consequences for human life. He challenges the community to reflect on the ethical implications of their work and the potential for harm that comes with it.\n\nChris Menegay responds to these concerns by asserting the importance of freedom of information and the right to create. He argues that while he does not condone malicious use of viruses, the act of writing and sharing code should not be criminalized. The article serves as a call to action for the hacking community to engage in a deeper dialogue about the moral responsibilities that come with their skills, urging them to consider the broader implications of their work in an increasingly digital world."
+}

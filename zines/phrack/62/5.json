@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x05 of 0x10",
+  "title": "Bypassing 3rd Party Windows Buffer Overflow Protection",
+  "authors": "anonymous, Jamie Butler, anonymous",
+  "date": "Not specified",
+  "historical_context": "This article discusses techniques to bypass buffer overflow protections that were becoming common in commercial security systems during the early 2000s.",
+  "target_audience": "Hackers, security researchers, and professionals interested in buffer overflow vulnerabilities and protection mechanisms.",
+  "short_summary": "The article analyzes various techniques to bypass buffer overflow protections implemented by third-party security systems on Windows. It covers both kernel and userland hooks, highlighting their weaknesses and providing methods to evade detection.",
+  "summary": "The paper begins by outlining the limitations of commercial buffer overflow protection technologies, primarily focusing on stack backtracing as a detection method. It explains how these systems often fail to prevent buffer overflows and instead rely on detecting shellcode execution. The authors delve into kernel and userland hook evasion techniques, emphasizing that many existing systems do not adequately cover all API versions or fail to hook deeply enough into the Windows API, allowing attackers to bypass protections with relative ease. Techniques such as faking stack frames, patch table jumping, and direct syscall invocation are discussed in detail, showcasing the vulnerabilities in the design of these security measures.\n\nIn conclusion, the article asserts that most buffer overflow protection implementations provide a false sense of security, as determined attackers can exploit their flaws. The authors advocate for a more robust understanding of these vulnerabilities and suggest that security professionals should be aware of the limitations of current technologies to better defend against potential exploits."
+}

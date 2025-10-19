@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Strategic Alliances? Bring 'em on, we love 'em!",
+  "authors": "Rajaat / 29A",
+  "date": "October 1, 1997",
+  "historical_context": "This article discusses the strategic alliance between Data Fellows and the AVP development team, which was significant in the antivirus industry during the late 1990s.",
+  "target_audience": "Hackers, virus authors, security professionals, antivirus developers.",
+  "short_summary": "The article critiques the strategic alliance between Data Fellows and the AVP team, suggesting that while it may enhance antivirus capabilities, it also simplifies the task for virus authors by reducing the number of products they need to circumvent.",
+  "summary": "In this article, Rajaat discusses the implications of the strategic alliance between Data Fellows and the AVP development team, which aimed to combine their antivirus engines to create a more robust product. The author acknowledges the potential benefits of this collaboration, particularly in improving detection rates against the growing number of viruses. However, he humorously points out that the combination of two engines into one product may not be as revolutionary as claimed, as it effectively reduces the number of antivirus products that virus authors need to contend with. Rajaat suggests that this could lead to a more focused approach for virus developers, allowing them to concentrate their efforts on circumventing a single product rather than multiple ones. The article concludes with a thought-provoking idea about forming alliances among virus authors to streamline their development processes.",
+  "additional_resources": "For more information, visit: http://www.datafellows.com/news/pr/f-secure/st-alnc.htm"
+}

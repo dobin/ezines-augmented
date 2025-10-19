@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "EPO techniques under Win32",
+  "authors": "Benny / 29A",
+  "date": "1999",
+  "historical_context": "This article discusses early techniques for virus development, specifically focusing on Entry Point Obscuring (EPO) methods that were emerging in the late 1990s. It reflects the hacker culture of that era, where virus creation was seen as a form of programming art and challenge.",
+  "target_audience": "Hackers, virus developers, security researchers, and those interested in malware techniques.",
+  "short_summary": "The article introduces Entry Point Obscuring (EPO) techniques used in Win32 viruses to evade detection by heuristic scanners. It discusses various methods of implementing EPO, including code patching and polymorphic decryptors, while highlighting the challenges and advantages of each approach.",
+  "summary": "In 'EPO techniques under Win32', Benny outlines the concept of Entry Point Obscuring (EPO), a method designed to make viruses less detectable by heuristic scanners. The article explains how EPO allows a virus to remain dormant until specific conditions are met, such as the calling of certain APIs, thus complicating detection efforts. Benny emphasizes that modern viruses should incorporate EPO routines to enhance their stealth capabilities, as traditional detection methods struggle to analyze the entirety of a program's code due to their complexity. \n\nThe author provides a historical perspective on the evolution of EPO techniques, mentioning early implementations and the challenges faced by antivirus developers in adapting to these new methods. He discusses various strategies for implementing EPO, including simple jumps, polymorphic decryptors, and more sophisticated code patching techniques. Each method has its own set of advantages and drawbacks, particularly in terms of implementation complexity and detection risk. Overall, the article serves as a technical guide for aspiring virus developers, encouraging them to innovate while also acknowledging the ongoing cat-and-mouse game with antivirus technologies."
+}

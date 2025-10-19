@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Nine, Issue 55, Phile #11 of 19",
+  "title": "Stego Hasho",
+  "authors": "Conehead",
+  "date": "09.09.99",
+  "short_summary": "This article discusses the use of hash functions for ensuring message integrity, authentication, and confidentiality, while introducing a steganographic method for embedding secret messages within hash outputs.",
+  "summary": "In 'Stego Hasho', Conehead explores the multifaceted role of hash functions in cryptographic systems, emphasizing their utility in ensuring message integrity and authentication. The article outlines how hash functions can be employed to create a Message Authentication Code (MAC) by incorporating a shared secret key, thus allowing the sender and receiver to verify the authenticity of messages. The author also highlights the importance of using nonces to prevent replay attacks, ensuring that each message remains unique and secure.\n\nThe article further delves into the concept of confidentiality, proposing a method to embed secret messages within hash outputs. This steganographic approach allows for the concealment of sensitive information within seemingly innocuous data transmissions. By leveraging the properties of hash functions, the author demonstrates how to create a hidden channel for communication, while maintaining the integrity and authenticity of the messages. The practical implications of this technique are illustrated through code examples, showcasing how to implement the stego hasho method using HMAC and MD5 hash functions."
+}

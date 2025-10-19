@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 4, File 007",
+  "title": "An Introduction to Nonoverwriting Virii Part II: EXE Infectors",
+  "authors": "Dark Angel",
+  "date": "",
+  "historical_context": "This article is part of a series on virus creation, focusing on nonoverwriting EXE infectors, which were a significant topic in the early days of computer viruses.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in the mechanics of virus creation.",
+  "short_summary": "This article delves into the mechanics of creating nonoverwriting EXE infectors, explaining the structure of EXE files and providing code examples for implementation. It builds on previous discussions of COM infectors, offering insights into the complexities of EXE infections.",
+  "summary": "In this second part of the series on nonoverwriting viruses, Dark Angel provides a detailed examination of EXE infectors, which are often perceived as more complex than their COM counterparts. The article begins by outlining the structure of EXE files, emphasizing the importance of understanding the header and segment layout for successful infection. The author explains how an EXE infector can append its code to the end of an EXE file while modifying the entry point and other critical header fields to ensure the original program runs correctly after infection. Key technical concepts such as memory allocation and the manipulation of the EXE header are discussed in depth, providing readers with a solid foundation for creating their own EXE infectors. \n\nThe article includes a complete code example, demonstrating the steps necessary to implement an EXE infector. Dark Angel highlights the importance of careful manipulation of the EXE file's header and the need for safety checks to avoid memory conflicts. The author also touches on the limitations of the provided code and encourages readers to explore additional features, such as handling misnamed COM files. This piece serves as both a technical guide and a historical artifact, reflecting the hacker culture's early fascination with virus creation and the technical challenges involved."
+}

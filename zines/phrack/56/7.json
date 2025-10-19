@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0xa Issue 0x38",
+  "title": "SHARED LIBRARY CALL REDIRECTION VIA ELF PLT INFECTION",
+  "authors": "Silvio Cesare",
+  "date": "05.01.2000",
+  "short_summary": "This article presents a method for redirecting shared library calls in executables by modifying the Procedure Linkage Table (PLT) using ELF infection techniques. It offers a stealthier alternative to traditional methods like LD_PRELOAD.",
+  "summary": "The article discusses a novel technique for shared library call redirection that leverages ELF infection to modify the Procedure Linkage Table (PLT) of an executable. This method allows for the redirection of library calls without altering environment variables, making it less detectable than previous techniques. The author provides a detailed explanation of the PLT's role in dynamic linking and outlines the steps necessary to implement this redirection, including marking the text segment as writable and replacing PLT entries with addresses of new library calls. A sample implementation is provided, demonstrating how to inject code into an executable to achieve this redirection.\n\nThe article also touches on the potential for further stealth enhancements, such as infecting shared libraries directly or modifying the process image in memory. The conclusion emphasizes the advantages of this technique over traditional methods, highlighting its stealth and flexibility in manipulating shared library calls. This work is particularly relevant for security researchers and practitioners interested in malware development and dynamic linking mechanisms in Linux environments."
+}

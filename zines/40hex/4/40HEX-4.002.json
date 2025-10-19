@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 4, Phile #1 of 1",
+  "title": "The Bob Ross Virus",
+  "authors": "Dark Angel / Phalcon/Skism",
+  "date": "September 26, 1991",
+  "historical_context": "This article is a part of the early 90s hacker culture, showcasing the playful and rebellious spirit of virus creation during that era.",
+  "target_audience": "Hackers, security researchers, and those interested in computer virus history.",
+  "short_summary": "The Bob Ross Virus is a self-encrypting COM infector that spreads a humorous message every five minutes. It was created to annoy certain individuals in the tech community and serves as a playful example of early virus programming.",
+  "summary": "The Bob Ross Virus, crafted by Dark Angel of Phalcon/Skism, is a self-encrypting, non-overwriting COM infector that was designed to annoy certain figures in the tech community while spreading a light-hearted message. The virus, which has an effective length of 1125 bytes and a resident length of 672 bytes, activates on July 9th or after seven infection waves. When triggered, it goes memory resident and prints out a 'Bobism' every five minutes, allowing the victim a brief moment of silence to read the message before entering a delay loop. Notably, it does not cause any destruction to files, making it more of a prank than a malicious threat. The article includes a hex dump of the virus, providing insights into its structure and functionality, which can be compiled by those familiar with programming in assembly language. This piece reflects the playful nature of early virus creators and their desire to challenge authority figures in the tech world."
+}

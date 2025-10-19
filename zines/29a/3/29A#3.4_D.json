@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win32.REDemption.9216 virus",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1998",
+  "historical_context": "This article discusses a virus from the late 1990s, a time when Windows 95 and NT were becoming popular. It reflects the early days of malware development and the techniques used by virus authors.",
+  "target_audience": "Security professionals, malware researchers, and those interested in historical hacking techniques.",
+  "short_summary": "The article details the design and functionality of the Win32.REDemption virus, a resident appender virus that infects various executable files on Windows platforms. It highlights its unique features, including a compression algorithm and a payload that alters infected files' icons.",
+  "summary": "The Win32.REDemption virus, crafted by Jacky Qwerty, is a sophisticated resident appender virus targeting Windows executable files. It operates by modifying the MZ header of infected files to include its own code, allowing it to spread without increasing the file size. This is achieved through a custom compression algorithm known as JQCODING, which compresses the virus's payload while maintaining the original file's integrity. The virus is designed to remain hidden and continuously search for new targets to infect in the background, showcasing a level of stealth that was advanced for its time.\n\nOn October 29th, the virus executes its payload, replacing the icons of infected programs with a 29A logo and changing the desktop wallpaper to match. The article serves as both a technical guide and a cautionary tale about the evolving landscape of computer security, emphasizing the need for vigilance against such threats. The source code is provided for educational purposes, illustrating the techniques used in virus development and the importance of understanding malware behavior for effective defense strategies."
+}

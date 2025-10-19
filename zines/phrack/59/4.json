@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3b, Phile #0x04 of 0x12",
+  "title": "Handling Interrupt Descriptor Table for fun and profit",
+  "authors": "kad, <kadamyse@altern.org>",
+  "date": "Not specified",
+  "historical_context": "This article discusses techniques for modifying the Interrupt Descriptor Table (IDT) on Linux/x86, a topic relevant to kernel hacking and security.",
+  "target_audience": "Hackers, security researchers, kernel developers.",
+  "short_summary": "The article explores methods to manipulate the Interrupt Descriptor Table (IDT) in Linux, demonstrating how to hook interrupts and system calls to create backdoors and other functionalities.",
+  "summary": "The article begins with an introduction to the Intel CPU's modes and the significance of the protected mode in modern operating systems. It explains the structure and purpose of the Interrupt Descriptor Table (IDT), detailing how interrupts and exceptions are managed in Linux. The author provides a comprehensive overview of how to hook interrupts and system calls, illustrating these techniques with practical examples. The article emphasizes the potential for both fun and profit through the manipulation of the IDT, including creating backdoors that grant root access to processes. Additionally, it introduces a tool called CheckIDT, which allows users to examine and manipulate the IDT from userland, enhancing the ability to test and develop kernel modules without frequent reboots. The article concludes with references and acknowledgments to contributors in the field of kernel hacking."
+}

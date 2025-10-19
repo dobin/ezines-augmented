@@ -1,0 +1,14 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Polymorphism and Grammars",
+  "authors": "Qozah",
+  "date": "1999",
+  "historical_context": "This article was written during a time when polymorphic viruses were becoming a significant concern in computer security, highlighting the ongoing cat-and-mouse game between virus creators and antivirus developers.",
+  "target_audience": "Security professionals, malware researchers, and advanced hackers interested in virus development techniques.",
+  "short_summary": "This article delves into the concepts of polymorphism and formal grammars, explaining how polymorphic engines generate virus code and the challenges of detecting such code using automata theory. It discusses the limitations of current polymorphic techniques and suggests that complete undetectability may be impossible.",
+  "summary": "In 'Polymorphism and Grammars', Qozah provides a technical exploration of polymorphism in the context of virus creation, emphasizing the relationship between formal grammars and the generation of polymorphic code. The article begins by defining essential concepts such as alphabets, words, and grammars, before illustrating how a polymorphic engine can be modeled as a grammar that generates a specific set of instructions. Qozah explains that while polymorphic engines can obfuscate their code, they remain vulnerable to detection through finite automata, which can recognize the patterns inherent in the generated code. The author argues that despite the complexity of the x86 instruction set, the fundamental nature of polymorphism makes it detectable, leading to the conclusion that achieving complete undetectability is a significant challenge due to the constraints of grammar and automaton theory. The article also hints at alternative methods, such as mixing legitimate and malicious code, but ultimately suggests that the quest for undetectable polymorphic engines may be a futile endeavor.",
+  "appendices": {
+    "A": "Non-regular grammars are discussed, indicating that while they may offer some complexity, they can still be detected by advanced computational models.",
+    "B": "The process of converting a production into an automaton is outlined, providing practical insights into how grammars can be analyzed for detection purposes."
+  }
+}

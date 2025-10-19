@@ -1,0 +1,37 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #6 of 11",
+      "title": "Tiny Lame Poly Engine V2.0",
+      "authors": "Dark Cobra",
+      "date": "Not specified",
+      "historical_context": "This article reflects the early experimentation with polymorphic engines in the 1990s, showcasing the creativity and technical prowess of underground programmers.",
+      "target_audience": "Hackers, malware developers, and security researchers interested in polymorphic techniques.",
+      "short_summary": "The Tiny Lame Poly Engine V2.0 is a compact 48-byte polymorphic engine designed for educational purposes rather than practical use. It demonstrates basic encryption techniques.",
+      "summary": "In this article, Dark Cobra presents the Tiny Lame Poly Engine V2.0, a minimalistic polymorphic engine that is only 48 bytes in size. The engine is not intended for practical applications but serves as an interesting example of how to create a small and efficient code obfuscation tool. The author acknowledges contributions from peers, particularly Darkman, who provided optimization tips that helped reduce the engine's size. The article includes assembly code that outlines the engine's functionality, which primarily revolves around generating a decryptor for encrypted code.",
+      "code_snippet": "EntryPoint:\n;    mov di, offset EntryPoint\n;    db 11 dup (90h)\n; The engine generates a decryptor of the following (general) form:\n; mov r1, code_begin    b8+r1 code_begin        (1)\n; crypt:\n; xor [r1], xor_key     80 01110r1 00           (2)\n; inc r1               40+r1                   (3)\n; cmp r1, code_end      81 01111r1 code_end     (4)\n; jnz crypt             75 crypt - $           (5)"
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #7 of 11",
+      "title": "Fucking Small Engine",
+      "authors": "Rajaat / 29A",
+      "date": "29A",
+      "historical_context": "This article showcases the evolution of polymorphic engines, highlighting the techniques used to evade detection by antivirus software prevalent in the early 1990s.",
+      "target_audience": "Malware developers, security researchers, and enthusiasts of reverse engineering.",
+      "short_summary": "The Fucking Small Engine is a polymorphic engine designed to encrypt code using various operations, making it difficult to detect by traditional antivirus methods.",
+      "summary": "Rajaat's Fucking Small Engine (FSE) is a polymorphic engine that employs a variety of operations to encrypt code, making it challenging for antivirus software to detect. The engine is designed to demonstrate how to defeat older detection techniques, particularly those relying on static analysis. The article details the assembly code for the engine, which utilizes operations such as XOR, ADD, and ROL to obfuscate the original code. The author emphasizes the importance of randomness in encryption and the need for a diverse set of operations to enhance the engine's effectiveness against detection mechanisms.",
+      "code_snippet": "fse proc C\n    push bp\n    call get_offset\n    ...\n    encrypt_actions:\n    call rnd_get\n    no_more_than_8: and ax,1f\n    sub ax,8\n    cmp ax,8\n    ja no_more_than_8\n    shl ax,1\n    mov bx,ax\n    add bx,bp\n    mov ax,word ptr cs:enc_opers[bx]\n    ..."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #8 of 11",
+      "title": "Not Even Near A Polymorphic Engine",
+      "authors": "Rajaat",
+      "date": "Not specified",
+      "historical_context": "This article is part of the ongoing exploration of polymorphic engines, showcasing the author's attempts to create a more modular and effective encryption method.",
+      "target_audience": "Malware developers, security researchers, and programmers interested in code obfuscation.",
+      "short_summary": "NENAPE is a modular polymorphic engine that allows for multiple layers of encryption, though its current implementation is basic and requires improvement.",
+      "summary": "Rajaat introduces Not Even Near A Polymorphic Engine (NENAPE), a polymorphic engine designed to facilitate multiple layers of encryption. The engine is still in its early stages, with the author acknowledging that the current encryption method is rudimentary. The article outlines the calling parameters and the structure of the engine, emphasizing its modularity and the potential for future enhancements. The author expresses a commitment to improving the random opcode generator and the overall effectiveness of the engine, making it a work in progress that reflects the evolving nature of malware development.",
+      "code_snippet": "nae_poly proc near\n    push si cx\n    lea si,cryptor\n    mov [si+(crypt_length-cryptor)],cx\n    in al,40h\n    mov [si+(crypt_key-cryptor)],al\n    ..."
+    }
+  ]
+}

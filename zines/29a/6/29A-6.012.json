@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "UNIX SH and BASH shell viruses",
+  "authors": "Gobleen Warrior//SMF 1901",
+  "date": "Not specified",
+  "historical_context": "This article discusses the creation and implications of shell viruses in UNIX systems, reflecting the hacker culture of the late 1990s and early 2000s.",
+  "target_audience": "Security researchers, UNIX system administrators, and those interested in malware development.",
+  "short_summary": "The article provides a comprehensive overview of UNIX shell viruses, detailing their structure, infection techniques, and potential impact on systems. It includes example code for creating simple shell viruses.",
+  "summary": "In this article, Gobleen Warrior explores the world of UNIX shell viruses, focusing on the SH and BASH shells. The author begins with a brief introduction to shell scripting, explaining its significance in UNIX environments. The article outlines various infection techniques, including overwriting, prepending, postpending, and companion viruses, each with its own advantages and disadvantages. The author emphasizes the importance of detecting potential victims and discusses methods for searching through directories to find suitable targets for infection.\n\nThe article also delves into the concept of polymorphism in shell viruses, suggesting techniques for making viruses harder to detect. The author provides example code for creating simple shell viruses, illustrating how they can append or prepend themselves to existing scripts. Throughout the article, Gobleen Warrior maintains a conversational tone, encouraging readers to experiment with the provided code while acknowledging the risks involved. Ultimately, the article serves as both a tutorial and a cautionary tale about the potential for misuse of shell scripting in UNIX systems."
+}

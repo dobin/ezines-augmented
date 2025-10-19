@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seven, Issue Forty-Eight, File 9 of 18",
+  "title": "Information about Northern Telecom's FMT-150B/C/D",
+  "authors": "StaTiC (statik@free.org)",
+  "date": "Not specified",
+  "historical_context": "This article provides detailed technical information about the FMT-150B/C/D fiber optic multiplexer, a critical component in telecommunications during the late 20th century.",
+  "target_audience": "Telecommunications engineers, security professionals, and hackers interested in telecommunications systems.",
+  "short_summary": "This article expands on previous work regarding the FMT-150B/C/D multiplexer, detailing its configuration, alarm systems, and providing a Procomm script for automation. It serves as a practical guide for engineers working with this equipment.",
+  "summary": "In this article, StaTiC delves into the intricacies of the Northern Telecom FMT-150B/C/D fiber optic multiplexer, offering insights that build upon earlier discussions in Phrack. The piece includes detailed instructions for connecting the FMT-150 to Rockwell OS-35 systems, as well as guidelines for integrating environmental alarms. The author emphasizes the importance of proper configuration and certification processes to ensure reliable operation of the multiplexer in telecommunications networks.\n\nAdditionally, the article features a Procomm script designed to automate the configuration of the FMT-150, streamlining the process for technicians. This script is compatible with the certification requirements for the FMT-150's Maintenance Control Units. The article also includes a glossary of technical terms relevant to the FMT-150, making it a valuable resource for both seasoned professionals and those new to the field of telecommunications."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0xa Issue 0x38, Phile #1 of 11",
+  "title": "Phrack Magazine Extraction Utility",
+  "authors": "Phrack Staff, sirsyko",
+  "date": "05.01.2000",
+  "historical_context": "This article discusses a utility designed to extract code from Phrack Magazine articles, reflecting the ongoing need for tools that facilitate the sharing and preservation of hacker culture.",
+  "target_audience": "Hackers, security researchers, software developers",
+  "short_summary": "The Phrack Magazine Extraction Utility allows users to extract source code from Phrack articles while maintaining a clean ASCII format. It includes detailed instructions on usage, compilation, and CRC verification.",
+  "summary": "The Phrack Magazine Extraction Utility is a tool that simplifies the extraction of code snippets from articles published in Phrack Magazine. The utility is designed to handle specially tagged files, where code is enclosed between <++> and <--> markers. This allows users to easily extract and organize code into a hierarchical directory structure. The article provides a comprehensive guide on how to compile and use the utility, including examples of how to generate CRC32 checksums for file verification. The utility is written in C and is compatible with various Unix-like systems, showcasing the practical application of programming skills in the hacker community.\n\nIn addition to the C implementation, the article also includes alternative extraction scripts written in Perl, Awk, and shell script, demonstrating the versatility of the extraction process across different programming environments. Each script is tailored to handle the extraction in its own way, providing users with options based on their preferred scripting language. This reflects the collaborative spirit of the hacker community, where sharing tools and techniques is essential for knowledge dissemination and skill development."
+}

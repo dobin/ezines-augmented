@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x07 of 0x14",
+  "title": "Playing Games With Kernel Memory ... FreeBSD Style",
+  "authors": "Joseph Kong <jkong01@gmail.com>",
+  "date": "July 8, 2005",
+  "short_summary": "This article explores the use of the Kernel Data Access Library (libkvm) to manipulate kernel memory in FreeBSD. It covers finding system calls, understanding bytecode injection, and allocating kernel memory, providing practical examples and source code.",
+  "summary": "In 'Playing Games With Kernel Memory ... FreeBSD Style', Joseph Kong delves into the intricacies of kernel memory manipulation using the Kernel Data Access Library (libkvm) in FreeBSD. The article begins with an introduction to the kvm interface, highlighting its historical context and the scarcity of documentation. Kong provides a detailed walkthrough of finding system calls, understanding call statements, and performing bytecode injections. He emphasizes the importance of having a moderate understanding of FreeBSD kernel hacking and C programming, as the techniques discussed require a solid grasp of these concepts.\n\nThe article progresses to practical examples, including a demonstration of how to allocate kernel memory and patch existing system calls. Kong illustrates these techniques with source code snippets, guiding the reader through the process of creating a simple syscall that prints messages and modifying existing syscalls to alter their behavior. The concluding remarks reflect on the power and potential risks associated with kernel memory manipulation, encouraging readers to explore further while acknowledging the contributions of other authors in the field."
+}

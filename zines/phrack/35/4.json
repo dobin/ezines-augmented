@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Three, Issue Thirty-five, File 4 of 13",
+  "title": "TELENET/SPRINTNET'S PC PURSUIT OUTDIAL DIRECTORY",
+  "authors": "Amadeus",
+  "date": "October 25, 1991",
+  "historical_context": "This article provides a comprehensive directory of PC Pursuit outdials, which were crucial for X.25 hackers in the early 1990s. The PC Pursuit service allowed users to connect to remote modems and access various networks, making it a valuable resource for hackers.",
+  "target_audience": "Hackers, phreakers, and security professionals interested in X.25 networks and modem access.",
+  "short_summary": "The article compiles a directory of PC Pursuit outdials, detailing area codes, modem speeds, and dialing instructions. It serves as a reference for hackers looking to utilize these outdials for network access.",
+  "summary": "In this article, Amadeus presents a detailed directory of PC Pursuit outdials, essential for any hacker delving into the X.25 network scene. The directory includes area codes, city names, and corresponding modem speeds (300 bps, 1200 bps, and 2400 bps), providing a comprehensive resource for users. The author emphasizes the importance of these outdials, noting that they have remained reliable tools for hackers over the years, especially when other global outdials (GODs) become unavailable due to abuse or discovery by network administrators.\n\nThe article also includes practical advice for beginners, such as using the Racal-Vadic modem's command modes and how to access specific modems within the outdial network. Amadeus explains the significance of memorizing shorter SprintNet addresses and provides examples of how to connect to specific modems that allow unrestricted dialing. The conclusion highlights the ongoing need for accurate and complete lists of outdials, inviting contributions from the hacker community to improve the directory further."
+}

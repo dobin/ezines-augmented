@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #5 of 9",
+  "title": "Understanding the Digital Multiplexing System Part II",
+  "authors": "Control C",
+  "date": "May 1987",
+  "historical_context": "This article is part of a series that delves into the technical aspects of digital multiplexing systems, which were crucial in the evolution of telecommunications during the late 20th century.",
+  "target_audience": "Telecommunications engineers, security professionals, and hackers interested in telecommunications infrastructure.",
+  "short_summary": "This article provides an in-depth examination of the Digital Multiplexing System (DMS), focusing on its components, signaling methods, and applications in telecommunications. It covers Common Channel Interoffice Signaling (CCIS) and its various implementations, including CCIS No. 6 and No. 7, as well as features like Equal Access and Mechanized Calling Card Service.",
+  "summary": "In this comprehensive exploration of the Digital Multiplexing System (DMS), the author, Control C, details the evolution and functionality of DMS switches introduced in 1979. The article emphasizes the significance of Common Channel Interoffice Signaling (CCIS), particularly CCIS No. 6 and No. 7, which facilitate reliable data signaling links between network components. The author explains how these signaling methods enhance telecommunications by allowing for efficient call routing and management, including features such as Automatic Calling Card Service and Enhanced INWATS.\n\nThe article also discusses the Equal Access feature, which enables interLATA carriers to connect seamlessly within Local Access and Transport Areas (LATAs). Additionally, it highlights the Mechanized Calling Card Service (MCCS) and its role in reducing fraudulent activities associated with calling cards. The DMS-200 Auxiliary Operator Services System (AOSS) is introduced as a modern solution for Directory Assistance, showcasing the advancements in operator services. Overall, this article serves as a technical guide for understanding the complexities of digital multiplexing and its impact on telecommunications infrastructure."
+}

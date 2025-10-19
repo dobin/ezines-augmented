@@ -1,0 +1,1033 @@
+---[  Phrack Magazine   Volume 8, Issue 54 Dec 25th, 1998, article 05 of 12
+
+
+-------------------------[  Linux and Random Source Bleaching 
+
+
+--------[  Phunda Menta <phundie@usa.net>
+
+
+
+----[  Introduction
+
+Random numbers are often used in cryptography, but good random bits can be
+hard to come by.  Linux has two useful pseudo-devices called /dev/random and
+/dev/urandom.  Catting /dev/random yields a small pool of random bits obtained
+from internal system state.  If you cat this output to your terminal and bang
+on some keys, you'll notice that you get more random bits.  Disk drive
+accesses, IRQ timings, and key presses; all of this stuff gets hashed into
+a small pool of entropy that can be accessed directly from /dev/random.
+/dev/urandom is a stream that hashes /dev/random, and gives you that hash
+value; then it hashes the last hash and the pool forever.  Both give a
+decent source of random bits.  By default, /dev/urandom uses SHA (I know
+the source comments claim MD5, but if you look at the code, it is SHA).
+
+So /dev/urandom is a decent source of pseudo-random bits.  /dev/random
+is better, but it is of limited size.
+
+These are very useful, but what we really want is a hardware source of random
+bits. 
+
+
+----[  The Hardware Solution
+
+Most computers have sound cards these days, and a sound card is a
+great source of potential entropy. 
+
+Unplug the microphone from your soundcard and cat /dev/audio to a file.
+Sample maybe 2 or 300k of data.  Now play it back, if it sounds like static,
+you can skip ahead to cleaning up the source.  You can also try plugging a
+1/8th jack (or whatever you use for input) that has dead-end leads into
+the mic port.  Try both of these methods and find one that gives a clean
+static hiss.
+
+Chances are that on playback all you have is silence, but we want static.
+Static is random, and randomness is our goal here, so grab an FM radio and
+tune it to the high end, around 106 or 107 MHz.  Find a frequency that gives a
+good clean hiss, an analog tuner is best for this.  If you have a digital
+tuner and can't get the precision needed to tune-in a good static source then
+get the best static you can, but you might have a harder time cleaning up this
+source.  If your signal has a high-pitched tone present you can clean this out
+in a few different ways.  The easiest is to use software to strip out that
+frequency.  There is a family of programs for Linux that can help with this
+(Bio, Mammut, and Ceres).  These programs allow very good visualization of the
+signal and they also allow you to pull the signal apart and isolate different
+frequencies.  Chances are you will have a bunch of junk in the 60 Hz region,
+probably due to EMI (electro-magnetic interference) from power supplies, along
+with whatever is giving you that tone.
+
+In either case you should shield your FM receiver and the audio cable to avoid
+EMI.  You may be able you shield your soundcard, but I am skeptical of the
+worth of this.  A lot of electronics supply houses sell shielding wrap and
+preshielded cables.  You can also try aluminum foil.  I haven't had much luck
+with aluminum foil, but some people swear by it. 
+
+Once you have your source set up, jack it into your sound card and sample it
+at 44 kHz.  Run the results through the Diehard testing package (a battery of
+tests to evaluate the strength of random number generators).  Your source
+won't pass the test.
+
+Clean up your source bytes however you need to.  Strip out any 60 Hz junk with
+Mammut by using the Transform|Filter options, you can then use the
+Transform|Phase Shift option to slide the wave form back into place so that
+there is no gap at 60 Hz.  If your static source has a small amplitude, crank
+it up by increasing the hardware gain, or use Mammut to change the derivative
+or the effective gain, whichever you like.  I have found no empirical evidence
+to suggest that one way works better than the others, but, theoretically,
+changing the slope may be a Bad Thing (tm).  You may also want to use the
+Phase Shift and Threshold options to chop up your signal.  You can
+resynthesize the parts and save them back out.  Listening to these parts, and
+graphing them can help give you an idea of what other things your source
+signal is doing. 
+
+If push comes to shove, and you can't weed out all of the bias, or if you need
+a more hands-free way to clean up the source (and don't have the time or skill
+to write custom filters) you can just use a cryptographic hash.
+
+After you clean up your source, take a look at it with ceres or bio, if the
+output looks like video static with no noticeable patterns or hot/cold areas
+then you have sufficiently cleaned up the signal, now you can move on to
+bleaching the static for use as a random number stream.
+
+As a side note, if you ever want to see what a good random distribution is
+supposed to look like, you can also use output from /dev/urandom.  Use sox
+(stock with Redhat distros) to convert the output stream of /dev/urandom
+(use a type of 'ul') to AIFF for mammut, or ceres or whatever.  The
+distribution given by /dev/urandom is statistically random so it will tell us
+what to look for, but /dev/urandom (SHA, basically) is still pseudo-random
+since complete knowledge of the previous inputs allows us to calculate all
+future outputs.  This is not so with static.
+
+
+----[  Bleaching the data stream
+
+The static coming out of your FM source is skewed white noise.  We need to
+clean it up, so we bleach it.
+
+RFC1750 gives a slew of methods to clean up your source.  One of the simplest,
+effective methods of whitening a source is to XOR all the bits in a byte
+together, yielding one output bit.  These bits are then reconstructed into
+a byte and output.  This method has a few advantages.  The first big advantage
+is that you know precisely how many bytes you need to sample in order obtain a
+certain number of output bytes.  XORing is also fast, and easy to implement.
+
+Another method of deskewing data is attributed to John von Neumann in RFC1750.
+This method is called transition mapping.  Transition mapping is a relatively
+simple process.  We take two bits from our input.  If this bit sequence is 01
+or 10 we output a 0 or a 1, respectively. The sequences 00 and 11 are
+discarded.  This method completely deskews a stream of data at the expense
+of needing an unknown number of input bits.  Transition mapping is also a
+very fast process, and on a lightly skewed input transition mapping can yield
+more output bits than XOR.
+
+Both XOR and transition mapping are fast processes that are good enough to
+deskew a set of bits such that they will pass the Diehard suite of tests,
+if the input is suitably clean and random.  If the input is somehow correlated,
+you will have a harder time getting it to pass Diehard.  I have found that
+correlated sources can be cleaned up by XORing the output of an XOR
+distillation with the output of a transition mapped distillation.
+
+Slower constructions can be created out of cryptographic hash functions,
+but may be trusted more by the paranoid.  Hash functions are also recommended
+if an attacker has the means to somehow affect your random source.  If you
+are worried about this attack, a good way to solve it is with appeal to
+/dev/random.  Use a block cipher such as 3DES to encrypt your random
+source with a key and initialization vector obtained from /dev/random.  If an
+attacker can bias your source in a predictable way, he still has no idea
+what bytes you may be using for your actual random numbers.  Skew that the
+attack may introduce into your hardware can first be cleaned with a process
+like transition mapping and then pumped through a looped hash function or a
+block cipher. 
+
+The output of a (decent) hash function or block cipher will pass the
+Diehard tests. 
+
+In a heavily used machine, where the entropy pool used by /dev/random will be
+updated frequently, the output from the above processes can be XORed byte
+for byte with the stream from /dev/urandom.  This is a simple method to mix
+the streams together for added security.  Another method would be to hash
+N/2 bytes from /dev/urandom and N/2 bytes from your source together, where
+N is the number of bytes that your hash function will yield.
+
+All of these methods are suitable to deskew a data set, but they should not be
+used blindly.  Before putting the resulting bits to use, examine several
+samples with Diehard and graphic or spectral tests.
+
+I have included code to do XOR, transition mapping along with hashing
+mechanisms..  I have plenty of code to do other hash and block cipher based
+stuff too, but I did not include that here because the code is not
+self-contained (it needs some crypto libs).
+
+If you want to contact me about the code or if you have some comments or
+suggestions, I can be reached at phundie@usa.net.
+
+
+----[  References and Related stuff:
+
+RFC1750 Randomness Recommendations for Security
+	http://www.kobira.co.jp/document/rfc/RFC1750.txt
+
+Diehard Test Suite
+	http://stat.fsu.edu/~geo/diehard.html
+
+Pseudo-Random Number Conditioning
+	http://www.clark.net/pub/cme/html/ranno.html
+
+Linux MIDI & Sound Applications (has links to Mammut, Bio and Ceres)
+	http://www.bright.net/~dlphilp/linux_soundapps.html
+
+----[  The code
+
+
+<++> bleach/Makefile
+all:
+	gcc -w -c md5/md5.c
+	gcc -c sha/shs.c
+	gcc -o sha_distill sha_distill.c shs.o 
+	gcc -o md5_distill md5_distill.c md5.o
+	gcc -o xor_distill xor_distill.c
+	gcc -o transmap transmap.c
+<-->
+
+<++> bleach/md5/md5.c
+/*
+ ***********************************************************************
+ ** md5.c -- the source code for MD5 routines                         **
+ ** RSA Data Security, Inc. MD5 Message-Digest Algorithm              **
+ ** Created: 2/17/90 RLR                                              **
+ ** Revised: 1/91 SRD,AJ,BSK,JT Reference C ver., 7/10 constant corr. **
+ ***********************************************************************
+ */
+
+/*
+ ***********************************************************************
+ ** Copyright (C) 1990, RSA Data Security, Inc. All rights reserved.  **
+ **                                                                   **
+ ** License to copy and use this software is granted provided that    **
+ ** it is identified as the "RSA Data Security, Inc. MD5 Message-     **
+ ** Digest Algorithm" in all material mentioning or referencing this  **
+ ** software or this function.                                        **
+ **                                                                   **
+ ** License is also granted to make and use derivative works          **
+ ** provided that such works are identified as "derived from the RSA  **
+ ** Data Security, Inc. MD5 Message-Digest Algorithm" in all          **
+ ** material mentioning or referencing the derived work.              **
+ **                                                                   **
+ ** RSA Data Security, Inc. makes no representations concerning       **
+ ** either the merchantability of this software or the suitability    **
+ ** of this software for any particular purpose.  It is provided "as  **
+ ** is" without express or implied warranty of any kind.              **
+ **                                                                   **
+ ** These notices must be retained in any copies of any part of this  **
+ ** documentation and/or software.                                    **
+ ***********************************************************************
+ */
+
+#include "md5.h"
+
+/*
+ ***********************************************************************
+ **  Message-digest routines:                                         **
+ **  To form the message digest for a message M                       **
+ **    (1) Initialize a context buffer mdContext using MD5Init        **
+ **    (2) Call MD5Update on mdContext and M                          **
+ **    (3) Call MD5Final on mdContext                                 **
+ **  The message digest is now in mdContext->digest[0...15]           **
+ ***********************************************************************
+ */
+
+/* forward declaration */
+static void Transform ();
+
+static unsigned char PADDING[64] = {
+  0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+/* F, G, H and I are basic MD5 functions */
+#define F(x, y, z) (((x) & (y)) | ((~x) & (z)))
+#define G(x, y, z) (((x) & (z)) | ((y) & (~z)))
+#define H(x, y, z) ((x) ^ (y) ^ (z))
+#define I(x, y, z) ((y) ^ ((x) | (~z)))
+
+/* ROTATE_LEFT rotates x left n bits */
+#define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
+
+/* FF, GG, HH, and II transformations for rounds 1, 2, 3, and 4 */
+/* Rotation is separate from addition to prevent recomputation */
+#define FF(a, b, c, d, x, s, ac) \
+  {(a) += F ((b), (c), (d)) + (x) + (UINT4)(ac); \
+   (a) = ROTATE_LEFT ((a), (s)); \
+   (a) += (b); \
+  }
+#define GG(a, b, c, d, x, s, ac) \
+  {(a) += G ((b), (c), (d)) + (x) + (UINT4)(ac); \
+   (a) = ROTATE_LEFT ((a), (s)); \
+   (a) += (b); \
+  }
+#define HH(a, b, c, d, x, s, ac) \
+  {(a) += H ((b), (c), (d)) + (x) + (UINT4)(ac); \
+   (a) = ROTATE_LEFT ((a), (s)); \
+   (a) += (b); \
+  }
+#define II(a, b, c, d, x, s, ac) \
+  {(a) += I ((b), (c), (d)) + (x) + (UINT4)(ac); \
+   (a) = ROTATE_LEFT ((a), (s)); \
+   (a) += (b); \
+  }
+
+/* The routine MD5Init initializes the message-digest context
+   mdContext. All fields are set to zero.
+ */
+void MD5Init (mdContext)
+MD5_CTX *mdContext;
+{
+  mdContext->i[0] = mdContext->i[1] = (UINT4)0;
+
+  /* Load magic initialization constants.
+   */
+  mdContext->buf[0] = (UINT4)0x67452301;
+  mdContext->buf[1] = (UINT4)0xefcdab89;
+  mdContext->buf[2] = (UINT4)0x98badcfe;
+  mdContext->buf[3] = (UINT4)0x10325476;
+}
+
+/* The routine MD5Update updates the message-digest context to
+   account for the presence of each of the characters inBuf[0..inLen-1]
+   in the message whose digest is being computed.
+ */
+void MD5Update (mdContext, inBuf, inLen)
+MD5_CTX *mdContext;
+unsigned char *inBuf;
+unsigned int inLen;
+{
+  UINT4 in[16];
+  int mdi;
+  unsigned int i, ii;
+
+  /* compute number of bytes mod 64 */
+  mdi = (int)((mdContext->i[0] >> 3) & 0x3F);
+
+  /* update number of bits */
+  if ((mdContext->i[0] + ((UINT4)inLen << 3)) < mdContext->i[0])
+    mdContext->i[1]++;
+  mdContext->i[0] += ((UINT4)inLen << 3);
+  mdContext->i[1] += ((UINT4)inLen >> 29);
+
+  while (inLen--) {
+    /* add new character to buffer, increment mdi */
+    mdContext->in[mdi++] = *inBuf++;
+
+    /* transform if necessary */
+    if (mdi == 0x40) {
+      for (i = 0, ii = 0; i < 16; i++, ii += 4)
+        in[i] = (((UINT4)mdContext->in[ii+3]) << 24) |
+                (((UINT4)mdContext->in[ii+2]) << 16) |
+                (((UINT4)mdContext->in[ii+1]) << 8) |
+                ((UINT4)mdContext->in[ii]);
+      Transform (mdContext->buf, in);
+      mdi = 0;
+    }
+  }
+}
+
+/* The routine MD5Final terminates the message-digest computation and
+   ends with the desired message digest in mdContext->digest[0...15].
+ */
+void MD5Final (mdContext)
+MD5_CTX *mdContext;
+{
+  UINT4 in[16];
+  int mdi;
+  unsigned int i, ii;
+  unsigned int padLen;
+
+  /* save number of bits */
+  in[14] = mdContext->i[0];
+  in[15] = mdContext->i[1];
+
+  /* compute number of bytes mod 64 */
+  mdi = (int)((mdContext->i[0] >> 3) & 0x3F);
+
+  /* pad out to 56 mod 64 */
+  padLen = (mdi < 56) ? (56 - mdi) : (120 - mdi);
+  MD5Update (mdContext, PADDING, padLen);
+
+  /* append length in bits and transform */
+  for (i = 0, ii = 0; i < 14; i++, ii += 4)
+    in[i] = (((UINT4)mdContext->in[ii+3]) << 24) |
+            (((UINT4)mdContext->in[ii+2]) << 16) |
+            (((UINT4)mdContext->in[ii+1]) << 8) |
+            ((UINT4)mdContext->in[ii]);
+  Transform (mdContext->buf, in);
+
+  /* store buffer in digest */
+  for (i = 0, ii = 0; i < 4; i++, ii += 4) {
+    mdContext->digest[ii] = (unsigned char)(mdContext->buf[i] & 0xFF);
+    mdContext->digest[ii+1] =
+      (unsigned char)((mdContext->buf[i] >> 8) & 0xFF);
+    mdContext->digest[ii+2] =
+      (unsigned char)((mdContext->buf[i] >> 16) & 0xFF);
+    mdContext->digest[ii+3] =
+      (unsigned char)((mdContext->buf[i] >> 24) & 0xFF);
+  }
+}
+
+/* Basic MD5 step. Transforms buf based on in.
+ */
+static void Transform (buf, in)
+UINT4 *buf;
+UINT4 *in;
+{
+  UINT4 a = buf[0], b = buf[1], c = buf[2], d = buf[3];
+
+  /* Round 1 */
+#define S11 7
+#define S12 12
+#define S13 17
+#define S14 22
+  FF ( a, b, c, d, in[ 0], S11, 3614090360); /* 1 */
+  FF ( d, a, b, c, in[ 1], S12, 3905402710); /* 2 */
+  FF ( c, d, a, b, in[ 2], S13,  606105819); /* 3 */
+  FF ( b, c, d, a, in[ 3], S14, 3250441966); /* 4 */
+  FF ( a, b, c, d, in[ 4], S11, 4118548399); /* 5 */
+  FF ( d, a, b, c, in[ 5], S12, 1200080426); /* 6 */
+  FF ( c, d, a, b, in[ 6], S13, 2821735955); /* 7 */
+  FF ( b, c, d, a, in[ 7], S14, 4249261313); /* 8 */
+  FF ( a, b, c, d, in[ 8], S11, 1770035416); /* 9 */
+  FF ( d, a, b, c, in[ 9], S12, 2336552879); /* 10 */
+  FF ( c, d, a, b, in[10], S13, 4294925233); /* 11 */
+  FF ( b, c, d, a, in[11], S14, 2304563134); /* 12 */
+  FF ( a, b, c, d, in[12], S11, 1804603682); /* 13 */
+  FF ( d, a, b, c, in[13], S12, 4254626195); /* 14 */
+  FF ( c, d, a, b, in[14], S13, 2792965006); /* 15 */
+  FF ( b, c, d, a, in[15], S14, 1236535329); /* 16 */
+
+  /* Round 2 */
+#define S21 5
+#define S22 9
+#define S23 14
+#define S24 20
+  GG ( a, b, c, d, in[ 1], S21, 4129170786); /* 17 */
+  GG ( d, a, b, c, in[ 6], S22, 3225465664); /* 18 */
+  GG ( c, d, a, b, in[11], S23,  643717713); /* 19 */
+  GG ( b, c, d, a, in[ 0], S24, 3921069994); /* 20 */
+  GG ( a, b, c, d, in[ 5], S21, 3593408605); /* 21 */
+  GG ( d, a, b, c, in[10], S22,   38016083); /* 22 */
+  GG ( c, d, a, b, in[15], S23, 3634488961); /* 23 */
+  GG ( b, c, d, a, in[ 4], S24, 3889429448); /* 24 */
+  GG ( a, b, c, d, in[ 9], S21,  568446438); /* 25 */
+  GG ( d, a, b, c, in[14], S22, 3275163606); /* 26 */
+  GG ( c, d, a, b, in[ 3], S23, 4107603335); /* 27 */
+  GG ( b, c, d, a, in[ 8], S24, 1163531501); /* 28 */
+  GG ( a, b, c, d, in[13], S21, 2850285829); /* 29 */
+  GG ( d, a, b, c, in[ 2], S22, 4243563512); /* 30 */
+  GG ( c, d, a, b, in[ 7], S23, 1735328473); /* 31 */
+  GG ( b, c, d, a, in[12], S24, 2368359562); /* 32 */
+
+  /* Round 3 */
+#define S31 4
+#define S32 11
+#define S33 16
+#define S34 23
+  HH ( a, b, c, d, in[ 5], S31, 4294588738); /* 33 */
+  HH ( d, a, b, c, in[ 8], S32, 2272392833); /* 34 */
+  HH ( c, d, a, b, in[11], S33, 1839030562); /* 35 */
+  HH ( b, c, d, a, in[14], S34, 4259657740); /* 36 */
+  HH ( a, b, c, d, in[ 1], S31, 2763975236); /* 37 */
+  HH ( d, a, b, c, in[ 4], S32, 1272893353); /* 38 */
+  HH ( c, d, a, b, in[ 7], S33, 4139469664); /* 39 */
+  HH ( b, c, d, a, in[10], S34, 3200236656); /* 40 */
+  HH ( a, b, c, d, in[13], S31,  681279174); /* 41 */
+  HH ( d, a, b, c, in[ 0], S32, 3936430074); /* 42 */
+  HH ( c, d, a, b, in[ 3], S33, 3572445317); /* 43 */
+  HH ( b, c, d, a, in[ 6], S34,   76029189); /* 44 */
+  HH ( a, b, c, d, in[ 9], S31, 3654602809); /* 45 */
+  HH ( d, a, b, c, in[12], S32, 3873151461); /* 46 */
+  HH ( c, d, a, b, in[15], S33,  530742520); /* 47 */
+  HH ( b, c, d, a, in[ 2], S34, 3299628645); /* 48 */
+
+  /* Round 4 */
+#define S41 6
+#define S42 10
+#define S43 15
+#define S44 21
+  II ( a, b, c, d, in[ 0], S41, 4096336452); /* 49 */
+  II ( d, a, b, c, in[ 7], S42, 1126891415); /* 50 */
+  II ( c, d, a, b, in[14], S43, 2878612391); /* 51 */
+  II ( b, c, d, a, in[ 5], S44, 4237533241); /* 52 */
+  II ( a, b, c, d, in[12], S41, 1700485571); /* 53 */
+  II ( d, a, b, c, in[ 3], S42, 2399980690); /* 54 */
+  II ( c, d, a, b, in[10], S43, 4293915773); /* 55 */
+  II ( b, c, d, a, in[ 1], S44, 2240044497); /* 56 */
+  II ( a, b, c, d, in[ 8], S41, 1873313359); /* 57 */
+  II ( d, a, b, c, in[15], S42, 4264355552); /* 58 */
+  II ( c, d, a, b, in[ 6], S43, 2734768916); /* 59 */
+  II ( b, c, d, a, in[13], S44, 1309151649); /* 60 */
+  II ( a, b, c, d, in[ 4], S41, 4149444226); /* 61 */
+  II ( d, a, b, c, in[11], S42, 3174756917); /* 62 */
+  II ( c, d, a, b, in[ 2], S43,  718787259); /* 63 */
+  II ( b, c, d, a, in[ 9], S44, 3951481745); /* 64 */
+
+  buf[0] += a;
+  buf[1] += b;
+  buf[2] += c;
+  buf[3] += d;
+}
+
+/*
+ ***********************************************************************
+ ** End of md5.c                                                      **
+ ******************************** (cut) ********************************
+ */
+<-->
+<++> bleach/md5/md5c.h
+/*
+ ***********************************************************************
+ ** md5.h -- header file for implementation of MD5                    **
+ ** RSA Data Security, Inc. MD5 Message-Digest Algorithm              **
+ ** Created: 2/17/90 RLR                                              **
+ ** Revised: 12/27/90 SRD,AJ,BSK,JT Reference C version               **
+ ** Revised (for MD5): RLR 4/27/91                                    **
+ **   -- G modified to have y&~z instead of y&z                       **
+ **   -- FF, GG, HH modified to add in last register done             **
+ **   -- Access pattern: round 2 works mod 5, round 3 works mod 3     **
+ **   -- distinct additive constant for each step                     **
+ **   -- round 4 added, working mod 7                                 **
+ ***********************************************************************
+ */
+
+/*
+ ***********************************************************************
+ ** Copyright (C) 1990, RSA Data Security, Inc. All rights reserved.  **
+ **                                                                   **
+ ** License to copy and use this software is granted provided that    **
+ ** it is identified as the "RSA Data Security, Inc. MD5 Message-     **
+ ** Digest Algorithm" in all material mentioning or referencing this  **
+ ** software or this function.                                        **
+ **                                                                   **
+ ** License is also granted to make and use derivative works          **
+ ** provided that such works are identified as "derived from the RSA  **
+ ** Data Security, Inc. MD5 Message-Digest Algorithm" in all          **
+ ** material mentioning or referencing the derived work.              **
+ **                                                                   **
+ ** RSA Data Security, Inc. makes no representations concerning       **
+ ** either the merchantability of this software or the suitability    **
+ ** of this software for any particular purpose.  It is provided "as  **
+ ** is" without express or implied warranty of any kind.              **
+ **                                                                   **
+ ** These notices must be retained in any copies of any part of this  **
+ ** documentation and/or software.                                    **
+ ***********************************************************************
+ */
+
+/* typedef a 32-bit type */
+typedef unsigned long int UINT4;
+
+/* Data structure for MD5 (Message-Digest) computation */
+typedef struct {
+  UINT4 i[2];                   /* number of _bits_ handled mod 2^64 */
+  UINT4 buf[4];                                    /* scratch buffer */
+  unsigned char in[64];                              /* input buffer */
+  unsigned char digest[16];     /* actual digest after MD5Final call */
+} MD5_CTX;
+
+void MD5Init ();
+void MD5Update ();
+void MD5Final ();
+
+/*
+ ***********************************************************************
+ ** End of md5.h                                                      **
+ ******************************** (cut) ********************************
+ */
+<-->
+
+<++> bleach/md5_distill.c
+#include <stdio.h>
+#include "md5/md5.h"
+
+main ()
+{
+	MD5_CTX md5Info;
+	
+	unsigned char c[16];
+
+	while (fread(c, 1,16,stdin) == 16)
+	{
+		MD5Init(&md5Info);
+		MD5Update(&md5Info,c,16);
+		MD5Final(&md5Info);
+		fwrite(md5Info.digest,1,16,stdout);
+	}
+}
+<-->
+
+<++> bleach/sha/shs.c
+/* --------------------------------- SHS.C ------------------------------- */
+
+/*
+ * NIST proposed Secure Hash Standard.
+ *
+ * Written 2 September 1992, Peter C. Gutmann.
+ * This implementation placed in the public domain.
+ *
+ * Comments to pgut1@cs.aukuni.ac.nz
+ */
+
+#include <string.h>
+#include "shs.h"
+
+/* The SHS f()-functions */
+
+#define f1(x,y,z)   ( ( x & y ) | ( ~x & z ) )		  /* Rounds  0-19 */
+#define f2(x,y,z)   ( x ^ y ^ z )			  /* Rounds 20-39 */
+#define f3(x,y,z)   ( ( x & y ) | ( x & z ) | ( y & z ) ) /* Rounds 40-59 */
+#define f4(x,y,z)   ( x ^ y ^ z )			  /* Rounds 60-79 */
+
+/* The SHS Mysterious Constants */
+
+#define K1  0x5A827999L 	/* Rounds  0-19 */
+#define K2  0x6ED9EBA1L 	/* Rounds 20-39 */
+#define K3  0x8F1BBCDCL 	/* Rounds 40-59 */
+#define K4  0xCA62C1D6L 	/* Rounds 60-79 */
+
+/* SHS initial values */
+
+#define h0init	0x67452301L
+#define h1init	0xEFCDAB89L
+#define h2init	0x98BADCFEL
+#define h3init	0x10325476L
+#define h4init	0xC3D2E1F0L
+
+/* 32-bit rotate - kludged with shifts */
+
+#define S(n,X)	((X << n) | (X >> (32 - n)))
+
+/* The initial expanding function */
+
+#define expand(count)	W [count] = W [count - 3] ^ W [count - 8] ^ W [count - 14] ^ W [count - 16]
+
+/* The four SHS sub-rounds */
+
+#define subRound1(count)    \
+	{ \
+		temp = S (5, A) + f1 (B, C, D) + E + W [count] + K1; \
+		E = D; \
+		D = C; \
+		C = S (30, B); \
+		B = A; \
+		A = temp; \
+	}
+
+#define subRound2(count)    \
+	{ \
+		temp = S (5, A) + f2 (B, C, D) + E + W [count] + K2; \
+		E = D; \
+		D = C; \
+		C = S (30, B); \
+		B = A; \
+		A = temp; \
+	}
+
+#define subRound3(count)    \
+	{ \
+		temp = S (5, A) + f3 (B, C, D) + E + W [count] + K3; \
+		E = D; \
+		D = C; \
+		C = S (30, B); \
+		B = A; \
+		A = temp; \
+	}
+
+#define subRound4(count)    \
+	{ \
+		temp = S (5, A) + f4 (B, C, D) + E + W [count] + K4; \
+		E = D; \
+		D = C; \
+		C = S (30, B); \
+		B = A; \
+		A = temp; \
+	}
+
+/* The two buffers of 5 32-bit words */
+
+LONG h0, h1, h2, h3, h4;
+LONG A, B, C, D, E;
+
+local void byteReverse OF((LONG *buffer, int byteCount));
+void shsTransform OF((SHS_INFO *shsInfo));
+
+/* Initialize the SHS values */
+
+void shsInit (shsInfo)
+	SHS_INFO *shsInfo;
+{
+	/* Set the h-vars to their initial values */
+	shsInfo->digest [0] = h0init;
+	shsInfo->digest [1] = h1init;
+	shsInfo->digest [2] = h2init;
+	shsInfo->digest [3] = h3init;
+	shsInfo->digest [4] = h4init;
+
+	/* Initialise bit count */
+	shsInfo->countLo = shsInfo->countHi = 0L;
+}
+
+/*
+ * Perform the SHS transformation.  Note that this code, like MD5, seems to
+ * break some optimizing compilers - it may be necessary to split it into
+ * sections, eg based on the four subrounds
+ */
+
+void shsTransform (shsInfo)
+	SHS_INFO *shsInfo;
+{
+	LONG W [80], temp;
+	int i;
+
+	/* Step A.	Copy the data buffer into the local work buffer */
+	for (i = 0; i < 16; i++)
+		W [i] = shsInfo->data [i];
+
+	/* Step B.	Expand the 16 words into 64 temporary data words */
+	expand (16); expand (17); expand (18); expand (19); expand (20);
+	expand (21); expand (22); expand (23); expand (24); expand (25);
+	expand (26); expand (27); expand (28); expand (29); expand (30);
+	expand (31); expand (32); expand (33); expand (34); expand (35);
+	expand (36); expand (37); expand (38); expand (39); expand (40);
+	expand (41); expand (42); expand (43); expand (44); expand (45);
+	expand (46); expand (47); expand (48); expand (49); expand (50);
+	expand (51); expand (52); expand (53); expand (54); expand (55);
+	expand (56); expand (57); expand (58); expand (59); expand (60);
+	expand (61); expand (62); expand (63); expand (64); expand (65);
+	expand (66); expand (67); expand (68); expand (69); expand (70);
+	expand (71); expand (72); expand (73); expand (74); expand (75);
+	expand (76); expand (77); expand (78); expand (79);
+
+	/* Step C.	Set up first buffer */
+	A = shsInfo->digest [0];
+	B = shsInfo->digest [1];
+	C = shsInfo->digest [2];
+	D = shsInfo->digest [3];
+	E = shsInfo->digest [4];
+
+	/* Step D.	Serious mangling, divided into four sub-rounds */
+	subRound1  (0); subRound1  (1); subRound1  (2); subRound1  (3);
+	subRound1  (4); subRound1  (5); subRound1  (6); subRound1  (7);
+	subRound1  (8); subRound1  (9); subRound1 (10); subRound1 (11);
+	subRound1 (12); subRound1 (13); subRound1 (14); subRound1 (15);
+	subRound1 (16); subRound1 (17); subRound1 (18); subRound1 (19);
+
+	subRound2 (20); subRound2 (21); subRound2 (22); subRound2 (23);
+	subRound2 (24); subRound2 (25); subRound2 (26); subRound2 (27);
+	subRound2 (28); subRound2 (29); subRound2 (30); subRound2 (31);
+	subRound2 (32); subRound2 (33); subRound2 (34); subRound2 (35);
+	subRound2 (36); subRound2 (37); subRound2 (38); subRound2 (39);
+
+	subRound3 (40); subRound3 (41); subRound3 (42); subRound3 (43);
+	subRound3 (44); subRound3 (45); subRound3 (46); subRound3 (47);
+	subRound3 (48); subRound3 (49); subRound3 (50); subRound3 (51);
+	subRound3 (52); subRound3 (53); subRound3 (54); subRound3 (55);
+	subRound3 (56); subRound3 (57); subRound3 (58); subRound3 (59);
+
+	subRound4 (60); subRound4 (61); subRound4 (62); subRound4 (63);
+	subRound4 (64); subRound4 (65); subRound4 (66); subRound4 (67);
+	subRound4 (68); subRound4 (69); subRound4 (70); subRound4 (71);
+	subRound4 (72); subRound4 (73); subRound4 (74); subRound4 (75);
+	subRound4 (76); subRound4 (77); subRound4 (78); subRound4 (79);
+
+	/* Step E.	Build message digest */
+	shsInfo->digest [0] += A;
+	shsInfo->digest [1] += B;
+	shsInfo->digest [2] += C;
+	shsInfo->digest [3] += D;
+	shsInfo->digest [4] += E;
+}
+
+local void byteReverse (buffer, byteCount)
+	LONG *buffer;
+	int byteCount;
+{
+	LONG value;
+	int count;
+
+	/*
+	 * Find out what the byte order is on this machine.
+	 * Big endian is for machines that place the most significant byte
+	 * first (eg. Sun SPARC). Little endian is for machines that place
+	 * the least significant byte first (eg. VAX).
+	 *
+	 * We figure out the byte order by stuffing a 2 byte string into a
+	 * short and examining the left byte. '@' = 0x40  and  'P' = 0x50
+	 * If the left byte is the 'high' byte, then it is 'big endian'.
+	 * If the left byte is the 'low' byte, then the machine is 'little
+	 * endian'.
+	 *
+	 *                          -- Shawn A. Clifford (sac@eng.ufl.edu)
+	 */
+
+	/*
+	 * Several bugs fixed       -- Pat Myrto (pat@rwing.uucp)
+	 */
+
+	if ((*(unsigned short *) ("@P") >> 8) == '@')
+		return;
+
+	byteCount /= sizeof (LONG);
+	for (count = 0; count < byteCount; count++) {
+		value = (buffer [count] << 16) | (buffer [count] >> 16);
+		buffer [count] = ((value & 0xFF00FF00L) >> 8) | ((value & 0x00FF00FFL) << 8);
+	}
+}
+
+/*
+ * Update SHS for a block of data.  This code assumes that the buffer size is
+ * a multiple of SHS_BLOCKSIZE bytes long, which makes the code a lot more
+ * efficient since it does away with the need to handle partial blocks
+ * between calls to shsUpdate()
+ */
+
+void shsUpdate (shsInfo, buffer, count)
+	SHS_INFO *shsInfo;
+	BYTE *buffer;
+	int count;
+{
+	/* Update bitcount */
+	if ((shsInfo->countLo + ((LONG) count << 3)) < shsInfo->countLo)
+		 shsInfo->countHi++;	/* Carry from low to high bitCount */
+	shsInfo->countLo += ((LONG) count << 3);
+	shsInfo->countHi += ((LONG) count >> 29);
+
+	/* Process data in SHS_BLOCKSIZE chunks */
+	while (count >= SHS_BLOCKSIZE) {
+		memcpy (shsInfo->data, buffer, SHS_BLOCKSIZE);
+		byteReverse (shsInfo->data, SHS_BLOCKSIZE);
+		shsTransform (shsInfo);
+		buffer += SHS_BLOCKSIZE;
+		count -= SHS_BLOCKSIZE;
+	}
+
+	/*
+	 * Handle any remaining bytes of data.
+	 * This should only happen once on the final lot of data
+	 */
+	memcpy (shsInfo->data, buffer, count);
+}
+
+void shsFinal (shsInfo)
+	SHS_INFO *shsInfo;
+{
+	int count;
+	LONG lowBitcount = shsInfo->countLo, highBitcount = shsInfo->countHi;
+
+	/* Compute number of bytes mod 64 */
+	count = (int) ((shsInfo->countLo >> 3) & 0x3F);
+
+	/*
+	 * Set the first char of padding to 0x80.
+	 * This is safe since there is always at least one byte free
+	 */
+	((BYTE *) shsInfo->data) [count++] = 0x80;
+
+	/* Pad out to 56 mod 64 */
+	if (count > 56) {
+		/* Two lots of padding:  Pad the first block to 64 bytes */
+		memset ((BYTE *) shsInfo->data + count, 0, 64 - count);
+		byteReverse (shsInfo->data, SHS_BLOCKSIZE);
+		shsTransform (shsInfo);
+
+		/* Now fill the next block with 56 bytes */
+		memset (shsInfo->data, 0, 56);
+	} else
+		/* Pad block to 56 bytes */
+		memset ((BYTE *) shsInfo->data + count, 0, 56 - count);
+	byteReverse (shsInfo->data, SHS_BLOCKSIZE);
+
+	/* Append length in bits and transform */
+	shsInfo->data [14] = highBitcount;
+	shsInfo->data [15] = lowBitcount;
+
+	shsTransform (shsInfo);
+	byteReverse (shsInfo->data, SHS_DIGESTSIZE);
+}
+<-->
+<++> bleach/sha/shs.h
+
+/* --------------------------------- SHS.H ------------------------------- */
+
+/*
+ * NIST proposed Secure Hash Standard. 
+ *
+ * Written 2 September 1992, Peter C. Gutmann.
+ * This implementation placed in the public domain. 
+ *
+ * Comments to pgut1@cs.aukuni.ac.nz 
+ */
+
+/* Useful defines/typedefs */
+
+#ifndef SHS_H
+#define SHS_H
+
+typedef unsigned char BYTE;
+typedef unsigned long LONG;
+
+/* The SHS block size and message digest sizes, in bytes */
+
+#define SHS_BLOCKSIZE	64
+#define SHS_DIGESTSIZE	20
+
+/* The structure for storing SHS info */
+
+typedef struct {
+	LONG digest [5];	/* Message digest */
+	LONG countLo, countHi;	/* 64-bit bit count */
+	LONG data [16];		/* SHS data buffer */
+} SHS_INFO;
+
+/* Turn off prototypes if requested */
+#if (defined(NOPROTO) && defined(PROTO))
+#	undef PROTO
+#endif
+
+/* Used to remove arguments in function prototypes for non-ANSI C */
+#ifdef PROTO
+#	define OF(a) a
+#else	/* !PROTO */
+#	define OF(a) ()
+#endif	/* ?PROTO */
+
+#define	local	static
+
+void shsInit OF((SHS_INFO *shsInfo));
+void shsUpdate OF((SHS_INFO *shsInfo, BYTE *buffer, int count));
+void shsFinal OF((SHS_INFO *shsInfo));
+
+#endif
+<-->
+
+<++> bleach/sha_distill.c
+#include <stdio.h>
+#include "sha/shs.h"
+
+main ()
+{
+	SHS_INFO shsInfo;
+	
+	unsigned char c[20];
+
+	while (fread(c, 1,20,stdin) == 20)
+	{
+		shsInit(&shsInfo);
+		shsUpdate(&shsInfo,c,20);
+		shsFinal(&shsInfo);
+		fwrite(&shsInfo,1,20,stdout);
+	}
+}
+<-->
+
+<++> bleach/transmap.c
+/* 
+    Implementation of von Neumann's transistion mapping scheme to de-skew
+    a series of random bits. See 5.2.2 of RFC1750 for more information.
+*/
+
+#include <stdio.h>
+char reconstruct_byte(char *byte_ary);
+main ()
+{
+	char c, b1, b2, i, j;
+	char byte[7];
+	j=0;
+	while ( !feof(stdin) )
+	{
+		fread(&c, 1,1,stdin);
+		for (i=7; i>=0; i-=2)
+		{
+			b1=((c>>i)&1); /* integer representation of bit i */
+			b2=((c>>(i-1))&1); 
+			if ( (b1==1) && (b2==0) ) /* translation of 10 */
+			{
+				byte[j]=1;
+				j++;
+			}
+			if ( (b1==0) && (b2==1) ) /* translation of 01 */
+			{
+				byte[j]=0;
+				j++;
+			}
+		}
+		if (j>7)
+		{
+			putc(reconstruct_byte(byte),stdout);
+			j=0;
+		}
+	} 
+}		
+char reconstruct_byte(char *byte_ary)
+{
+        char i;
+        char r = 0;
+        for (i=0; i<=7; i++)
+        {
+                r<<=1;
+                r|=byte_ary[i];
+        }
+        return r;
+} 
+<-->
+
+<++> bleach/xor_distill.c
+/* Distills entropy from a stream of skewed random bits by XORing
+   each bit in a byte against each other to obtain 1 output bit per
+   input byte. 8 such bits are reconstructed into a byte.
+*/
+#include <stdio.h>
+char reconstruct_byte(char *byte_ary);
+char xor_bits(char c);
+main ()
+{
+	char byte[7];
+	char c[7];
+	char i;
+	while (fread(c,1,8,stdin) == 8)
+	{
+		for (i=0; i<=7; i++)
+			byte[i]=xor_bits(c[i]);
+		putc(reconstruct_byte(byte), stdout);
+	}
+}		
+char xor_bits(char c)
+{
+	char i, f;
+	f=(c>>i)&1;
+	for (i=6; i>=0; i--)
+		f^=(c>>i)&1;
+	return f;
+}
+char reconstruct_byte(char *byte_ary)
+{
+        char i;
+        char r = 0;
+        for (i=0; i<=7; i++)
+        {
+                r<<=1;
+                r|=byte_ary[i];
+        }
+        return r;
+}
+<-->
+
+----[  Postscript file detailing empirical results
+
+<++> bleach/random.ps.gz.uue
+<-->
+
+----[  EOF

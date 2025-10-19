@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3f, Phile #0x14 of 0x14",
+  "title": "Social Penetration Testing",
+  "authors": "Pascal Cretain",
+  "date": "",
+  "historical_context": "This article reflects the hacker culture of the mid-2000s, showcasing the blend of technical prowess and social interactions within the hacking community.",
+  "target_audience": "Hackers, penetration testers, security professionals, and those interested in hacker culture.",
+  "short_summary": "The article humorously narrates a penetration tester's day, blending technical exploits with social interactions. It highlights the challenges of penetration testing while providing a satirical take on the hacker lifestyle.",
+  "summary": "In 'Social Penetration Testing', Pascal Cretain shares a day in the life of a penetration tester, illustrating the often absurd and humorous situations that arise in the field. The narrative begins with a mundane day at work, where the protagonist is tasked with conducting an external blind penetration test. Despite the lack of security measures in place, he humorously describes his attempts to exploit vulnerabilities, including a denial of service attack that brings down a client's website. This incident serves as a comedic backdrop to the serious nature of penetration testing, emphasizing the risks involved in such assessments.\n\nAs the story unfolds, the protagonist transitions from the technical realm to a social setting at a pub, where he attempts to impress women with his hacker persona. The dialogue is laced with innuendo and humor, showcasing the intersection of hacking skills and social dynamics. Cretain's writing captures the essence of hacker culture, where technical knowledge is often intertwined with personal interactions. The article serves as both a commentary on the challenges of security testing and a lighthearted exploration of the hacker lifestyle, making it a relevant read for those interested in the nuances of penetration testing and hacker culture."
+}

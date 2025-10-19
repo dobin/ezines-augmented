@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 21 of 27",
+  "title": "DataPac",
+  "authors": "Synapse 403",
+  "date": "",
+  "historical_context": "Datapac was one of the early packet-switched networks developed in the late 1970s, primarily serving Canadian businesses and government systems. Its security practices have remained largely unchanged over the years, making it a point of interest for hackers.",
+  "target_audience": "Hackers, security researchers, telecommunications enthusiasts",
+  "short_summary": "This article explores the Datapac network, detailing its origins, structure, and security vulnerabilities. It provides insights into how hackers can navigate the network and utilize its lax security for exploration and experimentation.",
+  "summary": "In addition to connection procedures, the article lists numerous dial-up ports across Canada, illustrating the accessibility of Datapac for potential hackers. The author also discusses the implications of using Datapac for covering tracks while engaging in activities on other networks, such as Sprintnet and Tymnet. The article concludes with a scan list of systems available on Datapac, providing readers with practical information to begin their exploration of this underappreciated network. Overall, this piece serves as both a historical account and a practical guide for those interested in the hacking culture surrounding early telecommunications networks."
+}

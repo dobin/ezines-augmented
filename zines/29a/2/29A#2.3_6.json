@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Win32.Cabanas.2999",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1997",
+  "historical_context": "Win32.Cabanas is recognized as the first known virus capable of infecting Portable Executable files across multiple Windows platforms, including Windows NT and Windows 95. It showcases advanced techniques for stealth and memory residency.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the evolution of computer viruses.",
+  "short_summary": "This article introduces Win32.Cabanas, the first resident virus for Win32 systems, detailing its stealth capabilities, infection methods, and technical intricacies. It highlights the virus's ability to infect PE files while remaining undetected.",
+  "summary": "The article presents Win32.Cabanas, a groundbreaking virus that operates on Win32 platforms, including Windows NT and Windows 95. It is notable for being a 'per process' memory resident virus, meaning it remains active within the memory space of the host application. The virus employs stealth techniques to avoid detection by antivirus software, such as not modifying the entry point in the PE header and using structured exception handling to thwart debugging attempts. Its infection mechanism is efficient, utilizing memory-mapped files to quickly infect executable files without noticeable delays to the user. \n\nWin32.Cabanas also demonstrates advanced techniques for API hooking, allowing it to intercept system calls to further its infection capabilities. The author emphasizes the importance of understanding these methods, as they represent a significant evolution in virus design, showcasing the potential for future malware development on the Win32 platform. The article serves as both a technical overview and a cautionary tale about the evolving landscape of computer security."
+}

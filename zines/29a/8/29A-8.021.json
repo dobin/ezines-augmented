@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "MS04-032 - Windows VDM #UD Local Privilege Escalation",
+  "authors": "aluc4rd@psycho-hazard.net",
+  "date": "October 12, 2004",
+  "historical_context": "This article discusses a vulnerability in Windows that was reported to Microsoft in March 2004 and subsequently patched in October 2004. The exploit leverages the Virtual DOS Machine (VDM) to escalate privileges.",
+  "target_audience": "Hackers, security researchers, and professionals interested in Windows vulnerabilities and exploit development.",
+  "short_summary": "The article details a local privilege escalation vulnerability in Windows VDM, allowing attackers to gain SYSTEM privileges by exploiting the interaction between 16-bit and 32-bit processes. It provides a proof-of-concept exploit and discusses the underlying mechanisms involved.",
+  "summary": "In this article, the author explores a critical vulnerability in the Windows Virtual DOS Machine (VDM) that allows for local privilege escalation. The vulnerability arises from the interaction between 16-bit DOS applications and the 32-bit Windows environment, specifically through the invalid opcode handling mechanism. By crafting a specific 16-bit binary that triggers a fault, the attacker can manipulate the control flow to execute arbitrary code in kernel mode, effectively gaining SYSTEM privileges. The author provides detailed assembly code examples and outlines the steps to exploit this vulnerability, emphasizing the importance of understanding the underlying Intel P-mode and the context switching between user and kernel modes.\n\nThe article serves as both a technical guide and a cautionary tale about the security implications of legacy support in modern operating systems. It highlights the need for security professionals to remain vigilant about such vulnerabilities, especially those that may arise from compatibility layers. The proof-of-concept code provided demonstrates the practical application of the discussed techniques, making it a valuable resource for those interested in exploit development and Windows security research."
+}

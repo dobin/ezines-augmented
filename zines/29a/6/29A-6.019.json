@@ -1,0 +1,37 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #6 of 11",
+      "title": "How to use COM (Component Object Model) in ass-embler :)",
+      "authors": "Silent Supporter",
+      "date": "11-08-01, corrected 23-09-01",
+      "historical_context": "This article reflects the early 2000s interest in low-level programming and the use of COM in malware development.",
+      "target_audience": "Assembly programmers, malware developers, security researchers.",
+      "short_summary": "The article provides a guide on using the Component Object Model (COM) in assembly language, focusing on creating shortcuts in Windows. It emphasizes the lack of documentation for assembly programmers and offers practical examples.",
+      "summary": "Silent Supporter dives into the intricacies of using the Component Object Model (COM) in assembly language, a topic often overlooked in favor of higher-level languages. The article begins with a brief introduction to COM, explaining its significance in accessing functions from other programs and its role in automation, exemplified by the Love Letter Worm. The author highlights the challenges faced by assembly programmers due to the scarcity of documentation, particularly for COM structures and interfaces. Through a detailed walkthrough, the article illustrates how to create a Windows shortcut using assembly, showcasing the necessary API calls and the underlying COM structures. The practical examples provided serve as a valuable resource for those looking to harness the power of COM in low-level programming, while also shedding light on the potential for such techniques in malware development.",
+      "additional_notes": "The article is a mix of technical guidance and personal commentary, reflecting the author's frustration with the lack of resources available for assembly programmers."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #7 of 11",
+      "title": "Infecting Compilers",
+      "authors": "Silent Supporter",
+      "date": "23-09-01",
+      "historical_context": "This article discusses the concept of infecting source code files, a technique that predates modern malware strategies.",
+      "target_audience": "Malware developers, security researchers, software engineers.",
+      "short_summary": "The article explores the idea of infecting source code files instead of executables, detailing methods to manipulate compilers and project files to spread malware.",
+      "summary": "Silent Supporter presents a novel approach to malware development by suggesting that instead of targeting executables, one could infect source code files. The article outlines how traditional methods of infection are easily detectable by antivirus software, thus proposing a more sophisticated strategy. By manipulating compilers and project files, a virus could be embedded in the source code, making it difficult for developers to notice the infection. The author discusses the potential for such infections to remain dormant until specific conditions are met, such as the compilation of the code, thereby increasing the chances of successful propagation. This concept not only highlights the creativity of malware authors but also serves as a cautionary tale for developers regarding the security of their source code and the importance of vigilance against such threats.",
+      "additional_notes": "The article reflects the author's insight into the evolving landscape of malware and the need for innovative strategies to evade detection."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #8 of 11",
+      "title": "Marketing Virus: The new age of malicious programs",
+      "authors": "Silent Supporter",
+      "date": "21-09-01",
+      "historical_context": "This article discusses the intersection of marketing strategies and malware distribution, highlighting the evolving tactics of virus writers.",
+      "target_audience": "Malware developers, marketing professionals, cybersecurity experts.",
+      "short_summary": "The article proposes a strategy for creating a 'marketing virus' that leverages legitimate software distribution channels to spread malware.",
+      "summary": "In this thought-provoking piece, Silent Supporter outlines a strategy for a 'marketing virus' that combines legitimate software distribution with malicious intent. The author describes a scenario where a virus writer creates a seemingly innocuous application, markets it aggressively, and embeds malicious features that activate after a period of time. This approach not only capitalizes on user trust but also exploits the delay in detection by antivirus software. The article emphasizes the importance of understanding user behavior and the potential for malware to blend seamlessly into legitimate software ecosystems. By leveraging marketing tactics, the author illustrates a new frontier in malware distribution that poses significant challenges for both users and security professionals. This article serves as a stark reminder of the need for vigilance in software acquisition and the ever-evolving tactics employed by malicious actors.",
+      "additional_notes": "The article reflects the author's deep understanding of both marketing and malware, providing a unique perspective on the challenges faced by the cybersecurity community."
+    }
+  ]
+}

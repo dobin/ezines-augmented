@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Candyman v1.01",
+  "authors": "T-2000 / [Immortal Riot]",
+  "date": "October - November 1998",
+  "historical_context": "This article discusses the development of a unique mirror-type virus during a time when computer viruses were becoming more prevalent and sophisticated. The late 1990s saw a surge in virus creation, with many hackers experimenting with various techniques.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in the evolution of computer viruses.",
+  "short_summary": "The article presents 'Candyman v1.01', a harmless full-mirror virus designed for DOS systems. It details the virus's capabilities, coding techniques, and its independence from other virus types, making it a unique entry in the malware landscape of the time.",
+  "summary": "In 'Candyman v1.01', T-2000 introduces a novel approach to virus creation with a focus on a full-mirror .COM and .EXE infector. Unlike its predecessors, Candyman operates independently without requiring any special file tables or structures, making it compatible across various DOS environments. The author emphasizes the harmless nature of the virus, which serves as an experimental piece rather than a destructive tool. The article also highlights the technical aspects of the virus's design, including its use of Upper Memory Blocks (UMBs) and its ability to infect files without leaving a significant footprint, showcasing the author's programming skills and understanding of DOS internals.\n\nThe coding section provides a detailed look at the assembly language used to create the virus, including memory management, infection routines, and the methods employed to disguise its presence. T-2000's commentary throughout the article reflects a hacker's mindset, blending technical prowess with a playful attitude towards the implications of virus creation. This piece serves as both a technical guide and a cultural artifact, illustrating the hacker ethos of the late 1990s while contributing to the ongoing dialogue about computer security and malware development."
+}

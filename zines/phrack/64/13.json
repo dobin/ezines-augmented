@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Blind TCP/IP hijacking is still alive",
+  "authors": "lkm <lkm@phrack.org>",
+  "date": "",
+  "historical_context": "This article discusses techniques for TCP/IP hijacking that were prevalent in the early 2000s, highlighting vulnerabilities in certain operating systems.",
+  "target_audience": "Hackers, security professionals, network engineers",
+  "short_summary": "The article presents a method for performing blind TCP/IP hijacking on vulnerable systems like Windows 2000, Windows XP, and FreeBSD 4, despite advancements in security measures. It details the prerequisites, attack methodology, and limitations of the technique.",
+  "summary": "In this article, lkm explores the feasibility of blind TCP/IP hijacking, a technique that exploits vulnerabilities in certain operating systems to take control of an existing TCP connection. The author begins by outlining the prerequisites for understanding TCP, including the significance of the Initial Sequence Number (ISN) and the IP ID. The paper details a method for identifying the client port and the sequence numbers necessary for hijacking, emphasizing that while modern systems have improved ISN randomization, certain older systems remain vulnerable due to predictable behaviors in their TCP/IP stacks.\n\nThe attack methodology is broken down into several steps: finding the client port using IP ID probing, determining the server's SND.NEXT sequence number, and finally, discovering the client's SND.NEXT. The author provides insights into the mechanics of TCP connections and the implications of ACK and SEQ number handling, illustrating how these can be manipulated to execute a hijacking. Limitations of the attack are also discussed, including the necessity for access to the client host and the potential impact of firewalls. The conclusion emphasizes that while the attack has limitations, it remains a significant threat due to the prevalence of unencrypted TCP communications."
+}

@@ -1,0 +1,34 @@
+{
+  "articles": [
+    {
+      "reference": "Volume 0x0b, Issue 0x3e, Phile #0x10 of 0x10",
+      "title": "Break, Memory",
+      "authors": "Richard Thieme",
+      "date": "",
+      "historical_context": "Explores the implications of collective memory and societal control in a futuristic context.",
+      "target_audience": "Philosophers, sociologists, futurists, hackers, and those interested in societal structures.",
+      "short_summary": "This article discusses the evolution of memory and forgetting in a future society where individuals live for centuries, leading to challenges in collective memory and societal control.",
+      "summary": "Thieme introduces the concept of the 'Hump,' a metaphor for the collective populace that is kept in a state of ignorance through controlled narratives and memory management. He discusses the societal implications of long-term memory, citing events like the Nostalgia Riots, where the elderly, with their vast memories, challenge the manufactured reality of the present. The article critiques the superficiality of modern life, where distractions and entertainment serve to keep individuals from confronting deeper truths. Ultimately, 'Break, Memory' serves as a cautionary tale about the dangers of forgetting and the power dynamics inherent in memory control."
+    },
+    {
+      "reference": "Volume 0x0b, Issue 0x3e, Phile #0x10 of 0x10",
+      "title": "The Geometry of Near",
+      "authors": "Richard Thieme",
+      "date": "",
+      "historical_context": "Reflects on the impact of technology and media on human perception and relationships.",
+      "target_audience": "Hackers, technologists, sociologists, and those interested in media studies.",
+      "short_summary": "This article critiques the superficiality of modern relationships shaped by media and technology, exploring the disconnect between reality and perception.",
+      "summary": "Thieme's writing is both a personal reflection and a broader commentary on society's relationship with technology. He argues that the allure of digital media creates a false sense of connection, while simultaneously fostering a deep-seated loneliness. The article challenges readers to reconsider their engagement with technology and the narratives they consume, urging a return to authentic human experiences. Ultimately, 'The Geometry of Near' serves as a poignant reminder of the importance of genuine connections in an increasingly mediated world."
+    },
+    {
+      "reference": "Volume 0x0b, Issue 0x3e, Phile #0x10 of 0x10",
+      "title": "The Feasibility of Anarchy in America",
+      "authors": "Anthony <ivrit@missvalley.com>",
+      "date": "",
+      "historical_context": "Discusses the concept of anarchy in the context of American society and its viability.",
+      "target_audience": "Political theorists, anarchists, and those interested in governance and societal structures.",
+      "short_summary": "This article explores the challenges and impracticalities of implementing anarchy in America, arguing that societal conditioning and dependency on government make it unfeasible.",
+      "summary": "The article critiques the romanticized notion of anarchy, suggesting that without a central authority, society would likely devolve into factionalism and conflict. Anthony posits that the American populace, accustomed to comfort and security, would struggle to adapt to a life without government oversight. He emphasizes the need for some form of organization to maintain social order, ultimately concluding that anarchy, while theoretically appealing, is impractical in a society that prioritizes individualism and self-interest over collective responsibility. 'The Feasibility of Anarchy in America' serves as a thought-provoking exploration of governance and societal dynamics."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0e, Issue 0x43, Phile #0x06 of 0x10",
+  "title": "Kernel instrumentation using kprobes",
+  "authors": "ElfMaster",
+  "date": "2010",
+  "short_summary": "This article explores the use of kprobes in the Linux kernel for debugging and modifying kernel behavior, including techniques for file hiding and disabling W^X restrictions.",
+  "summary": "In this article, ElfMaster delves into the intricacies of kprobes, a powerful debugging API in the Linux kernel that allows dynamic instrumentation of kernel routines. The author discusses the various types of probes—kprobes, jprobes, and kretprobes—and illustrates their applications through practical examples. The article emphasizes the potential for both security and anti-security applications, highlighting how kprobes can be leveraged to hide files and manipulate kernel behavior. The author also provides insights into the limitations of kprobes and suggests innovative methods for enhancing their functionality, particularly for hackers looking to exploit kernel vulnerabilities.\n\nThe article further details the implementation of kprobes, including the registration process and the handling of pre and post conditions during probe execution. ElfMaster presents code snippets to demonstrate how to register jprobes and kretprobes effectively, showcasing their utility in modifying kernel data structures and behavior. Additionally, the article addresses the challenges of modifying read-only kernel segments and provides techniques for bypassing W^X restrictions, allowing for more flexible memory management. Overall, this comprehensive guide serves as a valuable resource for security researchers and hackers interested in kernel instrumentation and rootkit development."
+}

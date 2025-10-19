@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x08 of 0x11",
+  "title": "Exploiting UMA, FreeBSD's kernel memory allocator",
+  "authors": "argp <argp@hushmail.com>, karl <karl@signedness.org>",
+  "date": "2009-05-11",
+  "historical_context": "This article discusses vulnerabilities in FreeBSD's kernel memory allocator, UMA, particularly relevant during a time when kernel protections were being introduced.",
+  "target_audience": "Security researchers, kernel developers, exploit developers, and those interested in operating system security.",
+  "short_summary": "The article explores vulnerabilities in FreeBSD's UMA memory allocator, detailing a method for exploiting these vulnerabilities to achieve arbitrary code execution. It provides a comprehensive overview of the UMA architecture and presents a step-by-step exploitation methodology.",
+  "summary": "This paper delves into the Universal Memory Allocator (UMA) used in FreeBSD, highlighting its structure and the potential vulnerabilities that can be exploited. The authors provide a detailed examination of how memory is allocated and managed within the kernel, particularly focusing on slab allocation and the implications of buffer overflows. They present a sample vulnerability that allows for exploitation through a crafted system call, demonstrating how an attacker can manipulate memory allocation to gain control over kernel execution flow. The methodology outlined includes steps to consume free items in a targeted zone, allocate new items to trigger an overflow, and overwrite critical function pointers to redirect execution to malicious code. The paper concludes with a discussion on maintaining system stability post-exploitation, emphasizing the importance of understanding kernel memory management for effective exploitation.",
+  "code": "The article includes code snippets demonstrating the exploitation process, including the construction of fake UMA structures and kernel shellcode for privilege escalation."
+}

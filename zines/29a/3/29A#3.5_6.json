@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "DARK THOUGHTS v1.20",
+  "authors": "ANAKTAS",
+  "date": "1998",
+  "historical_context": "This article discusses a polymorphic virus from the late 1990s, a period marked by the rise of computer viruses and malware as significant threats to computer security.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The article details the workings of the DARK THOUGHTS v1.20 virus, a polymorphic TSR EXE infector that uses a unique encryption engine. It highlights its methods for infecting files and evading detection.",
+  "summary": "DARK THOUGHTS v1.20 is a sophisticated virus designed to infect EXE files, particularly COMMAND.COM, by employing a polymorphic engine known as ENTHELECHIA v1.0. The virus increases the size of infected files by 6144 bytes and utilizes a technique to hook into the original INT 21h interrupt, allowing it to execute its payload while maintaining stealth. The author, ANAKTAS, explains that the virus scans for the original INT 21h handler using signatures rather than traditional tunneling methods, showcasing an innovative approach to virus design during its time.\n\nThe virus operates by first checking if it is already in memory and then proceeding to infect files if it is not. It includes mechanisms to avoid infecting certain files and ensures that it does not infect files that are already infected. The article serves as both a technical guide and a demonstration of the author's polymorphic engine, illustrating the complexities of virus creation and the ongoing cat-and-mouse game between malware developers and antivirus solutions."
+}

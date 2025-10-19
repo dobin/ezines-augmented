@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x01 of 0x11",
+  "title": "Introduction",
+  "authors": "The Circle of Lost Hackers",
+  "date": "",
+  "historical_context": "This article serves as an introduction to Phrack Issue #66, reflecting on the hacker culture and the loss of influential figures in the community.",
+  "target_audience": "Hackers, security researchers, and those interested in hacker culture.",
+  "short_summary": "The introduction sets the tone for Phrack Issue #66, discussing the state of the hacker community and mourning the loss of a prominent hacker, Cliph. It emphasizes the ongoing evolution of hacking and the importance of community.",
+  "summary": "In this evocative introduction to Phrack Issue #66, The Circle of Lost Hackers paints a vivid picture of the hacker community as a vibrant bar where diverse individuals gather, each with their own stories and motivations. The metaphor of a man on the Moon observing this chaotic yet fascinating world serves to highlight the disconnect between outsiders and the underground culture. The introduction reflects on the challenges faced by hackers, including the presence of 'gangsters'—those who seek to control and regulate the digital landscape, akin to politicians in the real world. It emphasizes the resilience of the hacker spirit, suggesting that even in the face of adversity, the culture will endure and adapt. \n\nThe article also serves as a poignant tribute to Cliph, a significant figure in the hacking community whose contributions to kernel exploitation have left a lasting impact. The dedication to Cliph underscores the theme of loss within the community while simultaneously celebrating the ongoing evolution of hacking techniques and the importance of collaboration among hackers. This introduction sets the stage for the articles that follow, which promise to delve into innovative exploitation techniques and the latest developments in security research, reinforcing Phrack's commitment to being a platform for all hackers, by all hackers."
+}

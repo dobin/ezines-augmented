@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "The use of set_head to defeat the wilderness",
+  "authors": "g463",
+  "date": "",
+  "historical_context": "This article discusses the set_head technique, which emerged as a response to challenges in exploiting memory management vulnerabilities in the GNU C Library, particularly concerning the wilderness chunk.",
+  "target_audience": "Hackers, security researchers, and professionals interested in memory management vulnerabilities and exploitation techniques.",
+  "short_summary": "The article introduces the set_head technique for exploiting memory management vulnerabilities in the GNU C Library, specifically targeting the wilderness chunk. It details the method, its limitations, and practical examples, including a real-world exploit of the file(1) utility.",
+  "summary": "The article begins by addressing the challenges of exploiting vulnerabilities associated with the wilderness chunk in memory management. It introduces the set_head technique, which allows an attacker to write almost four arbitrary bytes to nearly any memory location. The author explains the mechanics of the technique, including the need to control the size field of the top chunk and the parameters for malloc calls. The paper also contrasts the set_head technique with the earlier 'House of Force' technique, highlighting its advantages and limitations. Automation of the exploitation process is discussed, along with the necessary calculations to determine the correct parameters for successful exploitation.\n\nThe article culminates in a practical example involving the file(1) utility, showcasing how the set_head technique can be applied in real-world scenarios. The author emphasizes the importance of understanding the memory layout and the conditions required for successful exploitation. The paper serves as both a technical guide and a historical reference for those interested in the evolution of exploitation techniques in the context of memory management vulnerabilities."
+}

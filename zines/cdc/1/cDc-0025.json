@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "BETTER HOMES AND BLUE BOXING Part II: Practical Applications",
+  "authors": "Mark Tabas -LoD-",
+  "date": "12/16/1987",
+  "historical_context": "This article is part of a series on blue boxing, a technique used by phone phreaks to manipulate telephone systems for free calls. It reflects the hacking culture of the late 1980s, when such practices were more common.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts, security professionals.",
+  "short_summary": "This article delves into the practical applications of blue boxing, detailing how to effectively utilize the technique for toll fraud and other telecommunications manipulations. It discusses the technical aspects of seizing trunks and the implications of billing.",
+  "summary": "In this second part of the blue boxing series, Mark Tabas explores the practical applications of blue boxing beyond its original purpose of obtaining free toll services. He explains the complexities involved in making boxed calls, including the necessity of using extenders and the implications of billing systems that recognize 2600Hz supervisory signals. The article emphasizes that while blue boxing can still be used for toll fraud, it has become less practical due to advancements in telecommunications technology and billing practices. Tabas provides detailed examples of how to seize trunks and navigate the internal routing systems of Bell operators, offering insights into the nuances of operator functions and the risks associated with long-duration calls to directory assistance and other services. The article serves as a technical guide for aspiring phreakers, highlighting the importance of understanding the underlying telecommunications infrastructure to effectively utilize blue boxing techniques."
+}

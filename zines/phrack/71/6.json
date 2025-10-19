@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x10, Issue 0x47, Phile #0x06 of 0x11",
+  "title": "MPEG-CENC: Defective by Specification",
+  "authors": "David \"retr0id\" Buchanan",
+  "date": "",
+  "historical_context": "This article discusses vulnerabilities in the MPEG-CENC file format, which is widely used in DRM systems. It highlights the flaws in DRM design and the implications for content protection.",
+  "target_audience": "Security researchers, hackers, DRM developers, and anyone interested in video streaming technology.",
+  "short_summary": "The article presents DeCENC, a novel attack on the MPEG-CENC file format that allows for the decryption of video files without direct knowledge of the key. It explores the vulnerabilities in DRM systems and provides a detailed methodology for exploiting these weaknesses.",
+  "summary": "In 'MPEG-CENC: Defective by Specification', David Buchanan introduces DeCENC, a generic attack on the MPEG-CENC file format that exposes fundamental flaws in DRM systems. The attack exploits the lack of authentication in encryption processes, allowing attackers to decrypt video files without needing to know the encryption keys. The paper outlines various methods of exfiltrating decrypted data, including bypassing video decoders and manipulating codec features like I_PCM macroblocks to achieve predictable outputs. Buchanan emphasizes that while the attack is complex, it is broadly applicable across different DRM implementations due to its reliance on standardized interfaces like EME and MSE.\n\nThe article also discusses the implications of these vulnerabilities for the future of DRM, suggesting that the long-term solution lies in adopting authenticated encryption modes. Buchanan's work serves as a critical reminder of the inherent weaknesses in DRM design and the ongoing cat-and-mouse game between content protection and circumvention techniques. The detailed technical breakdown of the attack methodology, including the crafting of CENC metadata and the manipulation of video streams, provides valuable insights for security researchers and developers alike."
+}

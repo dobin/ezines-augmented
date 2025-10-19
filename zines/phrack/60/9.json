@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3c, Phile #0x09 of 0x10",
+  "title": "Big Loop Integer Protection",
+  "authors": "Oded Horovitz",
+  "date": "2002",
+  "short_summary": "This article discusses integer overflow vulnerabilities and proposes a method for detecting them through a patch for the GCC compiler. It includes examples of common vulnerabilities and a detailed implementation of the proposed detection scheme.",
+  "summary": "In this article, Oded Horovitz addresses the growing concern of integer overflow vulnerabilities, which have become prevalent in popular software packages. The author outlines the nature of these vulnerabilities, illustrating how improper input validation can lead to serious security issues. The article is structured into three parts: the first discusses common integer-related vulnerabilities, the second delves into the exploitation patterns associated with these vulnerabilities, and the third presents a practical implementation of a detection scheme in the form of a GCC patch. This patch aims to provide a safeguard against potential exploits by validating loop bounds before execution, thereby preventing integer overflow scenarios.\n\nThe implementation details are particularly noteworthy, as the author provides insights into the GCC internals and how the patch modifies the Abstract Syntax Tree (AST) to insert necessary checks. The article also includes real-life examples of vulnerabilities in well-known software, demonstrating the effectiveness of the proposed solution. By compiling applications with the -fblip flag, developers can enhance their software's resilience against integer-related exploits, making this article a valuable resource for security professionals and developers alike."
+}

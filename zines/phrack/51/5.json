@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 7, Issue 51, Phile #5 of 17",
+  "title": "File Descriptor Hijacking",
+  "authors": "orabidoo <odar@pobox.com>",
+  "date": "September 01, 1997",
+  "historical_context": "This article discusses a technique for hijacking file descriptors in Unix-like systems, relevant in the context of system security and privilege escalation.",
+  "target_audience": "Hackers, security researchers, system administrators",
+  "short_summary": "This article presents a method for hijacking file descriptors in Unix-like systems, allowing root users to take control of other processes' input and output streams. It details the underlying kernel structures and provides example code for Linux and FreeBSD.",
+  "summary": "In this article, orabidoo explores the concept of file descriptor hijacking, a technique that allows a root user to manipulate file descriptors of running processes on Unix-like systems. By directly accessing kernel memory, the author explains how to swap file descriptors between processes, effectively redirecting their input and output. The article provides a detailed overview of how file descriptors are managed in the kernel, including the structure of process tables and file descriptor tables. The author emphasizes the inherent risks of manipulating kernel memory, noting that while the technique is powerful, it is not reliable for production use due to potential race conditions and the changing state of the kernel.\n\nThe article includes practical examples demonstrating how to implement the hijacking technique using a utility called `chfd`, which can be compiled for both Linux and FreeBSD systems. The examples illustrate various scenarios, such as redirecting output from a long-running calculation to a file or taking over a telnet session from another user. The author concludes by acknowledging the ethical implications of such techniques, noting that while root access allows for these manipulations, they pose significant security risks if misused."
+}

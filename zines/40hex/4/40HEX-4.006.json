@@ -1,0 +1,11 @@
+{
+  "reference": "40Hex Issue 4, Phile #1 of 1",
+  "title": "The Typo COM Virus",
+  "authors": "DecimatoR",
+  "date": "December 1991",
+  "historical_context": "The article discusses a specific type of computer virus prevalent in the early 1990s, a time when viruses were becoming more common and awareness of computer security was beginning to grow.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of early computer viruses.",
+  "short_summary": "The Typo COM Virus is a non-destructive virus that infects COM files and alters output to parallel ports by garbling characters. It is notable for its unique behavior and origins in Israel.",
+  "summary": "The Typo COM Virus is introduced as a two-part virus, with the focus here on its COM file variant. This 867-byte virus is designed to stay resident in memory, allowing it to infect COM files regardless of whether they are executed. Its primary function is not destructive; instead, it modifies output to parallel ports by substituting similar-sounding letters and transposing numbers, which can lead to confusion and errors in data processing. The virus is believed to have originated in Israel, as it exhibits behavior that alters Hebrew characters when active. Detection is straightforward using the SCAN utility, with a specific hex string provided for identification. The article also includes assembly instructions for creating the virus, showcasing the technical details that would interest malware researchers and security professionals alike.",
+  "additional_notes": "The article reflects the hacker culture of the early 90s, where sharing knowledge about viruses was common among enthusiasts and researchers."
+}

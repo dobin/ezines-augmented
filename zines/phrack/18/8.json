@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 18, Phile #8 of 11",
+  "title": "LMOS (Loop Maintenance Operation System) - A List of Commands",
+  "authors": "Control C and The Tribunal of Knowledge",
+  "date": "",
+  "historical_context": "This article is part of the early hacking culture, focusing on telephone systems and maintenance operations, reflecting the interests of phreakers during the 1980s.",
+  "target_audience": "Hackers, phreakers, telecommunications professionals, and security researchers.",
+  "short_summary": "The article provides a comprehensive list of commands for the Loop Maintenance Operation System (LMOS), detailing their functions and usage in manipulating telephone lines. It serves as a guide for those looking to understand or exploit these systems.",
+  "summary": "This article presents a detailed compilation of commands for the Loop Maintenance Operation System (LMOS), a tool used in the telecommunications industry. Each command is described with its function, such as increasing or decreasing voice volume on a line, making calls, and testing various components of telephone systems. The authors emphasize the power of this information, suggesting that users must figure out how to apply it responsibly. The commands range from basic operations like 'Call' and 'Mon' to more complex functions like 'Loc1' and 'Loc2', which help technicians locate faults in long telephone lines. The article serves as both a technical reference and a cautionary note about the potential misuse of such powerful tools in the hands of unauthorized users."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "DogPaw: A DOS Virus",
+  "authors": "Jacky Qwerty/29A",
+  "date": "1997",
+  "historical_context": "This article discusses a DOS virus exploiting features of Windows 95 and NT, highlighting the transition from DOS to Windows environments.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in virus development.",
+  "short_summary": "DogPaw is a DOS virus that cleverly exploits a feature in Windows 95 and NT to infect executable files. It operates in stealth mode and demonstrates how to manipulate file headers to achieve its goals.",
+  "summary": "In 'DogPaw', Jacky Qwerty introduces a DOS virus that takes advantage of a feature in Windows 95 and NT, allowing non-DOS applications to run from a DOS box without displaying error messages. This capability is leveraged to create a stealthy EXE infector that operates by overwriting the first 720 bytes of a host file with virus code while preserving the original executable's functionality. The virus encrypts the original header and stores it at the end of the file, ensuring that the infected application can still execute as intended when called from a DOS environment.\n\nThe technical intricacies of DogPaw are explained in detail, including how it infects files on close and disinfects them on open. The author notes the limitations of this method, particularly as Microsoft phases out DOS compatibility in favor of 32-bit applications. The article serves as both a technical guide and a cautionary tale about the evolving landscape of operating systems and the implications for malware development. The narrative is interspersed with personal anecdotes, adding a unique touch to the technical content."
+}

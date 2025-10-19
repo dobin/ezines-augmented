@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "AVPX - AVP eXtender",
+  "authors": "Z0MBiE",
+  "date": "18-01-98",
+  "historical_context": "This article is from the late 1990s, a time when unpacking and repacking software was a common practice among hackers and software enthusiasts. The focus on file formats and compression techniques reflects the era's interest in reverse engineering.",
+  "target_audience": "Hackers, reverse engineers, software developers, and security professionals.",
+  "short_summary": "The article details the development of AVPX, a tool for unpacking and repacking .AVC files. It includes technical specifications of the .AVC file format and provides insights into the unpacking process, including error handling and file I/O operations.",
+  "summary": "In 'AVPX - AVP eXtender', Z0MBiE outlines the creation of a program designed to unpack .AVC files, a format used for compressed data blocks. The article begins with a chronological log of the development process, showcasing the iterative nature of software creation. Key features of the .AVC file format are described, including its header structure and the significance of various fields such as file size and data offsets. The author emphasizes the importance of checksum validation and error handling during the unpacking process, which is crucial for ensuring data integrity and successful file manipulation.\n\nThe technical depth of the article is evident in the detailed assembly code snippets that illustrate the unpacking logic. Z0MBiE explains the use of file I/O operations, such as reading and writing files, and the implementation of command-line parameters for user interaction. The unpacking algorithm itself is discussed, highlighting the XOR-based uncompression technique and the handling of various data structures within the .AVC files. Overall, the article serves as a valuable resource for those interested in reverse engineering and file format manipulation, providing both theoretical insights and practical coding examples."
+}

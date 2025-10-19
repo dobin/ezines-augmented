@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "New way to startup files - ShellExecute InstallScreenSaver API",
+  "authors": "SWaNk",
+  "date": "",
+  "historical_context": "This article reflects early hacking techniques that exploit Windows APIs, showcasing the creativity and resourcefulness of hackers in the late 1990s.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "This tutorial explains how to use the ShellExecute API to install a screen saver that can execute malicious code, bypassing traditional methods. It includes sample assembly code for implementation.",
+  "summary": "In this article, SWaNk introduces a novel method for executing malicious code by leveraging the ShellExecute API to install a screen saver on a target machine. The technique circumvents common execution methods like 'run' or 'RunOnce' by manipulating the Windows registry and using the InstallScreenSaver function. The author provides a step-by-step guide on how to create a .SCR file and execute it, allowing the worm to run whenever the screen saver is activated. This method highlights the ingenuity of hackers in finding alternative ways to deploy malware without raising immediate suspicion.\n\nThe article also includes a sample assembly code that demonstrates the process of copying the worm to the Windows directory and executing it as a screen saver. The code is designed to close the screen saver settings window after execution, minimizing the chances of detection by the user. Overall, this piece serves as both a tutorial and a reflection of the hacker mindset, emphasizing the importance of understanding system internals for effective exploitation."
+}

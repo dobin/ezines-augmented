@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Anubis of the West :: Guarding the PHP Temple",
+  "authors": "mr_me",
+  "date": "March 19, 2025",
+  "historical_context": "This article discusses vulnerabilities in PHP applications, particularly focusing on outdated libraries and their implications for security.",
+  "target_audience": "Security professionals, PHP developers, and hackers interested in web application security.",
+  "short_summary": "The article explores a vulnerability in a PHP application using the Cartalyst Sentinel library, detailing how an authentication bypass can be achieved through type juggling in MySQL and improper cookie handling.",
+  "summary": "In 'Anubis of the West', the author, mr_me, recounts a journey into source code auditing, revealing a significant vulnerability in a PHP application utilizing the Cartalyst Sentinel library. The vulnerability arises from a combination of outdated code and MySQL's type juggling behavior, which allows an attacker to bypass authentication by manipulating cookies. The author provides a proof of concept demonstrating how a crafted cookie can lead to unauthorized access, emphasizing the importance of understanding the underlying mechanisms of web application security. \n\nThe article delves into the technical details of the vulnerability, explaining how the Sentinel library's handling of cookies and persistence codes can be exploited. The author highlights the necessity for developers to implement proper type hinting and to avoid using outdated libraries. Mitigations are discussed, including the benefits of using newer versions of libraries that incorporate better security practices. The article serves as a cautionary tale for developers and security professionals, urging them to remain vigilant against such vulnerabilities in their applications."
+}

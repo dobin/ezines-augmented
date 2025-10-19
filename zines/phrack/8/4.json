@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Eight, Phile #4 of 9",
+  "title": "The Integrated Services Digital Network",
+  "authors": "Dr. Doom",
+  "date": "",
+  "historical_context": "This article discusses the emerging technology of ISDN in the late 1980s, highlighting its potential impact on telecommunications and security.",
+  "target_audience": "Telecommunications professionals, hackers, phreakers, and security researchers.",
+  "short_summary": "This article provides an in-depth analysis of the Integrated Services Digital Network (ISDN), detailing its structure, functionalities, and implications for telecommunications and security. It discusses the benefits of out-of-band signaling and the introduction of services like calling party identification.",
+  "summary": "In this article, Dr. Doom explores the Integrated Services Digital Network (ISDN), a revolutionary telecommunications technology poised to transform how voice and data are transmitted. The piece begins by defining ISDN and its significance, emphasizing its ability to support multiple services through a digital interface. The author explains the two types of channels—'D' channels for signaling and 'B' channels for customer data—highlighting how this separation enhances service capacity and efficiency. The article also discusses the Basic Rate Interface (BRI) and Primary Rate Interface (PRI), illustrating their applications in residential and business environments, respectively.\n\nDr. Doom delves into the implications of ISDN for security, particularly through the introduction of calling party identification, which aims to reduce phone fraud and enhance user privacy. The article outlines the operational framework of ISDN, including the necessary infrastructure and signaling protocols. It concludes with a cautionary note about the potential for abuse and the need for users to adapt to this new technology. Overall, the article serves as a prescient look at the future of telecommunications, foreshadowing the challenges and opportunities that ISDN will bring."
+}

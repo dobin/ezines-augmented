@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 24, File 7 of 13",
+  "title": "Advanced Bitnet Procedures",
+  "authors": "VAXBusters International",
+  "date": "",
+  "historical_context": "This article was published during the early 1990s, a time when Bitnet was a popular network for academic and research institutions. It provides insights into the operational procedures of Bitnet, which was a precursor to modern networking.",
+  "target_audience": "Hackers, network administrators, security professionals, and those interested in legacy networking protocols.",
+  "short_summary": "The article outlines advanced procedures for using Bitnet, including message sending, file transfers, and executing commands on remote hosts. It also provides a sample C program for handling incoming messages.",
+  "summary": "In 'Advanced Bitnet Procedures', VAXBusters International delves into the intricacies of operating within the Bitnet network, a significant platform for communication in the early days of networking. The article explains how to send multiple messages to a user, utilize the UREP package for Unix systems, and manage incoming messages effectively. It emphasizes the importance of the .exwrite program, which formats incoming messages for easier handling, showcasing a practical approach to network communication at the time.\n\nThe article also covers file transfer commands, detailing how to use 'netcopy' to send files and the necessary steps to convert NETDATA format files into ASCII text for Unix compatibility. Additionally, it discusses executing remote commands on Bitnet hosts, providing useful commands for querying node status and network topology. This comprehensive guide serves as a valuable resource for anyone looking to understand or work with Bitnet, highlighting both the technical aspects and the cultural significance of early networking practices."
+}

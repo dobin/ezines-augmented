@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0c, Issue 0x41, Phile #0x0b of 0x0f",
+  "title": "Hacking the $49 Wifi Finder",
+  "authors": "openschemes",
+  "date": "",
+  "historical_context": "This article reflects the early 2000s hacker culture where individuals sought to repurpose consumer electronics through reverse engineering and hacking.",
+  "target_audience": "Hackers, security researchers, electronics enthusiasts",
+  "short_summary": "This article details a comprehensive hack of a popular $49 wifi finder, guiding readers through the process of accessing and modifying its internal microcontroller to extend its capabilities.",
+  "summary": "In 'Hacking the $49 Wifi Finder', the author opens with a playful tone, inviting readers to explore the world of hacking consumer electronics. The article outlines a step-by-step process to access the internal microcontroller of a wifi finder device, emphasizing the importance of setting clear goals and taking incremental steps in the hacking process. The author describes the necessary tools, including a modified USB to RS232 converter and software like IDA disassembler and Keil A51 assembler, to facilitate communication with the device. The article also provides a detailed overview of the device's architecture, including the identification of critical components and their functions, which is crucial for successful hacking attempts.\n\nAs the article progresses, it delves into the intricacies of accessing the ISP loader and the capabilities it offers. The author explains how to communicate with the device using a custom interface and outlines various commands that can be executed to manipulate the device's EEPROM. The piece culminates in a discussion on how to insert custom code into the device, showcasing the flexibility and potential of the wifi finder once hacked. Overall, this article serves as both a practical guide and an inspiration for aspiring hackers, encouraging creativity and innovation in the realm of electronics."
+}

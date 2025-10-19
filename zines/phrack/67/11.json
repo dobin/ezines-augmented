@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x43, Phile #0x0b of 0x10",
+  "title": "Exploiting memory corruptions in Fortran programs under UNIX/VMS",
+  "authors": "Magma /FHC",
+  "date": "",
+  "historical_context": "This article discusses the vulnerabilities in Fortran programming, particularly in the context of memory corruption, which remains relevant due to the continued use of Fortran in scientific and financial applications.",
+  "target_audience": "Hackers, security researchers, and programmers interested in legacy languages and their vulnerabilities.",
+  "short_summary": "The article explores various memory corruption vulnerabilities in Fortran programs, detailing specific bugs and exploitation techniques. It emphasizes the importance of understanding Fortran's unique features and the potential security risks they pose.",
+  "summary": "In this comprehensive exploration of memory corruption in Fortran, the author, Magma, delves into the intricacies of the Fortran programming language, highlighting its historical significance and ongoing relevance in high-performance computing. The article begins with an introduction to Fortran's evolution, showcasing its modern features that make it susceptible to various types of memory corruption, including buffer overflows and pointer misuse. The author provides detailed examples of how these vulnerabilities can be exploited, particularly in the context of the gfortran compiler and OpenVMS systems. Techniques such as manipulating array indices and exploiting implicit typing are discussed, illustrating the potential for serious security issues if not properly managed.\n\nThe article concludes with recommendations for preventing such vulnerabilities, emphasizing the need for careful code review and the use of compiler options that enhance security. By shedding light on the often-overlooked security implications of Fortran, this piece serves as a crucial resource for security researchers and programmers alike, urging them to consider the risks associated with legacy programming languages in today's computing landscape."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Two, File 10 of 14",
+  "title": "Sprintnet Directory Part 3",
+  "authors": "Sky",
+  "date": "N/A",
+  "historical_context": "This article is part of a series documenting the Sprintnet network, a significant telecommunications network in the early 1990s, which was often targeted by hackers and phreakers.",
+  "target_audience": "Hackers, phreakers, security professionals, telecommunications enthusiasts.",
+  "short_summary": "This article provides a detailed scan of various addresses within the Sprintnet network, listing operating systems, prompts, and login information. It serves as a resource for understanding the network's structure and potential vulnerabilities.",
+  "summary": "In 'Sprintnet Directory Part 3', the author, Sky, presents a comprehensive scan of the Sprintnet network, detailing various addresses and their corresponding operating systems and prompts. The article includes a wealth of data, such as login attempts and responses from systems like VAX/VMS, Prime, and Unix, highlighting the accessibility and potential vulnerabilities of these systems during the early 1990s. Each entry is meticulously documented, showcasing the network's architecture and the types of interactions that could be expected from users attempting to connect to these systems.\n\nThis installment is particularly valuable for those interested in the historical context of telecommunications and hacking culture, as it illustrates the methods used by hackers to explore and exploit network systems. The detailed listings serve not only as a record of the network's structure but also as a cautionary tale about the importance of securing network access points. The article is a testament to the era's hacker ethos, emphasizing the thrill of discovery and the pursuit of knowledge within the realm of computer networks."
+}

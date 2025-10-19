@@ -1,0 +1,10 @@
+{
+  "reference": "40Hex Issue 3, Phile #3 of 3",
+  "title": "Anthrax",
+  "authors": "Patti Hoffman",
+  "date": "July, 1990",
+  "historical_context": "The Anthrax virus was one of the early examples of a file infector and boot sector virus, emerging during a time when computer viruses were becoming a significant concern for users and security professionals.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The article discusses the Anthrax virus, a file infector and boot sector virus that can reincarnate itself even after removal. It details its discovery, symptoms, and methods for detection and removal.",
+  "summary": "The article elaborates on the technical aspects of the Anthrax virus, including its size, the specific changes it makes to infected files, and the strings that can be found within them. It also discusses the interaction between Anthrax and another virus, V2100, which can further complicate the removal process. The author provides practical advice on how to detect and remove the virus, emphasizing the need for a low-level format or specific disinfection tools to ensure complete eradication. This article serves as a historical document that captures the early days of virus research and the evolving landscape of computer security."
+}

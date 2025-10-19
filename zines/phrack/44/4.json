@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Four, File 4 of 27",
+  "title": "Computer Security Guidelines",
+  "authors": "Southwestern Bell Telephone",
+  "date": "",
+  "short_summary": "This article provides essential computer security guidelines for users and managers, emphasizing the importance of password management and access control to protect sensitive information.",
+  "summary": "The 'Computer Security Guidelines' article from Southwestern Bell Telephone outlines critical practices for maintaining computer security within an organization. It emphasizes the responsibility of users to keep their login and password information confidential, suggesting measures such as not writing down passwords and changing them regularly. The guidelines also stress the importance of reporting security violations and ensuring that computing resources are used only for authorized purposes. For managers, the article provides additional recommendations, including establishing access control procedures and maintaining audit trails to track usage and identify security breaches. Overall, the article serves as a foundational resource for both users and managers to foster a culture of security awareness in the workplace.",
+  "historical_context": "This article reflects the growing awareness of computer security in the late 20th century, particularly as organizations began to rely more heavily on digital systems and the internet.",
+  "target_audience": "Security professionals, IT managers, and corporate users."
+}

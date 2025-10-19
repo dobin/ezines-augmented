@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 2, Issue 1, Phile #2 of 11",
+  "title": "Virus Spotlight: The Ambulance Car Virus",
+  "authors": "Unknown",
+  "date": "Not specified",
+  "historical_context": "This article discusses a virus from the early days of PC malware, highlighting the creativity and technical skill involved in virus creation during the late 1980s.",
+  "target_audience": "Hackers, malware researchers, security professionals, and enthusiasts of computer history.",
+  "short_summary": "The article presents a detailed debug script for the Ambulance Car virus, a non-resident .COM infector known for its rapid spread and unique graphical display. It includes instructions for creating the virus and describes its behavior.",
+  "summary": "In this article, the author provides a comprehensive debug script for the Ambulance Car virus, a notable example of early malware that infects .COM files. The virus is characterized by its rapid replication and a distinctive graphical display featuring an animated ambulance that moves across the screen while emitting siren sounds. This playful yet malicious behavior exemplifies the creativity of early virus authors, who often incorporated entertaining elements into their creations. The article serves as both a technical guide and a historical snapshot of the malware landscape during its time.",
+  "additional_notes": "The Ambulance Car virus represents a blend of technical prowess and artistic expression, showcasing how early malware authors approached their craft with a sense of humor. This article is particularly relevant for those studying the evolution of computer viruses and the cultural context of hacker creativity."
+}

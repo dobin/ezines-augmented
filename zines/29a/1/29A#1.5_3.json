@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "CRI-CRI ViRuS",
+  "authors": "Griyo/29A",
+  "date": "",
+  "historical_context": "This article discusses the CRI-CRI virus, a notable example of a multipartite virus that infects both executable files and boot sectors. It reflects the early days of computer viruses in the late 1980s and early 1990s.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "The CRI-CRI virus is a multipartite virus that infects .COM and .EXE files as well as floppy disk boot sectors. It employs stealth techniques to hide its presence and is polymorphic, making it difficult to detect.",
+  "summary": "The CRI-CRI virus, crafted by Griyo of the 29A group, is a sophisticated multipartite virus that demonstrates advanced infection techniques for its time. It infects .COM and .EXE files by appending its code to the end of these files and also targets the boot sector of floppy disks. The virus employs low-level system calls to hook into interrupt vectors, specifically INT 13h and INT 21h, allowing it to manipulate disk operations and file handling seamlessly. This hooking mechanism enables the virus to remain resident in memory, ensuring it can execute its payload whenever the infected files are accessed or executed.\n\nOne of the notable features of the CRI-CRI virus is its stealth capabilities. It can return clean copies of infected files when accessed, effectively hiding its true size and presence from users and antivirus software. Additionally, the virus is polymorphic, meaning it can change its code structure while maintaining the same functionality, making it harder for signature-based detection methods to identify it. This article serves as a historical reference for understanding the evolution of malware and the techniques used by early virus authors to evade detection."
+}

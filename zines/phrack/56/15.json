@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0xa Issue 0x38, Phile #6 of 11",
+  "title": "Writing MIPS/IRIX Shellcode",
+  "authors": "scut/teso",
+  "date": "05.01.2000",
+  "historical_context": "This article provides insights into writing shellcode for the MIPS architecture, specifically for the IRIX operating system, which was prevalent in high-performance computing environments during the late 1990s.",
+  "target_audience": "Hackers, security researchers, and anyone interested in low-level programming and exploit development.",
+  "short_summary": "The article serves as a guide to writing shellcode for the MIPS/Irix platform, detailing the architecture, instructions, and common practices to avoid NULL bytes in shellcode. It includes examples and tuning techniques for effective shellcode development.",
+  "summary": "This article by scut/teso offers a comprehensive introduction to writing shellcode for the MIPS/Irix platform, emphasizing the unique characteristics of the MIPS architecture compared to x86. It begins with an overview of the IRIX operating system and the MIPS CPU architecture, explaining the reduced instruction set and the implications for shellcode writing. The author discusses MIPS instructions, registers, and the assembly language, providing essential knowledge for anyone looking to exploit vulnerabilities on MIPS systems.\n\nThe article also delves into system calls and exceptions, which are crucial for executing operations within the shellcode. It outlines common constructs and techniques for writing efficient shellcode, such as avoiding NULL bytes and optimizing instruction usage. The author provides several tested examples of shellcode, including a simple execve shellcode and a listening portshell, illustrating practical applications of the concepts discussed. Overall, this article is a valuable resource for those interested in low-level programming and exploit development on the MIPS architecture."
+}

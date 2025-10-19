@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Ida.1490 (polymorphic engine)",
+  "authors": "Darkman/29A",
+  "date": "",
+  "historical_context": "This article discusses a COM virus that utilizes polymorphic techniques, which were significant in the evolution of malware during the early 1990s.",
+  "target_audience": "Security researchers, malware analysts, and those interested in the history of computer viruses.",
+  "short_summary": "Ida.1490 is a 1491-byte parasitic resident COM virus that employs a polymorphic engine and XOR encryption. It infects files upon opening and has a non-destructive payload.",
+  "summary": "The article provides a detailed disassembly of the Ida.1490 virus, which is a 1491-byte parasitic resident COM virus. It infects files when they are opened, modifies file attributes, and appends itself to the infected files. The virus features an error handler, a non-destructive payload, and employs a second layer of XOR encryption for its code. The author highlights the use of a Random Decoding Key (RDK) technique, which adds complexity to the virus's detection and analysis. The article also includes assembly code snippets that illustrate the virus's functionality and its polymorphic nature, making it a significant study for understanding early malware development and evasion techniques. The disassembly reveals the intricate methods used to ensure the virus remains undetected while effectively spreading itself across systems."
+}

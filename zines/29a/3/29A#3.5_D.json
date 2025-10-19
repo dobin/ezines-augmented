@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "SQUATTER v1.2",
+  "authors": "The Mental Driller/29A",
+  "date": "18/12/1998",
+  "historical_context": "This article is part of the early 1990s virus scene, showcasing the evolution of malware and the ongoing cat-and-mouse game between virus creators and antivirus developers.",
+  "target_audience": "Malware developers, security researchers, and those interested in the history of computer viruses.",
+  "short_summary": "SQUATTER v1.2 is a polymorphic DOS virus designed to evade detection by antivirus software through advanced techniques such as stealth, memory manipulation, and anti-emulation strategies. It includes a detailed explanation of its features and installation process.",
+  "summary": "SQUATTER v1.2, coded by The Mental Driller of the 29A group, represents a significant advancement in the realm of DOS viruses. This version introduces enhanced polymorphism, allowing the virus to change its appearance with each infection, making it difficult for antivirus programs to detect. The author discusses the virus's stealth capabilities, which include manipulating DOS interrupt calls to remain hidden from both the operating system and antivirus software. The virus can infect files by intercepting DOS function calls, ensuring that it remains active and undetected even after the host program has been executed.\n\nThe article provides a technical breakdown of the virus's installation routine, detailing how it checks system memory and modifies DOS interrupt vectors to maintain its presence. The author also highlights the virus's ability to infect both COM and EXE files, emphasizing its versatility. The SQUATTER virus is not just a piece of malware; it is a testament to the creativity and technical prowess of its creator, showcasing the ongoing battle between malware authors and antivirus developers during the early days of computer security."
+}

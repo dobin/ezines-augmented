@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Ithaqua Virus",
+  "authors": "Wintermute/29A",
+  "date": "1998-09-28",
+  "historical_context": "This article discusses the Ithaqua virus, a notable example of early polymorphic malware, which was prevalent during the late 1990s. It reflects the growing sophistication of virus authors and the challenges faced by antivirus solutions at the time.",
+  "target_audience": "Hackers, malware researchers, security professionals, and those interested in the history of computer viruses.",
+  "short_summary": "The Ithaqua virus showcases advanced techniques in code emulation, self-replication, and stealth mechanisms, making it a significant study in the evolution of malware. The article details its infection methods, payload, and the author's reflections on virus writing.",
+  "summary": "The Ithaqua virus, developed by Wintermute of the 29A group, represents a significant advancement in the realm of computer viruses. It employs a unique code emulation technique that allows it to evade detection by various antivirus programs by tracing the original handler of the DOS interrupt 'int21h'. This capability enables it to execute its malicious code while maintaining a low profile against detection mechanisms. The virus can infect COM and EXE files through appending and cavity techniques, and it features a polymorphic engine that enhances its ability to avoid signature-based detection by altering its code structure with each infection.\n\nIn addition to its technical prowess, the Ithaqua virus includes a payload that activates a visual snow effect on April 29th, showcasing the author's creativity. The article concludes with Wintermute's reflections on the challenges of virus writing amidst academic pressures, hinting at a potential retirement from the field. This piece serves as both a technical guide and a personal narrative, encapsulating the hacker culture of the time and the complexities of malware development."
+}

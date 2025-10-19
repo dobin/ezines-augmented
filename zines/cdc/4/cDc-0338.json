@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Who's Gonna Get Screwed Today? NetBIOS Attacks over TCP",
+  "authors": "SirDystic",
+  "date": "09/01/1997",
+  "historical_context": "This article was written during the rise of Windows 95 and highlights the security vulnerabilities inherent in early personal computing, particularly regarding networking and file sharing.",
+  "target_audience": "Hackers, security professionals, and anyone interested in the vulnerabilities of early Windows operating systems.",
+  "short_summary": "The article discusses the security flaws in Windows 95 related to NetBIOS over TCP, detailing how easily attackers can exploit these vulnerabilities to access sensitive information on users' machines. It emphasizes the lack of security awareness among users and the inadequate measures provided by Microsoft.",
+  "summary": "In 'Who's Gonna Get Screwed Today?', SirDystic exposes the significant security vulnerabilities present in Windows 95, particularly concerning NetBIOS over TCP. The article outlines how the default settings of Windows 95 leave many users exposed, with file sharing often enabled without proper password protection. It highlights that a substantial number of users have their entire file systems accessible, making them prime targets for attackers. The author notes that even basic security measures, such as filtering ports on firewalls, are often neglected, further exacerbating the issue. \n\nThe article goes on to describe various methods attackers can use to exploit these vulnerabilities, including accessing a target's machine using the nbtstat tool to retrieve NetBIOS names and IP addresses. SirDystic provides practical examples of how attackers can gain unauthorized access to sensitive files, manipulate user directories, and even run programs on victims' machines. The piece serves as both a warning and a guide, urging users to take their security seriously while also showcasing the ease with which malicious actors can exploit the weaknesses of early Windows systems."
+}

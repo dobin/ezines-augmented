@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0xa Issue 0x38",
+  "title": "SMASHING C++ VPTRS",
+  "authors": "rix <rix@securiweb.net>",
+  "date": "05.01.2000",
+  "historical_context": "This article discusses vulnerabilities in C++ programs, particularly focusing on buffer overflows and the exploitation of virtual pointers (VPTRs) in object-oriented programming. It reflects the growing complexity of software security issues at the turn of the millennium.",
+  "target_audience": "Security researchers, C++ developers, penetration testers, and anyone interested in software vulnerabilities.",
+  "short_summary": "The article explores buffer overflow vulnerabilities in C++ programs, particularly through the exploitation of virtual pointers (VPTRs). It provides detailed examples and code snippets to illustrate how these vulnerabilities can be exploited, emphasizing the importance of understanding object-oriented programming in security contexts.",
+  "summary": "In 'SMASHING C++ VPTRS', rix delves into the intricacies of buffer overflows in C++ applications, highlighting how the use of virtual pointers (VPTRs) can introduce new attack vectors. The article begins with a foundational overview of C++ classes and methods, illustrating how improper handling of buffers can lead to vulnerabilities. Through practical examples, rix demonstrates how an attacker can exploit these vulnerabilities by overflowing buffers to overwrite VPTRs, thereby redirecting program execution to malicious code. The discussion includes detailed code snippets and assembly-level analysis, showcasing the mechanics of dynamic binding and the structure of C++ objects in memory. The article serves as both a technical guide and a cautionary tale about the security implications of object-oriented programming, urging developers to adopt secure coding practices to mitigate these risks."
+}

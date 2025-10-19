@@ -1,0 +1,11 @@
+{
+  "reference": "40Hex Issue 3",
+  "title": "The Dark Avenger",
+  "authors": "Dark Avenger",
+  "date": "1988-89",
+  "historical_context": "This article presents one of the first major viruses, the Dark Avenger, which was notable for its rapid spread in Eastern and Western Europe and the USA during the late 1980s.",
+  "target_audience": "Security professionals, malware researchers, and those interested in the history of computer viruses.",
+  "short_summary": "The Dark Avenger is a source code for one of the first Bulgarian viruses, shared freely by its author. It includes assembly code and instructions for assembly, highlighting the virus's functionality and its implications.",
+  "summary": "The Dark Avenger virus, authored by a Bulgarian programmer, is presented in this article as a significant piece of malware from the late 1980s. The source code is provided in assembly language, showcasing the virus's ability to infect .COM and .EXE files. The author encourages readers to improve upon the code and distribute it, albeit with strict conditions against modification. The article also includes detailed assembly instructions for assembling the virus, emphasizing the technical aspects of its operation, such as intercepting DOS interrupts and manipulating file structures to facilitate infection. The Dark Avenger serves as a historical artifact, illustrating the early days of computer viruses and the hacker culture surrounding their development and distribution.",
+  "assembly_instructions": "To assemble the Dark Avenger virus, the author provides a step-by-step guide using Turbo Assembler. The process involves compiling the assembly code, linking the object file, converting it to a .COM file, and finally combining it with a small jump file to create the executable virus. This detailed instruction set reflects the technical proficiency required to work with low-level programming and the early malware landscape."
+}

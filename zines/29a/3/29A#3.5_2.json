@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Simple, a example virus",
+  "authors": "The Dark Lord",
+  "date": "1994",
+  "historical_context": "This article is a demonstration of a simple virus written in assembly language for the Acorn Archimedes platform. It reflects the early 90s hacker culture where creating and sharing viruses was a way to showcase programming skills.",
+  "target_audience": "Hackers, security researchers, and those interested in malware development.",
+  "short_summary": "The article presents a simple virus example written in assembly language, detailing its structure and functionality. It serves as an educational piece on how viruses operate at a low level.",
+  "summary": "In 'Simple, a example virus', The Dark Lord provides a detailed assembly language code for a basic virus designed to infect files on the Acorn Archimedes system. The virus initializes the WIMP (Window, Icon, Mouse, Pointer) environment and enters a polling loop to monitor user messages. When a specific message indicating a file is opened is detected, the virus attempts to infect that file by appending its own code to it. The article breaks down the code into sections, explaining the purpose of each block, such as the initialization, polling for user actions, and the infection mechanism itself. The virus also includes functionality to modify the system's boot file to ensure it executes upon startup, showcasing a common technique used in malware development to ensure persistence."
+}

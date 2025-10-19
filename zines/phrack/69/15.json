@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0f, Issue 0x45, Phile #0x0f of 0x10",
+  "title": "How to hide a hook",
+  "authors": "uty <whensungoes@gmail.com>, saman <saman.zonouz@rutgers.edu>",
+  "date": "Not specified",
+  "historical_context": "This article discusses advanced techniques for creating stealthy rootkits using hypervisor technology, reflecting the ongoing cat-and-mouse game between malware developers and security researchers.",
+  "target_audience": "Security researchers, malware developers, and advanced hackers interested in rootkit development and detection evasion techniques.",
+  "short_summary": "The article presents a method to make inline hooks invisible to detection tools by leveraging virtualization technology, specifically Intel's Extended Page Tables (EPT). It details the setup of a hypervisor that can dynamically change memory mappings to hide malicious code.",
+  "summary": "In this article, the authors explore the challenges of writing stealthy rootkits in an era where detection tools are increasingly sophisticated. They propose a novel approach using Intel's virtualization technology, specifically the Extended Page Tables (EPT), to create a hypervisor that can make inline hooks invisible to detection mechanisms. The hypervisor operates by mapping guest physical memory to two different host physical pages: one for execution and another for reading. When a detection tool attempts to read the memory, it triggers an EPT violation, allowing the hypervisor to switch the mapping to the benign page, thus evading detection. The article also includes practical demonstrations, such as implementing a keylogger and bypassing Windows PatchGuard, showcasing the effectiveness of this technique in real-world scenarios. The authors emphasize that while this method can be used for malicious purposes, it also has potential applications in security software to hide legitimate operations from malware."
+}

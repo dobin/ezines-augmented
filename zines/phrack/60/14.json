@@ -1,0 +1,11 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3c, Phile #0x0e of 0x10",
+  "title": "Traffic Lights",
+  "authors": "plunkett@hush.com",
+  "date": "",
+  "historical_context": "This article reflects the hacker culture of the early 2000s, where the intersection of technology and environmentalism was a growing concern.",
+  "target_audience": "Hackers, security researchers, and those interested in urban infrastructure.",
+  "short_summary": "The article explores the technical aspects of traffic light systems and discusses how they can be hacked for environmental benefits. It provides insights into the protocols and systems used in traffic management.",
+  "summary": "In 'Traffic Lights', the author delves into the intricacies of urban traffic control systems, highlighting their vulnerabilities and the potential for hacking them to reduce vehicle emissions. The article outlines various technical terms and protocols such as UTC, SCOOT, and NTCIP, which govern the operation of traffic lights. The author emphasizes that these systems are not only hackable but also operate on familiar networking protocols, making them accessible to those with the right skills. The piece is laced with a sense of humor and a call to action for environmentally conscious hacking, suggesting that manipulating traffic lights could lead to less pollution and more efficient travel.",
+  "additional_notes": "The article serves as both an educational piece and a cautionary tale about the ethical implications of hacking urban infrastructure. It encourages readers to think critically about the impact of their actions on the environment."
+}

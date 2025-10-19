@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Seventeen, Issue 8, Phile #8 of 12",
+  "title": "Dialback Modem Security",
+  "authors": "David I. Emery",
+  "date": "07 April 1988",
+  "historical_context": "This article discusses the security vulnerabilities of dialback modem systems, a common practice in the late 1980s for securing dial-in access to computer systems.",
+  "target_audience": "Hackers, security professionals, telecommunications engineers.",
+  "short_summary": "The article examines the security flaws in dialback modem systems, highlighting how attackers can exploit these vulnerabilities to gain unauthorized access. It provides recommendations for improving security in dialback operations.",
+  "summary": "In 'Dialback Modem Security', David I. Emery outlines the inherent vulnerabilities of dialback modem systems, which were widely used to secure dial-in access during the late 1980s. The article details how attackers can exploit weaknesses in the telephone network and modem design to bypass security measures. Emery explains that many systems rely on the assumption that a penetrator cannot dictate the callback number, but this is a flawed premise. He describes various attack vectors, such as caller control central offices and the ring window problem, which can allow an attacker to intercept or manipulate the callback process, effectively gaining access to the system without authorization.\n\nEmery concludes with practical recommendations for enhancing dialback security, such as using separate lines for dialing out, implementing random time delays, and ensuring that modems can distinguish between incoming and outgoing calls. He emphasizes that while some measures can improve security, complete protection is challenging due to the limitations of conventional modems and the telephone infrastructure. The article serves as a cautionary tale for organizations relying on dialback systems, urging them to reconsider their security strategies in light of these vulnerabilities."
+}

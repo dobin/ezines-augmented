@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "SuckSexee Automated Intruder",
+  "authors": "GriYo/29A",
+  "date": "May 1997",
+  "historical_context": "This article discusses the SuckSexee virus, a notable example of a polymorphic and stealth virus from the late 1990s, showcasing the evolution of malware techniques during that period.",
+  "target_audience": "Security professionals, malware researchers, and enthusiasts of hacker culture.",
+  "short_summary": "The SuckSexee virus is a sophisticated polymorphic and stealth virus that infects hard drives and floppy disks. It employs advanced techniques to evade detection and infect files, making it a significant case study in malware evolution.",
+  "summary": "The SuckSexee virus, coded by GriYo of the 29A group, represents a significant advancement in malware technology during the late 1990s. This virus is notable for its full stealth capabilities, allowing it to hide its presence on infected systems by returning clean copies of infected files and sectors. It infects the hard drive's master boot record (MBR), floppy boot sectors, and various executable files (.COM, .EXE, .SYS) using low-level disk access methods that bypass traditional antivirus protections. The virus's polymorphic nature means it can change its code structure with each infection, complicating detection efforts by antivirus software. The article details the virus's infection mechanisms, stealth techniques, and the payload it delivers, which triggers on a specific date, showcasing the creativity and technical prowess of its author. Overall, SuckSexee serves as a critical example of the malware landscape of its time, illustrating the ongoing cat-and-mouse game between malware authors and security professionals."
+}

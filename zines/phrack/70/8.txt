@@ -1,0 +1,1034 @@
+                            ==Phrack Inc.==
+
+               Volume 0x10, Issue 0x46, Phile #0x07 of 0x0f
+
+|=-----------------------------------------------------------------------=|
+|=--------------------=[ Viewer Discretion Advised: ]=-------------------=|
+|=--------------=[ (De)coding an iOS Kernel Vulnerability ]=-------------=|
+|=-----------------------------------------------------------------------=|
+|=-------------------------=[ Adam Donenfeld ]=--------------------------=|
+|=----------------------------=[ @doadam ]=------------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+--[ Table of contents
+
+0) Introduction
+1) Sandbox concepts
+2) A bug - how it all got started (IOSurface)
+3) A bug - finding a primitive for the IOSurface bug
+4) Tracing the iOS kernel
+5) Reversing AppleD5500.kext
+6) Influencing AppleD5500.kext via mediaserverd
+7) _The_ bug
+8) H.264 in general and in iOS
+9) mediaserverd didn't read the fucking manual
+0xA) Takeaways
+0xB) Final words
+0xC) References
+0xD) Code
+
+--[ 0 - Introduction
+
+The goal of this article is to demonstrate a (relatively) hard-to-reach
+attack surface on iOS, and showing the entire process from the beginning
+of the research till the point where a vulnerability is being found.
+While exploitation is out of the scope in this article, understanding
+the process of defining the attack surface, researching and while making
+your life easier (see sections 4 and 9), can provide beginners and
+expert hackers alike, a different approach for sandbox-accessible
+vulnerability research.
+
+The bug in question is CVE-2018-4109 [1], which was found by yours truly,
+that is Adam Donenfeld (@doadam). A PoC of the vulnerability is also
+available with this paper, and you're free to use it for educational
+purposes only.
+
+While an exploit can (IMO) be written for this vulnerability, I had too
+many things to do (writing this paper for instance) but if you feel like
+working on an exploit, feel free to write me if you want my help with it.
+Without further ado - let's start.
+
+
+--[ 1 - Sandbox concepts
+
+On all modern operating systems, most of the processes are by default
+restricted by sandbox technologies. A sandbox is an extra layer of
+protection, which prevents certain processes from accessing certain
+mechanisms. A sandbox is mandatory for many reasons, for instance:
+
+* Preventing leakage of sensitive information. For example, let's take
+the case where an attacker has breached your phone using a WebKit
+exploit. While WebKit can steal information related to your browsing,
+it will not be able to read your contacts, because the sandbox checks
+who tries to access your contacts, and denies permission unless there's
+a legitimate reason (If the attacker has gained code execution using
+a vulnerability in the Contacts app, he will probably be able to access
+your Contacts).
+
+* Narrowing attack surface. Most of the vulnerabilities out there
+can be found in different, unrelated components of the system (as will be
+shown soon). In the world of iOS, an interesting example is
+CVE-2015-7006 [2]. CVE-2015-7006 is a directory traversal which could be
+triggered via an Airdrop connection on iOS. The daemon in question was
+"sharingd". The directory traversal ultimately gave the attacker a write
+file primitive, meaning an attacker could overwrite any file on the system.
+Because sharingd was running unsandboxed as root back then, this
+vulnerability alone was enough to do various powerful operations (an
+installation of an arbitrary app, for example). Apple has since sandboxed
+sharingd. If sharingd would have been sandboxed before the publication of
+CVE-2015-7006, the vulnerability alone wouldn't be so powerful, because the
+primitives and privileges which could be gained are substantially limited
+(after being sandboxed, sharingd couldn't write any file on the system,
+thus couldn't manipulate installd to install arbitrary applications).
+
+While fixing vulnerabilities like the one in sharingd does solve the
+specific issue in CVE-2015-7006, that alone doesn't approach the main
+issue: any exploit in sharingd results in compromise of the entire device.
+As a result, a lot of vendors (Apple among them) designed their system so
+that almost everything is sandboxed, and nowadays, almost every operation
+that requires hardware interaction is sandboxed and is only given upon
+permission from the user\Apple.
+
+Because the vulnerability discussed in this paper (CVE-2018-4109) is in the
+accelerated hardware decoding driver, let's see the approach Apple took in
+sandboxing video operations, namely, video encoding\decoding:
+
+The following graph demonstrates how the app would interact with the
+video-decoding driver if there would be no sandbox:
+
+                                            |
+     EL0 (user mode)                        |  EL1 (kernel mode)
+                                            |
+        +-------+    Decode video request   |  +---------------+
+        |       |---------------------------+->|               |
+        |iOS app|                           |  |AppleD5500.kext|
+        |       |<--------------------------+--|               |
+        +-------+    Decode video response  |  +---------------+
+                                            |
+                                            |
+                                            |
+                                            |
+                                            |
+
+Fortunately for Apple, communication with every hardware accelerated
+encoding\decoding driver is sandboxed, meaning each request goes through
+a "broker" (mediaserverd). This can be extremely time-consuming for an
+attacker, because it means the communication with AppleD5500.kext is
+defined by mediaserverd and that an unprivileged attacker can't access
+"exotic features" without having prior access to the driver (or code
+execution in a privileged context like mediaserverd).
+
+This is how unprivileged apps communicate with AppleD5500.kext:
+
+  EL0 (user mode)                        |           EL1 (kernel mode)
+                                         |
+                decode                   |
+     +-------+   video    +------------+ |  new      +---------------+
+     |       |  request   |            | |sanitized  |               |
+     |       |----------->|            | | request   |               |
+     |iOS app|            |mediaserverd|-+---------->|AppleD5500.kext|
+     |       |            |            |<+-----------|               |
+     |       |<-----------|            | | Decode    |               |
+     |       | simplified |            | |response   |               |
+     +-------+   decode   +------------+ |           +---------------+
+                response         |       |
+                                 |       |
+                                 |       |
+                                 |
+                                 |
+                                _|_
+                                \ /
+                                 '
+              +-------------------------------------+
+              |* Basic video frame validation       |
+              |* Confined API                       |
+              |* Check decoding\encoding permissions|
+              +-------------------------------------+
+
+As we can see from the diagram, not only mediaserverd sanitizes our
+request, it never forwards requests: in fact, it recreates the
+request\response accordingly, which limits the attacker's power, both
+in causing memory corruptions and performing infoleaks.
+
+--[ 2 - A bug - how it all got started (IOSurface)
+
+The bug was hidden deeply within the AppleD5500.kext file and while I had
+no intention to reverse engineer AppleD5500.kext, I found myself doing so
+in pursuit of a candidate for a different bug I found (which Apple silently
+fixed without issuing a CVE for).
+
+While the other bug is not in the scope of this article, in order to
+understand how CVE-2018-4109 was originally found, it is important to have
+some background on the other bug.
+
+That other bug was in a driver called IOSurface.kext. IOSurface are objects
+which primarily store framebuffers and pixels and information about these.
+IOSurface allows transferring a lot of information between processes about
+framebuffers without causing a lot of overhead. Each IOSurface object has
+an ID, which can be used as a request to an IOSurfaceRootUserClient object.
+IOSurfaces map the information between different processes, and thus save
+the overhead of sending a lot of information between processes. In iOS, a
+lot of drivers use IOSurface when it comes to graphics. The user doesn't
+store anything on the IOSurface object except for its ID. This means that
+in order to use an IOSurface object (for example, for video decoding), the
+user just needs to supply the ID to the appropriate driver and the original
+video is extracted from the IOSurface. The video itself is never being sent
+to the driver as a part of the request.
+
+
+IOSurface objects store a lot of properties about the graphics; one of them
+is called "plane". For brevity, there was a sign mismatch in the "offset"
+of the plane. It means that each driver which used the plane's offset (or
+base), would have had a negative int, while the kernel
+"IOSurface->getPlaneSize()" function regarded the plane's offset as a
+uint32_t. So this vulnerability resulted in a buffer overflow.
+
+Because surface objects only store that information without really "using"
+it (e.g performing memory manipulations based on the plane offset), it was
+necessary to find a different driver that used the plane's offset to
+actually perform a buffer overflow (or anything else which would give us
+more primitives).
+
+--[ 3 - A bug - finding a primitive for the IOSurface bug
+
+Fortunately, if a driver wants to use IOSurface objects, it has to find the
+"IOSurfaceRoot" service, which is public and is named in the kernel's 
+registryas "IOCoreSurfaceRoot". This means that each driver who actually 
+needs IOSurface will have the string "IOCoreSurfaceRoot".
+
+* Please note that IORegistry isn't within the scope of this paper.
+
+* You can however read about it in the following Apple's document:
+
+https://developer.apple.com/library/archive/documentation/DeviceDrivers/ \
+Conceptual/IOKitFundamentals/TheRegistry/TheRegistry.html
+
+Looking up the string in IDA yields the following results:
+
+__PRELINK_TEXT:__PRELINK_TEXT_hidden:                  IOCoreSurfaceRoot
+com.apple.iokit.IOSurface:__cstring:                   IOCoreSurfaceRoot
+com.apple.driver.AppleM2ScalerCSC:__cstring:           IOCoreSurfaceRoot
+com.apple.iokit.IOMobileGraphicsFamily:__cstring:      IOCoreSurfaceRoot
+com.apple.driver.AppleD5500:__cstring:                 IOCoreSurfaceRoot
+com.apple.driver.AppleAVE:__cstring:                   IOCoreSurfaceRoot
+com.apple.drivers.AppleS7002SPUSphere:__cstring:       IOCoreSurfaceRoot
+com.apple.driver.AppleAVD:__cstring:                   IOCoreSurfaceRoot
+com.apple.driver.AppleH10CameraInterface:__cstring:    IOCoreSurfaceRoot
+com.apple.iokit.IOAcceleratorFamily:__cstring:         IOCoreSurfaceRoot
+com.apple.iokit.IOAcceleratorFamily:__cstring:         IOCoreSurfaceRoot
+
+Because Apple's drivers are mostly closed-source, it takes a lot of effort
+to understand how each driver uses the IOSurface objects. Therefore it was
+necessary (and just easy) to look for the string "plane" in each one of
+these drivers. While this doesn't guarantee we actually find anything
+useful, it's easy and it doesn't consume a lot of time.
+
+Fortunately, the following string came up (newlines added for readability):
+
+Assertion "outWidth > pIOSurfaceDst->getPlaneWidth(0) ||
+outHeight > pIOSurfaceDst->getPlaneHeight(0) ||
+outWidth < 16 || outHeight < 16 || inWidth < 16 || inHeight < 16"
+failed in "/BuildRoot/Library/Caches/com.apple.xbs/Sources/AppleD5500/
+AppleD5500-165.5/AppleD5500.cpp" at line 3461 goto bail1
+
+Around the usage of that string, there was the following assembly code:
+
+SXTW            X2, W25
+MOV             W1, #0x80
+MOV             X0, X21
+BL              memset
+
+As AppleD5500.kext is closed-source, one needs to guess a lot, and try to
+infer from the code what is the context in each function. Because we search
+for the usage of an IOSurface object, which has a vtable, one useful thing
+would be to add a comment around every virtual call with the function name
+of the corresponding IOSurface object. Having this and our "plane" string
+in mind, we expect virtual calls which contain "plane" in their name. To
+find the vtable of IOSurface (or any vtable of any object in a kext), it is
+possible to reverse engineer the kext on a macOS. Kexts are still
+symbolicated on macOS and therefore it is possible to obtain meaningful
+names for the vtable entries.
+
+For the sake of this example, we'll reverse IOSurface.kext here. Opening up
+the IOSurface kext binary (on macOS it is located in the following path:
+/System/Library/Extensions/IOSurface.kext/Contents/MacOS/IOSurface), we get
+a symbolicated kext. To get the actual IOSurface's vtable, we can simply
+open the "Names" view (Shift+F4 for the keyboard shortcut lovers) and
+search for the string "vtable for'IOSurface". This will give us the
+offset-0x10 of the vtable, along with all the entries, symbolicated.
+Although sometimes the vtable entries are in a different order, they are
+virtually the same (minus the diff between ARM and Intel CPUs), so it is
+necessary to make sure you look at the same function and not just blindly
+picking up the name from the macOS version.
+
+This indeed works here:
+
+LDR             X8, [X19]               ; X8=IOSurface.vtable
+LDR             X8, [X8,#0x110]         ; X8=&IOSurface->getPlaneSize
+MOV             W1, #0
+MOV             X0, X19
+BLR             X8                      ; IOSurface->getPlaneSize(0)
+MOV             X23, X0
+LDR             X8, [X19]               ; X8=IOSurface.vtable
+LDR             X8, [X8,#0x110]         ; X8=&IOSurface->getPlaneSize
+MOV             W1, #1
+MOV             X0, X19
+BLR             X8                      ; IOSurface->getPlaneSize(1)
+MOV             X25, X0
+SXTW            X2, W23
+MOV             W1, #0x80
+LDR             X0, [SP,#0x120+var_E0]
+BL              memset                  ; memset(unk, 0x80, planeSize0)
+SXTW            X2, W25
+MOV             W1, #0x80
+MOV             X0, X21
+BL              memset                  ; memset(unk, 0x80, planeSize1)
+
+So it looks as if we have a new primitive! We can arbitrarily overwrite
+something with 0x80, while we control the length of the overwrite. We do
+not control "unk" (which is later revealed that it is the mapping of the
+IOSurface object; keep reading). The length is taken from the plane member
+of something we assume is an IOSurface object, which we can arbitrarily
+control using the vulnerability in IOSurface.kext. Obviously this is a far
+fetched assumption. Except for the string we found, there's nothing else
+that hints this is indeed an IOSurface object. To verify that, it is
+necessary first to understand what AppleD5500 is.
+
+AppleD5500 is a video-decoding driver, which is not accessible from the
+default sandbox. Communication with this device is done solely via
+mediaserverd, as described in the infographic above (section 1). So the
+next objective is to see how to trigger the function with the IOSurface
+usage. The function is approximately 20 functions from the entry point to
+the driver's communication (AppleD5500::externalMethod) [3]. Apple does not
+provide us with the right tools to debug the iOS kernel (in fact, it
+constantly makes it more and more complicated), and macOS doesn't have this
+driver. While guessing can get you started, getting a deterministic
+code-flow is something that we want to assure, and not assume, as the
+direction of our research might be oriented based on such an assumption.
+
+--[ 4 - Tracing the iOS kernel
+
+I took Yalu102 [4] (thanks to @qwertyoruiopz and @macrograss for that) and
+utilized its KPP bypass. KPP [5] is a (not so new) mechanism that was
+introduced in iOS 9, checking the integrity of the text section of the
+kernel, meaning you can't modify the kernel's text section. I didn't care
+about setting breakpoints in the kernel, but I just wanted to get a dump of
+all the registers given a specific address. This would be enough to
+understand how to control the code-flow, or at least how to progress
+steadily towards the function which uses the plane from our IOSurface
+object (and understand whether this was actually an IOSurface object in the
+first place).
+
+What I did was as follows; assuming we want to see the registers' state at
+address 0x10C:
+
+Kernel code with no KPP
+
+  ------------------  ADDRESS
+  |                |  0x100
+  |                |
+  ------------------
+  |                |  0x104
+  |                |
+  ------------------
+  |                |  0x108
+  |                |
+  ------------------
+  |                |  0x10C
+  |                |
+  ------------------
+  |                |  0x110
+  |                |
+  ------------------
+  |                |  0x114
+  |                |
+  ------------------
+  |                |  0x118
+  |                |
+  ------------------
+
+
+We overwrite 0x10 bytes with the following assembly code:
+
+LDR x16, #0x8
+BLR x16
+.quad shellcode_address
+
+shellcode_address contains code which prints the registers' state, a
+snippet from the shellcode:
+
+STP x0, x1 [SP]
+STP x2, x3 [SP, 0x10]
+...
+
+LDR x0, debug_str
+LDR x16, kprintf
+BLR x16
+MOV x0, x0
+MOV x0, x0
+MOV x0, x0
+MOV x0, x0
+RET
+
+Before overwriting 0x10C, the last 4 NOP instructions (MOV x0, x0) are
+replaced with the original instructions at 0x10C-0x11C. This way, the code
+executes seamlessly (as long as no branches are being replaced). x16 was
+chosen because according to the ABI, x16 is only used for jumping to stubs
+(so it is safe to overwrite it). This way we can see the registers' state
+at (almost) any address in the kernel without hurting performance or
+slowing the research. Generally speaking, I've found that this
+infrastructure work, as time consuming as it might be, will be insanely
+helpful later on, and always worths the invested time.
+
+Ultimately, the state of the kernel text will look like the following:
+
+  ------------------
+  | LDR x16, #0x8  |0x1000
+  ------------------
+  | BLR x16        |0x1004
+  ------------------
+  | .quad shelladdr|0x1008
+  ------------------
+
+
+ ; memcpy(0x10C, 0x1000, 0x10)
+
+                    ADDRESS
+  ------------------
+  |                |0x100
+  |                |
+  ------------------
+  |                |0x104
+  |                |
+  ------------------
+  |                |0x108
+  |                |
+  ------------------
+  | LDR x16, #0x8  |0x10C
+  |                |
+  ------------------
+  | BLR x16        |0x110              +---------------------+
+  |                |------------------>|STP x0, x1 [SP]      | shelladdr
+  ------------------                   |STP x2, x3 [SP, #0x8]|
+  | .quad shelladdr|0x114              |...                  |
+  |                |                   |LDR x0, kdebug_str   |
+  ------------------                   |LDR x16, kprintf     |
+  |                |0x11C              |BLR x16              |
+  |                |<+                 |old insn from 0x10C  |
+  ------------------ |                 |old insn from 0x110  |
+                     |                 |...                  |
+                     +-----------------|RET                  |
+                     back to orig code +---------------------+
+
+The shellcode advances X30 as well, so that we return to a valid
+instruction (0x10C-0x11C are not restored upon the shellcode's execution).
+At the time of this writing there are other (public) ways to achieve the
+same result, but that's what I did, and the most important point I'd like
+to show here is that infrastructure work is extremely important, and I
+think every decent researcher who has experience in the field, has written
+some tools\scripts to ease the research process. Besides, at the
+return\appearance of an AMCC bypass, this could sleep be handy ;)
+
+--[ 5 - Reversing AppleD5500.kext
+
+Continuing our research, we know that AppleD5500 has something to do with
+IOSurfaces. So the next step is to see where the driver actually looks
+up\fetches IOSurface objects based on their IDs. A quick string search
+reveals the following string:
+
+"AppleVXD393::allocateKernelMemory kAllocMapTypeIOSurface -
+lookupSurface failed. %d\n"
+
+Going to the place where this string is being used, I did the same thing -
+I added a comment near every virtual call to see where the driver probably
+uses IOSurface (you can probably guess by now that this is an automated
+script, another 'infrastructure' work :) ). This indeed looked like an
+IOSurface object, but to verify that for 100%, I used the same kernel
+tracing technique like before and checked the vtable of the object in use.
+This was indeed an IOSurface vtable! This means we know now where the
+IOSurface object is being looked up. IOSurface was stored exactly in the
+same offset used in our mysterious memset call. Using the kernel tracing
+technique we see that indeed this IOSurface object is used for the memset
+as well! So if we can control the IOSurface object we can do an arbitrary
+write.
+
+Unfortunately, at this point Apple silently fixed the IOSurface plane bug,
+but I got involved in this research deep enough to continue researching
+this area of AppleD5500.
+
+Now the next part is to make sure we control this IOSurface object. We can
+obviously do that assuming we magically have an AppleD5500 send right port,
+but perhaps we can influence mediaserverd to supply our own IOSurface
+object.
+
+--[ 6 - Influencing AppleD5500.kext via mediaserverd
+
+Reverse engineering mediaserverd and looking for calls to anything that
+looks like AppleD5500 yielded no results, but after further investigation
+(= symbols and strings search). I saw that VideoToolbox was responsible for
+video decoding, and thus I assumed it was responsible for AppleD5500 as
+well (though no mention of AppleD5500 was in VideoToolbox).
+
+When looking for AppleD5500 strings in the entire dyld_shared_cache, I
+found out that a library named H264H8 contained several different
+references to AppleD5500. One of the interesting call flow was:
+
+AppleD5500WrapperH264DecoderDecodeFrame
+        --> AppleD5500DecodeFrameInternal
+              --> IOConnectCallStructMethod ; Calling one of the driver's
+                                            ; 'exposed usermode API' [3]
+
+AppleD5500WrapperH264DecoderDecodeFrame had no xrefs unfortunately, but as
+(most) of the code isn't written not to be used (or it would be optimized
+out in that case), I assumed this function might be inside a vtable.
+
+Binary search in IDA for the address of
+AppleD5500WrapperH264DecoderDecodeFrame indeed resulted in something that
+looked like a vtable. The vtable used in an object's initialization code in
+a function called AppleD5500WrapperH264DecoderCreateInstance. H264Register
+was an exported function with no symbols and no xrefs, but the string
+"H264Register" did appear in VideoToolbox. It appears that VideoToolbox
+treated H264H8 as a dynamic library and H264Register as the "entry point"
+(found with dlsym).
+
+So to actually trigger usage of the driver without having a send right to
+the driver, we needed to do the following:
+
+     +----------------------------------------------------------+
+     |XPC request to mediaserverd (VTDecompressionSessionCreate)|
+     +----------------------------+-----------------------------+
+                                  |
+                                  v
+                   +------------------------------+
+                   |dlopen & dlsym to H264Register|
+                   +--------------+---------------+
+                                  |
+                                  v
+             +------------------------------------------+
+             |AppleD5500WrapperH264DecoderCreateInstance|
+             +--------------------+---------------------+
+                                  |
+                                  v
+                       +---------------------+
+                       |Utilizing the vtables|
+                       +---------------------+
+                                  |
+                                  v
+              +----------------------------------------+
+              |AppleD5500WrapperH264DecoderStartSession|
+              +----------------------------------------+
+                                  |
+                                  v
+              +---------------------------------------+
+              |AppleD5500WrapperH264DecoderDecodeFrame|
+              +---------------------------------------+
+                                  |
+                                  v
+                   +-----------------------------+
+                   |AppleD5500DecodeFrameInternal|
+                   +-----------------------------+
+                                  |
+                                  v
+                     +-------------------------+
+                     |IOConnectCallStructMethod| <- driver entry point
+                     +-------------------------+
+
+VTDecompressionSessionDecodeFrame is a documented API that checks if we're
+a "server" (e.g, mediaserverd) and does a lot of logic assuming access to
+those drivers. Or it just sends a mach message to mediaserverd if we're not
+a server. Despite being 'documented', VTDecompressionSessionDecodeFrame had
+a secret undocumented feature which I discovered during reverse engineering
+AppleD5500WrapperH264DecoderDecodeFrame (so a much later stage of this
+API).
+
+It is possible to embed some properties in the sampleBuffer, in a
+dictionary called "tileDecode":
+
+tileDecodeDict = CMGetAttachment(sampleBuffer, CFSTR("tileDecode"), 0);
+
+if (tileDecodeDict) {
+    cfnum = CFDictionaryGetValue(tileDecodeDict,
+            CFSTR("canvasSurfaceID"));
+    uint32_t surfaceID;
+    CFNumberGetValue(cfnum, surfaceID);
+    ...
+    x = ... CFDictionaryGetValue(..., CFSTR("offsetX"));
+    y = ... CFDictionaryGetValue(..., CFSTR("offsetY"));
+    lastTile = CFDictionaryGetValue(..., CFSTR("lastTile"));
+}
+
+The dictionary had 4 properties (or at least, I saw 4 properties):
+"canvasSurfaceID", "offsetX", "offsetY", "lastTile". I had no idea what
+these properties meant, but "canvasSurfaceID" sounded perfect for our case:
+What if we could supply a surface ID to canvasSurfaceID, and hope that,
+magically, this surface will be used in AppleD5500 in the behaviour we saw
+previously?
+
+And so it appears - this could indeed influence the behaviour of
+mediaserverd and make sure it sends our requested surface object to
+AppleD5500!!
+
+This could be verified both by reverse engineering mediaserverd and
+following the IOConnectCallStructMethod call, and the buffer given to
+AppleD5500, or simply using the kernel tracing technique to see whether the
+surfaceID of the object in AppleD5500 matches the surfaceID we sent (which
+requires prior reverse engineering of IOSurface.kext).
+
+It could also be performed by calling the function IOSurfaceRoot has to
+lookup surface IDs, and see if we get back the value we expect given our
+specific surfaceID. Most important thing is - to make sure that this indeed
+influenced the given surfaceID. I personally did it by reverse engineering
+mediaserverd and following these calls, because I was interested in offsetX
+and offsetY as well, though this isn't necessary (but proved to be useful,
+as you'll see soon ;) ).
+
+--[ 7 - _The_ bug
+
+Back to our main objective, get to that memset with our arbitrary 0x80
+write. Looking up the code, I noticed the following:
+
+if ( context->tile_decode )
+{
+    dest_surf->tile_decode = 1;
+    tile_offset_x = context->tile_offset_x;      // [0x1]
+    dest_surf->tile_offset_x = tile_offset_x;
+    tile_offset_y = context->tile_offset_y;      // [0x2]
+    dest_surf->tile_offset_y = tile_offset_y;
+    v73 = tile_offset_x +
+        tile_offset_y * 
+            dest_surf->surf_props.plane_bytes_per_row[0];   // [0x3]
+    v74 = tile_offset_x
+        + ((dest_surf->surf_props.plane_bytes_per_row[1] *  // [0x4]
+        tile_offset_y + 1) >> 1)
+        + dest_surf->surf_props.plane_offset_again?[1];     // [0x5]
+    dest_surf->surf_props.plane_offset[0] = v73 +
+    dest_surf->surf_props.plane_offset_again?[0];
+    dest_surf->surf_props.plane_offset[1] = v74;
+}
+...
+if ( !context->field_4E0 &&
+   !(context->some_unknown_data->unk & 0x30) ) // [0x6]
+{
+  surface_buffer_mapping = v85->surf_props.surface_buffer_mapping;
+  if ( surface_buffer_mapping )
+    memset_stub(
+        (char *)surface_buffer_mapping +
+        (unsigned int)*(_QWORD *)&v85->surf_props.plane_offset[1],
+        0x80LL,
+        ((dest_surf->surf_props.plane_height[0] >> 1) *
+        (*(_QWORD *)&dest_surf->surf_props.plane_offset[1] >> 0x20)));
+}
+
+The data in [0x1] and [0x2] are completely controlled by the user. These
+are the offsetX and offsetY which we provided in the dictionary and they
+were forwarded exactly without any check.
+
+It looks like, [0x1] and [0x2] are being used in a calculation that
+ultimately leads not only to a write of 0x80s with an arbitrary length, but
+also to control the offset from which the write is done! This makes our
+primitive much more powerful as we can make our overwrite more accurate.
+
+The values mentioned in [0x3], [0x4] and [0x5] are attributes of the
+IOSurface in question, so they are usually somewhat controllable. In this
+particular case, the limitations on these attributes pose no restrictions
+on the impact of the memset's primitive. While these attributes aren't
+really within the scope of the paper, for the curious reader, you are
+welcomed to reverse IOSurface::parse_properties to see what IOSurface
+expects to receive for creation.
+
+One problem I noticed with kernel tracing though, is that we never get to
+the memset because of the following condition:
+
+context->some_unknown_data->unk & 0x30 // [0x6]
+
+The obvious problem we face here is that there are no sources and these are
+actual offsets in a struct and unfortunately there's no easy deterministic
+way to know which object we look at. Looking at the assembly code for this
+line, it is decompiled from the following:
+
+; X19 = context
+LDR             X8, [X19,#0x448]    ; X8 = context->some_unknown_data
+LDRB            W8, [X8,#6]         ; W8 = unk
+AND             W8, W8, #0x30       ; unk & 0x30
+CBNZ            W8, skip_memset     ; if (unk & 0x30) goto skip_memset;
+
+Because the offsets weren't so common (0x448, 0x6), it is possible to
+actually grep the entire driver text section and start trying to find the
+right reference by grepping. Because this happens pretty often when
+reversing IOKit drivers (or reversing "large" binaries anyway), I highly
+recommend automating this process. Imagine how good life would be if you
+could just grep for "STR *, [*, #0x448]". It's not a oneliner in Python,
+but for the long run this worths it. For this case however, grepping would
+be enough:
+
+$ cat d5500 | grep STR | grep 448 | grep -v SP
+0xfffffff006c30448L	STR             D1, [X19,#0xA90]
+0xfffffff006c41448L	STRB            W13, [X1]
+0xfffffff006c44488L	STRH            W17, [X13,X15,LSL#1]
+0xfffffff006c4481cL	STR             W8, [X19,#0x64C]
+0xfffffff006c44890L	STRB            W9, [X8,#6]
+0xfffffff006c448e8L	STR             W9, [X8,#4]
+0xfffffff006c47448L	STRB            W0, [X19,#0x2A0]
+0xfffffff006c495ccL	STR             X9, [X10,#0x448]   ; only option
+0xfffffff006c50448L	STR             W24, [X22,#0x17BC]
+
+For brevity, I'll sum this xref looking process for you - it wasn't
+magical, and I made some tools to speed up the process. Sometimes the
+offsets are very common and then grepping won't work - for this case
+sometimes the best way is just manually following the code flow. Going
+further, I eventually got to this code:
+
+LDR             X11, [X19,#0x1B0]
+LDRH            W11, [X11,#0x24]
+LDR             X12, [X19,#0x28]
+LDRH            W13, [X12,#6]
+MOV             W14, #0xFFCF
+AND             W13, W13, W14
+BFI             W13, W11, #4, #2
+STRH            W13, [X12,#6] ; This is the "unk" we were looking for.
+
+I then looked for 0x1B0, which was responsible for this entire calculation,
+and then I saw the following string:
+
+"CH264Decoder::DecodeStream error h264fw_SetPpsAndSps"
+
+In the same function, I found another interesting string:
+
+"AVC_Decoder::ParseHeader unsupported naluLengthSize"
+
+--[ 8 - H.264 in general and in iOS
+
+I googled then "AVC nalu" and the first result I got was "Introduction to
+H.264: (1) NAL Unit" [6].
+
+I figured, it might be easier to understand a little bit more about H.264
+(as I had 0 experience with that before this research). The standard of
+H.264 can be found at [7].
+
+The relevant page for NAL unit is section 7.3.1, "NAL unit syntax". As we
+can see from the copy, each NAL unit has a type and is being processed
+according to its type ("nal_unit_type"). From all of the different NAL unit
+types, there are 3 which are necessary to know:
+
+*) SPS (sequence parameter set): General properties for a coded video
+sequence. An example of a property which is held by SPS is the "level_idc"
+which is a specified set of constraints that indicate a required decoder
+performance.
+
+*) PPS (picture parameter set): General properties for a coded picture
+sequence. An example of a property that PPS contains is
+"deblocking_filter_control_present_flag" - flags related to the deblocking
+filter - a video filter which helps smoothing edges between macroblocks in
+the video. Macroblocks are like blocks of pixels (a very rough description,
+but good enough for our case).
+
+*) IDR (Instanteous decoding refresh): This is a standalone frame, a
+complete picture which doesn't need other pictures to be displayed. IDR is
+always the first NAL in a video sequence (because it's standalone and other
+frames depend on it).
+
+The question is - how to find the appropriate type in the kernel and the
+code that processes each NAL unit according to its type? I started 
+searching for NAL unit type strings in the kernel (SPS, IDR, PPS, etc), and
+found the following piece of code:
+
+LDP             W9, W8, [X19,#0x18]
+CBNZ            W9, parse_nal_by_type   ; [0xA]
+CMP             W8, #5
+B.EQ            idr_type_and_no_idc_ref
+
+parse_nal_by_type
+SUB             W9, W8, #1              ; switch 12 cases
+CMP             W9, #0xB
+B.HI            def_FFFFFFF006C3A2DC
+ADRP            X10, #jpt_FFFFFFF006C3A2DC@PAGE
+ADD             X10, X10, #jpt_FFFFFFF006C3A2DC@PAGEOFF
+LDRSW           X9, [X10,X9,LSL#2]
+ADD             X9, X9, X10
+BR              X9                      ; switch jump
+
+idr_type_and_no_idc_ref
+ADRP            X0, #aZeroNal_ref_id@PAGE ; "zero nal_ref_idc with IDR!"
+ADD             X0, X0, #aZeroNal_ref_id@PAGEOFF
+BL              kprintf
+MOV             W0, #0x131
+B               cleanup
+
+
+As we can see here, "idr_type_and_no_idc_ref" happens "if [X19+0x18] == 0"
+(at the [0xA] marker) and if [X19+0x1C]. Checking in the manual, we can see
+that for NAL type == 5, we get indeed an IDR NAL. Based on this findings,
+we can assume that [X19+0x18] is nal_ref_idc and that [X19+0x1C] is the
+type of the NALunit!
+
+Back to our mysterious offset 0x1B0, I started thinking - perhaps it is
+either PPS or SPS? The string we found earlier is pretty clear that the
+function is doing something with them. I then decoded a video with the API
+and using the kernel tracing technique, I looked at the content of 0x1B0 to
+see if it looks like something which looks like SPS or PPS. Luckily for us
+- this was indeed the SPS object! 
+
+I figured that out because within 0x1B0, All of the values were in fact the
+values of the SPS object which is described in the standard (section
+7.3.2.1.1 [7], I love you too).
+
+By slightly changing the SPS of the video I was tracing, I saw that the
+changes in 0x1B0 were correlated. In fact, most of the SPS object was
+stored there in the same order as it appears on the manual :) so this was
+even easier once I found the function in the kext which filled up the
+object. This was sufficient to understand the mysterious unk & 0x30 check
+which means (wait for it):
+
+If SPS->chroma_format_idc (section 7.3.2.1.1 [7]) == 0, we get to the
+memset we were waiting for! At this point, I already had some tools to
+create and manipulate videos. So creating a video with chroma_format_idc ==
+0 wasn't a big problem. To send a video for decoding, you first have to call
+the function CMVideoFormatDescriptionCreateFromH264ParameterSets which
+creates an object that holds information about the SPS and the PPS of the
+video. This object is given to mediaserverd to create the session. After
+the session is created, we get a handle representing the session, and give
+it to *DecodeFrame which ioctls the driver from mediaserverd (see graph
+above). I created such a video, sent it to decoding, was waiting for it to
+crash the device and... nothing happened!
+
+After a brief reversing of mediaserverd, it appears mediaserverd rejects
+chroma_format_idc == 0!
+
+--[ 9 - mediaserverd didn't read the fucking manual
+
+But...
+
+mediaserverd only gets the SPS information at the beginning in the function
+CMVideoFormatDescriptionCreateFromH264ParameterSets which is only being
+called once. According to the manual (haven't seen a single case in
+practice though, and I've seen plenty of "Snow Monkey in Japan 5k"s during
+this research), there could be multiple SPS objects there (section
+7.4.1.2.1 in [7]). Which is odd, because if mediaserverd only gets the SPS
+and PPS information once, and rejects them, then how it is supposed to be
+aware of the other SPS\PPS packets? (*DecodeFrame just passes the packets
+to the driver without doing any sanity check).
+
+With this in mind, I decided I'd just try creating a video with a normal
+SPS\PPS properties, then in the middle of the video embed a new IDR, which
+points to a new PPS, which points to a new PPS with chroma_format_idc == 0,
+and see if that bypasses the check deployed in mediaserverd.
+
+                        +------------------------+
+                        |          SPS           |
+                        | chroma_format_idc > 0  |
+                        |seq_parameter_set_id = 1|
+                        +------------------------+
+                                    |
+                                    v
+                        +------------------------+
+                        |          PPS           |
+                        |seq_parameter_set_id = 1|
+                        |pic_parameter_set_id = 1|
+                        +------------------------+
+                                    |
+                                    v
+                        +------------------------+
+                        |          IDR           |
+                        |pic_parameter_set_id = 1|
+                        +------------------------+
+                                    |
+                                    v
+                        +------------------------+
+                        |          SPS           |
+                        | chroma_format_idc = 0  |
+                        |seq_parameter_set_id = 2|
+                        +------------------------+
+                                    |
+                                    v
+                        +------------------------+
+                        |          PPS           |
+                        |seq_parameter_set_id = 2|
+                        |pic_parameter_set_id = 2|
+                        +------------------------+
+                                    |
+                                    v
+                        +------------------------+
+                        |          IDR           |
+                        |pic_parameter_set_id = 2|
+                        +------------------------+
+
+The moment the IDR packet with pic_parameter_set_id = 2 was sent, the
+kernel crashed with the panic we were expecting! Slightly afterwards, iOS
+11 was released. And unfortunately - the same PoC code did not crash the
+kernel...
+
+I diffed the driver code but there wasn't any change. What I did notice
+however, is that the string "canvasSurfaceID" did not appear in the binary
+of the driver anymore. I did notice that a bunch of undocumented APIs were
+introduced then, namely VTTileDecompression* (instead of VTDecompression).
+I was too lazy analyzing the function with IDA (to be fair, IDA and
+dyld_shared_cache aren't good friends yet), so I decided to go with a
+different approach: try attaching debugserver to mediaserverd, and change
+the given values to IOConnectCallStructMethod, hoping that the kernel
+crashes if I change it to the same values back in iOS 10.x. Attaching the
+debugger obviously doesn't work out of the box. I assumed both the driver
+and the process need the run-unsigned-code entitlement, so without even
+checking why things didn't work, I just injected the entitlement to
+mediaserverd and to debugserver and tried attaching debugserver again.
+
+The entitlements' dictionary is stored in
+task->bsd_info->p_ucred->cr_label->l_ptr:
+
+struct task {
+	/* Synchronization/destruction information */
+	decl_lck_mtx_data(,lock)		/* Task's lock */
+	_Atomic uint32_t	ref_count;	/* Number of references to me */
+	boolean_t	active;		        /* Task has not been terminated */
+	boolean_t	halting;	        /* Task is being halted */
+    ...
+	/* Task security and audit tokens */
+#ifdef  MACH_BSD 
+	void *bsd_info;                 // struct proc
+    ...
+};
+
+struct	proc {
+	LIST_ENTRY(proc) p_list;		/* List of all processes. */
+
+	pid_t		p_pid;			/* Process identifier. (static)*/
+	void * 		task;			/* corresponding task (static)*/
+	struct	proc *	p_pptr;		 	/* Pointer to parent process.(LL) */
+	pid_t		p_ppid;			/* process's parent pid number */
+	pid_t		p_pgrpid;		/* process group id of the process (LL)*/
+
+    ...
+	/* substructures: */
+	kauth_cred_t	p_ucred;		/* Process owner's identity. (PUCL) */
+    ...
+};
+
+struct ucred {
+	TAILQ_ENTRY(ucred)	cr_link; 
+	u_long	cr_ref;			/* reference count */
+
+struct posix_cred {
+	/*
+	 * The credential hash depends on everything from this point on
+	 * (see kauth_cred_get_hashkey)
+	 */
+	uid_t	cr_uid;			/* effective user id */
+	uid_t	cr_ruid;		/* real user id */
+	uid_t	cr_svuid;		/* saved user id */
+	short	cr_ngroups;		/* number of groups in advisory list */
+	gid_t	cr_groups[NGROUPS];	/* advisory group list */
+	gid_t	cr_rgid;		/* real group id */
+	gid_t	cr_svgid;		/* saved group id */
+	uid_t	cr_gmuid;		/* UID for group membership purposes */
+	int	cr_flags;		/* flags on credential */
+} cr_posix;
+	struct label	*cr_label;	/* MAC label - contains the dictionary */
+	/*
+	 * NOTE: If anything else (besides the flags)
+	 * added after the label, you must change
+	 * kauth_cred_find().
+	 */
+	struct au_session cr_audit;		/* user auditing data */
+};
+
+struct label {
+	int	l_flags;
+	union {
+		void	*l_ptr;
+		long	 l_long;
+	}	l_perpolicy[MAC_MAX_SLOTS];
+};
+
+This time it worked! First, I took an iOS 10.x device, triggered the
+problematic flow, and put a breakpoint just before the
+IOConnectCallStructMethod function (which is the actual ioctl to the
+driver). I knew that this works, so I just copied the entire input buffer
+to the IOConnectCallStructMethod.  I then called the corresponding
+functions (same API, but changed the VT prefix to VTTile) and set a
+breakpoint again. Once I reached IOConnectCallStructMethod, I simply
+overwrote the entire input buffer and replaced it with the input buffer
+I copied from the iOS 10.x device. The kernel crashed! From there, it was
+easy to reverse engineer backwards from IOConnectCallStructMethod and see
+that the 6th parameter given to VTTileDecompressionSessionDecodeTile is
+simply the X and Y offsets shifted so that they fit in a 64 bit integer
+(each one of the offsets is a 32 bit integer).
+
+Apple eventually fixed the bug by checking in the kernel for out of bounds
+before performing the write. They re-verified the values once again in 
+AppleD5500.kext. If you would like to find the actual code where Apple
+introduced the checks, you can search up the kernel for the following
+string as this is now printed when putting bad arguments:
+
+"bad IOSurface* in tile offset check"
+
+After this string there's a series of checks for the attributes of the
+IOSurface object.
+
+--[ 0xA - Takeaways
+
+*) I've just displayed one vulnerability in an attack vector accessible
+from within the sandbox. Parsing video and making sure there aren't
+mistakes isn't that easy, and it's all done from within the kernel! It's
+obvious that there are more vulnerabilities in this driver, and in other
+codecs in iOS as well. The attack surface is (sometimes) more important
+than the vulnerabilities, and I think this is a good example because
+nowadays it is not _that_ common to find simple buffer overflows.
+
+*) Manuals are super important. Often when reversing drivers, it is easy to
+fall for looking for patterns (looking for integer overflows, races,
+appropriate refcounts, etc). Understanding what we actually reverse and not
+just looking blindly for patterns was the only reason I thought about
+putting two SPS in the same packet. I didn't try "bypassing" mediaserverd,
+I just understood that SPS has an ID, and hence it is likely that there can
+be more than one of them. Maybe it wasn't the reason I found the
+vulnerability this time, but that happens as well.
+
+*) Infrastructure is super helpful. Sometimes people can get lazy writing
+tools, but these might be helpful eventually, even if it takes a lot of
+time writing them (the kernel patching technique was really easy to write,
+but I did find myself writing a single tool for a few days just to have
+things easier when researching). It's an investment for the long term, but
+without the kernel tracing technique I would have probably given up
+already. I had so many assumptions which were mandatory to verify, and it
+was very easy thanks to the kernel tracing technique.
+
+--[ 0xB - Final words
+
+I'm not sure how you readers feel about this paper, but from section 7 till
+the first crash, it took me about a week. I tried to put as much details as
+I could into that paper, but unfortunately sometimes you either forget or
+ignore details. While it was time consuming and some experience IS needed
+for that, I'm trying to show you that it is not impossible to actually find
+bugs (good, reachable from the sandbox bugs). I highly encourage you to
+stop mentally masturbating about iOS bugs and just throw a freakin'
+kernelcache into IDA and just start reversing. It's much easier than it
+looks! We're still in the era where someone can drag a kernelcache into IDA
+and have a good bug within 2 weeks. Remember my words, in 5 years we'll
+miss these days, where we can completely wrap up such a project within a
+month.
+
+Additionally, I would like to thank Zimperium for letting me doing this
+research. It is not always easy for a company to simply let a single person
+to do his own research on the internals of a video decoder driver, hoping
+that when he says there's something coming up, something actually comes up.
+
+P.S. - I did start working on an exploit, and then more important things
+had priority over it. Hence some of the attached code might be redundant.
+
+Sincerely yours,
+Adam Donenfeld, aka @doadam.
+
+--[ 0xC - References
+
+[1] https://nvd.nist.gov/vuln/detail/CVE-2018-4109
+[2] https://nvd.nist.gov/vuln/detail/CVE-2015-7006
+[3] https://developer.apple.com/documentation/iokit
+[4] https://github.com/kpwn/yalu102
+[5] https://xerub.github.io/ios/kpp/2017/04/13/tick-tock.html
+[6] https://yumichan.net/video-processing/video-compression/
+    introduction-to-h264-nal-unit/
+[7] https://www.itu.int/rec/T-REC-H.264
+
+--[ 0xD - Code
+
+|=[ EOF ]=---------------------------------------------------------------=|

@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3e, Phile #0x0a of 0x10",
+  "title": "Attacking Apache with builtin Modules in Multihomed Environments",
+  "authors": "Andi <andi@void.at>",
+  "date": "Not specified",
+  "short_summary": "This article discusses a method to exploit Apache's memory layout in multihomed environments, allowing an attacker to hijack virtual hosts by modifying memory directly. It details the memory structure of Apache, how to access it, and provides a sample attack scenario.",
+  "summary": "The article presents a detailed examination of how to exploit Apache web servers that utilize built-in modules like PHP and Mod_perl in a multihomed environment. The author explains that since these modules run in the same memory space as the Apache process, an attacker with access to a web server can manipulate the memory of the Apache processes directly. The paper outlines the memory layout of Apache, specifically focusing on how virtual hosts are managed and stored in memory. It discusses the process of retrieving and modifying virtual host information, which can lead to hijacking requests meant for legitimate hosts.\n\nThe article provides a step-by-step guide on how to execute an attack, including the necessary commands and code snippets to manipulate the Apache memory. It also highlights the importance of understanding the internal workings of Apache to effectively exploit its vulnerabilities. The author concludes by suggesting mitigations, such as disabling certain functions in PHP and using read-only configurations for Apache. This article remains relevant for security professionals and researchers interested in web server vulnerabilities and memory exploitation techniques."
+}

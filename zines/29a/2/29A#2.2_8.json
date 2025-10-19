@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Compression engines",
+  "authors": "Super/29A & Vecna/29A",
+  "date": "",
+  "historical_context": "This article discusses compression techniques used in viruses, reflecting the hacker culture's focus on efficiency and stealth in malware development during the early 1990s.",
+  "target_audience": "Hackers, malware developers, security researchers",
+  "short_summary": "The article introduces various compression engines designed for use in viruses, focusing on the Super Tiny Compression Engine (STCE) and additional engines by Vecna. It details their functionality, implementation, and potential applications in malware.",
+  "summary": "In this article, Super/29A presents the Super Tiny Compression Engine (STCE), a compact 413-byte compression engine designed for viruses. The STCE allows for the inclusion of compressed payloads, such as images or VxD droppers, and can even compress infected files, challenging traditional antivirus definitions. The author emphasizes the importance of creativity in utilizing compression techniques to enhance malware stealth and functionality. The article provides a detailed explanation of the STCE's operation, including its input and output requirements, and offers suggested register values for optimal performance.\n\nVecna/29A contributes additional compression engines, CRUNCH/UNCRUNCH and PACK/UNPACK, which are smaller and serve different purposes. CRUNCH/UNCRUNCH is optimized for text files, leveraging frequency analysis of ASCII characters to achieve better compression ratios, while PACK/UNPACK focuses on zero-repeat compression for code with many zeros. The article showcases the ingenuity of the hacker community in developing efficient tools for malware, highlighting the ongoing cat-and-mouse game between malware authors and antivirus developers."
+}

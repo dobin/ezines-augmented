@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Vulnerabilities in the S/KEY One-Time Password System",
+  "authors": "Mudge",
+  "date": "01/01/1997",
+  "historical_context": "This article was written during a time when one-time password systems were gaining traction as a method to enhance security against password sniffing attacks. S/KEY was one of the early implementations of such systems.",
+  "target_audience": "Security professionals, hackers, and anyone interested in password security mechanisms.",
+  "short_summary": "Mudge discusses several vulnerabilities in the S/KEY one-time password system, including risks associated with plaintext transmission, dictionary attacks, and session hijacking. The article emphasizes the importance of understanding these vulnerabilities to avoid a false sense of security.",
+  "summary": "In this article, Mudge delves into the vulnerabilities of the S/KEY one-time password system, which was designed to enhance security by generating unique passwords for each session. He highlights the ease with which attackers can exploit the system due to plaintext transmission of sensitive information, making it susceptible to dictionary attacks. Users often choose weak passwords, which can be easily guessed, allowing attackers to compute valid responses for future challenges without needing to know the original password. Mudge also points out that improper file permissions on the skeykeys file can expose sensitive data, further compromising security. \n\nThe article continues to explore various attack vectors, including spoofing and race conditions, which can allow unauthorized access to systems using S/KEY. Mudge emphasizes that while S/KEY is a valuable tool, it is not foolproof and should not be relied upon as the sole security measure. The conclusion serves as a reminder that security is a multifaceted issue, and users must remain vigilant and informed about potential vulnerabilities to maintain a secure environment."
+}

@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 2, Issue 5, File 007",
+  "title": "A New Virus Naming Convention",
+  "authors": "Fridrik Skulason, Alan Solomon, Vesselin Bontchev",
+  "date": "November 1991",
+  "historical_context": "This article discusses the establishment of a standardized naming convention for computer viruses, which was a significant issue in the early 1990s as the number of viruses proliferated.",
+  "target_audience": "Security professionals, virus researchers, anti-virus developers, hackers.",
+  "short_summary": "The article outlines a proposed naming convention for computer viruses aimed at reducing confusion and improving identification. It details the structure of virus names and guidelines for naming to ensure clarity and consistency.",
+  "summary": "In November 1991, a committee formed at the Anti-Virus Product Developers Conference proposed a new naming convention for computer viruses to address the chaos in virus identification. The convention suggests a structured format consisting of Family_Name, Group_Name, Major_Variant, and Minor_Variant, with specific guidelines for each component to avoid confusion and ensure clarity. The article emphasizes the importance of avoiding company names, numeric identifiers, and offensive terms in naming, while advocating for the retention of commonly recognized names to maintain continuity in the field. \n\nThe authors express support for the committee's efforts but also raise concerns about the lack of strict rules, urging for immediate establishment of names for existing viruses to prevent future disorganization. They highlight the need for an open forum for discussion among researchers and developers to refine the naming process, ensuring that the community can contribute to a more systematic approach to virus classification. This initiative is seen as a crucial step towards better virus management and identification in the rapidly evolving landscape of computer security."
+}

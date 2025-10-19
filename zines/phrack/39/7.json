@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Thirty-Nine, File 7 of 13",
+  "title": "Special Area Codes II",
+  "authors": "Bill Huttig",
+  "date": "February 24, 1992",
+  "historical_context": "This article is a follow-up to the first 'Special Area Codes' file published in Phrack Issue 24, providing updated information on toll-free service area codes.",
+  "target_audience": "Hackers, phreakers, telecommunications enthusiasts, and security professionals.",
+  "short_summary": "This article presents an updated listing of area codes associated with 800 toll-free services, detailing which carriers handle calls to these numbers and the limitations of caller identification.",
+  "summary": "In 'Special Area Codes II', Bill Huttig provides a comprehensive update on the prefixes used for 800 toll-free services, a crucial resource for anyone involved in telecommunications or hacking. The article outlines the various carriers responsible for handling calls to these numbers, emphasizing that the choice of carrier routing cannot be overridden with traditional 10xxx routing methods. Additionally, it highlights the fact that the called party receives a record of incoming calls, which cannot be blocked using common caller ID suppression techniques like *67. This information is particularly valuable for phreakers looking to exploit toll-free services while remaining aware of the limitations imposed by the telecommunications infrastructure of the time. Overall, the article serves as a practical guide for navigating the complexities of toll-free calling and the associated risks."
+}

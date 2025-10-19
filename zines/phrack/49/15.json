@@ -1,0 +1,8 @@
+{
+  "reference": "Volume Seven, Issue Forty-Nine, Phile #15 of 16",
+  "title": "Port Scanning without the SYN flag",
+  "authors": "Uriel Maimon",
+  "date": "",
+  "short_summary": "This article discusses advanced techniques for port scanning, specifically focusing on methods that do not rely on the SYN flag, thus evading detection by common security measures.",
+  "summary": "In this article, Uriel Maimon explores various methods of port scanning that bypass the traditional SYN flag approach. The author begins by outlining the evolution of port scanning techniques, from the basic full TCP connection method to the more stealthy SYN scanning. However, SYN scanning still leaves traces that can be detected by certain logging mechanisms. Maimon introduces the concept of 'StealthScan', which exploits vulnerabilities in BSD networking code to perform scans without establishing a full connection. This method utilizes TCP packets with FIN and ACK flags to infer the state of ports without triggering standard logging mechanisms.\n\nThe article details the advantages and disadvantages of these stealth scanning techniques, emphasizing their effectiveness against firewalls and logging systems. Maimon provides a technical breakdown of the scanning methods, including the construction of custom IP packets and the interpretation of responses from target ports. The author also notes the reliance on specific bugs in networking code, which may be patched in future updates, thus potentially diminishing the effectiveness of these techniques. Overall, this article serves as a valuable resource for security professionals and hackers interested in advanced port scanning methodologies."
+}

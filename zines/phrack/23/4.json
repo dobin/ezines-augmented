@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 23, File 4 of 12",
+  "title": "Utopia: An Introduction To The World Of Bitnet",
+  "authors": "Knight Lightning, Jester Sluggo",
+  "date": "January 1, 1989",
+  "historical_context": "This article was written during the early days of Bitnet, a significant network for academic communication, highlighting its importance in connecting universities and facilitating information exchange.",
+  "target_audience": "Hackers, security professionals, computer enthusiasts, and academics interested in network communication.",
+  "short_summary": "This article introduces Bitnet, a network designed for interuniversity communication. It covers its origins, basic functionalities, and communication methods, emphasizing its role in creating a connected academic community.",
+  "summary": "In 'Utopia: An Introduction To The World Of Bitnet,' Knight Lightning presents an overview of Bitnet, a pioneering network established in 1981 to facilitate communication among universities. The article details the network's origins, stemming from a survey by the City University of New York, and its subsequent growth, which connected numerous academic institutions. The author describes Bitnet as a 'store and forward' network, explaining how messages and files are transmitted between nodes, which are identified by unique addresses. This foundational understanding is crucial for users looking to navigate the network effectively.\n\nThe article elaborates on the various methods of communication available on Bitnet, including messages, files, and mail. Each method has its advantages and limitations, with messages being the quickest form of communication, while mail allows for larger file transfers but is slower. The author also provides practical examples of commands used to send messages and files, catering to both VM/CMS and VAX/VMS systems. Overall, the piece serves as a guide for newcomers to Bitnet, encouraging exploration and engagement within this burgeoning digital landscape."
+}

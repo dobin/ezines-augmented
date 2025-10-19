@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Advanced ZCME: Permutating Engine Research",
+  "authors": "Z0MBiE/29A",
+  "date": "18-07-98",
+  "historical_context": "This article is part of the early hacking culture, focusing on reverse engineering and code manipulation techniques prevalent in the late 1990s.",
+  "target_audience": "Hackers, security researchers, and enthusiasts of low-level programming and reverse engineering.",
+  "short_summary": "The article presents a detailed exploration of a permutating engine designed for code manipulation, including disassembly and command storage techniques. It emphasizes the importance of understanding assembly language and the mechanics of instruction execution.",
+  "summary": "In 'Advanced ZCME: Permutating Engine Research', the author delves into the intricacies of a custom-built engine aimed at manipulating executable code. The article outlines the architecture of the engine, which includes various components such as disassembly routines, command storage, and randomization techniques. The author provides code snippets that illustrate how the engine processes instructions, handles jumps, and manages memory, showcasing a deep understanding of assembly language and low-level programming concepts.\n\nThe piece also discusses the significance of marking commands and managing execution flow, emphasizing the need for precision in manipulating machine code. The author shares insights into the challenges faced during development, including the necessity of ensuring that the engine can handle various instruction types and the importance of maintaining a clean and efficient output. Overall, this article serves as a valuable resource for those interested in the technical aspects of code manipulation and reverse engineering, reflecting the hacker ethos of exploration and innovation in the realm of computer security."
+}

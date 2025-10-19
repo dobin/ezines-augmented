@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0b, Issue 0x3d, Phile #0x04 of 0x0f",
+  "title": "Toolz Armory",
+  "authors": "Phrack Staff",
+  "date": "",
+  "historical_context": "This article is part of the Phrack zine, which has been a significant publication in hacker culture since the late 1980s, showcasing tools and techniques relevant to the computer underground.",
+  "target_audience": "Hackers, security professionals, and enthusiasts interested in network tools and manipulation techniques.",
+  "short_summary": "The Toolz Armory section introduces several noteworthy tools for packet manipulation, shellcode building, object file obfuscation, ELF file manipulation, and network auditing. Each tool is briefly described along with its capabilities and potential applications.",
+  "summary": "In this edition of Phrack, the Toolz Armory presents a selection of tools that are essential for anyone involved in network security and hacking. The featured tools include Scapy, a versatile packet manipulation program that allows users to create and analyze network packets interactively using Python. ShellForge is highlighted as a shellcode builder that simplifies the creation of complex shellcodes from C, making it easier for developers to automate the process of compilation and testing. Objobf, part of the burneye2 suite, offers obfuscation for IA32 object files, enhancing security by complicating decompilation efforts.\n\nAdditionally, ELFsh is introduced as a scripting language for manipulating ELF objects, useful for tasks such as binary analysis and code injection. Finally, Packit is presented as a comprehensive network auditing tool that enables users to customize and manipulate IP traffic, making it invaluable for testing security measures and learning about TCP/IP protocols. Each tool is accompanied by a URL for further exploration, emphasizing the collaborative and open nature of the hacker community."
+}

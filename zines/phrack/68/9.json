@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0e, Issue 0x44, Phile #0x09 of 0x13",
+  "title": "Single Process Parasite",
+  "authors": "Crossbower",
+  "date": "Not specified",
+  "historical_context": "This article discusses techniques for injecting code into processes, a concept that has been relevant in both hacking and security research for decades.",
+  "target_audience": "Hackers, security researchers, and those interested in process manipulation techniques.",
+  "short_summary": "The article explores the concept of a 'parasite'—code injected into another process that operates stealthily. It details various methods of injection and presents practical examples of creating backdoors using these techniques.",
+  "summary": "In this article, Crossbower introduces the concept of a 'parasite'—a piece of code that is injected into a host process, allowing it to operate without detection. The author categorizes injection methods into three generations: using `fork()` and `clone()` to create child processes or threads, utilizing signals and alarms for time-sharing within a single process, and employing `setitimer()` for more granular control. Each method is accompanied by practical examples, demonstrating how to create backdoors that can listen for connections or monitor files without raising alarms.\n\nThe article culminates in the presentation of three working parasites: a process and thread backdoor, a remote file tailing parasite, and a single process backdoor. Each example illustrates the stealthy nature of these techniques, emphasizing their potential for evasion against traditional security measures. The author also discusses the importance of the injector tool, Cymothoa, which facilitates the customization and injection of shellcode into target processes, further enhancing the practical application of these concepts."
+}

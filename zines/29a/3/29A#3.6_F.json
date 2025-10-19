@@ -1,0 +1,44 @@
+{
+  "articles": [
+    {
+      "reference": "Volume Two, Issue 12, Phile #7 of 11",
+      "title": "Overwriting Encrypted OBJ Infector",
+      "authors": "Vecna",
+      "date": "1998",
+      "historical_context": "This article also stems from the CyberYoda contest, illustrating the evolution of virus coding techniques.",
+      "target_audience": "Malware developers, security researchers, and those interested in the history of computer viruses.",
+      "short_summary": "This article describes a virus that overwrites the LEDATA section of OBJ files with an encrypted copy of itself, demonstrating polymorphic techniques.",
+      "summary": "The 'Overwriting Encrypted OBJ Infector' is a sophisticated virus that targets OBJ files, specifically looking for the LEDATA section to overwrite it with an encrypted version of itself. The virus checks the size of the LEDATA section and ensures that the loading address is suitable for infection. The article includes assembly code that illustrates the virus's logic and encryption mechanism, highlighting the creativity and technical prowess of its author. This piece serves as a historical reference for the development of more complex malware techniques."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #8 of 11",
+      "title": "GALINDO Virus",
+      "authors": "Super/29A",
+      "date": "1998",
+      "historical_context": "Part of the early wave of resident viruses, showcasing the creativity of the 29A group.",
+      "target_audience": "Malware developers, retro computing enthusiasts, and security professionals.",
+      "short_summary": "This article presents a small resident COM and EXE infector that demonstrates the techniques used in early virus development.",
+      "summary": "The 'GALINDO Virus' is a compact 72-byte resident virus that infects both COM and EXE files. It employs a straightforward approach to stay resident in memory and infect files upon execution. The article provides assembly code that details the virus's functionality, including how it modifies file headers and executes infected files. This piece is notable for its brevity and efficiency, reflecting the early days of virus programming where size and stealth were paramount. The GALINDO Virus serves as an example of the ingenuity found in the hacker culture of the time."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #9 of 11",
+      "title": "MARIANO Virus",
+      "authors": "Super/29A",
+      "date": "1998",
+      "historical_context": "Another entry from the 29A group, showcasing the evolution of polymorphic virus techniques.",
+      "target_audience": "Malware developers, security researchers, and those studying the history of computer viruses.",
+      "short_summary": "This article details a polymorphic resident virus that infects COM and EXE files, illustrating advanced techniques for evasion.",
+      "summary": "The 'MARIANO Virus' is a 147-byte polymorphic virus that infects COM and EXE files. It employs a sophisticated encryption mechanism to obfuscate its code, making it harder for antivirus solutions to detect. The article includes assembly code that outlines the virus's structure and infection routine, showcasing the advanced techniques used to ensure its persistence and stealth. This virus is dedicated to a fellow virus writer, reflecting the camaraderie within the hacker community. The MARIANO Virus exemplifies the creativity and technical skill that characterized the early days of malware development."
+    },
+    {
+      "reference": "Volume Two, Issue 12, Phile #10 of 11",
+      "title": "Compo",
+      "authors": "Darkman/29A",
+      "date": "1998",
+      "historical_context": "Part of the early executable virus landscape, highlighting techniques for direct action infections.",
+      "target_audience": "Malware developers, security researchers, and enthusiasts of retro computing.",
+      "short_summary": "This article describes a parasitic executable virus that infects files by overwriting specific bytes, utilizing tunneling techniques.",
+      "summary": "The 'Compo' virus is a 145-byte parasitic executable virus that infects files in the current directory by overwriting a known area of constant bytes. It employs tunneling of interrupt 21h to evade detection and is designed to be oligomorphic, adding complexity to its detection. The article provides detailed assembly code that illustrates the virus's infection mechanism and the clever techniques used to ensure its stealth. Compo serves as a historical reference for the evolution of executable viruses and the creativity of its author, showcasing the early days of malware development."
+    }
+  ]
+}

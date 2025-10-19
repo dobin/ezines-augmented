@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "BELLCORE Information",
+  "authors": "The Mad Phone-man",
+  "date": "",
+  "historical_context": "This article provides insights into the technical aspects of telecommunication lines and their coding, reflecting the hacker culture's interest in understanding and exploiting telephony systems during the early days of hacking.",
+  "target_audience": "Hackers, phreakers, telecommunications professionals, and security researchers.",
+  "short_summary": "The article decodes Bellcore line numbers and service codes, providing a guide for identifying various telecommunication services. It details the structure of line numbers and the significance of specific service codes used in the telecommunications industry.",
+  "summary": "In 'BELLCORE Information', The Mad Phone-man delves into the intricate world of telecommunication line coding, specifically focusing on the Bellcore system. The article breaks down the structure of a typical line number, explaining how each segment corresponds to different types of services and functionalities. The author emphasizes the importance of understanding these codes for anyone looking to navigate or exploit telecommunication systems effectively. The detailed list of service codes, ranging from packet access lines to emergency reporting circuits, serves as a valuable reference for hackers and telecommunications enthusiasts alike. This knowledge not only aids in identifying services but also enhances the reader's ability to manipulate and utilize these systems for various purposes, reflecting the ethos of the hacker community during this era. The article is a treasure trove of information for those interested in the technical underpinnings of telephony and the potential for exploration within these frameworks."
+}

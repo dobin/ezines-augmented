@@ -1,0 +1,11 @@
+{
+  "reference": "Volume Four, Issue Thirty-Nine, File 8 of 13",
+  "title": "Air Fone Frequencies",
+  "authors": "Leroy Donnelly",
+  "date": "1991-09-09",
+  "historical_context": "This article was published shortly after the FCC's regulatory changes regarding air-ground radiotelephone services, which aimed to standardize and improve communication during flights.",
+  "target_audience": "Hackers, telecommunications enthusiasts, security professionals, and those interested in radio frequency communications.",
+  "short_summary": "This article provides an overview of the frequencies used for Air Fone telephone services during flights, detailing FCC regulations and channel allocations.",
+  "summary": "In 'Air Fone Frequencies', Leroy Donnelly outlines the frequencies allocated for Air Fone services, which facilitate communication between aircraft and ground stations. The article details the FCC's regulatory changes effective September 9, 1991, which included modifications to channel spacing, the introduction of control channels, and the empowerment of the FCC to assign channels to air-ground licensees. The author emphasizes the importance of these changes for ensuring non-discriminatory access to air-ground communication services.",
+  "summary_details": "The article lists specific communication and control channels, detailing their frequency ranges and the maximum effective radiated power (ERP) limits for both airborne and ground stations. Donnelly also provides a geographical layout of channel blocks, indicating where ground stations must be located to avoid interference. This technical insight is crucial for anyone interested in the operational aspects of air-ground communication systems, especially in the context of regulatory compliance and the evolution of telecommunications technology."
+}

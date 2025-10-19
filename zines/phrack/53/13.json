@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 8, Issue 53, article 13 of 15",
+  "title": "Designing and Attacking Port Scan Detection Tools",
+  "authors": "solar designer <solar@false.com>",
+  "date": "July 8, 1998",
+  "historical_context": "This article was written during a time when intrusion detection systems (IDS) were becoming increasingly important in network security, and the understanding of port scanning as a technique for probing systems was evolving.",
+  "target_audience": "Security professionals, hackers, and anyone interested in intrusion detection systems and network security.",
+  "short_summary": "The article discusses the vulnerabilities of intrusion detection systems (IDS) to port scans and presents a host-based detection tool called 'scanlogd'. It covers detection techniques, the importance of logging, and the challenges of false positives and negatives.",
+  "summary": "In 'Designing and Attacking Port Scan Detection Tools', solar designer explores the intricacies of intrusion detection systems (IDS) with a focus on detecting port scans. The article outlines various methods for identifying port scans, emphasizing the need for a balance between false positives and false negatives. It introduces 'scanlogd', a host-based tool designed to log port scans while addressing the challenges of spoofed source addresses and the limitations of traditional network-based IDS. The author argues that while complete detection of all port scans is impossible, a reliable system should aim to catch as many as possible without overwhelming the administrator with false alerts.\n\nThe article also delves into the technical aspects of logging and data structures, highlighting the potential for denial-of-service attacks against IDS and the importance of resource management. The author provides example code for 'scanlogd', illustrating the practical implementation of the discussed concepts. By focusing on the detection of port scans, the article serves as a valuable resource for security professionals looking to enhance their understanding of IDS and the tactics employed by attackers."
+}

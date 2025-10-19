@@ -1,0 +1,10 @@
+{
+  "reference": "Volume 0x0d, Issue 0x42, Phile #0x09 of 0x11",
+  "title": "Exploiting TCP and the Persist Timer Infiniteness",
+  "authors": "ithilgore",
+  "date": "2009",
+  "historical_context": "This article discusses vulnerabilities in the TCP protocol, particularly focusing on the Persist Timer, which was a significant concern in the context of Denial of Service (DoS) attacks.",
+  "target_audience": "Security researchers, network engineers, and hackers interested in TCP vulnerabilities and DoS attack methodologies.",
+  "short_summary": "The article explores the vulnerabilities associated with the TCP Persist Timer and presents Nkiller2, a tool designed to exploit these vulnerabilities for prolonged DoS attacks. It details the mechanics of TCP's behavior under certain conditions and how attackers can leverage these to exhaust system resources.",
+  "summary": "In this article, ithilgore delves into the intricacies of the TCP Persist Timer, a mechanism that can be exploited to create a Denial of Service (DoS) attack. The author explains that the Persist Timer is triggered when a TCP receiver advertises a zero window size, leading to a deadlock situation if the sender does not receive a window update. By manipulating this behavior, attackers can create a situation where the sender continues to send probes indefinitely, effectively exhausting system resources. The article presents Nkiller2, a tool designed to automate this attack, emphasizing its efficiency due to low memory overhead and minimal bandwidth usage compared to traditional DoS methods. The author provides a detailed analysis of the TCP stack implementation, attack vectors, and test cases to illustrate the effectiveness of the tool against various operating systems, including Linux and BSD variants."
+}

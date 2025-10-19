@@ -1,0 +1,15 @@
+{
+  "reference": "Volume Seven, Issue Fifty, Phile #14 of 16",
+  "title": "The DCO-CS Operating System",
+  "authors": "Trunkin' Fool AKA mrnobody",
+  "date": "4.1.97",
+  "historical_context": "This article discusses the DCO operating system used in telecommunications, highlighting its features and command structure. It reflects the hacker culture's interest in exploring and manipulating telecommunications systems.",
+  "target_audience": "Hackers, telecommunications professionals, security researchers",
+  "short_summary": "This article provides an overview of the DCO-CS operating system from Siemens, detailing its features, command structure, and potential for manipulation. It serves as an introductory guide for those interested in the system's capabilities.",
+  "summary": "In this first part of a series on the DCO-CS operating system, Trunkin' Fool introduces readers to the Siemens telecommunications system, which operates on LLS/RLS-1000/RLS-4000 machines. The DCO-CS is equipped with extensive logging capabilities and offers various features such as billing computer interfaces, international callback, and ISDN transport. The author emphasizes the system's potential for fun and exploration, while also cautioning users about the risks of making mistakes due to the system's complexity. The article outlines the Man-Machine Interface (MMI) and provides a comprehensive command list, showcasing the system's functionality and the intricacies of its command structure. Commands are prefixed with a '$', and the author explains how to use parameters and option words effectively. This foundational knowledge sets the stage for further exploration of the DCO-CS in future articles, making it a valuable read for those interested in telecommunications hacking and system administration.",
+  "resources": [
+    "an actual RLS machine running DCO siemens stromberg-carlson",
+    "my mind",
+    "the minds of my phriends, to whom i give much thanks: c-stone, lefty, port9, cyklonik, a guy named don in CA, and ben"
+  ]
+}

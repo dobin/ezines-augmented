@@ -1,0 +1,8 @@
+{
+  "reference": "Volume 0x0f, Issue 0x45, Phile #0x0d of 0x10",
+  "title": "The Art of Exploitation",
+  "authors": "huku",
+  "date": "January 21, 2016",
+  "short_summary": "This article explores the exploitation of a vulnerability in Adobe Flash Player, detailing the methodology for extracting sensitive information from a victim's filesystem, particularly targeting Firefox's stored passwords and cookies.",
+  "summary": "In this article, the author discusses a vulnerability in Adobe Flash Player (ZDI-15-007) that allows for the extraction of sensitive information from a victim's filesystem. The piece begins with setting up a debugging environment for ActionScript and introduces useful ActionScript classes for exploitation. The core of the article focuses on the analysis and exploitation of the vulnerability, which involves an information leak that can be leveraged to read arbitrary files, including Firefox's SQLite databases containing passwords and cookies. The author provides a detailed step-by-step methodology for achieving this, including heap spraying techniques and memory address manipulation to bypass the sandbox restrictions imposed by Flash Player.\n\nThe article is rich in technical detail, covering the exploitation process from setting up the environment to the final steps of exfiltrating data. It emphasizes the importance of understanding the underlying memory management of the Flash Player and Windows heap, showcasing how attackers can manipulate these to gain access to sensitive information. The author concludes by reflecting on the implications of such vulnerabilities in the context of modern security challenges, highlighting the ongoing relevance of Flash exploitation techniques in the evolving landscape of cybersecurity."
+}

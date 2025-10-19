@@ -1,0 +1,10 @@
+{
+  "reference": "Volume One, Issue Eight, Phile #3 of 9",
+  "title": "The Executioner and the PhoneLine Phantoms!",
+  "authors": "The Executioner and The Egyptian Lover",
+  "date": "1986",
+  "historical_context": "This article discusses the City-Wide Centrex (CWC) feature, which was a significant advancement in telecommunications for multi-location businesses, allowing for more seamless communication across geographic boundaries.",
+  "target_audience": "Telecommunications professionals, hackers interested in phone systems, and security researchers.",
+  "short_summary": "The article explores the City-Wide Centrex (CWC) feature, detailing its capabilities for multi-location businesses, including intercom dialing, remote access to private facilities, and various call management features. It provides a technical overview of how these systems operate and their implications for telecommunications.",
+  "summary": "In this article, the authors delve into the City-Wide Centrex (CWC) feature, which revolutionizes how multi-location businesses manage their telecommunications. The CWC allows for intercom dialing across different locations, enabling seamless communication without the need for dedicated facilities between sites. This feature is particularly beneficial for large businesses that require efficient and cost-effective communication solutions. The authors explain the technical workings of intercom dialing, including how calls are routed and processed through the system, emphasizing the importance of CCIS (Common Channel Interoffice Signaling) trunks in facilitating these operations.\n\nAdditionally, the article outlines various features enabled by the CWC, such as call forwarding, call waiting, and distinctive ringing. These features enhance user experience and provide businesses with greater flexibility in managing their communications. The authors also touch on the implications of these advancements for security and privacy, making this article a valuable resource for telecommunications professionals and security researchers interested in the evolution of phone systems and their vulnerabilities."
+}

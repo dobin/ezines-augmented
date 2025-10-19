@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Mac OS X wars - a XNU Hope",
+  "authors": "nemo <nemo@felinemenace.org>",
+  "date": "2007",
+  "short_summary": "This article explores various techniques for exploiting vulnerabilities in Mac OS X, focusing on shellcode development, privilege escalation, and rootkit techniques. It covers both Intel and PowerPC architectures, providing insights into local exploitation methods and kernel-level shellcode.",
+  "summary": "In 'Mac OS X wars - a XNU Hope', author nemo delves into the intricacies of exploiting vulnerabilities within the Mac OS X operating system, particularly focusing on shellcode development and local privilege escalation techniques. The paper begins with an introduction to local shellcode maneuvering, discussing historical methods for calculating valid return addresses in buffer overflow exploits, and introduces a novel technique using the undocumented 'shared_region_mapping_np' syscall to position shellcode at a fixed location in memory. This method allows for effective exploitation even in the presence of non-executable stack protections introduced in later versions of Mac OS X.\n\nThe article further explores advanced topics such as writing kernel-level shellcode, breaking out of chroot environments, and various rootkit techniques. It emphasizes the importance of understanding the Mach-O binary format and the architecture spanning shellcode that can operate on both Intel and PowerPC systems. The paper concludes with practical examples and code snippets demonstrating the discussed techniques, making it a valuable resource for security researchers and hackers interested in Mac OS X exploitation.",
+  "historical_context": "This article was written during a time when Mac OS X was transitioning from PowerPC to Intel architecture, highlighting the security implications of this shift and the evolving landscape of exploitation techniques.",
+  "target_audience": "Hackers, security researchers, and professionals interested in Mac OS X security and exploitation techniques."
+}

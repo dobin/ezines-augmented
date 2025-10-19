@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Weird Al Virus",
+  "authors": "Rajaat / 29A",
+  "date": "March 1998",
+  "historical_context": "This article discusses a boot sector virus created in the late 1990s, a time when computer viruses were becoming more prevalent and sophisticated. The 'Weird Al Virus' showcases techniques that were common among early virus authors.",
+  "target_audience": "Hackers, malware researchers, and security professionals interested in historical malware development.",
+  "short_summary": "The 'Weird Al Virus' is a boot sector virus that infects MBR and COM files. It employs stealth techniques to avoid detection and features a recursive extended partition trick for persistence. The article details its behavior and coding techniques.",
+  "summary": "The 'Weird Al Virus' is a 512-byte boot sector virus that targets Master Boot Records (MBR) and COM files, written by Rajaat from the 29A group. The virus is designed to be resident in memory and employs stealth techniques to evade detection by hooking into DOS interrupt routines. When a COM file is executed, the virus attempts to infect the MBR, ensuring it remains undetected during normal operations. The author describes the virus's behavior, including its ability to recognize if it has already infected the MBR and its method of hooking into INT 13 and INT 2F for stealth operations.\n\nThe article serves as both a technical guide and a programming exercise, showcasing the author's coding skills in assembly language. It discusses the virus's recursive extended partition trick, which complicates removal efforts, particularly for users of MS-DOS 4.0 or higher. While the virus itself is not particularly remarkable in terms of functionality, it reflects the creativity and technical prowess of early virus authors, making it a noteworthy piece in the history of malware development."
+}

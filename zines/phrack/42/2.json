@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-Two, File 2a of 14",
+  "title": "Phrack Loopback",
+  "authors": "Unknown",
+  "date": "March 18, 1993",
+  "historical_context": "This article reflects the hacker culture of the early 1990s, showcasing techniques for anonymity and password collection during a time when UNIX systems were prevalent.",
+  "target_audience": "Hackers, security researchers, UNIX enthusiasts",
+  "short_summary": "The article presents a C program that allows users to change their user ID and X.25 address on UNIX systems, enabling them to disguise their identity. It also includes a password-grabbing program that operates undetected.",
+  "summary": "In this article, the author shares a C program that modifies the user ID and X.25 address on UNIX systems, allowing users to appear invisible to commands like 'who' and 'write'. This program does not grant additional access rights but serves as a tool for anonymity. The usage is straightforward, requiring two arguments to set the desired user ID and address. The author notes that while they did not personally use the program for malicious purposes, it is left to the reader's discretion how to apply it.\n\nAdditionally, the article introduces a more sophisticated password-grabbing program, designed to simulate the login process and capture user credentials. This program cleverly avoids detection by trapping signals that could terminate it and erasing its executable after launching. The captured credentials are stored in a hidden file, making it difficult for system administrators to trace the activity back to the hacker. The author emphasizes the importance of discretion and creativity in executing such programs, highlighting the risks involved in running them from identifiable accounts."
+}

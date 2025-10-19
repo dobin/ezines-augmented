@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Hacking deeper in the system",
+  "authors": "scythale",
+  "date": "",
+  "historical_context": "This article reflects the growing interest in hardware hacking during a time when concerns about corporate control over computing devices were rising, particularly regarding DRM and TCPA.",
+  "target_audience": "Hackers, security researchers, hardware enthusiasts",
+  "short_summary": "This article serves as an introduction to hardware hacking, focusing on I/O systems, GPU manipulation, and BIOS modifications. It aims to equip readers with foundational knowledge to combat corporate control over computing devices.",
+  "summary": "In 'Hacking deeper in the system', scythale provides a comprehensive introduction to hardware hacking, emphasizing the importance of understanding I/O systems, GPUs, and BIOS for those looking to gain deeper control over their computing environments. The article begins with a discussion on I/O systems, explaining how devices communicate with the CPU through memory-mapped I/O and direct access methods. It also covers the Direct Memory Access (DMA) system, which allows devices to transfer data independently of the CPU, thus enhancing performance and opening avenues for manipulation.\n\nThe second part of the article delves into GPU hacking, highlighting the capabilities of modern graphics cards that function as mini-computers. Scythale discusses how to utilize OpenGL and shaders to manipulate data and execute instructions on the GPU, suggesting that these techniques can be used for data hiding and encryption. Finally, the article explores BIOS hacking, detailing methods to patch BIOS code to gain control over the boot process, which can be leveraged for stealthy backdoor implementations. Overall, the piece serves as a call to arms for hackers to explore hardware vulnerabilities and resist corporate overreach in technology."
+}

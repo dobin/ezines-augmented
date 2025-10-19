@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "Pervert world wide",
+  "authors": "Unknown",
+  "date": "2004.03.01",
+  "historical_context": "This article discusses techniques for evading antivirus detection, which were particularly relevant during the early 2000s when malware was becoming increasingly sophisticated.",
+  "target_audience": "Hackers, security researchers, antivirus developers",
+  "short_summary": "The article explores methods for modifying executable files to evade antivirus detection, focusing on techniques like code perversion and diversification. It discusses the implications of these methods for malware propagation and antivirus response.",
+  "summary": "In 'Pervert world wide', the author delves into the mechanics of how trojans and viruses are typically detected through simple signatures, which can be easily circumvented. By employing a tool called 'Code Pervertor', malicious actors can analyze and modify executable files, altering their checksums while maintaining functionality. This manipulation allows malware to evade traditional antivirus detection methods, which rely on static signatures. The article emphasizes the potential for widespread infection through automated 'pervertors' that could continuously spawn new variants of malware, complicating the landscape for antivirus solutions.\n\nThe piece also discusses two primary methods for detecting these modified files: one involves pre-analyzing files with a modified approach to code perversion, while the other suggests a complete overhaul of checksum algorithms to account for interchangeable instructions. Both methods have significant drawbacks, highlighting the ongoing cat-and-mouse game between malware developers and antivirus researchers. The article serves as a cautionary tale about the evolving nature of malware and the challenges faced by security professionals in keeping up with increasingly sophisticated evasion techniques."
+}

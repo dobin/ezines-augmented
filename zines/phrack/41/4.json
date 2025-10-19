@@ -1,0 +1,10 @@
+{
+  "reference": "Volume Four, Issue Forty-One, File 4 of 13",
+  "title": "The POWER of Electronic Mail",
+  "authors": "The Racketeer",
+  "date": "1992",
+  "historical_context": "This article reflects the early days of email and hacking culture, showcasing techniques that were relevant during the rise of the Internet and SMTP protocols.",
+  "target_audience": "Hackers, security professionals, and those interested in the history of email and network manipulation.",
+  "short_summary": "This article explores the intricacies of SMTP and the use of fakemail, detailing how to manipulate email headers for various purposes. It discusses risks, precautions, and the potential for mischief using email systems.",
+  "summary": "In 'The POWER of Electronic Mail', The Racketeer delves into the mechanics of SMTP, providing a comprehensive guide on how to send fakemail and manipulate email headers. The article begins with an overview of the risks associated with such activities, including potential legal repercussions and the importance of anonymity. The author emphasizes the necessity of using bogus accounts and deleting logs to avoid detection, while also providing a humorous take on the various 'do-gooders' who might oppose such practices.\n\nThe article then transitions into a detailed explanation of SMTP commands and the process of sending emails, including the use of commands like HELO, MAIL FROM, and RCPT TO. The Racketeer illustrates how to craft convincing fakemails, avoiding the 'Apparently-to:' line that often reveals the sender's true identity. The piece culminates in a narrative of an ambitious attempt to send an email around the world, showcasing the author's technical prowess and the challenges faced in executing such a feat. Overall, the article serves as both a technical manual and a reflection of the hacker ethos of the early 90s."
+}
