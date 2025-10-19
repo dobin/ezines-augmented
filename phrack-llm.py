@@ -130,7 +130,7 @@ class PhackSummarizer:
                     model="gpt-4o-mini",  # or "gpt-3.5-turbo" for cheaper option
                     messages=[
                         {"role": "system", "content": "You are a technical writer specialized in computer security and hacker culture history."},
-                        {"role": "user", "content": f"{prompt}\n\nArticle content:\n{content}"}  # Limit content to avoid token limits
+                        {"role": "user", "content": f"{prompt}\n\nArticle content:\n{content}"}
                     ],
                     temperature=0.2,
                     response_format={ "type": "json_object" },
