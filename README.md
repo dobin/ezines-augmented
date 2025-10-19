@@ -1,0 +1,60 @@
+# Augmented E-Zines
+
+Zines: 
+* 29a
+* 40Hex
+* Phrack
+* cDC
+
+Augment:
+* organized in `/<zine>/<issue>/<article>.txt` structure
+* `/<zine>/about.json`: about the zine
+* `/<zine>/issues.json`: id, date, editor of issue
+* `/<zine>/<issue>/<article>.json`: meta information about that article
+
+
+## `about.json`
+
+```json
+{
+    "name": "29A",
+    "topic": "Virus research, assembly programming, and reverse engineering",
+    "date": "1996 – 2008",
+    "impact": "Regarded as the most advanced virus-writing group and zine; pushed the limits of self-replicating code and polymorphic engines, influencing both malware researchers and antivirus developers.",
+    "description": "A Spanish-founded ezine created by the 29A virus-writing group, dedicated to technical exploration of computer viruses as a form of digital art and research.",
+    "essential": "Demonstrates the intersection of creativity, code, and research — showing that virus authors could be both highly skilled and scientifically minded.",
+    "inside": "Assembly source code for viruses, polymorphism and metamorphism techniques, disassembly and analysis of malware, and articles on system internals."
+}
+```
+
+## `issues.json`
+
+```json
+[
+  {
+    "Issue": 1,
+    "ReleaseDate": "1996",
+    "Editor": "Mister Sandman"
+  },
+  {
+    "Issue": 2,
+    "ReleaseDate": "1998",
+    "Editor": "Mister Sandman"
+  }
+]
+```
+
+## `article.json`
+
+```json
+{
+  "reference": "Volume Two, Issue 12, Phile #6 of 11",
+  "title": "29A: The First Issue",
+  "authors": "Mister Sandman, Mr. White, and others",
+  "date": "December 13, 1996",
+  "historical_context": "This article marks the debut of the Spanish virus writing group 29A, reflecting the vibrant underground virus scene of the late 1990s.",
+  "target_audience": "Hackers, virus writers, security researchers, and those interested in malware development.",
+  "short_summary": "The first issue of the 29A zine introduces the group's activities in virus writing, discusses the evolution of the virus scene, and includes tutorials and virus disassemblies.",
+  "summary": "In this inaugural issue, 29A, a Spanish virus writing collective, shares their journey into the world of malware development. The authors express their excitement and challenges in creating this zine, which they hope will contribute to the virus writing community. They provide insights into the current state of the virus scene, mentioning the rise and fall of various groups and the continuous evolution of techniques. The zine includes tutorials on polymorphism and macro viruses, as well as viral techniques for evading antivirus software. Additionally, readers can find disassemblies of notable viruses, showcasing innovative methods and coding practices that have emerged in the field.\n\nThe zine also features a member list with their IRC nicknames, emphasizing the community aspect of virus writing. The authors acknowledge their language limitations but are eager to share their knowledge and experiences. They hint at future issues that will delve deeper into advanced topics, including a working encrypted resident PE infector and more virus disassemblies. Overall, this first issue serves as both an introduction to 29A and a snapshot of the dynamic and often chaotic world of virus creation during this era."
+}
+```
